@@ -11,8 +11,8 @@ Note on .Rnw files
 -------------
 I use knitr instead of Seave to compile .Rnw files into latex. Some of the syntax is different, so Seave won't work with my .Rnw files. To use knitr, run the following code in R:
 
-   library(knitr)
-   knit("filename.Rnw")
+    library(knitr)
+    knit("filename.Rnw")
 
 This will output filename.tex to the current working directory. Simply run latex on this file to get the pdf output.
 
