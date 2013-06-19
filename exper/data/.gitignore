@@ -1,0 +1,8 @@
+# git: ignore this stuff for this directory only #
+##################################################
+
+# Basically everything until I'm sure any of it can be public #
+*.pdf
+*.csv
+*.xlsx
+*.docx

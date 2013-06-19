@@ -1,0 +1,7 @@
+# git: ignore this stuff for this directory only #
+##################################################
+
+# just big .RData files #
+chains.RData
+chains2.RData
+chains3.RData

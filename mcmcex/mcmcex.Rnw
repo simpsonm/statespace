@@ -1,0 +1,812 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol}
+\usepackage[sc]{mathpazo}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{url}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false]
+ {hyperref}
+\hypersetup{
+ pdfstartview={XYZ null null 1}}
+\usepackage{breakurl}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{caption}
+\begin{document}
+
+% \SweaveOpts{fig.path='figure/', fig.align='center', fig.show='hold'}
+
+<<setup, include=FALSE, cache=FALSE>>=
+options(replace.assign=TRUE,width=90)
+@
+
+
+\title{MCMC Examples for DLMs}
+
+
+\author{Matt Simpson}
+
+\maketitle
+
+\section{Introduction}
+
+In this note, I compare the performance of two samplers
+for exploring the posterior distribution of a local level state space
+model. Suppose we have a univariate time series $y_t$ for
+$t=1,2,...,T$. The local level model says
+\begin{align*}
+  y_t &= \theta_t + v_t\\
+  \theta_t & = \theta_{t-1} + w_t
+\end{align*}
+for $t=1,2,...,T$ with
+\[
+\begin{bmatrix} v_t \\ w_t \end{bmatrix} \stackrel{iid}{\sim}
+N\left(\begin{bmatrix} 0\\0\end{bmatrix}, \begin{bmatrix} V & 0 \\ 0 &
+    W \end{bmatrix}\right)
+\]
+and
+\[
+\theta_0\sim N(m_0, C_0)
+\]
+
+$V$ and $W$ are treated as unkown, and we put independent inverse gamma
+priors on each, i.e. $V\sim IG(\alpha_1, \beta_1)$ and $W\sim
+IG(\alpha_2, \beta_2)$. The goal, then, is to simulate from the posterior
+distribution of $(V,W,\theta_{0:T} | y_{0:T})$.
+
+\subsection{Algorithm 1: The State Sampler}
+
+The standard algorithm for doing this, which I'm calling the ``state
+sampler,'' relies on Forward Filtering Backward Sampling (FFBS). FFBS
+is an algorithm for sampling from the latent states, $\theta_{0:T}$
+conditional on any unknown parameters. The algorithm samples the
+states condition on $(V,W)$, then samples $(V,W)$ conditional on the
+states, hence the name. In detail, the algorithm is as follows.
+
+\begin{enumerate}
+  \item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{1:T})$
+    using FFBS
+  \item Simulate $V$ from $\pi(V|\theta_{0:T},W,y_{1:T})$:
+    \[
+    V|\theta_{0:T},W,y_{1:T} \sim IG(a_V, b_V)
+    \]
+    where
+    \begin{align*}
+      a_V =& \alpha_1 + T/2\\
+      b_V = & \beta_1 + \sum_{t=1}^T(y_t-\theta_t)^2/2
+    \end{align*}
+  \item Simulate $W$ from $\pi(W|\theta_{0:T},V,y_{1:T})$:
+    \[
+    W|\theta_{0:T},V,y_{1:T} \sim IG(a_W, b_W)
+    \]
+    where
+    \begin{align*}
+      a_W =& \alpha_2 + T/2\\
+      b_W = & \beta_1 + \sum_{t=1}^T(\theta_t-\theta_{t-1})^2/2
+    \end{align*}
+\end{enumerate}
+
+\subsection{Algorithm 2: The Scaled Disturbance Sampler}
+
+A second algorithm worth considering  samples $V$ and $W$ conditional
+on $\gamma_{0:T}$ instead of conditional on $\theta_t$,  with
+$\gamma_t = (\theta_t - \theta_{t-1})/\sqrt{W}$ for $t=1,2,...,T$ and
+$\gamma_0=\theta_0$. Note that for $t>0$, $\gamma_t = w_t/\sqrt{W}$,
+i.e. the $\gamma$'s are the disturbances from the system equation, but
+scaled so that they have a $N(0,1)$ distribution a priori. The basic
+idea here is to sample the scaled disturbances conditional on $(V,W)$,
+then sample $V$ conditional on the scaled disturbances and $W$, then
+$W$ conditional on the scaled disturbances and $V$. Sampling the
+scaled disturbances can be accomplished using FFBS to sample the
+states, then transform the states to the scaled disturbances using the
+formulas above, or by sampling them directly using the disturbance
+smoother. The full algorithm is as follows:
+
+\begin{enumerate}
+  \item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{0:T})$
+    using FFBS and form $\gamma_{0:T}$.
+  \item Simulate $V$ from $\pi(V|\gamma_{0:T},W,y_{1:T})$:
+    \[
+    V|\theta_{0:T},W,y_{1:T} \sim IG(a_V, b_V)
+    \]
+    where
+    \begin{align*}
+      a_V =& \alpha_1 + T/2\\
+      b_V = & \beta_1 + \sum_{t=1}^T(y_t-\gamma_0 -
+      \sqrt{W}\sum_{j=1}^t\gamma_j)^2/2
+    \end{align*}
+  \item Simulate $W$ from $\pi(W|\gamma_{0:T},V,y_{1:T})$:
+    \[
+    \mathcal{L} \equiv \log \pi(W|\gamma_{0:T},V,y_{1:T}) = -aW +
+    b\sqrt{W} - (\alpha_2 + 1)\log W -\beta_2/W +C
+    \]
+    where $C$ is some constant we can ignore for sampling purposes,
+    $a=\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and
+    $b=\sum_{t=1}^T(y_t-\gamma_0)(\sum_{j=1}^t\gamma_j)/V$.
+\end{enumerate}
+
+Step 3 of this algorithm is of some interest since the distribution to
+be simulated from isn't standard. One possibility (suggested by
+Dr. Roy) is to use an adaptive rejection sampling algorithm that
+depends on the density being log-concave. This doesn't always work
+because the target density isn't log-concave in general (Dr. Roy made
+a mistake confusing $W$ and $\sqrt{W}$ in his note that led him to
+derive an incorrect conditional density for $W$ which was
+log-concave. The correct density, here, is clearly not guaranteed to
+be log-concave). When $W/V$, the signal-to-noise ratio, is above 1 the
+density tends to be log-concave and adaptive rejection sampling works
+well. When the signal-to-noise ratio is below 1, the density is often not
+log concave. In this case a proposal density from the location-scale
+family of $t$ distributions works, albeit with some additional
+computational cost. In this case, setting the location parameter equal
+to the target density's mode and the scale parameter equal to the
+square root of the negative second derivative of the log of the target
+density results in a family of proposal densities defined by the
+degrees of freedom parameter, $df$. Then it's just a matter of
+choosing $df$ to minimize the rejection rate.
+
+\section{Results}
+
+<<tablesetup, echo=FALSE>>=
+library(xtable)
+load("cors.Rdata")
+sTHcors <- cors[[1]]
+sVcors <- cors[[2]]
+sWcors <- cors[[3]]
+dTHcors <- cors[[4]]
+dVcors <- cors[[5]]
+dWcors <- cors[[6]]
+cnam <- colnames(sVcors[[1]])
+rnam <- rownames(sVcors[[1]])
+algn <- paste(paste("l",paste(rep("r",length(rnam)), collapse=""), sep=""),"", sep="")
+sclbx <- 0.79
+@
+
+In order to test these two algorithms, I simulated a fake dataset from
+the local level model for various choices of $V$, $W$, and $T$ ---
+i.e. all possible combinations of $V=0.01,\ 0.1,\ 1,\ 10,\ 100,\
+1000$, $W=0.01,\ 0.1,\ 1,\ 10,\ 100,\ 1000$, and $T=10,\ 100,\
+500$. Then for each dataset, I fit the local level model using both
+the state sampler and the scaled disturbance sampler. For both
+samplers, I used the sampe priors: $m_0=0$, $C_0=10^7$,
+$\alpha_1=\alpha_2=5$, $\beta_1=(\alpha_1-1)V$ and
+$\beta_2=(\alpha_2-1)W$ where $(V,W)$ were the true values of $V$ and
+$W$ used to simulate the time series. This ensures all priors and thus
+the posterior are proper and results in independent inverse gamma
+priors on $V$ and $W$ with prior means equal to the respective true
+values and moderately large prior variances. For both samplers, I
+obtained a sample of size $n=5000$ and threw away the first 500
+samples as burn in. In the scaled disturbance sampler, I used adaptive
+rejection sampling to sample $W$ when log-concavity was satisfied, and
+the rejection sampling scheme with $t$ proposal mention above in all
+other situations. Once the sampling was complete, I computed the
+autocorrelation in the chain for each parameter, including each of the
+$\theta$'s. The following tables show what I found.
+
+\subsection{Results for $(V,W)$}
+
+Table \ref{tableVWT10} shows the autocorrelation for $V$ and $W$ for both
+samplers in all of the fitted models for $T=10$. We can see that for
+the state sampler when the the signal-to-noise ratio ($W/V$) is high,
+$V$ has very low autocorrelation in the posterior sampler while $W$
+has rather high autocorrelation. On the other hand, when the signal to
+noise ratio is low, $V$ has high autocorrelation while $W$ has low
+autocorrelation in the posterior sampler. Neither of these facts seem
+affected by the actual values of $W$ and $V$, just their relative
+values. When the signal to noise ratio is constant (down any diagonal in
+the table) the first order autocorrelation for both $V$ and $W$ looks
+about constant even while $W$ and $V$ are changing (by the same
+factor).  Note that the autocorrelation is never all that bad even when
+it becomes high in one of the chains --- never above $0.6$ or so.
+
+The scaled disturbance sampler had significantly different
+results. When the signal-to-noise ratio is high, autocorrelation is
+low for both $V$ and $W$. However, whent he signal-to-noise ratio is
+low, autocorrelation is high for both $V$ and $W$ --- albeit it gets
+much worse for $W$ than for $V$, maxing out at $0.999$ and $0.6$ or
+so respectively. Again for constant signal-to-noise ratio, the values
+of $V$ and $W$ respectively don't seem to matter much for
+autocorrelation. Only the signal-to-noise ratio matters.
+
+Now we can look at Table \ref{tableVWT100} and see essentially the
+same pattern when $T=100$. The state sampler has low autocorrelation for $W$ and
+high autocorrelation for $V$ when the signal-to-noise ratio is low and
+high autocorrelation for $W$ and low autocorrelation for $V$ when the
+signal-to-noise ratio is high. Note, however, that this time the
+autocorrelation problem becomes much worse when the signal-to-noise
+ratio is significantly different from 1 - reaching to about $0.9$ in
+the worst cases.
+
+The scaled disturbance sampler is also repeating the
+same pattern --- high signal-to-noise ratio begets low autocorrelation
+in both $V$ and $W$, while low signal-to-noise ratio begets high
+autocorrelation in both $V$ and $W$. However now the autocorrelation
+for $V$ now gets as high as $0.93$ while the autocorrelation for $W$
+still gets to about $0.999$, but it gets there for somewhat higher
+signal-to-noise ratios than for the smaller sample size.
+
+Finally in Table \ref{tableVWT500} we see the same pattern repeated
+again for $T=500$. The trend also seems to continue with respect to
+the length of the time series --- as $T$ increases, problems with
+autocorrelation only become worse.
+
+To sum up the results for $V$ and $W$, the state sampler is good for
+$V$ when the signal-to-noise ratio is high; good for $W$ when the
+signal-to-noise ratio is low; and good for $(V,W)$ when the
+signal-to-noise ratio is near 1. The scaled disturbance sampler is
+good for $(V,W)$ or either individually whent he signal-to-noise ratio
+is high. Increase $T$, the length of the time series, only exacerbates
+autocorrelation problems and restricts the range of the parameter
+space where either sampler works well. Most notably, for very low
+signal-to-noise ratios, nether sampler can be expected to perform well
+for $V$.
+
+%V,W tables for T=10
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT11, echo=FALSE, results='asis'>>=
+T11 <- xtable(sVcors[[1]], digit=4, align=algn)
+print(T11,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT12, echo=FALSE, results='asis'>>=
+T12 <- xtable(sWcors[[1]], digit=4, align=algn)
+?xtable
+print(T12,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT13, echo=FALSE, results='asis'>>=
+T13 <- xtable(dVcors[[1]], digit=4, align=algn)
+print(T13,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in Scaled Disturbance Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT14, echo=FALSE, results='asis'>>=
+T14 <- xtable(dWcors[[1]], digit=4, align=algn)
+print(T14,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in Scaled Disturbance Sampler}
+\end{minipage}
+\caption{Autocorrelation in posterior sampler for a time series of
+  length $T=10$ for $V$ and $W$ and for the state and scaled
+  disturbance samplers. Row and column names indicate the true values
+  of $W$ and $V$ respectively for the simulated data.}
+\label{tableVWT10}
+\end{table}
+
+%V,W tables for T=100
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT21, echo=FALSE, results='asis'>>=
+T21 <- xtable(sVcors[[2]], digit=4, align=algn)
+print(T21,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT22, echo=FALSE, results='asis'>>=
+T22 <- xtable(sWcors[[2]], digit=4, align=algn)
+?xtable
+print(T22,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT23, echo=FALSE, results='asis'>>=
+T23 <- xtable(dVcors[[2]], digit=4, align=algn)
+print(T23,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in Scaled Disturbance Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT24, echo=FALSE, results='asis'>>=
+T24 <- xtable(dWcors[[2]], digit=4, align=algn)
+print(T24,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in Scaled Disturbance Sampler}
+\end{minipage}
+\caption{Autocorrelation in posterior sampler for a time series of
+  length $T=100$ for $V$ and $W$ and for the state and scaled
+  disturbance samplers. Row and column names indicate the true values
+  of $W$ and $V$ respectively for the simulated data.}
+\label{tableVWT100}
+\end{table}
+
+% V,W tables for T=500
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT31, echo=FALSE, results='asis'>>=
+T31 <- xtable(sVcors[[3]], digit=4, align=algn)
+print(T31,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in State Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT32, echo=FALSE, results='asis'>>=
+T32 <- xtable(sWcors[[3]], digit=4, align=algn)
+print(T32,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in State Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT33, echo=FALSE, results='asis'>>=
+T33 <- xtable(dVcors[[3]], digit=4, align=algn)
+print(T33,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in Scaled Disturbance Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT34, echo=FALSE, results='asis'>>=
+T34 <- xtable(dWcors[[3]], digit=4, align=algn)
+print(T34,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in Scaled Disturbance Sampler}
+\end{minipage}
+\caption{Autocorrelation in posterior sampler for a time series of
+  length $T=500$ for $V$ and $W$ and for the state and scaled
+  disturbance samplers. Row and column names indicate the true values
+  of $W$ and $V$ respectively for the simulated data.}
+\label{tableVWT500}
+\end{table}
+
+
+\subsection{Results for the $\theta$'s}
+<<maxcor, echo=FALSE>>=
+mscor <- round(max(sTHcors[[1]], sTHcors[[2]], sTHcors[[3]]),2)
+mdcor <- round(max(dTHcors[[1]], dTHcors[[2]], dTHcors[[3]]),2)
+@
+
+We can do the same thing for some of the $\theta$'s. Tables
+\ref{tableTHT10}, \ref{tableTHT100}, and \ref{tableTHT500} contain the
+first order autocorrelation for $\theta_0$, $\theta_{T/2}$, and
+$\theta_{T}$ for $T=10$, $T=100$, and $T=500$
+respectively. The key thing we learn here is that autocorrelation in
+the chains for the $\theta$'s doesn't appear to be a problem - it's
+always pretty low and usually is essentially 0. I picked the first, last,
+and middle states of the time series to illustrate this, but the
+result holds across all states in all time series. The maximum
+autocorrelation for any of the states in any of the fitted models for
+the the state sampler is \Sexpr{mscor}. Likewise for the scaled
+disturbance sampler the maximum autocorrelation is
+\Sexpr{mdcor}. Autocorrelation for the states doesn't seem to be a
+problem, at least for the local level model.
+
+
+%Theta tables for T=10
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTH0s1, echo=FALSE, results='asis'>>=
+sTH01 <- sTHcors[[1]][,,1]
+rownames(sTH01) <- rnam
+colnames(sTH01) <- cnam
+TH0s1 <- xtable(sTH01, digit=4, align=algn)
+print(TH0s1,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in State Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTH0d1, echo=FALSE, results='asis'>>=
+dTH01 <- dTHcors[[1]][,,1]
+rownames(dTH01) <- rnam
+colnames(dTH01) <- cnam
+TH0d1 <- xtable(dTH01, digit=4, align=algn)
+print(TH0d1,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in Scaled Disturbance Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHT2s1, echo=FALSE, results='asis'>>=
+sTHT21 <- sTHcors[[1]][,,10/2+1]
+rownames(sTHT21) <- rnam
+colnames(sTHT21) <- cnam
+THT2s1 <- xtable(sTHT21, digit=4, align=algn)
+print(THT2s1,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T/2}$ in State Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHT2d1, echo=FALSE, results='asis'>>=
+dTHT21 <- dTHcors[[1]][,,10/2+1]
+rownames(dTHT21) <- rnam
+colnames(dTHT21) <- cnam
+THT2d1 <- xtable(dTHT21, digit=4, align=algn)
+print(THT2d1,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T/2}$ in Scaled Disturbance Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHTs1, echo=FALSE, results='asis'>>=
+sTHT1 <- sTHcors[[1]][,,10+1]
+rownames(sTHT1) <- rnam
+colnames(sTHT1) <- cnam
+THTs1 <- xtable(sTHT1, digit=4, align=algn)
+print(THTs1,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T}$ in State Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHTd1, echo=FALSE, results='asis'>>=
+dTHT1 <- dTHcors[[1]][,,10+1]
+rownames(dTHT1) <- rnam
+colnames(dTHT1) <- cnam
+THTd1 <- xtable(dTHT21, digit=4, align=algn)
+print(THTd1,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T}$ in Scaled Disturbance Sampler}
+\end{minipage}
+\caption{Autocorrelation in posterior sampler for a time series of
+  length $T=10$ for $\theta_0$, $\theta_{T/2}$, and $\theta_T$ for the
+  state and scaled disturbance samplers. Row and column names indicate
+  the true values of $W$ and $V$ respectively for the simulated data.}
+\label{tableTHT10}
+\end{table}
+
+%Theta tables for T=100
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTH0s2, echo=FALSE, results='asis'>>=
+sTH02 <- sTHcors[[2]][,,1]
+rownames(sTH02) <- rnam
+colnames(sTH02) <- cnam
+TH0s2 <- xtable(sTH02, digit=4, align=algn)
+print(TH0s2,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in State Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTH0d2, echo=FALSE, results='asis'>>=
+dTH02 <- dTHcors[[2]][,,1]
+rownames(dTH02) <- rnam
+colnames(dTH02) <- cnam
+TH0d2 <- xtable(dTH02, digit=4, align=algn)
+print(TH0d2,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in Scaled Disturbance Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHT2s2, echo=FALSE, results='asis'>>=
+sTHT22 <- sTHcors[[2]][,,100/2+1]
+rownames(sTHT22) <- rnam
+colnames(sTHT22) <- cnam
+THT2s2 <- xtable(sTHT22, digit=4, align=algn)
+print(THT2s2,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T/2}$ in State Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHT2d2, echo=FALSE, results='asis'>>=
+dTHT22 <- dTHcors[[2]][,,100/2+1]
+rownames(dTHT22) <- rnam
+colnames(dTHT22) <- cnam
+THT2d2 <- xtable(dTHT22, digit=4, align=algn)
+print(THT2d2,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T/2}$ in Scaled Disturbance Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHTs2, echo=FALSE, results='asis'>>=
+sTHT2 <- sTHcors[[2]][,,100+1]
+rownames(sTHT2) <- rnam
+colnames(sTHT2) <- cnam
+THTs2 <- xtable(sTHT2, digit=4, align=algn)
+print(THTs2,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T}$ in State Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHTd2, echo=FALSE, results='asis'>>=
+dTHT2 <- dTHcors[[2]][,,100+1]
+rownames(dTHT2) <- rnam
+colnames(dTHT2) <- cnam
+THTd2 <- xtable(dTHT22, digit=4, align=algn)
+print(THTd2,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T}$ in Scaled Disturbance Sampler}
+\end{minipage}
+\caption{Autocorrelation in posterior sampler for a time series of
+  length $T=100$ for $\theta_0$, $\theta_{T/2}$, and $\theta_T$ for the
+  state and scaled disturbance samplers. Row and column names indicate
+  the true values of $W$ and $V$ respectively for the simulated data.}
+\label{tableTHT100}
+\end{table}
+
+%theta tables for T=500
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTH0s3, echo=FALSE, results='asis'>>=
+sTH03 <- sTHcors[[3]][,,1]
+rownames(sTH03) <- rnam
+colnames(sTH03) <- cnam
+TH0s3 <- xtable(sTH03, digit=4, align=algn)
+print(TH0s3,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in State Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTH0d3, echo=FALSE, results='asis'>>=
+dTH03 <- dTHcors[[3]][,,1]
+rownames(dTH03) <- rnam
+colnames(dTH03) <- cnam
+TH0d3 <- xtable(dTH03, digit=4, align=algn)
+print(TH0d3,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in Scaled Disturbance Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHT2s3, echo=FALSE, results='asis'>>=
+sTHT23 <- sTHcors[[3]][,,200/2+1]
+rownames(sTHT23) <- rnam
+colnames(sTHT23) <- cnam
+THT2s3 <- xtable(sTHT23, digit=4, align=algn)
+print(THT2s3,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T/2}$ in State Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHT2d3, echo=FALSE, results='asis'>>=
+dTHT23 <- dTHcors[[3]][,,200/2+1]
+rownames(dTHT23) <- rnam
+colnames(dTHT23) <- cnam
+THT2d3 <- xtable(dTHT23, digit=4, align=algn)
+print(THT2d3,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T/2}$ in Scaled Disturbance Sampler}
+\vspace{.15 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHTs3, echo=FALSE, results='asis'>>=
+sTHT3 <- sTHcors[[3]][,,200+1]
+rownames(sTHT3) <- rnam
+colnames(sTHT3) <- cnam
+THTs3 <- xtable(sTHT3, digit=4, align=algn)
+print(THTs3,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T}$ in State Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableTHTd3, echo=FALSE, results='asis'>>=
+dTHT3 <- dTHcors[[3]][,,200+1]
+rownames(dTHT3) <- rnam
+colnames(dTHT3) <- cnam
+THTd3 <- xtable(dTHT23, digit=4, align=algn)
+print(THTd3,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_{T}$ in Scaled Disturbance Sampler}
+\end{minipage}
+\caption{Autocorrelation in posterior sampler for a time series of
+  length $T=500$ for $\theta_0$, $\theta_{T/2}$, and $\theta_T$ for the
+  state and scaled disturbance samplers. Row and column names indicate
+  the true values of $W$ and $V$ respectively for the simulated data.}
+\label{tableTHT500}
+\end{table}
+
+\subsection{Implications for Interweaving}
+
+There are two main implications for interveaving algorithms, it
+seems. First, the possibility of an interveaving algorithm performing
+better than both of the algorithms presented above exists since each
+algorithm works best for a different set of parameter values ---
+specifically, the state sampler works best for signal-to-noise ratios
+near 1 and the scaled disturbance sampler works best for high
+signal-to-noise ratios. Second, the interweaving algorithm may still
+be pretty bad for low signal-to-noise ratios since both algorithms
+considered have trouble in this region of the parameter space,
+especially for large $T$.
+
+Perhaps a third implication is that we need to find a third algorithm
+that works well for low signal-to-noise ratios. Then some sort of
+interweaving strategy between all three algorithms can be created that
+takes advantage of each of their strengths. One possibility is an
+algorithm that handles the observation equation analogous in some way
+to how the scaled disturbance algorithm handles the system equation.
+
+
+\end{document}
