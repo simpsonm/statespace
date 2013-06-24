@@ -3,12 +3,16 @@
 
 # .RData files that are HUGE #
 ##############################
-simsam.RData
+errorsam.RData
 distsam.RData
-statesam.RData
+statsam.RData
 
-# Outputs that you can compile yourself!!      #
-# (See README.md for how to compile .Rnw files #
-################################################
+# Outputs that you can compile yourself!!       #
+# (See README.md for how to compile .Rnw files) #
+#################################################
 mcmcex.pdf
 mcmcex.tex
+
+# These output folders come from knitr #
+/auto
+/figure

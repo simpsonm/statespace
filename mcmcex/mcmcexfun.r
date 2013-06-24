@@ -263,7 +263,7 @@ distsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, time=FALSE){
 }
 
 ## returns TRUE if target density of log-concave, FALSE otherwise
-logcon <- function(b, a12, b12, eps=0.1){
+logcon <- function(b, a12, b12, eps=0.2){
   sb <- 1*(b>0) - 1*(b<0)  ##sign(b)
   RHS <- (a12 + 1)^3*(1 - 2/3*sb)*32/9/b12 + eps
   ## + eps to make sure ARS algorithm doesn't fail on

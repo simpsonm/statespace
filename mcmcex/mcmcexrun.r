@@ -6,9 +6,9 @@
 
 ## setup and data simulation
 source("mcmcexfun.r")
-n <- 20
-burn <- 5
-Ts <- c(10,10,10)
+n <- 2000
+burn <- 500
+Ts <- c(10,100,1000)
 LT <- length(Ts)
 a1 <- 5
 a2 <- 5
@@ -31,21 +31,12 @@ for(k in 1:LT){
   }
 }
 
-dVcors <- list()
-dWcors <- list()
-dTHcors <- list()
 sVcors <- list()
 sWcors <- list()
 sTHcors <- list()
-eVcors <- list()
-eWcors <- list()
-eTHcors <- list()
-dsam <- list()
 ssam <- list()
-esam <- list()
-dtimes <- list()
 stimes <- list()
-etimes <- list()
+
 
 ## first do the state sampler
 for(k in 1:LT){
@@ -80,14 +71,22 @@ for(k in 1:LT){
     }
   }
 }
-
 scors <- list(sTHcors, sVcors, sWcors)
 save(stimes, file="stimes.RData")
 save(scors, file="scors.RData")
 save(ssam, file="statsam.RData")
 rm(ssam)
 
+
+
 ## next do the scaled disturbance sampler
+set.seed(413013)
+dVcors <- list()
+dWcors <- list()
+dTHcors <- list()
+dsam <- list()
+dtimes <- list()
+
 for(k in 1:LT){
   T <- Ts[k]
   dVcors[[k]] <- matrix(0, LVW, LVW)
@@ -126,6 +125,13 @@ save(dcors, file="dcors.RData")
 save(dsam, file="distsam.RData")
 save(dtimes, file="dtimes.RData")
 rm(dsam)
+
+set.seed(413412)
+eVcors <- list()
+eWcors <- list()
+eTHcors <- list()
+esam <- list()
+etimes <- list()
 
 ## finally do the scaled error sampler
 for(k in 1:LT){
