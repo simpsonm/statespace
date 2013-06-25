@@ -1,5 +1,3 @@
-## functions for replicating previous work done on this data
-
 library(dlm)
 library(MCMCpack)
 library(coda)
@@ -77,5 +75,3 @@ postsam <- function(n, data, prior, start){
   }
   return(out)
 }
-
-

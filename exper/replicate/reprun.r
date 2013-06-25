@@ -14,7 +14,7 @@ datMH11 <- apply(datheat2011,1,mean)
 plot(ts(datheat2011[,1]), ylim=c(-5,30))
 lines(datheat2011[,2], col="red")
 lines(datheat2011[,3], col="blue")
-lines(datMH2011, col="green")
+lines(datMH11, col="green")
 
 
 ## Fit model 3b using MLE
@@ -64,8 +64,8 @@ save(chains2, file="chains2.RData")
 ## Fitting model 3b with the IG(e,e) prior, letting e shrink to check for
 ## sensitivity to e. Very sensitive.
 prior1 <- c(1, 1, 1, 1, 1, 1, 1, 1)
-prior2 <- rep(c(.1,10),4)
-prior3 <- rep(c(.01,100),4)
+prior2 <- rep(.1,8)
+prior3 <- rep(.01, 8)
 priors <- list(prior1, prior2, prior3)
 n <- 1000
 chains3 <- list()
@@ -77,8 +77,7 @@ for(i in 1:3){
   times3[[i]] <- tim
   chains3[[i]] <- sam
 }
-save(chains3, file="chains2.RData")
-
+save(chains3, file="chains3.RData")
 
 ## Plotting trace plots for all three chains for all three sets of priors
 
@@ -107,12 +106,10 @@ for(i in 1:4){
 yls <- rep(1/2,4)
 par(mfrow=c(2,2))
 for(i in 1:4){
-  plot(ts(chains3[[1]][,i]), ylab=colnames(chains[[1]])[i], yls[i])
+  plot(ts(chains3[[1]][,i]), ylab=colnames(chains3[[1]])[i])#, ylim=c(0,yls[i]))
   lines(chains3[[2]][,i], col="red")
   lines(chains3[[3]][,i], col="blue")
   abline(h=MLEstart[i], lty=2)
 }
-
-
 
 
