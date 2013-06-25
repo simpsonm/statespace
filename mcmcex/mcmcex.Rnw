@@ -1053,13 +1053,14 @@ There are 3 different possible interweaving algorithms available ---
 interweaving any 2 of the 3 algorithms above. Interweaving the error
 and disturbance samplers is most promising in terms of convergence
 since they have low autocorrelation in exactly the opposite
-situations. However, as we'll see in the next section, the disturbance
-sampler is rather slow and should probably be avoided if possible. It
+situations. However, as we'll see in the next section, both samplers
+are rather slow so interweaving them might not be very efficient. It
 may the case that each of the 3 available interweaving algorithms is
-fastest to converge for different parameter values. In that case,
-there may be an algorithm the somehow hybridizes the interweaving
-algorithms in order to come up with something better. Another
-possibility worth noting is some sort of 3-way interweaving algorithm.
+fastest to converge (or more efficient) for different parameter
+values. In that case, there may be an algorithm the somehow hybridizes
+the interweaving algorithms in order to come up with something
+better. Another possibility worth noting is some sort of 3-way
+interweaving algorithm.
 
 It's worth noting that while the state sampler generalizes easily to
 generic dynamic linear (gaussian) models, the the error sampler and
