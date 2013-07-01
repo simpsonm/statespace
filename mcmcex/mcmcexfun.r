@@ -5,6 +5,24 @@ library(coda)
 library(MCMCpack)
 library(ars)
 
+## a wraper for simulating from any of the interweaving/alternating
+## functions quickly in a loop
+samwrapper <- function(n, start, dat, a1, a2, b1, b2, inter, samp){
+  if(samp==1){
+    out <- statedistinter(n, start, dat, a1, a2, b1, b2, inter)
+  }
+  if(samp==2){
+    out <- stateerrorinter(n, start, dat, a1, a2, b1, b2, inter)
+  }
+  if(samp==3){
+    out <- disterrorinter(n, start, dat, a1, a2, b1, b2, inter)
+  }
+  if(samp==4){
+    out <- tripleinter(n, start, dat, a1, a2, b1, b2, c(inter, inter))
+  }
+  return(out)
+}
+
 ## Simulates from a local level model
 llsim <- function(T, V, W, m0, C0){
   out <- rep(0,T)
@@ -116,11 +134,15 @@ errorsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, time=FALSE){
     b <- sum(Lpsi*Ly)/W
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
     if(logcon(b, a1, b1)){
-      rejsam[i] <- "ARS"
+      if(time){
+        rejsam[i] <- "ARS"
+      }
       V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
     }
     else{
-      rejsam[i] <- "TPROP"
+      if(time){
+        rejsam[i] <- "TPROP"
+      }
       propvar <- - 1 /( (a1 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b1*mn^(-3) )
       d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a1, b12=b1, mn=mn, propvar=propvar)
       M <- d$objective
@@ -214,11 +236,15 @@ distsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, time=FALSE){
     b <- sum( (dat - gam0) * cgam ) /V
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
     if(logcon(b, a2, b2)){
-      rejsam[i] <- "ARS"
+      if(time){
+        rejsam[i] <- "ARS"
+      }
       W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
     }
     else{
-      rejsam[i] <- "TPROP"
+      if(time){
+        rejsam[i] <- "TPROP"
+      }
       propvar <- - 1 /( (a2 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b2*mn^(-3) )
       d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a2, b12=b2, mn=mn, propvar=propvar)
       M <- d$objective
@@ -260,6 +286,368 @@ distsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, time=FALSE){
   else{
     return(out)
   }
+}
+
+## state + dist interveaving or alternating sampler
+statedistinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
+  T <- length(dat)
+  V <- start[1]
+  W <- start[2]
+  out <- mcmc(matrix(0, nrow=n, ncol=T+3))
+  colnames(out) <- c(paste("theta",0:T,sep=""),"V","W")
+  B <- diag(1,T+1,T+1)
+  C <- diag(-1,T,T)
+  B <- rbind(rep(0,T+1),cbind(C,rep(0,T))) + B
+
+  for(i in 1:n){
+    ## sample states
+    mod <- dlmModPoly(order=1, dV=V, dW=W)
+    filt <- dlmFilter(dat, mod)
+    theta <- dlmBSample(filt)
+    ## sampler V,W conditional on states
+    V <- rinvgamma(1, a1 + T/2, b1 + sum((dat-theta[-1])^2)/2)
+    W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
+    ## If not interweaving, sample states again
+    if(!inter){
+      mod <- dlmModPoly(order=1, dV=V, dW=W)
+      filt <- dlmFilter(dat, mod)
+      theta <- dlmBSample(filt)
+    }
+    ## convert states to disturbances and sample (V,W) conditional on disturbances
+    A <- B/sqrt(W)
+    A[1,1] <- 1
+    gam <- A%*%theta
+    cgam <- cumsum(gam[-1])
+    gam0 <- gam[1]
+    Va <- a1 + T/2
+    Vb <- b1 + sum( (dat - theta[-1])^2 )/2
+    V <- rinvgamma(1, Va, Vb)
+    a <- sum( cgam^2 )/2/V
+    b <- sum( (dat - gam0) * cgam ) /V
+    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
+    if(logcon(b, a2, b2)){
+      W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
+    }
+    else{
+      propvar <- - 1 /( (a2 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b2*mn^(-3) )
+      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a2, b12=b2, mn=mn, propvar=propvar)
+      M <- d$objective
+      df <- d$minimum
+      rej <- TRUE
+      while(rej){
+        prop <- rtprop(1, mn, propvar, df)
+        if(prop>0){
+          R <- logpirej(prop, a, b, a2, b2, mn, propvar, df) - M
+          u <- runif(1,0,1)
+          if(log(u)<R){
+            W <- prop
+            rej <- FALSE
+          }
+        }
+      }
+    }
+    ## convert disturbances back to states and save
+    A <- B/sqrt(W)
+    A[1,1] <- 1
+    theta <- solve(A)%*%gam
+    out[i,] <- c(theta,V,W)
+  }
+    return(out)
+}
+
+## state + error interveaving/alternating sampler
+stateerrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
+  T <- length(dat)
+  V <- start[1]
+  W <- start[2]
+  out <- mcmc(matrix(0, nrow=n, ncol=T+3))
+  colnames(out) <- c(paste("theta",0:T,sep=""),"V","W")
+  for(i in 1:n){
+    ## sample states
+    mod <- dlmModPoly(order=1, dV=V, dW=W)
+    filt <- dlmFilter(dat, mod)
+    theta <- dlmBSample(filt)
+    ## sample (V,W) conditional on states
+    V <- rinvgamma(1, a1 + T/2, b1 + sum((dat-theta[-1])^2)/2)
+    W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
+    ## if not interweaving, sample states again
+    if(!inter){
+      mod <- dlmModPoly(order=1, dV=V, dW=W)
+      filt <- dlmFilter(dat, mod)
+      theta <- dlmBSample(filt)
+    }
+    ## convert states to errors and sample (V,W) conditional on errors
+    A <- diag(-1/sqrt(V), T+1 )
+    A[1,1] <- 1
+    ytild <- c(0, dat/sqrt(V))
+    psi <- ytild + A%*%theta
+    Wa <- a2 + T/2
+    Wb <- b2 + sum( (theta[-1] - theta[-(T+1)])^2 )/2
+    W <- rinvgamma(1, Wa, Wb)
+    psi0 <- psi[1]
+    psiLT <- c(0,psi[-1])
+    Lpsi <- psiLT[-1] - psiLT[-(T+1)]
+    ys <- c(psi0, dat)
+    Ly <- ys[-1] - ys[-(T+1)]
+    a <- sum(Lpsi^2)/2/W
+    b <- sum(Lpsi*Ly)/W
+    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
+    if(logcon(b, a1, b1)){
+      V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
+    }
+    else{
+      propvar <- - 1 /( (a1 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b1*mn^(-3) )
+      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a1, b12=b1, mn=mn, propvar=propvar)
+      M <- d$objective
+      df <- d$minimum
+      rej <- TRUE
+      while(rej){
+        prop <- rtprop(1, mn, propvar, df)
+        if(prop>0){
+          R <- logpirej(prop, a, b, a1, b1, mn, propvar, df) - M
+          u <- runif(1,0,1)
+          if(log(u)<R){
+            V <- prop
+            rej <- FALSE
+          }
+        }
+      }
+    }
+    ## convert errors to states and save
+    A <- diag(-1/sqrt(V), T+1 )
+    A[1,1] <- 1
+    ytild <- c(0, dat/sqrt(V))
+    theta <- solve(A)%*%(psi - ytild)
+    out[i,] <- c(theta,V,W)
+  }
+    return(out)
+}
+
+## dist + error interveaving/alternating sampler
+disterrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
+  T <- length(dat)
+  V <- start[1]
+  W <- start[2]
+  out <- mcmc(matrix(0, nrow=n, ncol=T+3))
+  colnames(out) <- c(paste("theta",0:T,sep=""),"V","W")
+  B <- diag(1,T+1,T+1)
+  C <- diag(-1,T,T)
+  B <- rbind(rep(0,T+1),cbind(C,rep(0,T))) + B
+
+  for(i in 1:n){
+    ## sample states and convert to disturbances
+    mod <- dlmModPoly(order=1, dV=V, dW=W)
+    filt <- dlmFilter(dat, mod)
+    theta <- dlmBSample(filt)
+    A <- B/sqrt(W)
+    A[1,1] <- 1
+    gam <- A%*%theta
+    cgam <- cumsum(gam[-1])
+    gam0 <- gam[1]
+    ## sample (V,W) conditional on disturbances
+    Va <- a1 + T/2
+    Vb <- b1 + sum( (dat - theta[-1])^2 )/2
+    V <- rinvgamma(1, Va, Vb)
+
+    a <- sum( cgam^2 )/2/V
+    b <- sum( (dat - gam0) * cgam ) /V
+    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
+    if(logcon(b, a2, b2)){
+      W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
+    }
+    else{
+      propvar <- - 1 /( (a2 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b2*mn^(-3) )
+      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a2, b12=b2, mn=mn, propvar=propvar)
+      M <- d$objective
+      df <- d$minimum
+      rej <- TRUE
+      while(rej){
+        prop <- rtprop(1, mn, propvar, df)
+        if(prop>0){
+          R <- logpirej(prop, a, b, a2, b2, mn, propvar, df) - M
+          u <- runif(1,0,1)
+          if(log(u)<R){
+            W <- prop
+            rej <- FALSE
+          }
+        }
+      }
+    }
+    ## if not interweaving, sample the states. Otherwise convert disturbances
+    ## to states
+    if(!inter){
+      mod <- dlmModPoly(order=1, dV=V, dW=W)
+      filt <- dlmFilter(dat, mod)
+      theta <- dlmBSample(filt)
+    }
+    else{
+      A <- B/sqrt(W)
+      A[1,1] <- 1
+      theta <- solve(A)%*%gam
+    }
+    ## convert states to errors and sample (V,W) conditional on errors
+    Ap <- diag(-1/sqrt(V), T+1 )
+    Ap[1,1] <- 1
+    ytild <- c(0, dat/sqrt(V))
+    psi <- ytild + Ap%*%theta
+    Wa <- a2 + T/2
+    Wb <- b2 + sum( (theta[-1] - theta[-(T+1)])^2 )/2
+    W <- rinvgamma(1, Wa, Wb)
+    psi0 <- psi[1]
+    psiLT <- c(0,psi[-1])
+    Lpsi <- psiLT[-1] - psiLT[-(T+1)]
+    ys <- c(psi0, dat)
+    Ly <- ys[-1] - ys[-(T+1)]
+    a <- sum(Lpsi^2)/2/W
+    b <- sum(Lpsi*Ly)/W
+    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
+    if(logcon(b, a1, b1)){
+      V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
+    }
+    else{
+      propvar <- - 1 /( (a1 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b1*mn^(-3) )
+      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a1, b12=b1, mn=mn, propvar=propvar)
+      M <- d$objective
+      df <- d$minimum
+      rej <- TRUE
+      while(rej){
+        prop <- rtprop(1, mn, propvar, df)
+        if(prop>0){
+          R <- logpirej(prop, a, b, a1, b1, mn, propvar, df) - M
+          u <- runif(1,0,1)
+          if(log(u)<R){
+            V <- prop
+            rej <- FALSE
+          }
+        }
+      }
+    }
+    ## convert errors to states and save
+    Ap <- diag(-1/sqrt(V), T+1 )
+    A[1,1] <- 1
+    ytild <- c(0, dat/sqrt(V))
+    theta <- solve(Ap)%*%(psi - ytild)
+    out[i,] <- c(theta,V,W)
+  }
+    return(out)
+}
+
+## state + dist + error interweaving/alternating sampler
+tripleinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=c(TRUE, TRUE)){
+  T <- length(dat)
+  V <- start[1]
+  W <- start[2]
+  out <- mcmc(matrix(0, nrow=n, ncol=T+3))
+  colnames(out) <- c(paste("theta",0:T,sep=""),"V","W")
+  B <- diag(1,T+1,T+1)
+  C <- diag(-1,T,T)
+  B <- rbind(rep(0,T+1),cbind(C,rep(0,T))) + B
+
+  for(i in 1:n){
+    ## sample states
+    mod <- dlmModPoly(order=1, dV=V, dW=W)
+    filt <- dlmFilter(dat, mod)
+    theta <- dlmBSample(filt)
+    ## sample (V,W) conditional on states
+    V <- rinvgamma(1, a1 + T/2, b1 + sum((dat-theta[-1])^2)/2)
+    W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
+    ## If not interweaving, sample the states again
+    if(!inter[1]){
+      mod <- dlmModPoly(order=1, dV=V, dW=W)
+      filt <- dlmFilter(dat, mod)
+      theta <- dlmBSample(filt)
+    }
+    ## Convert states to disturbances
+    A <- B/sqrt(W)
+    A[1,1] <- 1
+    gam <- A%*%theta
+    cgam <- cumsum(gam[-1])
+    gam0 <- gam[1]
+    ## Sample (V,W) conditional on disturbances
+    Va <- a1 + T/2
+    Vb <- b1 + sum( (dat - theta[-1])^2 )/2
+    V <- rinvgamma(1, Va, Vb)
+    a <- sum( cgam^2 )/2/V
+    b <- sum( (dat - gam0) * cgam ) /V
+    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
+    if(logcon(b, a2, b2)){
+      W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
+    }
+    else{
+      propvar <- - 1 /( (a2 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b2*mn^(-3) )
+      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a2, b12=b2, mn=mn, propvar=propvar)
+      M <- d$objective
+      df <- d$minimum
+      rej <- TRUE
+      while(rej){
+        prop <- rtprop(1, mn, propvar, df)
+        if(prop>0){
+          R <- logpirej(prop, a, b, a2, b2, mn, propvar, df) - M
+          u <- runif(1,0,1)
+          if(log(u)<R){
+            W <- prop
+            rej <- FALSE
+          }
+        }
+      }
+    }
+    ## If not interweaving, sample the states.
+    ## Otherwise, convert disturbances to states
+    if(!inter[2]){
+      mod <- dlmModPoly(order=1, dV=V, dW=W)
+      filt <- dlmFilter(dat, mod)
+      theta <- dlmBSample(filt)
+    }
+    else{
+      A <- B/sqrt(W)
+      A[1,1] <- 1
+      theta <- solve(A)%*%gam
+    }
+    ## Convert states to errors and sample (V,W) conditional on errors
+    Ap <- diag(-1/sqrt(V), T+1 )
+    Ap[1,1] <- 1
+    ytild <- c(0, dat/sqrt(V))
+    psi <- ytild + Ap%*%theta
+    Wa <- a2 + T/2
+    Wb <- b2 + sum( (theta[-1] - theta[-(T+1)])^2 )/2
+    W <- rinvgamma(1, Wa, Wb)
+    psi0 <- psi[1]
+    psiLT <- c(0,psi[-1])
+    Lpsi <- psiLT[-1] - psiLT[-(T+1)]
+    ys <- c(psi0, dat)
+    Ly <- ys[-1] - ys[-(T+1)]
+    a <- sum(Lpsi^2)/2/W
+    b <- sum(Lpsi*Ly)/W
+    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
+    if(logcon(b, a1, b1)){
+      V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
+    }
+    else{
+      propvar <- - 1 /( (a1 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b1*mn^(-3) )
+      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a1, b12=b1, mn=mn, propvar=propvar)
+      M <- d$objective
+      df <- d$minimum
+      rej <- TRUE
+      while(rej){
+        prop <- rtprop(1, mn, propvar, df)
+        if(prop>0){
+          R <- logpirej(prop, a, b, a1, b1, mn, propvar, df) - M
+          u <- runif(1,0,1)
+          if(log(u)<R){
+            V <- prop
+            rej <- FALSE
+          }
+        }
+      }
+    }
+    ## Convert errors to states and save
+    Ap <- diag(-1/sqrt(V), T+1 )
+    A[1,1] <- 1
+    ytild <- c(0, dat/sqrt(V))
+    theta <- solve(Ap)%*%(psi - ytild)
+    out[i,] <- c(theta,V,W)
+  }
+    return(out)
 }
 
 ## returns TRUE if target density of log-concave, FALSE otherwise

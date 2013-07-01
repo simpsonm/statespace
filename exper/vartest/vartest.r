@@ -111,3 +111,4 @@ n <- 1000
 prior <- c(1,1,25,25)
 test <- mcmc(statesam(1000, start, dat, prior))
 plot(test)
+
