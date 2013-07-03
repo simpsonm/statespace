@@ -1,0 +1,1407 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol}
+\usepackage[sc]{mathpazo}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{url}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false]
+ {hyperref}
+\hypersetup{
+ pdfstartview={XYZ null null 1}}
+\usepackage{breakurl}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{caption}
+\begin{document}
+
+% \SweaveOpts{fig.path='figure/', fig.align='center', fig.show='hold'}
+
+<<setup, include=FALSE, cache=FALSE>>=
+options(replace.assign=TRUE,width=90)
+source("../mcmcexfun.r")
+library(xtable)
+library(coda)
+@
+
+\section{Results}
+
+<<tablesetup, echo=FALSE, cache=TRUE>>=
+load("../scors.Rdata")
+cnam <- colnames(scors[[2]][[1]])
+rnam <- rownames(scors[[2]][[1]])
+rm(scors)
+algn <- paste(paste("l",paste(rep("r",length(rnam)), collapse=""), sep=""),"", sep="")
+load("../statsam.RData")
+sVeff <- list()
+sWeff <- list()
+sTHeff <- list()
+Ts <- c(10, 100, 1000)
+for(ts in 1:3){
+  sVeff[[ts]] <- matrix(0,6,6)
+  sWeff[[ts]] <- matrix(0,6,6)
+  rownames(sVeff[[ts]]) <- rnam
+  colnames(sVeff[[ts]]) <- cnam
+  rownames(sWeff[[ts]]) <- rnam
+  colnames(sWeff[[ts]]) <- cnam
+  sTHeff[[ts]] <- array(0, dim=c(6,6,Ts[ts]+1))
+  for(vs in 1:6){
+    for(ws in 1:6){
+      sefftemp <- effectiveSize(ssam[[ts]][[vs]][[ws]])
+      sVeff[[ts]][vs,ws] <- sefftemp[ Ts[ts] + 2]
+      sWeff[[ts]][vs,ws] <- sefftemp[ Ts[ts] + 3]
+      sTHeff[[ts]][vs, ws, ] <- sefftemp[1:(Ts[ts]+1)]
+    }
+  }
+}
+rm(ssam)
+load("../distsam.RData")
+dVeff <- list()
+dWeff <- list()
+dTHeff <- list()
+for(ts in 1:3){
+  dVeff[[ts]] <- matrix(0,6,6)
+  dWeff[[ts]] <- matrix(0,6,6)
+  rownames(dVeff[[ts]]) <- rnam
+  colnames(dVeff[[ts]]) <- cnam
+  rownames(dWeff[[ts]]) <- rnam
+  colnames(dWeff[[ts]]) <- cnam
+  dTHeff[[ts]] <- array(0, dim=c(6,6,Ts[ts]+1))
+  for(vs in 1:6){
+    for(ws in 1:6){
+      defftemp <- effectiveSize(dsam[[ts]][[vs]][[ws]])
+      dVeff[[ts]][vs,ws] <- defftemp[ Ts[ts] + 2]
+      dWeff[[ts]][vs,ws] <- defftemp[ Ts[ts] + 3]
+      dTHeff[[ts]][vs, ws, ] <- defftemp[1:(Ts[ts]+1)]
+    }
+  }
+}
+rm(dsam)
+load("../errorsam.RData")
+eVeff <- list()
+eWeff <- list()
+eTHeff <- list()
+Ts <- c(10, 100, 1000)
+for(ts in 1:3){
+  eVeff[[ts]] <- matrix(0,6,6)
+  eWeff[[ts]] <- matrix(0,6,6)
+  rownames(eVeff[[ts]]) <- rnam
+  colnames(eVeff[[ts]]) <- cnam
+  rownames(eWeff[[ts]]) <- rnam
+  colnames(eWeff[[ts]]) <- cnam
+  eTHeff[[ts]] <- array(0, dim=c(6,6,Ts[ts]+1))
+  for(vs in 1:6){
+    for(ws in 1:6){
+      eefftemp <- effectiveSize(esam[[ts]][[vs]][[ws]])
+      eVeff[[ts]][vs,ws] <- eefftemp[ Ts[ts] + 2]
+      eWeff[[ts]][vs,ws] <- eefftemp[ Ts[ts] + 3]
+      eTHeff[[ts]][vs, ws, ] <- eefftemp[1:(Ts[ts]+1)]
+    }
+  }
+}
+rm(esam)
+scors <- list(sTHeff, sVeff, sWeff)
+dcors <- list(dTHeff, dVeff, dWeff)
+ecors <- list(eTHeff, eVeff, eWeff)
+@
+
+
+\subsection{Results for $(V,W)$}
+
+Table \ref{tableVWT10} shows the effective sample size for $V$ and $W$
+for all three samplers in all of the fitted models for $T=10$, while
+Table \ref{tableVWT100} shows the effective sample size for $T=100$
+and Table \ref{tableVWT1000} shows the effective sample size for
+$T=1000$. Note that the actual sample size is $n=1500$, so an
+effective sample size of $1500$ indicates that estimating the standard
+error of the mean of the given parameter is like assuming that the
+chain is independent. We see essentially the same results for
+effective sample size as we did for first order autocorrelation. The
+state sampler has high effective sample size for $V$ when the
+signal-to-noise ratio ($W/V$) is above 1 and low effective sample size
+for $W$ when the ratio is below 1, while it has a {\it low} effective
+sample size for $W$ when the ratio is {\it above} 1 and a high
+effective sample size for $W$ when the ratio is below 1. When the
+signal-to-noise ratio is near 1, the effective sample size for both
+$V$ and $W$ is tolerable though as $T$ increases the effective sample
+size appears to decrease.
+
+Looking at the scaled disturbance sampler, we see high effective
+sample sizes for both $V$ and $W$ when the signal-to-noise ratio is
+large, and low effective sample sizes for both $V$ and $W$ when the
+signal-to-noise ratio is small. The scaled error sampler has the exact
+opposite result: large effective sample sizes for small
+signal-to-noise ratios and small effective sample sizes for large
+signal-to-noise ratios.
+
+Figures \ref{stateplot}, \ref{distplot}, and \ref{errorplot} contain
+plots of effective sample size vs. $T$ (length of the time series) in order
+to illustrate the behavior as $T$ changes. Figure \ref{stateplot}
+contains the plots for the state sampler, Figure \ref{distplot}
+contains the plots for the scaled disturbance sampler, and Figure
+\ref{errorplot} contains the plots for the scaled error sampler. The
+basic trend as $T$
+increases becomes apparent --- increasing $T$ seems to decrease the
+effective sample size in the sampler for both variables.
+
+%V,W tables for T=10
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10Vs, echo=FALSE, results='asis'>>=
+sclbx <- 0.79
+dig <- 0
+T10Vs <- xtable(scors[[2]][[1]], digit=dig, align=algn)
+print(T10Vs,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10Ws, echo=FALSE, results='asis'>>=
+T10Ws <- xtable(scors[[3]][[1]], digit=dig, align=algn)
+print(T10Ws,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10Vd, echo=FALSE, results='asis'>>=
+T10Vd <- xtable(dcors[[2]][[1]], digit=dig, align=algn)
+print(T10Vd,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10Wd, echo=FALSE, results='asis'>>=
+T10Wd <- xtable(dcors[[3]][[1]], digit=dig, align=algn)
+print(T10Wd,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10Ve, echo=FALSE, results='asis'>>=
+T10Ve <- xtable(ecors[[2]][[1]], digit=dig, align=algn)
+print(T10Ve,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in Scaled Error Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10We, echo=FALSE, results='asis'>>=
+T10We <- xtable(ecors[[3]][[1]], digit=dig, align=algn)
+print(T10We,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in Scaled Error Sampler}
+\end{minipage}
+\caption{Effective sample size in posterior sampler for a time series of
+  length $T=10$ for $V$ and $W$ and for the state, scaled
+  disturbance, and scaled error samplers. Row and column names
+  indicate the true values of $W$ and $V$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  across any diagonal. Also note that the actual sample size, after
+  burn in, is $1500$. }
+\label{tableVWT10}
+\end{table}
+
+%V,W tables for T=100
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100Vs, echo=FALSE, results='asis'>>=
+T100Vs <- xtable(scors[[2]][[2]], digit=dig, align=algn)
+print(T100Vs,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100Ws, echo=FALSE, results='asis'>>=
+T100Ws <- xtable(scors[[3]][[2]], digit=dig, align=algn)
+print(T100Ws,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100Vd, echo=FALSE, results='asis'>>=
+T100Vd <- xtable(dcors[[2]][[2]], digit=dig, align=algn)
+print(T100Vd,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100Wd, echo=FALSE, results='asis'>>=
+T100Wd <- xtable(dcors[[3]][[2]], digit=dig, align=algn)
+print(T100Wd,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100Ve, echo=FALSE, results='asis'>>=
+T100Ve <- xtable(ecors[[2]][[2]], digit=dig, align=algn)
+print(T100Ve,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in Scaled Error Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100We, echo=FALSE, results='asis'>>=
+T100We <- xtable(ecors[[3]][[2]], digit=dig, align=algn)
+print(T100We,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in Scaled Error Sampler}
+\end{minipage}
+\caption{Effective sample size in posterior sampler for a time series of
+  length $T=100$ for $V$ and $W$ and for the state, scaled
+  disturbance, and scaled error samplers. Row and column names
+  indicate the true values of $W$ and $V$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  across any diagonal. Also note that the actual sample size, after
+  burn in, is $1500$.}
+\label{tableVWT100}
+\end{table}
+
+%V,W tables for T=1000
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000Vs, echo=FALSE, results='asis'>>=
+T1000Vs <- xtable(scors[[2]][[3]], digit=dig, align=algn)
+print(T1000Vs,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000Ws, echo=FALSE, results='asis'>>=
+T1000Ws <- xtable(scors[[3]][[3]], digit=dig, align=algn)
+print(T1000Ws,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000Vd, echo=FALSE, results='asis'>>=
+T1000Vd <- xtable(dcors[[2]][[3]], digit=dig, align=algn)
+print(T1000Vd,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000Wd, echo=FALSE, results='asis'>>=
+T1000Wd <- xtable(dcors[[3]][[3]], digit=dig, align=algn)
+print(T1000Wd,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000Ve, echo=FALSE, results='asis'>>=
+T1000Ve <- xtable(ecors[[2]][[3]], digit=dig, align=algn)
+print(T1000Ve,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{V in Scaled Error Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000We, echo=FALSE, results='asis'>>=
+T1000We <- xtable(ecors[[3]][[3]], digit=dig, align=algn)
+print(T1000We,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{W in Scaled Error Sampler}
+\end{minipage}
+\caption{Effective sample size in posterior sampler for a time series of
+  length $T=1000$ for $V$ and $W$ and for the state, scaled
+  disturbance, and scaled error samplers. Row and column names
+  indicate the true values of $W$ and $V$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  across any diagonal. Also note that the actual sample size, after
+  burn in, is $1500$. }
+\label{tableVWT1000}
+\end{table}
+
+<<corrplots, echo=FALSE>>=
+library(ggplot2)
+plotdat <- data.frame(corr=0, sampler=0, variable=0, T=0, V=0, W=0)
+k <- 1
+Ts <- c(10, 100, 1000)
+Vs <- c(0.01, 0.1, 1, 10, 100, 1000)
+Ws <- Vs
+for(i in 1:6){
+  for(j in 1:6){
+    for(t in 1:3){
+      plotdat[k,] <- c(scors[[2]][[t]][i,7-j], "state", "V", Ts[t], rnam[i], cnam[7-j])
+      k <- k+1
+      plotdat[k,] <- c(scors[[3]][[t]][i,7-j], "state", "W", Ts[t], rnam[i], cnam[7-j])
+      k <- k+1
+      plotdat[k,] <- c(dcors[[2]][[t]][i,7-j], "dist", "V", Ts[t], rnam[i], cnam[7-j])
+      k <- k+1
+      plotdat[k,] <- c(dcors[[3]][[t]][i,7-j], "dist", "W", Ts[t], rnam[i], cnam[7-j])
+      k <- k+1
+      plotdat[k,] <- c(ecors[[2]][[t]][i,7-j], "error", "V", Ts[t], rnam[i], cnam[7-j])
+      k <- k+1
+      plotdat[k,] <- c(ecors[[3]][[t]][i,7-j], "error", "W", Ts[t], rnam[i], cnam[7-j])
+      k <- k+1
+    }
+  }
+}
+plotdat$corr <- as.numeric(plotdat$corr)
+plotdat$T <- as.numeric(plotdat$T)
+@
+
+\begin{figure}[htb]
+  \centering
+<<stateplot, echo=FALSE>>=
+m <- qplot(T, corr, data=plotdat[plotdat$sampler=="state",], facets=V~W, color=variable, geom="line", size=I(1), log="x", ylab="Effective Sample Size", main="State Sampler")
+m +
+    theme(axis.text.x = element_text(angle = 90, vjust=0.45))
+## + scale_y_continuous( breaks=c(0, 450, 900, 1350, 1800))
+@
+\caption{Plot of effective sample size vs. length of time series ($T$) for
+  the State Sampler. Across a diagonal, the signal-to-noise ratio
+  ($W/V$) is constant. Note that when the signal-to-noise ratio is
+  high, $W$ has low effective sample size and $V$ has high effective
+  sampler size and when the signal-to-noise ratio is low, $V$ has low
+  effective sample size and $W$ has high effective sampler size. When the
+  signal-to-noise ratio is near 1, both $V$ and $W$ have moderate to
+  low effective sample size. Also note that increasing $T$ seems to decrease
+  effective sample size for both $W$ and $V$.}
+\label{stateplot}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<distplot, echo=FALSE>>=
+m <- qplot(T, corr, data=plotdat[plotdat$sampler=="dist",], facets=V~W, color=variable, geom="line", size=I(1), log="x", ylab="Effective Sample Size", main="Scaled Disturbance Sampler")
+m +
+    theme(axis.text.x = element_text(angle = 90, vjust=0.45))
+## + scale_y_continuous( breaks=c(0, 450, 900, 1350, 1800))
+@
+\caption{Plot of effective sample size vs. length of time series ($T$) for
+  the Scaled Disturbance Sampler. Across a diagonal, the signal-to-noise ratio
+  ($W/V$) is constant. Note that when the signal-to-noise ratio is
+  low, both $V$ and $W$ have low effective sample size and when the
+  signal-to-noise ratio is high, both $V$ and $W$ have high effective
+  sample size. Also note   that increasing $T$ seems to decrease
+  effective sample size for both $W$ and $V$.}
+\caption{Plot of autocorrelations vs. length of time series ($T$) for
+  the Scaled Disturbance Sampler. Across a diagonal, the signal-to-noise ratio
+  ($W/V$) is constant. Note that when the signal-to-noise ratio is
+  high, both $V$ and $W$ have low autocorrelation and when the signal-to-noise
+  ratio is low, both $V$ and $W$ have high autocorrelation. Also note
+  that increasing $T$ seems to increase autocorrelation for both $W$
+  and $V$.}
+\label{distplot}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<errorplot, echo=FALSE>>=
+m <- qplot(T, corr, data=plotdat[plotdat$sampler=="error",], facets=V~W, color=variable, geom="line", size=I(1), log="x", ylab="Effective Sample Size", main="Scaled Error Sampler")
+m  +
+    theme(axis.text.x = element_text(angle = 90, vjust=0.45))
+## + scale_y_continuous( breaks=c(0, 450, 900, 1350, 1800))
+@
+\caption{Plot of effective sample size vs. length of time series ($T$) for
+  the Scaled Error Sampler. Across a diagonal, the signal-to-noise ratio
+  ($W/V$) is constant. Note that when the signal-to-noise ratio is
+  high, both $V$ and $W$ have low effective sample size and when the
+  signal-to-noise ratio is low, both $V$ and $W$ have high effective
+  sample size. Also note   that increasing $T$ seems to decrease
+  effective sample size for both $W$ and $V$.}
+\label{errorplot}
+\end{figure}
+
+
+\subsection{Results for the $\theta$'s}
+<<maxcor, echo=FALSE>>=
+mscor <- round(min(scors[[1]][[1]], scors[[1]][[2]], scors[[1]][[3]]),2)
+mdcor <- round(min(dcors[[1]][[1]], dcors[[1]][[2]], dcors[[1]][[3]]),2)
+mecor <- round(min(ecors[[1]][[1]], ecors[[1]][[2]], ecors[[1]][[3]]),2)
+@
+
+We can do the same thing for some of the $\theta$'s. Tables
+\ref{tableTHT10}, \ref{tableTHT100}, and \ref{tableTHT1000} contain the
+effective sample size for $\theta_0$ and $\theta_{T}$, for
+$T=10$, $T=100$, and $T=1000$ respectively. Once again we see the same
+thing for effective sample size as we did for first order
+autocorrelation: the effective sample size for the $\theta$'s is
+always large and doesn't seem to depend on the true parameter values,
+the posterior sampler, or the length of the time series. The minimum
+effective sample size for any of the states in any of the fitted
+models for the the state sampler is \Sexpr{mscor}. Likewise for the
+scaled disturbance sampler the minimum effective sample size is
+\Sexpr{mdcor} and the for scaled error sampler the minimum effective
+sample size is \Sexpr{mecor}. So when looking at effective sample
+size, we see that for some $\theta$'s some of the time, there can be
+some persistence in the chain, but it isn't necessarily a large problem.
+
+%Theta tables for T=10
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10TH0s, echo=FALSE, results='asis'>>=
+sTH0T10 <- scors[[1]][[1]][,,1]
+rownames(sTH0T10) <- rnam
+colnames(sTH0T10) <- cnam
+TH0T10s <- xtable(sTH0T10, digit=dig, align=algn)
+print(TH0T10s,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10THTs, echo=FALSE, results='asis'>>=
+sTHTT10 <- scors[[1]][[1]][,,10+1]
+rownames(sTHTT10) <- rnam
+colnames(sTHTT10) <- cnam
+THTT10s <- xtable(sTHTT10, digit=dig, align=algn)
+print(THTT10s,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_T$ in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10TH0d, echo=FALSE, results='asis'>>=
+dTH0T10 <- dcors[[1]][[1]][,,1]
+rownames(dTH0T10) <- rnam
+colnames(dTH0T10) <- cnam
+TH0T10d <- xtable(dTH0T10, digit=dig, align=algn)
+print(TH0T10d,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10THTd, echo=FALSE, results='asis'>>=
+dTHTT10 <- dcors[[1]][[1]][,,10+1]
+rownames(dTHTT10) <- rnam
+colnames(dTHTT10) <- cnam
+THTT10d <- xtable(dTHTT10, digit=dig, align=algn)
+print(THTT10d,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_T$ in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10TH0e, echo=FALSE, results='asis'>>=
+eTH0T10 <- ecors[[1]][[1]][,,1]
+rownames(eTH0T10) <- rnam
+colnames(dTH0T10) <- cnam
+TH0T10e <- xtable(eTH0T10, digit=dig, align=algn)
+print(TH0T10e,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in Scaled Error Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10THTe, echo=FALSE, results='asis'>>=
+eTHTT10 <- ecors[[1]][[1]][,,10+1]
+rownames(eTHTT10) <- rnam
+colnames(eTHTT10) <- cnam
+THTT10e <- xtable(eTHTT10, digit=dig, align=algn)
+print(THTT10e,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_T$ in Scaled Error Sampler}
+\end{minipage}
+\caption{Effective sample size in posterior sampler for a time series of
+  length $T=10$ for $\theta_0$ and $\theta_T$ for the state, scaled
+  disturbance, and scaled error samplers. Row and column names indicate
+  the true values of $W$ and $V$ respectively for the simulated
+  data. Note that the signal-to-noise ratio is constant across any
+  diagonal. Also note that the actual sample size, after burn in, is
+  $1500$. }
+\label{tableTHT10}
+\end{table}
+
+%Theta tables for T=100
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100TH0s, echo=FALSE, results='asis'>>=
+sTH0T100 <- scors[[1]][[2]][,,1]
+rownames(sTH0T100) <- rnam
+colnames(sTH0T100) <- cnam
+TH0T100s <- xtable(sTH0T100, digit=dig, align=algn)
+print(TH0T100s,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100THTs, echo=FALSE, results='asis'>>=
+sTHTT100 <- scors[[1]][[2]][,,100+1]
+rownames(sTHTT100) <- rnam
+colnames(sTHTT100) <- cnam
+THTT100s <- xtable(sTHTT100, digit=dig, align=algn)
+print(THTT100s,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_T$ in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100TH0d, echo=FALSE, results='asis'>>=
+dTH0T100 <- dcors[[1]][[2]][,,1]
+rownames(dTH0T100) <- rnam
+colnames(dTH0T100) <- cnam
+TH0T100d <- xtable(dTH0T100, digit=dig, align=algn)
+print(TH0T100d,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100THTd, echo=FALSE, results='asis'>>=
+dTHTT100 <- dcors[[1]][[2]][,,100+1]
+rownames(dTHTT100) <- rnam
+colnames(dTHTT100) <- cnam
+THTT100d <- xtable(dTHTT100, digit=dig, align=algn)
+print(THTT100d,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_T$ in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100TH0e, echo=FALSE, results='asis'>>=
+eTH0T100 <- ecors[[1]][[2]][,,1]
+rownames(eTH0T100) <- rnam
+colnames(dTH0T100) <- cnam
+TH0T100e <- xtable(eTH0T100, digit=dig, align=algn)
+print(TH0T100e,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in Scaled Error Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100THTe, echo=FALSE, results='asis'>>=
+eTHTT100 <- ecors[[1]][[2]][,,100+1]
+rownames(eTHTT100) <- rnam
+colnames(eTHTT100) <- cnam
+THTT100e <- xtable(eTHTT100, digit=dig, align=algn)
+print(THTT100e,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_T$ in Scaled Error Sampler}
+\end{minipage}
+\caption{Effective sample size in posterior sampler for a time series of
+  length $T=100$ for $\theta_0$ and $\theta_T$ for the state, scaled
+  disturbance, and scaled error samplers. Row and column names indicate
+  the true values of $W$ and $V$ respectively for the simulated
+  data. Note that the signal-to-noise ratio is constant across any
+  diagonal. Also note that the actual sample size, after burn in, is
+  $1500$. }
+\label{tableTHT100}
+\end{table}
+
+
+%Theta tables for T=1000
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000TH0s, echo=FALSE, results='asis'>>=
+sTH0T1000 <- scors[[1]][[3]][,,1]
+rownames(sTH0T1000) <- rnam
+colnames(sTH0T1000) <- cnam
+TH0T1000s <- xtable(sTH0T1000, digit=dig, align=algn)
+print(TH0T1000s,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000THTs, echo=FALSE, results='asis'>>=
+sTHTT1000 <- scors[[1]][[3]][,,1000+1]
+rownames(sTHTT1000) <- rnam
+colnames(sTHTT1000) <- cnam
+THTT1000s <- xtable(sTHTT1000, digit=dig, align=algn)
+print(THTT1000s,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_T$ in State Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000TH0d, echo=FALSE, results='asis'>>=
+dTH0T1000 <- dcors[[1]][[3]][,,1]
+rownames(dTH0T1000) <- rnam
+colnames(dTH0T1000) <- cnam
+TH0T1000d <- xtable(dTH0T1000, digit=dig, align=algn)
+print(TH0T1000d,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000THTd, echo=FALSE, results='asis'>>=
+dTHTT1000 <- dcors[[1]][[3]][,,1000+1]
+rownames(dTHTT1000) <- rnam
+colnames(dTHTT1000) <- cnam
+THTT1000d <- xtable(dTHTT1000, digit=dig, align=algn)
+print(THTT1000d,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_T$ in Scaled Disturbance Sampler}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000TH0e, echo=FALSE, results='asis'>>=
+eTH0T1000 <- ecors[[1]][[3]][,,1]
+rownames(eTH0T1000) <- rnam
+colnames(dTH0T1000) <- cnam
+TH0T1000e <- xtable(eTH0T1000, digit=dig, align=algn)
+print(TH0T1000e,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_0$ in Scaled Error Sampler}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000THTe, echo=FALSE, results='asis'>>=
+eTHTT1000 <- ecors[[1]][[3]][,,1000+1]
+rownames(eTHTT1000) <- rnam
+colnames(eTHTT1000) <- cnam
+THTT1000e <- xtable(eTHTT1000, digit=dig, align=algn)
+print(THTT1000e,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{$\theta_T$ in Scaled Error Sampler}
+\end{minipage}
+\caption{Effective sample size in posterior sampler for a time series of
+  length $T=1000$ for $\theta_0$ and $\theta_T$ for the state, scaled
+  disturbance, and scaled error samplers. Row and column names indicate
+  the true values of $W$ and $V$ respectively for the simulated
+  data. Note that the signal-to-noise ratio is constant across any
+  diagonal. Also note that the actual sample size, after burn in, is $1500$.}
+\label{tableTHT1000}
+\end{table}
+
+\section{Correlation in the Posterior}
+
+Usually when a Gibbs sampler runs into trouble, it's because there's a
+large amount of dependence in the posterior between some of the
+parameters. Commonly, the solution is to transform the parameters into
+something that has less dependence and do the sampling on that scale
+before transforming back to the parameters of interest. Here we
+investigate this dependence.
+
+<<postcorr, cache=TRUE, echo=FALSE>>=
+Ts <- c(10, 100, 1000)
+Vs <- c(.01, .1, 1, 10, 100, 1000)
+Ws <- Vs
+set.seed(152893627)
+simdata <- list()
+for(k in 1:3){
+  T <- Ts[k]
+  simdata[[k]] <- list()
+  for(i in 1:6){
+    V <- Vs[i]
+    simdata[[k]][[i]] <- list()
+    for(j in 1:6){
+      W <- Ws[j]
+      simdata[[k]][[i]][[j]] <- llsim(T, V, W, 0, 1)
+    }
+  }
+}
+
+
+vwcors <- list()
+vthcors <- list()
+wthcors <- list()
+vgacors <- list()
+wgacors <- list()
+vpscors <- list()
+wpscors <- list()
+for(ts in 1:3){
+  vwcors[[ts]] <- matrix(0,6,6)
+  vthcors[[ts]] <- matrix(0,6,6)
+  wthcors[[ts]] <- matrix(0,6,6)
+  rownames(vwcors[[ts]]) <- rnam
+  colnames(vwcors[[ts]]) <- cnam
+  rownames(vthcors[[ts]]) <- rnam
+  colnames(vthcors[[ts]]) <- cnam
+  rownames(wthcors[[ts]]) <- rnam
+  colnames(wthcors[[ts]]) <- cnam
+  vgacors[[ts]] <- vthcors[[ts]]
+  wgacors[[ts]] <- vthcors[[ts]]
+  vpscors[[ts]] <- vthcors[[ts]]
+  wpscors[[ts]] <- vthcors[[ts]]
+  for(vs in 1:6){
+    for(ws in 1:6){
+      if(vs-ws==0){
+        ##load("../statsam.RData")
+        ##sam <- ssam[[ts]][[vs]][[ws]]
+        ##rm(ssam)
+      }
+      if(vs-ws > 0){
+        load("../distsam.RData")
+        sam <- dsam[[ts]][[vs]][[ws]]
+        rm(dsam)
+      }
+      if(vs-ws <= 0){
+        load("../errorsam.RData")
+        sam <- esam[[ts]][[vs]][[ws]]
+        rm(esam)
+      }
+      corstemp <- cor(sam)
+      vwcors[[ts]][vs,ws] <- corstemp[Ts[ts]+2, Ts[ts]+3]
+      mavth <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mivth <- min(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mawth <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+      miwth <- min(corstemp[-c(Ts[ts]+3, Ts[ts]+3), Ts[ts]+3])
+      vthcors[[ts]][vs,ws] <- c(mavth, mivth)[which.max(abs(c(mavth, mivth)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      wthcors[[ts]][vs,ws] <- c(mawth, miwth)[which.max(abs(c(mawth, miwth)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+      stat <- sam[,1:(Ts[ts]+1)]
+      V <- sam[,Ts[ts]+2]
+      W <- sam[,Ts[ts]+3]
+      gamm <- cbind(stat[,1], stat[,-1] - stat[,-(Ts[ts]+1)])/sqrt(W)
+      corstemp <- cor(cbind(gamm,V,W))
+      mavga <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mivga <- min(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mawga <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+      miwga <- min(corstemp[-c(Ts[ts]+3, Ts[ts]+3), Ts[ts]+3])
+      vgacors[[ts]][vs,ws] <- c(mavga, mivga)[which.max(abs(c(mavga, mivga)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      wgacors[[ts]][vs,ws] <- c(mawga, miwga)[which.max(abs(c(mawga, miwga)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+      y <- simdata[[ts]][[vs]][[ws]]
+      psi <- cbind(stat[,1], y-stat[,-1])/sqrt(V)
+      corstemp <- cor(cbind(psi,V,W))
+      mavps <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mivps <- min(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mawps <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+      miwps <- min(corstemp[-c(Ts[ts]+3, Ts[ts]+3), Ts[ts]+3])
+      vpscors[[ts]][vs,ws] <- c(mavps, mivps)[which.max(abs(c(mavps, mivps)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      wpscors[[ts]][vs,ws] <- c(mawps, miwps)[which.max(abs(c(mawps, miwps)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+    }
+  }
+}
+sclbox <- 0.79
+dig <- 4
+@
+
+
+
+
+Table \ref{tableMaxCorsVWTH} contains posterior correlations between
+the variance parameters ($V$ and $W$) and the states ($\theta$'s). In
+a given cell in the table is the maximum in magnitude correlation
+between either $V$ or $W$, depending on the table, and the states for
+the given true parameter values and given length of the time
+series. In other words, for $T=10$ when the true parameter values are
+$V=1$ and $W=1$, the largest correlation between $V$ and any of the
+states is $0.2053$. Using this rough measure of dependence between $V$
+or $W$ and the states, we see a rough pattern begin to
+emerge. Basically, when the signal-to-noise ratio is near 1, the
+maximum correlation between $V$ and the $\theta$'s tends to be higher
+and the same can be said for the maximum correlation between $W$ and
+the $\theta$'s. The difference isn't that that large though (on the order
+of about $0.3$ in the extremes) and there are certainly some exceptions. The
+``roughness'' of the relationship might be caused by estimating these
+correlations with only 1500 samples from the posterior. Note that when
+the signal-to-noise ratio is near 1 is when the autocorrelation and
+effective sample size problems are least bad, overall, in the state
+sampler. This is strange since it contradicts the conventional wisdom
+on when the gibbs sampler has issues.
+
+In Table \ref{tableMaxCorsVWGA} we have similar set of tables for the
+scaled disturbances, i.e the $\gamma$'s where
+$\gamma_0=\theta_0/\sqrt{W}$ and
+$\gamma_t=(\theta_t-\theta_{t-1})/\sqrt{W}$ for $t>0$. The maximum correlation
+between $V$ and the $\gamma$'s appears to follow a similar pattern as
+that of $V$ and the $\theta$'s --- it's largest, in magnitude, when
+the signal-to-noise ratio is near 1; though in this case whether the
+signal-to-noise ratio is  below or above 1 doesn't seem to
+matter. The correlation between $W$ and the $\gamma$'s is drastically
+different. Essentially it appears that smaller signal-to-noise ratios
+lead to larger maximum correlations, and overall the dependence
+between $W$ and the $\gamma$'s appears to be higher. This isn't too
+surprising given the nature of the transformation. Also note that when
+the dependence between $W$ and  the $\gamma$'s is high is precisely
+when the scaled disturbance sampler has issues (low signal-to-noise ratios).
+
+Finally Table \ref{tableMaxCorsVWGA} contains the same tables for the
+scaled errors, i.e. the $\psi$'s where $\psi_0=\theta_0/\sqrt{V}$ and
+$\psi_t=(y_y-\theta_t)/\sqrt{V}$ for $t>0$. The maximum correlation
+between $W$ and the $\psi$'s follows the same pattern we saw for $W$
+and the $theta$'s: it's higher (in magnitude) when the signal-to-noise
+ratio is near 1 and smaller away from 1, though the difference is a
+bit more stark this time. The maximum correlation between $V$ and the
+$\psi$'s tends to be high (in magnitude) when the signal-to-noise
+ratio is small --- similar to the pattern of correlations between $W$
+and the $\gamma$'s. However the correlations are a bit smaller in this cases.
+
+So we can sum up the dependence between the variance parameters and
+the states, scaled disturbances, and scaled errors thusly. The
+posterior correlation between $V$ and the $\theta$'s as well as between $W$ and
+the $\theta$'s is highest when the signal-to-noise ratio is close to
+1, though it's typically under 0.5. The posterior correlation between
+$V$ and the $\gamma$'s follows a similar pattern --- it's high when
+the signal-to-noise ratio is near 1, but otherwise it's low and it's
+typically less than 0.4. The posterior correlation between $W$ and the
+$\gamma$'s, however, is high when the signal-to-noise ratio is small,
+and it gets very high in the extreme cases: around 0.99. When we
+consider the $\psi$'s, the posterior correlation between $W$ and the
+$\psi$'s is, once again, high when the signal-to-noise ratio is near 1
+and small otherwise, though it get's near 0.6. The posterior
+correlation between $V$ and the $\psi$'s, however, is high when the
+signal-to-noise ratio is small and small otherwise, getting as high as
+about 0.5 typically.
+
+
+In Table \ref{tableCorsVW} we can see the posterior correlation
+between $V$ and $W$. We see the main basic pattern we've seen before:
+the correlation is high when the signal-to-noise ratio is near 1 and
+small otherwise, topping out at around 0.6. So in general, the
+correlation between the set of parameters is the highest when the
+signal-to-noise ratio is near 1 and smaller otherwise. The exception
+is if you transform the states into a scaled version of
+themselves. Then the transformed version of the states become
+correlated in the posterior with the thing you scaled with in low
+signal-to-noise cases. In the case of the scaled disturbances, we
+scaled by $\sqrt{W}$ so now $W$ and the scaled disturbances have a high
+correlation in low signal-to-noise cases. In the case of the scaled
+errors, we scaled by $\sqrt{V}$ so now $V$ and the scaled errors have
+a high correlation in low signal-to-noise cases. The variance
+uninvolved in the scaling, however, has roughly the same relationship
+with the transformed states as it had with the original states ---
+higher posterior correlation when the signal-to-noise ratio is near 1
+and low otherwise.
+
+% corr(v,theta) and corr(w,theta) tables
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10cVth, echo=FALSE, results='asis'>>=
+T10cVth <- xtable(vthcors[[1]], digit=dig, align=algn)
+print(T10cVth,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $V$
+  and the $\theta$'s for $T=10$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10cWth, echo=FALSE, results='asis'>>=
+T10cWth <- xtable(wthcors[[1]], digit=dig, align=algn)
+print(T10cWth,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $W$
+  and the $\theta$'s for $T=10$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100cVth, echo=FALSE, results='asis'>>=
+T100cVth <- xtable(vthcors[[2]], digit=dig, align=algn)
+print(T100cVth,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $V$
+  and the $\theta$'s for $T=100$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100cWth, echo=FALSE, results='asis'>>=
+T100cWth <- xtable(wthcors[[2]], digit=dig, align=algn)
+print(T100cWth,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $W$
+  and the $\theta$'s for $T=100$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000cVth, echo=FALSE, results='asis'>>=
+T1000cVth <- xtable(vthcors[[3]], digit=dig, align=algn)
+print(T1000cVth,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $V$
+  and the $\theta$'s for $T=1000$.}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000cWth, echo=FALSE, results='asis'>>=
+T1000cWth <- xtable(wthcors[[3]], digit=dig, align=algn)
+print(T1000cWth,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $W$
+  and the $\theta$'s for $T=1000$.}
+\end{minipage}
+\caption{Maximum magnitude of the correlation in the posterior between $V$ or $W$ and the
+  $\theta$'s. Note that the signal-to-noise ratio is constant across
+  any diagonal. }
+\label{tableMaxCorsVWTH}
+\end{table}
+
+% corr(v,gamma) and corr(w,gamma) tables
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10cVga, echo=FALSE, results='asis'>>=
+T10cVga <- xtable(vgacors[[1]], digit=dig, align=algn)
+print(T10cVga,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $V$
+  and the $\gamma$'s for $T=10$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10cWga, echo=FALSE, results='asis'>>=
+T10cWga <- xtable(wgacors[[1]], digit=dig, align=algn)
+print(T10cWga,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $W$
+  and the $\gamma$'s for $T=10$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100cVga, echo=FALSE, results='asis'>>=
+T100cVga <- xtable(vgacors[[2]], digit=dig, align=algn)
+print(T100cVga,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $V$
+  and the $\gamma$'s for $T=100$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100cWga, echo=FALSE, results='asis'>>=
+T100cWga <- xtable(wgacors[[2]], digit=dig, align=algn)
+print(T100cWga,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $W$
+  and the $\gamma$'s for $T=100$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000cVga, echo=FALSE, results='asis'>>=
+T1000cVga <- xtable(vgacors[[3]], digit=dig, align=algn)
+print(T1000cVth,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $V$
+  and the $\gamma$'s for $T=1000$.}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000cWga, echo=FALSE, results='asis'>>=
+T1000cWga <- xtable(wgacors[[3]], digit=dig, align=algn)
+print(T1000cWga,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $W$
+  and the $\gamma$'s for $T=1000$.}
+\end{minipage}
+\caption{Maximum magnitude of the correlation in the posterior between $V$ or $W$ and the
+  $\gamma$'s. Note that the signal-to-noise ratio is constant across
+  any diagonal. }
+\label{tableMaxCorsVWGA}
+\end{table}
+
+% corr(v,psi) and corr(w,psi) tables
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10cVps, echo=FALSE, results='asis'>>=
+T10cVps <- xtable(vpscors[[1]], digit=dig, align=algn)
+print(T10cVps,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $V$
+  and the $\psi$'s for $T=10$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT10cWps, echo=FALSE, results='asis'>>=
+T10cWps <- xtable(wpscors[[1]], digit=dig, align=algn)
+print(T10cWps,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $W$
+  and the $\psi$'s for $T=10$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100cVps, echo=FALSE, results='asis'>>=
+T100cVps <- xtable(vpscors[[2]], digit=dig, align=algn)
+print(T100cVps,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $V$
+  and the $\psi$'s for $T=100$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100cWps, echo=FALSE, results='asis'>>=
+T100cWps <- xtable(wpscors[[2]], digit=dig, align=algn)
+print(T100cWps,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $W$
+  and the $\psi$'s for $T=100$.}
+\vspace{.19 in}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000cVps, echo=FALSE, results='asis'>>=
+T1000cVps <- xtable(vpscors[[3]], digit=dig, align=algn)
+print(T1000cVps,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $V$
+  and the $\psi$'s for $T=1000$.}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000cWps, echo=FALSE, results='asis'>>=
+T1000cWps <- xtable(wpscors[[3]], digit=dig, align=algn)
+print(T1000cWps,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $W$
+  and the $\psi$'s for $T=1000$.}
+\end{minipage}
+\caption{Maximum magnitude of the correlation in the posterior between $V$ or $W$ and the
+  $\psi$'s. Note that the signal-to-noise ratio is constant across
+  any diagonal. }
+\label{tableMaxCorsVWPS}
+\end{table}
+
+% corr(v,w) tables, only for T=100 and T=1000
+\begin{table}[htb]
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT100cVW, echo=FALSE, results='asis'>>=
+T100cVW <- xtable(vwcors[[2]], digit=dig, align=algn)
+print(T100cVW,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $V$ and $W$ for $T=100$.}
+\end{minipage}
+\begin{minipage}{.5\textwidth}
+\centering
+<<tableT1000cVW, echo=FALSE, results='asis'>>=
+T1000cVW <- xtable(vwcors[[3]], digit=dig, align=algn)
+print(T1000cVW,
+  floating=FALSE,
+  hline.after=NULL,
+  scalebox=sclbx,
+  add.to.row=list(pos=list(-1,0, length(rnam)),
+  command=c('\\toprule\n','\\midrule\n','\\bottomrule\n')))
+@
+\captionof*{table}{Correlation between $V$ and $W$ for $T=1000$.}
+\end{minipage}
+\caption{Correlation between $V$ and $W$ in the posterior for various
+  true values of $V$ and $W$. Note that the signal-to-noise ratio is
+  constant across any diagonal. }
+\label{tableCorsVW}
+\end{table}
+
+
+\end{document}
