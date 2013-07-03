@@ -1,0 +1,211 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol}
+\usepackage[sc]{mathpazo}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{url}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false]
+ {hyperref}
+\hypersetup{
+ pdfstartview={XYZ null null 1}}
+\usepackage{breakurl}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{caption}
+\begin{document}
+
+% \SweaveOpts{fig.path='figure/', fig.align='center', fig.show='hold'}
+
+<<setup, include=FALSE, cache=FALSE>>=
+options(replace.assign=TRUE,width=90)
+@
+
+<<plotset, echo=FALSE>>=
+Ts <- c(10, 100, 1000)
+Vs <- c(1, 10, 100)
+Ws <- Vs
+ts <- 3
+@
+
+\title{Different Starting Values}
+
+
+\author{Matt Simpson}
+
+\maketitle
+
+In order to assess how well the various algorithms were mixing vs. how
+well they were converging, I restricted the set of true values of $V$
+and $W$ to all possible combinations of $1$, $10$, and $100$ (so a
+$3\times 3$ grid). I simulated a dataset for each possible pair
+$(V,W)$ above and fit the local linear model to the dataset using each
+sampler, 3 chains of size $n=2000$ from each sampler. Each chain was
+given different starting values --- one started high, one low, and one
+near the true values. I repeated this proces for time series lengths
+of $T=10,$ $100,$ and $1000$, but I'll focus on $T=1000$ below because
+the differences are more stark.
+
+Figure \ref{plotStateV} contains the trace plots for $log(V)$ from the
+state sampler. We see that for a signal-to-noise ratio at or below 1,
+convergence appears to be immediate and the chain mixes very
+quickly. Once the signal-to-noise ratio gets above 1, mixing slows
+down though convergence still happens pretty quickly. This is opposite
+of what the autocorrelations and effective sizes indicated --- $V$
+seemed to have less dependence in its chain when the signal-to-noise
+ratio was high. The story is similar for $log(W)$ in Figure
+\ref{plotStateW}. For signal-to-noise ratios at or above 1,
+convergence appears to happen immediately and the chain mixes
+quickly. For signal-to-noise ratios below 1, mixing slows down though
+convergence still happens very quickly.
+
+For the scaled disturbance sampler, we can look for Figure
+\ref{plotDistV} for the trace plots for $log(V)$. For low
+signal-to-noise ratios, the chain converges immediately and mixes
+quickly. As the signal-to-noise ratio increase convergece first
+slows down drastically while mixing appears unnaffected, then as the
+ratio increase mixing also slows down. In Figure \ref{plotDistW} we
+see something even more stark for $log(W)$. For very tiny signal-to-noise ratios
+mixing is quick and convergence happens immediately, but as the ratio
+increases both mixing and convergence quickly slow down to a
+crawl. Again, this is the opposite of the result we found we measures
+of dependence.
+
+Finally, Figures \ref{plotErrorV} and \ref{plotErrorW} contain the
+trace plots for $log(V)$ and $log(W)$ respectively for the scaled
+error sampler. Convergence happens immediately for $log(V)$ no matter
+what the parameter values are, though mixing slows down as the
+signal-to-noise ratio decreases. The same basic pattern seems to
+happen for $log(W)$ in the scaled error sampler --- convergence seems
+to occur essentially immediately for all parameter values tested, but
+mixing slows as the signal-to-noise ratio decreases. Once again, this
+is the ``opposite'' of the result we obtain when looking at simple measure
+of dependence where we found higher dependence when the
+signal-to-noise ratio was higher, though it should be said that this
+just shows that those results weren't informative in the way we
+thought they were.
+
+\begin{figure}[htb]
+  \centering
+<<SVtrplots, echo=FALSE>>=
+load("statsam.RData")
+
+par(mfrow=c(3,3))
+for(j in 1:3){
+  for(i in 1:3){
+    nam <- paste(paste("V=", Vs[i], sep=""), paste("W=", Ws[j], sep=""), sep=", ")
+    nam2 <- paste("True: ", nam, sep="")
+    plot(ts(log(ssam[[1]][[ts]][[i]][[j]][,Ts[ts]+2])), ylab="log(V)", xlab="time", main=nam2, ylim=c(log(Vs[i]/5), log(Vs[i]*5)))
+    lines(log(ssam[[2]][[ts]][[i]][[j]][,Ts[ts]+2]), col="red")
+    lines(log(ssam[[3]][[ts]][[i]][[j]][,Ts[ts]+2]), col="blue")
+  }
+}
+@
+\caption{Trace plots for $log(V)$ in the state sampler.}
+\label{plotStateV}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<SWtrplots, echo=FALSE>>=
+par(mfrow=c(3,3))
+for(j in 1:3){
+  for(i in 1:3){
+    nam <- paste(paste("V=", Vs[i], sep=""), paste("W=", Ws[j], sep=""), sep=", ")
+    nam2 <- paste("True: ", nam, sep="")
+    plot(ts(log(ssam[[1]][[ts]][[i]][[j]][,Ts[ts]+3])), ylab="log(W)", xlab="time", main=nam2, ylim=c(log(Ws[j]/5), log(Ws[j]*5)))
+    lines(log(ssam[[2]][[ts]][[i]][[j]][,Ts[ts]+3]), col="red")
+    lines(log(ssam[[3]][[ts]][[i]][[j]][,Ts[ts]+3]), col="blue")
+  }
+}
+rm(ssam)
+@
+\caption{Trace plots for $log(W)$ in the state sampler.}
+\label{plotStateW}
+\end{figure}
+
+
+\begin{figure}[htb]
+  \centering
+<<DVtrplots, echo=FALSE>>=
+load("distsam.RData")
+
+par(mfrow=c(3,3))
+for(j in 1:3){
+  for(i in 1:3){
+    nam <- paste(paste("V=", Vs[i], sep=""), paste("W=", Ws[j], sep=""), sep=", ")
+    nam2 <- paste("True: ", nam, sep="")
+    plot(ts(log(dsam[[1]][[ts]][[i]][[j]][,Ts[ts]+2])), ylab="log(V)", xlab="time", main=nam2, ylim=c(log(Vs[i]/5), log(Vs[i]*5)))
+    lines(log(dsam[[2]][[ts]][[i]][[j]][,Ts[ts]+2]), col="red")
+    lines(log(dsam[[3]][[ts]][[i]][[j]][,Ts[ts]+2]), col="blue")
+  }
+}
+@
+\caption{Trace plots for $log(V)$ in the scaled disturbance sampler.}
+\label{plotDistV}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<DWtrplots, echo=FALSE>>=
+par(mfrow=c(3,3))
+for(j in 1:3){
+  for(i in 1:3){
+    nam <- paste(paste("V=", Vs[i], sep=""), paste("W=", Ws[j], sep=""), sep=", ")
+    nam2 <- paste("True: ", nam, sep="")
+    plot(ts(log(dsam[[1]][[ts]][[i]][[j]][,Ts[ts]+3])), ylab="log(W)", xlab="time", main=nam2, ylim=c(log(Ws[j]/5), log(Ws[j]*5)))
+    lines(log(dsam[[2]][[ts]][[i]][[j]][,Ts[ts]+3]), col="red")
+    lines(log(dsam[[3]][[ts]][[i]][[j]][,Ts[ts]+3]), col="blue")
+  }
+}
+rm(dsam)
+@
+\caption{Trace plots for $log(W)$ in the scaled disturbance sampler.}
+\label{plotDistW}
+\end{figure}
+
+\begin{figure}[tb]
+  \centering
+<<EVtrplots, echo=FALSE>>=
+load("errorsam.RData")
+
+par(mfrow=c(3,3))
+for(j in 1:3){
+  for(i in 1:3){
+    nam <- paste(paste("V=", Vs[i], sep=""), paste("W=", Ws[j], sep=""), sep=", ")
+    nam2 <- paste("V, True: ", nam, sep="")
+    plot(ts(log(esam[[1]][[ts]][[i]][[j]][,Ts[ts]+2])), ylab="log(V)", xlab="time", main=nam2, ylim=c(log(Vs[i]/5), log(Vs[i]*5)))
+    lines(log(esam[[2]][[ts]][[i]][[j]][,Ts[ts]+2]), col="red")
+    lines(log(esam[[3]][[ts]][[i]][[j]][,Ts[ts]+2]), col="blue")
+  }
+}
+@
+\caption{Trace plots for $log(V)$ in the scaled error sampler.}
+\label{plotErrorV}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<EWtrplots, echo=FALSE>>=
+par(mfrow=c(3,3))
+for(j in 1:3){
+  for(i in 1:3){
+    nam <- paste(paste("V=", Vs[i], sep=""), paste("W=", Ws[j], sep=""), sep=", ")
+    nam2 <- paste("True: ", nam, sep="")
+    plot(ts(log(esam[[1]][[ts]][[i]][[j]][,Ts[ts]+3])), ylab="log(W)", xlab="time", main=nam2, ylim=c(log(Ws[j]/5), log(Ws[j]*5)))
+    lines(log(esam[[2]][[ts]][[i]][[j]][,Ts[ts]+3]), col="red")
+    lines(log(esam[[3]][[ts]][[i]][[j]][,Ts[ts]+3]), col="blue")
+  }
+}
+rm(esam)
+@
+\caption{Trace plots for $log(W)$ in the scaled error sampler.}
+\label{plotErrorW}
+\end{figure}
+
+\end{document}
