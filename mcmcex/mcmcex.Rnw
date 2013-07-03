@@ -72,20 +72,21 @@ states, hence the name. In detail, the algorithm is as follows.
 \begin{enumerate}
   \item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{1:T})$
     using FFBS
-  \item Simulate $V$ from $\pi(V|\theta_{0:T},W,y_{1:T})$:
+  \item Simulate $(V,W)$ from $\pi(V,W|\theta_{0:T},y_{1:T})$:
+    $V$ and $W$ are conditionally independent (conditional on
+    $\theta_{0:T},y_{1:T}$), with distributions
     \[
-    V|\theta_{0:T},W,y_{1:T} \sim IG(a_V, b_V)
+    V|\theta_{0:T},y_{1:T} \sim IG(a_V, b_V)
+    \]
+    \[
+    W|\theta_{0:T},y_{1:T} \sim IG(a_W, b_W)
     \]
     where
     \begin{align*}
       a_V =& \alpha_1 + T/2\\
       b_V = & \beta_1 + \sum_{t=1}^T(y_t-\theta_t)^2/2
     \end{align*}
-  \item Simulate $W$ from $\pi(W|\theta_{0:T},V,y_{1:T})$:
-    \[
-    W|\theta_{0:T},V,y_{1:T} \sim IG(a_W, b_W)
-    \]
-    where
+    and
     \begin{align*}
       a_W =& \alpha_2 + T/2\\
       b_W = & \beta_1 + \sum_{t=1}^T(\theta_t-\theta_{t-1})^2/2
