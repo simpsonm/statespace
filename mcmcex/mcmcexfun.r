@@ -5,7 +5,7 @@ library(coda)
 library(MCMCpack)
 library(ars)
 
-## a wraper for simulating from any of the interweaving/alternating
+## a wrapper for simulating from any of the interweaving/alternating
 ## functions quickly in a loop
 samwrapper <- function(n, start, dat, a1, a2, b1, b2, inter, samp){
   if(samp==1){

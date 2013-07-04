@@ -50,8 +50,8 @@ for(samp in 1:4){
   }
 }
 
-## first do the state sampler
-set.seed(1890)
+
+set.seed(16524536)
 for(samp in 1:4){
   for(int in 1:2){
     Vcors <- list()
@@ -83,7 +83,7 @@ for(samp in 1:4){
             b2 <- (a2-1)*W
             start <- c(V,W)*starts[ch]
             dat <- simdata[[k]][[i]][[j]]
-            tempsam <- samwrapper(n, start, dat, a1, a2, b1, b2, truth, samp)
+            tempsam <- samwrapper(n, start, dat, a1, a2, b1, b2, truth[int], samp)
             sam[[ch]][[k]][[i]][[j]] <- tempsam
             THcors[[ch]][[k]][i,j,] <- diag(acf(tempsam[,1:(T+1)], plot=FALSE, lag.max=1)$acf[2,,])
             Vcors[[ch]][[k]][i,j] <- acf(tempsam[,T+2], plot=FALSE, lag.max=1)$acf[2]
