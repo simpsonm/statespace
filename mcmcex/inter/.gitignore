@@ -1,0 +1,6 @@
+##ignore only in this folder##
+/cache
+/figure
+mcmcexinter.tex
+mcmcexinter.pdf
+*.Rdata

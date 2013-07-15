@@ -1,0 +1,10 @@
+
+
+
+
+
+
+samps <- c("sd", "se", "de", "tr")
+ints <- c("i", "a")
+cend <- "cors.RData"
+send <- "sam.RData"
