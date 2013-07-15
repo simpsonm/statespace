@@ -55,8 +55,10 @@ Interweaving and Alternating Samplers
 
 5. The state-error samplers always have good mixing and convergence for *V*.
 
-6. Notably, the state-error samplers appear to work well for *W* more often than the state-disturbance samplers work well for *V*, at least relative to the values of *R* we tend to expect.
+6. The state-error samplers appear to work well for *W* more often than the state-disturbance samplers work well for *V*, at least relative to the values of *R* we tend to expect.
 
-7. The dist-error samplers appear to always have good convergence and mixing for both *V* and *W*.
+7. Notably, both the state-error and state-disturbance samplers appear to work well for larger regions of the parameter space than any of the more basic samplers.
 
-8. The triple samplers appear identical to the dist-error samplers.
+8. The dist-error samplers appear to always have good convergence and mixing for both *V* and *W*.
+
+9. The triple samplers appear identical to the dist-error samplers.
