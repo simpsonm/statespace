@@ -51,10 +51,10 @@ for(ch in 1:chains){
     sWcors[[ch]][[k]] <- matrix(0, LVW, LVW)
     sTHcors[[ch]][[k]] <- array(0, dim=c(LVW, LVW, T+1))
     ssam[[ch]][[k]] <- list()
-    colnames(sVcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
-    colnames(sWcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
-    rownames(sVcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
-    rownames(sWcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
+    rownames(sVcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
+    rownames(sWcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
+    colnames(sVcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
+    colnames(sWcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
     for(i in 1:LVW){
       ssam[[ch]][[k]][[i]] <- list()
       V <- Vs[i]
@@ -99,10 +99,10 @@ for(ch in 1:chains){
     dWcors[[ch]][[k]] <- matrix(0, LVW, LVW)
     dTHcors[[ch]][[k]] <- array(0, dim=c(LVW, LVW, T+1))
     dsam[[ch]][[k]] <- list()
-    colnames(dVcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
-    colnames(dWcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
-    rownames(dVcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
-    rownames(dWcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
+    rownames(dVcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
+    rownames(dWcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
+    colnames(dVcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
+    colnames(dWcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
     for(i in 1:LVW){
       dsam[[ch]][[k]][[i]] <- list()
       V <- Vs[i]
@@ -147,10 +147,10 @@ for(ch in 1:chains){
     eWcors[[ch]][[k]] <- matrix(0, LVW, LVW)
     eTHcors[[ch]][[k]] <- array(0, dim=c(LVW, LVW, T+1))
     esam[[ch]][[k]] <- list()
-    colnames(eVcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
-    colnames(eWcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
-    rownames(eVcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
-    rownames(eWcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
+    rownames(eVcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
+    rownames(eWcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
+    colnames(eVcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
+    colnames(eWcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
     for(i in 1:LVW){
       esam[[ch]][[k]][[i]] <- list()
       V <- Vs[i]
@@ -176,3 +176,29 @@ save(ecors, file="ecors.RData")
 save(esam, file="errorsam.RData")
 rm(esam)
 
+
+#### code used to fix row and column names on correlations (not run)
+##load("ecors.RData")
+##load("scors.RData")
+##load("dcors.RData")
+##for(ch in 1:3){
+##  for(T in 1:3){
+##    rn <- colnames(ecors[[2]][[ch]][[T]])
+##    cn <- rownames(ecors[[2]][[ch]][[T]])
+##    colnames(ecors[[2]][[ch]][[T]]) <- cn
+##    colnames(ecors[[1]][[ch]][[T]]) <- cn
+##    rownames(ecors[[2]][[ch]][[T]]) <- rn
+##    rownames(ecors[[1]][[ch]][[T]]) <- rn
+##    colnames(scors[[2]][[ch]][[T]]) <- cn
+##    colnames(scors[[1]][[ch]][[T]]) <- cn
+##    rownames(scors[[2]][[ch]][[T]]) <- rn
+##    rownames(scors[[1]][[ch]][[T]]) <- rn
+##    colnames(dcors[[2]][[ch]][[T]]) <- cn
+##    colnames(dcors[[1]][[ch]][[T]]) <- cn
+##    rownames(dcors[[2]][[ch]][[T]]) <- rn
+##    rownames(dcors[[1]][[ch]][[T]]) <- rn
+##  }
+##}
+##save(scors, file="scors.RData")
+##save(dcors, file="dcors.RData")
+##save(ecors, file="ecors.RData")

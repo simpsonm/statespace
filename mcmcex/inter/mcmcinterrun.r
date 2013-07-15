@@ -15,7 +15,7 @@ a2 <- 5
 Vs <- c(1, 10, 100)
 LVW <- length(Vs)
 Ws <- Vs
-starts <- c(1/100, 1, 100)
+
 chains <- length(starts)
 
 set.seed(152893627)
@@ -69,10 +69,10 @@ for(samp in 1:4){
         Wcors[[ch]][[k]] <- matrix(0, LVW, LVW)
         THcors[[ch]][[k]] <- array(0, dim=c(LVW, LVW, T+1))
         sam[[ch]][[k]] <- list()
-        colnames(Vcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
-        colnames(Wcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
-        rownames(Vcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
-        rownames(Wcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
+        rownames(Vcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
+        rownames(Wcors[[ch]][[k]]) <- paste("V=", Vs, sep="")
+        colnames(Vcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
+        colnames(Wcors[[ch]][[k]]) <- paste("W=", Ws, sep="")
         for(i in 1:LVW){
           sam[[ch]][[k]][[i]] <- list()
           V <- Vs[i]

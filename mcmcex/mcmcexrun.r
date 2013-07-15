@@ -46,10 +46,10 @@ for(k in 1:LT){
   sTHcors[[k]] <- array(0, dim=c(LVW, LVW, T+1))
   ssam[[k]] <- list()
   stimes[[k]] <- list()
-  colnames(sVcors[[k]]) <- paste("V=", Vs, sep="")
-  colnames(sWcors[[k]]) <- paste("V=", Vs, sep="")
-  rownames(sVcors[[k]]) <- paste("W=", Ws, sep="")
-  rownames(sWcors[[k]]) <- paste("W=", Ws, sep="")
+  rownames(sVcors[[k]]) <- paste("V=", Vs, sep="")
+  rownames(sWcors[[k]]) <- paste("V=", Vs, sep="")
+  colnames(sVcors[[k]]) <- paste("W=", Ws, sep="")
+  colnames(sWcors[[k]]) <- paste("W=", Ws, sep="")
   for(i in 1:LVW){
     ssam[[k]][[i]] <- list()
     stimes[[k]][[i]] <- list()
@@ -94,10 +94,10 @@ for(k in 1:LT){
   dTHcors[[k]] <- array(0, dim=c(LVW, LVW, T+1))
   dsam[[k]] <- list()
   dtimes[[k]] <- list()
-  colnames(dVcors[[k]]) <- paste("V=", Vs, sep="")
-  colnames(dWcors[[k]]) <- paste("V=", Vs, sep="")
-  rownames(dVcors[[k]]) <- paste("W=", Ws, sep="")
-  rownames(dWcors[[k]]) <- paste("W=", Ws, sep="")
+  rownames(dVcors[[k]]) <- paste("V=", Vs, sep="")
+  rownames(dWcors[[k]]) <- paste("V=", Vs, sep="")
+  colnames(dVcors[[k]]) <- paste("W=", Ws, sep="")
+  colnames(dWcors[[k]]) <- paste("W=", Ws, sep="")
   for(i in 1:LVW){
     dsam[[k]][[i]] <- list()
     dtimes[[k]][[i]] <- list()
@@ -141,10 +141,10 @@ for(k in 1:LT){
   eTHcors[[k]] <- array(0, dim=c(LVW, LVW, T+1))
   esam[[k]] <- list()
   etimes[[k]] <- list()
-  colnames(eVcors[[k]]) <- paste("V=", Vs, sep="")
-  colnames(eWcors[[k]]) <- paste("V=", Vs, sep="")
-  rownames(eVcors[[k]]) <- paste("W=", Ws, sep="")
-  rownames(eWcors[[k]]) <- paste("W=", Ws, sep="")
+  rownames(eVcors[[k]]) <- paste("V=", Vs, sep="")
+  rownames(eWcors[[k]]) <- paste("V=", Vs, sep="")
+  colnames(eVcors[[k]]) <- paste("W=", Ws, sep="")
+  colnames(eWcors[[k]]) <- paste("W=", Ws, sep="")
   for(i in 1:LVW){
     esam[[k]][[i]] <- list()
     etimes[[k]][[i]] <- list()
@@ -173,3 +173,28 @@ save(esam, file="errorsam.RData")
 save(etimes, file="etimes.Rdata")
 rm(esam)
 
+
+
+## code used to fix row and column names on correlations (not run)
+##load("ecors.RData")
+##load("scors.RData")
+##load("dcors.RData")
+##for(T in 1:3){
+##  rn <- colnames(ecors[[2]][[T]])
+##  cn <- rownames(ecors[[2]][[T]])
+##  colnames(ecors[[2]][[T]]) <- cn
+##  colnames(ecors[[1]][[T]]) <- cn
+##  rownames(ecors[[2]][[T]]) <- rn
+##  rownames(ecors[[1]][[T]]) <- rn
+##  colnames(scors[[2]][[T]]) <- cn
+##  colnames(scors[[1]][[T]]) <- cn
+##  rownames(scors[[2]][[T]]) <- rn
+##  rownames(scors[[1]][[T]]) <- rn
+##  colnames(dcors[[2]][[T]]) <- cn
+##  colnames(dcors[[1]][[T]]) <- cn
+##  rownames(dcors[[2]][[T]]) <- rn
+##  rownames(dcors[[1]][[T]]) <- rn
+##}
+##save(scors, file="scors.RData")
+##save(dcors, file="dcors.RData")
+##save(ecors, file="ecors.RData")
