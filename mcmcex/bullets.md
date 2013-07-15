@@ -1,5 +1,4 @@
 Bullet Points
-
 =========
 
 This document is a short list of the basic findings of my simulations with the local level model. Through, *V* denotes the observational variance, *W* denotes the system variance, and *R=W/V$ denotes the signal-to-noise ratio.
