@@ -64,7 +64,7 @@ for(i in 1:3){
 }
 @
 
-<<plots, cach=TRUE, echo=FALSE>>=
+<<plots, cache=TRUE, echo=FALSE>>=
 T <- 3
 for(samp in 1:4){
   for(int in 2:1){
@@ -91,29 +91,58 @@ for(samp in 1:4){
 }
 @
 
+
+<<corrplots, echo=FALSE>>=
+cornam <- matrix(0, ncol=2, nrow=4)
+samps <- c("sd", "se", "de", "tr")
+sampsfull <- c("state-dist", "state-error", "dist-error", "triple")
+ints <- c("i", "a")
+intsfull <- c("interweave", "alternate")
+cend <- "cors.RData"
+for(samp in 1:4){
+  for(int in 1:2){
+    tnam <- paste(samps[samp], ints[int], sep="")
+    cornam[samp,int] <- paste(tnam, cend, sep="")
+  }
+}
+
+cordat <- data.frame(ACV=NULL, ACW=NULL, V=NULL, W=NULL, sam=NULL, inter=NULL)
+for(i in 1:4){
+  for(j in 1:2){
+    load(cornam[i,j])
+    V <- rep(c(1,10,100),3)
+    W <- c(rep(1,3), rep(10,3), rep(100,3))
+    ACV <- c(cors[[2]][[2]][[3]])
+    ACW <- c(cors[[3]][[2]][[3]])
+    cordat <- rbind(cordat, data.frame(ACV, ACW, V, W, sampsfull[i], intsfull[j]))
+  }
+}
+cordat$sam <- as.factor(cordat$sam)
+cordat$ints <- as.factor(cordat$ints)
+
+library(ggplot2)
+library(scales) #for muted
+
+ggplot(data=cordat, aes(x=log(W), y=log(V), fill=ACV)) +
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(sam~ints, scales="free") +
+    xlab("log(W)") + ylab("log(V)") + ggtitle("Autocorrelation for V")
+
+ggplot(data=cordat, aes(x=log(W), y=log(V), fill=ACW)) +
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(sam~ints, scales="free") +
+    xlab("log(W)") + ylab("log(V)") + ggtitle("Autocorrelation for W")
+@
+
 \end{document}
 
 <<testing>>=
-samp <- 1
-int <- 1
-T <- 3
-load(samnam[samp, int])
-load(cornam[samp, int])
-
-par(mfcol=c(3,3), oma=c(2,2,2,2))
-for(v in 1:3){
-  for(w in 1:3){
-    plot(ts(log(sam[[1]][[T]][[v]][[w]][,Ts[T] + 2])), ylim=log(starts[-2]*Vs[v]), main=mains[v,w], ylab="log(V)")
-    lines(log(sam[[2]][[T]][[v]][[w]][,Ts[T] + 2]), col="red")
-    lines(log(sam[[3]][[T]][[v]][[w]][,Ts[T] + 2]), col="blue")
-  }
-}
-title(main=paste(bignam[samp, int], " for V", sep=""), outer=TRUE)
-
-
-
-
-
 
 @
 
