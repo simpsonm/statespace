@@ -93,6 +93,7 @@ for(samp in 1:4){
 
 
 <<corrplots, echo=FALSE>>=
+
 cornam <- matrix(0, ncol=2, nrow=4)
 samps <- c("sd", "se", "de", "tr")
 sampsfull <- c("state-dist", "state-error", "dist-error", "triple")
@@ -106,38 +107,83 @@ for(samp in 1:4){
   }
 }
 
-cordat <- data.frame(ACV=NULL, ACW=NULL, V=NULL, W=NULL, sam=NULL, inter=NULL)
+Ts <- c(10, 100, 1000)
+cordat <- data.frame(ACV=NULL, ACW=NULL, V=NULL, W=NULL, sampler=NULL, type=NULL, T=NULL)
 for(i in 1:4){
   for(j in 1:2){
-    load(cornam[i,j])
-    V <- rep(c(1,10,100),3)
-    W <- c(rep(1,3), rep(10,3), rep(100,3))
-    ACV <- c(cors[[2]][[2]][[3]])
-    ACW <- c(cors[[3]][[2]][[3]])
-    cordat <- rbind(cordat, data.frame(ACV, ACW, V, W, sampsfull[i], intsfull[j]))
+    for(k in 1:3){
+      load(cornam[i,j])
+      V <- rep(c(1,10,100),3)
+      W <- c(rep(1,3), rep(10,3), rep(100,3))
+      ACV <- c(cors[[2]][[2]][[k]])
+      ACW <- c(cors[[3]][[2]][[k]])
+      cordat <- rbind(cordat, data.frame(ACV, ACW, V, W, sampler=sampsfull[i], type=intsfull[j], T=Ts[k]))
+    }
   }
 }
-cordat$sam <- as.factor(cordat$sam)
-cordat$ints <- as.factor(cordat$ints)
 
 library(ggplot2)
 library(scales) #for muted
 
-ggplot(data=cordat, aes(x=log(W), y=log(V), fill=ACV)) +
+ggplot(data=cordat[cordat$T==10,], aes(x=W, y=V, fill=ACV)) +
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
                          limits=c(-1,1), mid="white",
                          guide=guide_colorbar(barheight=20)) +
-    facet_grid(sam~ints, scales="free") +
-    xlab("log(W)") + ylab("log(V)") + ggtitle("Autocorrelation for V")
+    scale_x_log10(breaks=c(1, 10, 100)) + scale_y_log10(breaks=c(1, 10, 100)) +
+    facet_grid(sampler~type, scales="free", labeller=label_both) +
+    ggtitle("Autocorrelation for V, T=10")
 
-ggplot(data=cordat, aes(x=log(W), y=log(V), fill=ACW)) +
+
+ggplot(data=cordat[cordat$T==10,], aes(x=W, y=V, fill=ACW)) +
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
                          limits=c(-1,1), mid="white",
                          guide=guide_colorbar(barheight=20)) +
-    facet_grid(sam~ints, scales="free") +
-    xlab("log(W)") + ylab("log(V)") + ggtitle("Autocorrelation for W")
+    scale_x_log10(breaks=c(1, 10, 100)) + scale_y_log10(breaks=c(1, 10, 100)) +
+    facet_grid(sampler~type, scales="free", labeller=label_both) +
+    ggtitle("Autocorrelation for W, T=10")
+
+
+ggplot(data=cordat[cordat$T==100,], aes(x=W, y=V, fill=ACV)) +
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    scale_x_log10(breaks=c(1, 10, 100)) + scale_y_log10(breaks=c(1, 10, 100)) +
+    facet_grid(sampler~type, scales="free", labeller=label_both) +
+    ggtitle("Autocorrelation for V, T=100")
+
+
+ggplot(data=cordat[cordat$T==100,], aes(x=W, y=V, fill=ACW)) +
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    scale_x_log10(breaks=c(1, 10, 100)) + scale_y_log10(breaks=c(1, 10, 100)) +
+    facet_grid(sampler~type, scales="free", labeller=label_both) +
+    ggtitle("Autocorrelation for W, T=100")
+
+
+ggplot(data=cordat[cordat$T==1000,], aes(x=W, y=V, fill=ACV)) +
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    scale_x_log10(breaks=c(1, 10, 100)) + scale_y_log10(breaks=c(1, 10, 100)) +
+    facet_grid(sampler~type, scales="free", labeller=label_both) +
+    ggtitle("Autocorrelation for V, T=1000")
+
+
+ggplot(data=cordat[cordat$T==1000,], aes(x=W, y=V, fill=ACW)) +
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    scale_x_log10(breaks=c(1, 10, 100)) + scale_y_log10(breaks=c(1, 10, 100)) +
+    facet_grid(sampler~type, scales="free", labeller=label_both) +
+    ggtitle("Autocorrelation for W, T=1000")
+
 @
 
 \end{document}
