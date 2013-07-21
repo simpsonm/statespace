@@ -1,0 +1,679 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol}
+\usepackage[sc]{mathpazo}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+\usepackage{url}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=2,
+ breaklinks=false,pdfborder={0 0 1},backref=false,colorlinks=false]
+ {hyperref}
+\hypersetup{
+ pdfstartview={XYZ null null 1}}
+\usepackage{breakurl}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{caption}
+\begin{document}
+
+% \SweaveOpts{fig.path='figure/', fig.align='center', fig.show='hold'}
+
+<<setup, include=FALSE, cache=FALSE>>=
+options(replace.assign=TRUE,width=90)
+source("../mcmcexfun.r")
+library(xtable)
+library(coda)
+@
+
+\section{Results}
+
+<<tablesetup, echo=FALSE, cache=TRUE>>=
+
+load("../scors.Rdata")
+cnam <- colnames(scors[[2]][[1]])
+rnam <- rownames(scors[[2]][[1]])
+rm(scors)
+algn <- paste(paste("l",paste(rep("r",length(rnam)), collapse=""), sep=""),"", sep="")
+load("../statsam.RData")
+sVeff <- list()
+sWeff <- list()
+sTHeff <- list()
+Ts <- c(10, 100, 1000)
+for(ts in 1:3){
+  sVeff[[ts]] <- matrix(0,6,6)
+  sWeff[[ts]] <- matrix(0,6,6)
+  rownames(sVeff[[ts]]) <- rnam
+  colnames(sVeff[[ts]]) <- cnam
+  rownames(sWeff[[ts]]) <- rnam
+  colnames(sWeff[[ts]]) <- cnam
+  sTHeff[[ts]] <- array(0, dim=c(6,6,Ts[ts]+1))
+  for(vs in 1:6){
+    for(ws in 1:6){
+      sefftemp <- effectiveSize(ssam[[ts]][[vs]][[ws]])
+      sVeff[[ts]][vs,ws] <- sefftemp[ Ts[ts] + 2]
+      sWeff[[ts]][vs,ws] <- sefftemp[ Ts[ts] + 3]
+      sTHeff[[ts]][vs, ws, ] <- sefftemp[1:(Ts[ts]+1)]
+    }
+  }
+}
+rm(ssam)
+load("../distsam.RData")
+dVeff <- list()
+dWeff <- list()
+dTHeff <- list()
+for(ts in 1:3){
+  dVeff[[ts]] <- matrix(0,6,6)
+  dWeff[[ts]] <- matrix(0,6,6)
+  rownames(dVeff[[ts]]) <- rnam
+  colnames(dVeff[[ts]]) <- cnam
+  rownames(dWeff[[ts]]) <- rnam
+  colnames(dWeff[[ts]]) <- cnam
+  dTHeff[[ts]] <- array(0, dim=c(6,6,Ts[ts]+1))
+  for(vs in 1:6){
+    for(ws in 1:6){
+      defftemp <- effectiveSize(dsam[[ts]][[vs]][[ws]])
+      dVeff[[ts]][vs,ws] <- defftemp[ Ts[ts] + 2]
+      dWeff[[ts]][vs,ws] <- defftemp[ Ts[ts] + 3]
+      dTHeff[[ts]][vs, ws, ] <- defftemp[1:(Ts[ts]+1)]
+    }
+  }
+}
+rm(dsam)
+load("../errorsam.RData")
+eVeff <- list()
+eWeff <- list()
+eTHeff <- list()
+Ts <- c(10, 100, 1000)
+for(ts in 1:3){
+  eVeff[[ts]] <- matrix(0,6,6)
+  eWeff[[ts]] <- matrix(0,6,6)
+  rownames(eVeff[[ts]]) <- rnam
+  colnames(eVeff[[ts]]) <- cnam
+  rownames(eWeff[[ts]]) <- rnam
+  colnames(eWeff[[ts]]) <- cnam
+  eTHeff[[ts]] <- array(0, dim=c(6,6,Ts[ts]+1))
+  for(vs in 1:6){
+    for(ws in 1:6){
+      eefftemp <- effectiveSize(esam[[ts]][[vs]][[ws]])
+      eVeff[[ts]][vs,ws] <- eefftemp[ Ts[ts] + 2]
+      eWeff[[ts]][vs,ws] <- eefftemp[ Ts[ts] + 3]
+      eTHeff[[ts]][vs, ws, ] <- eefftemp[1:(Ts[ts]+1)]
+    }
+  }
+}
+rm(esam)
+seff <- list(sTHeff, sVeff, sWeff)
+deff <- list(dTHeff, dVeff, dWeff)
+eeff <- list(eTHeff, eVeff, eWeff)
+
+@
+
+
+\subsection{Results for $(V,W)$}
+
+Figure \ref{esplotT10} shows the effective sample size for $V$ and $W$
+for all three samplers in all of the fitted models for $T=10$, while
+Table \ref{esplotT100} shows the effective sample size for $T=100$
+and Table \ref{esplotT1000} shows the effective sample size for
+$T=1000$. Note that the actual sample size is $n=1500$, so an
+effective sample size of $1500$ indicates that estimating the standard
+error of the mean of the given parameter is like assuming that the
+chain is independent. We see essentially the same results for
+effective sample size as we did for first order autocorrelation. The
+state sampler has high effective sample size for $V$ when the
+signal-to-noise ratio ($W/V$) is below 1 and low effective sample size
+for $W$ when the ratio is below 1, while it has a {\it low} effective
+sample size for $W$ when the ratio is {\it above} 1 and a high
+effective sample size for $W$ when the ratio is below 1. When the
+signal-to-noise ratio is near 1, the effective sample size for both
+$V$ and $W$ is tolerable though as $T$ increases the effective sample
+size appears to decrease.
+
+Looking at the scaled disturbance sampler, we see high effective
+sample sizes for both $V$ and $W$ when the signal-to-noise ratio is
+small, and low effective sample sizes for both $V$ and $W$ when the
+signal-to-noise ratio is large. The scaled error sampler has the exact
+opposite result: large effective sample sizes for large
+signal-to-noise ratios and small effective sample sizes for small
+signal-to-noise ratios. For all three samplers, increasing the length
+of the time series ($T$) decreases the effective sample size.
+
+
+
+<<plotsetup, echo=FALSE>>=
+library(ggplot2)
+library(scales)
+cnam <- colnames(seff[[2]][[1]])
+rnam <- rownames(seff[[2]][[1]])
+Vs <- c(.01, .1, 1, 10, 100, 1000)
+Ws <- Vs
+Ts <- c(10, 100, 1000)
+effdat <- data.frame(ES=NULL, V=NULL, W=NULL, sampler=NULL, T=NULL, variable=NULL)
+for(i in 1:3){
+  effdat <- rbind(effdat,  data.frame(ES=c(seff[[2]][[i]]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="state", T=Ts[i], variable="V"))
+  effdat <- rbind(effdat,  data.frame(ES=c(seff[[3]][[i]]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="state", T=Ts[i], variable="W"))
+  effdat <- rbind(effdat,  data.frame(ES=c(deff[[2]][[i]]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="dist", T=Ts[i], variable="V"))
+  effdat <- rbind(effdat,  data.frame(ES=c(deff[[3]][[i]]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="dist", T=Ts[i], variable="W"))
+  effdat <- rbind(effdat,  data.frame(ES=c(eeff[[2]][[i]]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="error", T=Ts[i], variable="V"))
+  effdat <- rbind(effdat,  data.frame(ES=c(eeff[[3]][[i]]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="error", T=Ts[i], variable="W"))
+}
+@
+
+
+\begin{figure}[htb]
+  \centering
+<<esplotT10, echo=FALSE>>=
+ggplot(data=effdat[effdat$T==10,], aes(x=V, y=W, fill=ES)) + #$
+    geom_tile() +
+    scale_fill_gradient("EffSize", low=muted("red"), high="white",
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,1500), na.value="white") +
+    facet_grid(sampler~variable, scales="free", labeller=label_both) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle("Effective Sample Size for V and W, T=10") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+\caption{Effective sample size in posterior sampler for a time series
+  of length $T=10$ for $V$ and $W$ and for the state, scaled
+  disturbance, and scaled error samplers. $X$ and $Y$ axes
+  indicate the true values of $V$ and $W$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  moving up any diagonal. In the upper left the signal is high, in the
+  lower right the noise is high. Also note that the actual sample size
+  is $1500$.}
+\label{esplotT10}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<esplotT100, echo=FALSE>>=
+ggplot(data=effdat[effdat$T==100,], aes(x=V, y=W, fill=ES)) + #$
+    geom_tile() +
+    scale_fill_gradient("EffSize", low=muted("red"), high="white",
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,1500), na.value="white") +
+    facet_grid(sampler~variable, scales="free", labeller=label_both) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle("Effective Sample Size for V and W, T=100") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+\caption{Effective sample size in posterior sampler for a time series
+  of length $T=100$ for $V$ and $W$ and for the state, scaled
+  disturbance, and scaled error samplers. $X$ and $Y$ axes
+  indicate the true values of $V$ and $W$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  moving up any diagonal. In the upper left the signal is high, in the
+  lower right the noise is high. Also note that the actual sample size
+  is $1500$.}
+\label{esplotT100}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<esplotT1000, echo=FALSE>>=
+ggplot(data=effdat[effdat$T==1000,], aes(x=V, y=W, fill=ES)) + #$
+    geom_tile() +
+    scale_fill_gradient("EffSize", low=muted("red"), high="white",
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,1500), na.value="white") +
+    facet_grid(sampler~variable, scales="free", labeller=label_both) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle("Effective Sample Size for V and W, T=1000") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+\caption{Effective sample size in posterior sampler for a time series
+  of length $T=100$ for $V$ and $W$ and for the state, scaled
+  disturbance, and scaled error samplers. $X$ and $Y$ axes
+  indicate the true values of $V$ and $W$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  moving up any diagonal. In the upper left the signal is high, in the
+  lower right the noise is high. Also note that the actual sample size
+  is $1500$.}
+\label{esplotT1000}
+\end{figure}
+
+
+\subsection{Results for the $\theta$'s}
+<<maxcor, echo=FALSE>>=
+mseff <- round(min(seff[[1]][[1]], seff[[1]][[2]], seff[[1]][[3]]),2)
+mdeff <- round(min(deff[[1]][[1]], deff[[1]][[2]], deff[[1]][[3]]),2)
+meeff <- round(min(eeff[[1]][[1]], eeff[[1]][[2]], eeff[[1]][[3]]),2)
+thetaeffdat <- data.frame(AC=NULL, V=NULL, W=NULL, sampler=NULL, T=NULL, variable=NULL)
+for(i in 1:3){
+  thetaeffdat <- rbind(thetaeffdat, data.frame(ES=c(seff[[1]][[i]][,,1]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="state", T=Ts[i], variable="theta[0]"))
+  thetaeffdat <- rbind(thetaeffdat, data.frame(ES=c(seff[[1]][[i]][,,Ts[i] + 1]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="state", T=Ts[i], variable="theta[T]"))
+  thetaeffdat <- rbind(thetaeffdat, data.frame(ES=c(deff[[1]][[i]][,,1]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="dist", T=Ts[i], variable="theta[0]"))
+  thetaeffdat <- rbind(thetaeffdat, data.frame(ES=c(deff[[1]][[i]][,,Ts[i] + 1]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="dist", T=Ts[i], variable="theta[T]"))
+  thetaeffdat <- rbind(thetaeffdat, data.frame(ES=c(eeff[[1]][[i]][,,1]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="error", T=Ts[i], variable="theta[0]"))
+  thetaeffdat <- rbind(thetaeffdat, data.frame(ES=c(eeff[[1]][[i]][,,Ts[i] + 1]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="error", T=Ts[i], variable="theta[T]"))
+}
+library(plyr) ## needed for the following function to work
+
+## passed into ggplot functions to make facet labels have variable name
+## and math parsing.
+label_both_parsed <- function(variable, value){
+  llply(as.character(paste(variable, value, sep = ": ")), function(x) parse(text = x))
+}
+@
+
+We can do the same thing for some of the $\theta$'s. Tables
+\ref{tableTHT10}, \ref{tableTHT100}, and \ref{tableTHT1000} contain the
+effective sample size for $\theta_0$ and $\theta_{T}$, for
+$T=10$, $T=100$, and $T=1000$ respectively. Once again we see the same
+thing for effective sample size as we did for first order
+autocorrelation: the effective sample size for the $\theta$'s is
+always large and doesn't seem to depend on the true parameter values,
+the posterior sampler, or the length of the time series. The minimum
+effective sample size for any of the states in any of the fitted
+models for the the state sampler is \Sexpr{mscor}. Likewise for the
+scaled disturbance sampler the minimum effective sample size is
+\Sexpr{mdcor} and the for scaled error sampler the minimum effective
+sample size is \Sexpr{mecor}. So when looking at effective sample
+size, we see that for some $\theta$'s some of the time, there can be
+some persistence in the chain, but it isn't necessarily a large problem.
+
+
+\begin{figure}[htb]
+  \centering
+<<thetaplotT10, echo=FALSE>>=
+ggplot(data=thetaeffdat[thetaeffdat$T==10,], aes(x=V, y=W, fill=ES)) + #$
+    geom_tile() +
+    scale_fill_gradient("EffSize", low=muted("red"), high="white",
+                         guide=guide_colorbar(barheight=20),
+                        limits=c(0,1500), na.value="white") +
+    facet_grid(sampler~variable, scales="free",
+               labeller=label_both_parsed) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle(expression(paste("Effective Sample Size for ", theta[0], " and ", theta[T], ", T=10"))) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+\caption{Effective sample size in posterior sampler for a time series of
+  length $T=10$ for $\theta_0$ and $\theta_T$ and for the state, scaled
+  disturbance, and scaled error samplers. $X$ and $Y$ axes
+  indicate the true values of $V$ and $W$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  moving up any diagonal. In the upper left the signal is high, in the
+  lower right the noise is high. Also note that the actual sample size
+  is $1500$.}
+\label{thetaplotT10}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<thetaplotT100, echo=FALSE>>=
+ggplot(data=thetaeffdat[thetaeffdat$T==100,], aes(x=V, y=W, fill=ES)) + #$
+    geom_tile() +
+    scale_fill_gradient("EffSize", low=muted("red"), high="white",
+                        guide=guide_colorbar(barheight=20),
+                        limits=c(0,1500), na.value="white") +
+    facet_grid(sampler~variable, scales="free",
+               labeller=label_both_parsed) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle(expression(paste("Effective Sample Size for ", theta[0], " and ", theta[T], ", T=100"))) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+\caption{Effective sample size in posterior sampler for a time series of
+  length $T=100$ for $\theta_0$ and $\theta_T$ and for the state, scaled
+  disturbance, and scaled error samplers. $X$ and $Y$ axes
+  indicate the true values of $V$ and $W$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  moving up any diagonal. In the upper left the signal is high, in the
+  lower right the noise is high. Also note that the actual sample size
+  is $1500$.}
+\label{thetaplotT100}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<thetaplotT1000, echo=FALSE>>=
+ggplot(data=thetaeffdat[thetaeffdat$T==1000,], aes(x=V, y=W, fill=ES)) + #$
+    geom_tile() +
+    scale_fill_gradient("EffSize", low=muted("red"), high="white",
+                        guide=guide_colorbar(barheight=20),
+                        limits=c(0,1500), na.value="white") +
+    facet_grid(sampler~variable, scales="free",
+               labeller=label_both_parsed) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle(expression(paste("Effective Sample Size for ", theta[0], " and ", theta[T], ", T=1000"))) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+\caption{Effective sample size in posterior sampler for a time series of
+  length $T=100$ for $\theta_0$ and $\theta_T$ and for the state, scaled
+  disturbance, and scaled error samplers. $X$ and $Y$ axes
+  indicate the true values of $V$ and $W$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  moving up any diagonal. In the upper left the signal is high, in the
+  lower right the noise is high. Also note that the actual sample size
+  is $1500$.}
+\label{thetaplotT1000}
+\end{figure}
+
+
+\section{Correlation in the Posterior}
+
+Usually when a Gibbs sampler runs into trouble, it's because there's a
+large amount of dependence in the posterior between some of the
+parameters. Commonly, the solution is to transform the parameters into
+something that has less dependence and do the sampling on that scale
+before transforming back to the parameters of interest. Here we
+investigate this dependence.
+
+<<postcorr, cache=TRUE, echo=FALSE>>=
+Ts <- c(10, 100, 1000)
+Vs <- c(.01, .1, 1, 10, 100, 1000)
+Ws <- Vs
+set.seed(152893627)
+simdata <- list()
+for(k in 1:3){
+  T <- Ts[k]
+  simdata[[k]] <- list()
+  for(i in 1:6){
+    V <- Vs[i]
+    simdata[[k]][[i]] <- list()
+    for(j in 1:6){
+      W <- Ws[j]
+      simdata[[k]][[i]][[j]] <- llsim(T, V, W, 0, 1)
+    }
+  }
+}
+vwcors <- list()
+vthcors <- list()
+wthcors <- list()
+vgacors <- list()
+wgacors <- list()
+vpscors <- list()
+wpscors <- list()
+for(ts in 1:3){
+  vwcors[[ts]] <- matrix(0,6,6)
+  vthcors[[ts]] <- matrix(0,6,6)
+  wthcors[[ts]] <- matrix(0,6,6)
+  rownames(vwcors[[ts]]) <- rnam
+  colnames(vwcors[[ts]]) <- cnam
+  rownames(vthcors[[ts]]) <- rnam
+  colnames(vthcors[[ts]]) <- cnam
+  rownames(wthcors[[ts]]) <- rnam
+  colnames(wthcors[[ts]]) <- cnam
+  vgacors[[ts]] <- vthcors[[ts]]
+  wgacors[[ts]] <- vthcors[[ts]]
+  vpscors[[ts]] <- vthcors[[ts]]
+  wpscors[[ts]] <- vthcors[[ts]]
+  for(vs in 1:6){
+    for(ws in 1:6){
+      if(vs-ws==0){
+        ##load("../statsam.RData")
+        ##sam <- ssam[[ts]][[vs]][[ws]]
+        ##rm(ssam)
+      }
+      if(vs-ws > 0){
+        load("../distsam.RData")
+        sam <- dsam[[ts]][[vs]][[ws]]
+        rm(dsam)
+      }
+      if(vs-ws <= 0){
+        load("../errorsam.RData")
+        sam <- esam[[ts]][[vs]][[ws]]
+        rm(esam)
+      }
+      corstemp <- cor(sam)
+      vwcors[[ts]][vs,ws] <- corstemp[Ts[ts]+2, Ts[ts]+3]
+      mavth <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mivth <- min(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mawth <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+      miwth <- min(corstemp[-c(Ts[ts]+3, Ts[ts]+3), Ts[ts]+3])
+      vthcors[[ts]][vs,ws] <- c(mavth, mivth)[which.max(abs(c(mavth, mivth)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      wthcors[[ts]][vs,ws] <- c(mawth, miwth)[which.max(abs(c(mawth, miwth)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+      stat <- sam[,1:(Ts[ts]+1)]
+      V <- sam[,Ts[ts]+2]
+      W <- sam[,Ts[ts]+3]
+      gamm <- cbind(stat[,1], stat[,-1] - stat[,-(Ts[ts]+1)])/sqrt(W)
+      corstemp <- cor(cbind(gamm,V,W))
+      mavga <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mivga <- min(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mawga <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+      miwga <- min(corstemp[-c(Ts[ts]+3, Ts[ts]+3), Ts[ts]+3])
+      vgacors[[ts]][vs,ws] <- c(mavga, mivga)[which.max(abs(c(mavga, mivga)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      wgacors[[ts]][vs,ws] <- c(mawga, miwga)[which.max(abs(c(mawga, miwga)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+      y <- simdata[[ts]][[vs]][[ws]]
+      psi <- cbind(stat[,1], y-stat[,-1])/sqrt(V)
+      corstemp <- cor(cbind(psi,V,W))
+      mavps <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mivps <- min(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      mawps <- max(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+      miwps <- min(corstemp[-c(Ts[ts]+3, Ts[ts]+3), Ts[ts]+3])
+      vpscors[[ts]][vs,ws] <- c(mavps, mivps)[which.max(abs(c(mavps, mivps)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+2])
+      wpscors[[ts]][vs,ws] <- c(mawps, miwps)[which.max(abs(c(mawps, miwps)))]
+###mean(corstemp[-c(Ts[ts]+2, Ts[ts]+3), Ts[ts]+3])
+    }
+  }
+}
+@
+
+
+
+
+Table \ref{tableMaxCorsVWTH} contains posterior correlations between
+the variance parameters ($V$ and $W$) and the states ($\theta$'s). In
+a given cell in the table is the maximum in magnitude correlation
+between either $V$ or $W$, depending on the table, and the states for
+the given true parameter values and given length of the time
+series. In other words, for $T=10$ when the true parameter values are
+$V=1$ and $W=1$, the largest correlation between $V$ and any of the
+states is $0.2053$. Using this rough measure of dependence between $V$
+or $W$ and the states, we see a rough pattern begin to
+emerge. Basically, when the signal-to-noise ratio is near 1, the
+maximum correlation between $V$ and the $\theta$'s tends to be higher
+and the same can be said for the maximum correlation between $W$ and
+the $\theta$'s. The difference isn't that that large though (on the order
+of about $0.3$ in the extremes) and there are certainly some exceptions. The
+``roughness'' of the relationship might be caused by estimating these
+correlations with only 1500 samples from the posterior. Note that when
+the signal-to-noise ratio is near 1 is when the autocorrelation and
+effective sample size problems are least bad, overall, in the state
+sampler. This is strange since it contradicts the conventional wisdom
+on when the gibbs sampler has issues.
+
+In Table \ref{tableMaxCorsVWGA} we have similar set of tables for the
+scaled disturbances, i.e the $\gamma$'s where
+$\gamma_0=\theta_0/\sqrt{W}$ and
+$\gamma_t=(\theta_t-\theta_{t-1})/\sqrt{W}$ for $t>0$. The maximum correlation
+between $V$ and the $\gamma$'s appears to follow a similar pattern as
+that of $V$ and the $\theta$'s --- it's largest, in magnitude, when
+the signal-to-noise ratio is near 1; though in this case whether the
+signal-to-noise ratio is  below or above 1 doesn't seem to
+matter. The correlation between $W$ and the $\gamma$'s is drastically
+different. Essentially it appears that smaller signal-to-noise ratios
+lead to larger maximum correlations, and overall the dependence
+between $W$ and the $\gamma$'s appears to be higher. This isn't too
+surprising given the nature of the transformation. Also note that when
+the dependence between $W$ and  the $\gamma$'s is high is precisely
+when the scaled disturbance sampler has issues (low signal-to-noise ratios).
+
+Finally Table \ref{tableMaxCorsVWGA} contains the same tables for the
+scaled errors, i.e. the $\psi$'s where $\psi_0=\theta_0/\sqrt{V}$ and
+$\psi_t=(y_y-\theta_t)/\sqrt{V}$ for $t>0$. The maximum correlation
+between $W$ and the $\psi$'s follows the same pattern we saw for $W$
+and the $theta$'s: it's higher (in magnitude) when the signal-to-noise
+ratio is near 1 and smaller away from 1, though the difference is a
+bit more stark this time. The maximum correlation between $V$ and the
+$\psi$'s tends to be high (in magnitude) when the signal-to-noise
+ratio is small --- similar to the pattern of correlations between $W$
+and the $\gamma$'s. However the correlations are a bit smaller in this cases.
+
+So we can sum up the dependence between the variance parameters and
+the states, scaled disturbances, and scaled errors thusly. The
+posterior correlation between $V$ and the $\theta$'s as well as between $W$ and
+the $\theta$'s is highest when the signal-to-noise ratio is close to
+1, though it's typically under 0.5. The posterior correlation between
+$V$ and the $\gamma$'s follows a similar pattern --- it's high when
+the signal-to-noise ratio is near 1, but otherwise it's low and it's
+typically less than 0.4. The posterior correlation between $W$ and the
+$\gamma$'s, however, is high when the signal-to-noise ratio is small,
+and it gets very high in the extreme cases: around 0.99. When we
+consider the $\psi$'s, the posterior correlation between $W$ and the
+$\psi$'s is, once again, high when the signal-to-noise ratio is near 1
+and small otherwise, though it get's near 0.6. The posterior
+correlation between $V$ and the $\psi$'s, however, is high when the
+signal-to-noise ratio is small and small otherwise, getting as high as
+about 0.5 typically.
+
+
+In Table \ref{tableCorsVW} we can see the posterior correlation
+between $V$ and $W$. We see the main basic pattern we've seen before:
+the correlation is high when the signal-to-noise ratio is near 1 and
+small otherwise, topping out at around 0.6. So in general, the
+correlation between the set of parameters is the highest when the
+signal-to-noise ratio is near 1 and smaller otherwise. The exception
+is if you transform the states into a scaled version of
+themselves. Then the transformed version of the states become
+correlated in the posterior with the thing you scaled with in low
+signal-to-noise cases. In the case of the scaled disturbances, we
+scaled by $\sqrt{W}$ so now $W$ and the scaled disturbances have a high
+correlation in low signal-to-noise cases. In the case of the scaled
+errors, we scaled by $\sqrt{V}$ so now $V$ and the scaled errors have
+a high correlation in low signal-to-noise cases. The variance
+uninvolved in the scaling, however, has roughly the same relationship
+with the transformed states as it had with the original states ---
+higher posterior correlation when the signal-to-noise ratio is near 1
+and low otherwise.
+
+<<postplotsetup>>=
+postcordat <- data.frame(Cor=NULL, V=NULL, W=NULL, T=NULL, parameter=NULL, statevar=NULL)
+for(i in 1:3){
+  postcordat <- rbind(postcordat, data.frame(Cor=c(vthcors[[i]]), V=rep(Vs,6), W=rep(Ws, each=6), T=Ts[i], parameter="V", statevar="theta"))
+  postcordat <- rbind(postcordat, data.frame(Cor=c(wthcors[[i]]), V=rep(Vs,6), W=rep(Ws, each=6), T=Ts[i], parameter="W", statevar="theta"))
+  postcordat <- rbind(postcordat, data.frame(Cor=c(vgacors[[i]]), V=rep(Vs,6), W=rep(Ws, each=6), T=Ts[i], parameter="V", statevar="gamma"))
+  postcordat <- rbind(postcordat, data.frame(Cor=c(wgacors[[i]]), V=rep(Vs,6), W=rep(Ws, each=6), T=Ts[i], parameter="W", statevar="gamma"))
+  postcordat <- rbind(postcordat, data.frame(Cor=c(vpscors[[i]]), V=rep(Vs,6), W=rep(Ws, each=6), T=Ts[i], parameter="V", statevar="psi"))
+  postcordat <- rbind(postcordat, data.frame(Cor=c(wpscors[[i]]), V=rep(Vs,6), W=rep(Ws, each=6), T=Ts[i], parameter="W", statevar="psi"))
+}
+
+vwpostcordat <- data.frame(Cor=NULL, V=NULL, W=NULL, T=NULL)
+for(i in 1:3){
+  vwpostcordat <- rbind(vwpostcordat, data.frame(Cor=c(vwcors[[i]]), V=rep(Vs, 6), W=rep(Vs, each=6), T=Ts[i]))
+}
+library(scales)
+library(ggplot2)
+library(plyr) ## needed for the following function to work
+
+## passed into ggplot functions to make facet labels have variable name
+## and math parsing.
+label_both_parsed <- function(variable, value){
+  llply(as.character(paste(variable, value, sep = ": ")), function(x) parse(text = x))
+}
+@
+
+
+\begin{figure}[htb]
+  \centering
+<<postplotT10, echo=FALSE>>=
+ggplot(data=postcordat[postcordat$T==10,], aes(x=V, y=W, fill=Cor)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(statevar~parameter, scales="free",
+               labeller=label_both_parsed) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle(expression(paste("Max Correlation Between V or W and the ", theta, "'s, ", gamma, "'s, or ", psi, "'s, T=10"))) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+\caption{Maximum (in magnitude) of the posterior correlations between
+  either $V$ or $W$ and either the $\theta$'s, $\gamma$'s, and
+  $\psi$'s for a time series of length $T=10$. $X$ and $Y$ axes
+  indicate the true values of $V$ and $W$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  moving up any diagonal. In the upper left the signal is high, in the
+  lower right the noise is high.}
+\label{postplotT10}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<postplotT100, echo=FALSE>>=
+ggplot(data=postcordat[postcordat$T==100,], aes(x=V, y=W, fill=Cor)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(statevar~parameter, scales="free",
+               labeller=label_both_parsed) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle(expression(paste("Max Correlation Between V or W and the ", theta, "'s, ", gamma, "'s, or ", psi, "'s, T=100"))) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+\caption{Maximum (in magnitude) of the posterior correlations between
+  either $V$ or $W$ and either the $\theta$'s, $\gamma$'s, and
+  $\psi$'s for a time series of length $T=100$. $X$ and $Y$ axes
+  indicate the true values of $V$ and $W$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  moving up any diagonal. In the upper left the signal is high, in the
+  lower right the noise is high.}
+\label{postplotT100}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<postplotT1000, echo=FALSE>>=
+ggplot(data=postcordat[postcordat$T==1000,], aes(x=V, y=W, fill=Cor)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(statevar~parameter, scales="free",
+               labeller=label_both_parsed) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle(expression(paste("Max Correlation Between V or W and the ", theta, "'s, ", gamma, "'s, or ", psi, "'s, T=1000"))) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+\caption{Maximum (in magnitude) of the posterior correlations between
+  either $V$ or $W$ and either the $\theta$'s, $\gamma$'s, and
+  $\psi$'s for a time series of length $T=10$. $X$ and $Y$ axes
+  indicate the true values of $V$ and $W$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  moving up any diagonal. In the upper left the signal is high, in the
+  lower right the noise is high.}
+\label{postplotT1000}
+\end{figure}
+
+\begin{figure}[htb]
+  \centering
+<<postplotVW, echo=FALSE, fig.height=3>>=
+ggplot(data=vwpostcordat, aes(x=V, y=W, fill=Cor)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white") +
+    facet_grid(.~T, scales="free",
+               labeller=label_both_parsed) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle("Posterior Correlation Between V and W") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+\caption{Posterior correlation between $V$ and $W$. $X$ and $Y$ axes
+  indicate the true values of $V$ and $W$ respectively for the
+  simulated data. Note that the signal-to-noise ratio is constant
+  moving up any diagonal. In the upper left the signal is high, in the
+  lower right the noise is high.}
+\label{postplotVW}
+\end{figure}
+
+
+\end{document}
