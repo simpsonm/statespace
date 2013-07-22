@@ -1,13 +1,11 @@
-
-## a wrapper for simulating from any of the interweaving/alternating
-## functions quickly in a loop
-
 source("mcmcexfun.r")
-
-
-
 set.seed(152893627)
-simdata <- data.frame(y=NULL, t=NULL, V=NULL, W=NULL, T=NULL)
+simdata <- data.frame(y=NULL, t=NULL, V.T=NULL, W.T=NULL, T.T=NULL)
+Ts <- c(10, 100, 1000)
+Vs <- 10^(c(0:10)/2-2)
+Ws <- Vs
+LT <- length(Ts)
+LVW <- length(Vs)
 for(k in 1:LT){
   T <- Ts[k]
   for(i in 1:LVW){
@@ -16,25 +14,18 @@ for(k in 1:LT){
       W <- Ws[j]
       y <- llsim(T, V, W, 0, 1)
       newsim <- data.frame(y=y, t=1:length(y), V.T=V, W.T=W, T.T=T)
-      simdata <- merge(simdata, newsim, all=TRUE)
+      simdata <- rbind(simdata, newsim)
     }
   }
 }
-
 simdata1 <- data.frame(simdata, ch=1)
 simdata2 <- data.frame(simdata, ch=2)
 simdata3 <- data.frame(simdata, ch=3)
-simdat <- merge(merge(simdata1, simdata2, all=TRUE), simdata3, all=TRUE)
+simdat <- rbind(simdata1, simdata2, simdata3)
+sams <- c("state", "dist", "error", "sdint", "seint", "deint",
+          "triint", "sdalt", "sealt", "dealt", "trialt")
+samplers <- data.frame(sams=rep(1,length(sams)))
+samplers$sams <- sams
 
-
-
-
-sams <- c("state", "dist", "error", "sdint", "seint", "deint", "triint", "sdalt", "sealt", "dealt", "trialt")
-sam <- ddply(simdata, .(V.T, W.T, T.T), samwrap, n=5, a1=5, a2=5,
-b1=5, b2=5, samp="state", ch=1)
-
-
-
-
-
+system.time(test <- fullsim(samplers, simdata1, 4, 1, 5, 5))
 

@@ -1,41 +1,53 @@
 ## A set of functions for simulated from and fitting local level models
-
 library(dlm)
 library(coda)
 library(MCMCpack)
 library(ars)
 library(plyr)
 
+fullsim <- function(samplers, simdata, n, burn, a1, a2){
+  parallel <- require(doMC, quietly=TRUE)
+  out <- ddply(samplers, .(sams), samsim, .parallel=parallel,
+               simdata=simdata, n=n, burn=burn, a1=a1, a2=a2)
+  return(out)
+}
+
 
 ## simulates from a given sampler for each dataset and for multiple
 ## chains, and returns summary info on the first chain.
-samsim <- function(simdata, n, burn, sampler, a1, a2){
-  parallel <- require(doMC)
-  sam <- ddply(simdata, .(V.T, W.T, T.T), samwrap, .parallel=parallel,
-               n=5, a1=a1, a2=a2, samp=sampler)
-  samnam <- paste(sampler, "SAM.Rdata", sep="")
-  write(sam, file=samnam)
+samsim <- function(sampler, simdata, n, burn, a1, a2){
+  ##sampler <- samplers$sams
+  print(sampler[1,],)
+  parallel <- require(doMC, quietly=TRUE)
+  sam <- ddply(simdata, .(V.T, W.T, T.T, ch), samwrap, .parallel=parallel,
+               n=n, a1=a1, a2=a2, samp=sampler)
+  samnam <- paste(sampler, "SAM.RData", sep="")
+  ##colnam <- grep("(V.T|W.T|T.T|ch|V|W|time|theta(0|1|10|100|1000)$)",
+                 ##colnames(sam))
+  save(sam, file=samnam)
+  write.csv(sam, file="test.csv", row.names=FALSE)
   out <- ddply(sam[sam$ch==1,], .(V.T, W.T, T.T), samsummary,
-               .parallel=parallel, dat=simdat[simdat$ch=1,], burn=burn,
+               .parallel=parallel, dat=simdata[simdata$ch==1,], burn=burn,
                sampler=sampler)
+  rm(sam)
   return(out)
 }
 
 ## Finds autocorrelation and effective sample size info from a
 ## sample from a given sampler
 samsummary <- function(sam, dat, burn, sampler){
+  V.T <- sam$V.T[1]
+  W.T <- sam$W.T[1]
+  T.T <- sam$T.T[1]
+  V <- sam$V[-c(1:burn)]
+  W <- sam$W[-c(1:burn)]
   theta0s <- sam[,grep("theta", colnames(sam))]
   theta0s <- theta0s[-c(1:burn),1:(T.T+1)]
   thetas <- theta0s[-c(1:burn),-1]
   theta0 <- sam$theta0[-c(1:burn)]
-  V <- sam$V[-c(1:burn)]
-  W <- sam$W[-c(1:burn)]
-  V.T <- sam$V.T[1]
-  W.T <- sam$W.T[1]
-  T.T <- sam$T.T[1]
-  data <- dat$y[data$V.T=V.T & data$W.T=W.T & data$T.T=T.T, ]
+  data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
   time <- mean(sam$time[-c(1:burn)])
-  init <- data.frame(V=V.T, W=W.T, T=T.T, sampler=sampler, time=time)
+  init <- data.frame(sampler=sampler, time=time)
   gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
   colnames(gammas) <- paste("gamma", 1:T.T, sep="")
   psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
@@ -82,7 +94,7 @@ samsummary <- function(sam, dat, burn, sampler){
 
 ## function for finding the first order autocorrelation of a TS
 corfun <- function(x){
-  acf(x, lag.max=NULL, plot=FALSE)[[1]][2]
+  acf(x, lag.max=1, plot=FALSE)[[1]][2]
 }
 
 ## Wrapper for quickly simulating from all samplers
@@ -667,7 +679,7 @@ tripleinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=c(TRUE, TRU
 }
 
 ## returns TRUE if target density of log-concave, FALSE otherwise
-logcon <- function(b, a12, b12, eps=0.2){
+logcon <- function(b, a12, b12, eps=10){
   sb <- 1*(b>0) - 1*(b<0)  ##sign(b)
   RHS <- (a12 + 1)^3*(1 - 2/3*sb)*32/9/b12 + eps
   ## + eps to make sure ARS algorithm doesn't fail on
