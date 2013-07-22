@@ -242,9 +242,9 @@ ggplot(data=effdat[effdat$T==1000,], aes(x=V, y=W, fill=ES)) + #$
 
 \subsection{Results for the $\theta$'s}
 <<maxcor, echo=FALSE>>=
-mseff <- round(min(seff[[1]][[1]], seff[[1]][[2]], seff[[1]][[3]]),2)
-mdeff <- round(min(deff[[1]][[1]], deff[[1]][[2]], deff[[1]][[3]]),2)
-meeff <- round(min(eeff[[1]][[1]], eeff[[1]][[2]], eeff[[1]][[3]]),2)
+mseff <- round(min(seff[[1]][[1]], seff[[1]][[2]], seff[[1]][[3]]),0)
+mdeff <- round(min(deff[[1]][[1]], deff[[1]][[2]], deff[[1]][[3]]),0)
+meeff <- round(min(eeff[[1]][[1]], eeff[[1]][[2]], eeff[[1]][[3]]),0)
 thetaeffdat <- data.frame(AC=NULL, V=NULL, W=NULL, sampler=NULL, T=NULL, variable=NULL)
 for(i in 1:3){
   thetaeffdat <- rbind(thetaeffdat, data.frame(ES=c(seff[[1]][[i]][,,1]), V=rep(Vs, 6), W=rep(Ws, each=6), sampler="state", T=Ts[i], variable="theta[0]"))
@@ -263,21 +263,22 @@ label_both_parsed <- function(variable, value){
 }
 @
 
-We can do the same thing for some of the $\theta$'s. Tables
-\ref{tableTHT10}, \ref{tableTHT100}, and \ref{tableTHT1000} contain the
-effective sample size for $\theta_0$ and $\theta_{T}$, for
+We can do the same thing for some of the $\theta$'s. Figures
+\ref{thetaplotT10}, \ref{thetaplotT100}, and \ref{thetaplotT1000}
+contain plots the effective sample size for $\theta_0$ and $\theta_{T}$, for
 $T=10$, $T=100$, and $T=1000$ respectively. Once again we see the same
 thing for effective sample size as we did for first order
 autocorrelation: the effective sample size for the $\theta$'s is
-always large and doesn't seem to depend on the true parameter values,
+usually large and doesn't seem to depend on the true parameter values,
 the posterior sampler, or the length of the time series. The minimum
 effective sample size for any of the states in any of the fitted
-models for the the state sampler is \Sexpr{mscor}. Likewise for the
+models for the the state sampler is \Sexpr{mseff}. Likewise for the
 scaled disturbance sampler the minimum effective sample size is
-\Sexpr{mdcor} and the for scaled error sampler the minimum effective
-sample size is \Sexpr{mecor}. So when looking at effective sample
-size, we see that for some $\theta$'s some of the time, there can be
-some persistence in the chain, but it isn't necessarily a large problem.
+\Sexpr{mdeff} and the for scaled error sampler the minimum effective
+sample size is \Sexpr{meeff}. These numbers are actually quite low. So
+when looking at effective sample size, we see that for some $\theta$'s
+some of the time, there can be some persistence in the chain, but it
+isn't necessarily a large problem.
 
 
 \begin{figure}[htb]
@@ -466,84 +467,58 @@ for(ts in 1:3){
 
 
 
-Table \ref{tableMaxCorsVWTH} contains posterior correlations between
-the variance parameters ($V$ and $W$) and the states ($\theta$'s). In
-a given cell in the table is the maximum in magnitude correlation
-between either $V$ or $W$, depending on the table, and the states for
-the given true parameter values and given length of the time
-series. In other words, for $T=10$ when the true parameter values are
-$V=1$ and $W=1$, the largest correlation between $V$ and any of the
-states is $0.2053$. Using this rough measure of dependence between $V$
-or $W$ and the states, we see a rough pattern begin to
-emerge. Basically, when the signal-to-noise ratio is near 1, the
+Figures \ref{postplotT10}, \ref{postplotT100} and \ref{postplotT1000}
+contain plots of a measure of the posterior correlations either $V$ or
+$V$ and either the states ($\theta$'s), the scaled disturbances
+($\gamma$'s), or  the scaled errors ($\psi$'s) for $T=10$, $100$, and
+$1000$. In a given cell in one of plots the maximum in magnitude correlation
+between either $V$ or $W$ and either the $\theta$'s, $\gamma$'s, or
+$\psi$'s, depending on the table for the given true parameter values
+and given length of the time series. In other words, for $T=10$ when
+the true parameter values are $V=1$ and $W=1$ and for $T=10$, the largest
+corrpelation between $V$ and any of the $\theta$'s is about $0.2$
+while given the same parameter values, the maximum correlation between
+$V$ and any of the $\psi$'s is about $-0.2$ or so. Using this rough
+measure of dependence we see a few rough patterns begin to
+emerge. When the signal-to-noise ratio is near 1, the
 maximum correlation between $V$ and the $\theta$'s tends to be higher
 and the same can be said for the maximum correlation between $W$ and
-the $\theta$'s. The difference isn't that that large though (on the order
-of about $0.3$ in the extremes) and there are certainly some exceptions. The
-``roughness'' of the relationship might be caused by estimating these
-correlations with only 1500 samples from the posterior. Note that when
-the signal-to-noise ratio is near 1 is when the autocorrelation and
-effective sample size problems are least bad, overall, in the state
-sampler. This is strange since it contradicts the conventional wisdom
-on when the gibbs sampler has issues.
+the $\theta$'s.
 
-In Table \ref{tableMaxCorsVWGA} we have similar set of tables for the
-scaled disturbances, i.e the $\gamma$'s where
-$\gamma_0=\theta_0/\sqrt{W}$ and
-$\gamma_t=(\theta_t-\theta_{t-1})/\sqrt{W}$ for $t>0$. The maximum correlation
-between $V$ and the $\gamma$'s appears to follow a similar pattern as
-that of $V$ and the $\theta$'s --- it's largest, in magnitude, when
-the signal-to-noise ratio is near 1; though in this case whether the
-signal-to-noise ratio is  below or above 1 doesn't seem to
-matter. The correlation between $W$ and the $\gamma$'s is drastically
-different. Essentially it appears that smaller signal-to-noise ratios
-lead to larger maximum correlations, and overall the dependence
-between $W$ and the $\gamma$'s appears to be higher. This isn't too
-surprising given the nature of the transformation. Also note that when
-the dependence between $W$ and  the $\gamma$'s is high is precisely
-when the scaled disturbance sampler has issues (low signal-to-noise ratios).
+When looking at the $\gamma$'s, though, we see a
+different picture. The correlation between $V$ and the $\gamma$'s is
+the same as that of $V$ and the $\theta$'s: it's highest when the
+signal-to-noise ratio is near 1, but only modestly high in absolute
+terms. The correlation between $W$ and the $\gamma$'s is completely
+different: it's highest when the signal-to-noise ratio is large, and
+the correlation gets very close to 1.
 
-Finally Table \ref{tableMaxCorsVWGA} contains the same tables for the
-scaled errors, i.e. the $\psi$'s where $\psi_0=\theta_0/\sqrt{V}$ and
-$\psi_t=(y_y-\theta_t)/\sqrt{V}$ for $t>0$. The maximum correlation
-between $W$ and the $\psi$'s follows the same pattern we saw for $W$
-and the $theta$'s: it's higher (in magnitude) when the signal-to-noise
-ratio is near 1 and smaller away from 1, though the difference is a
-bit more stark this time. The maximum correlation between $V$ and the
-$\psi$'s tends to be high (in magnitude) when the signal-to-noise
-ratio is small --- similar to the pattern of correlations between $W$
-and the $\gamma$'s. However the correlations are a bit smaller in this cases.
+The $\psi$'s have a similar pattern but reversed. The correlation
+between $W$ and the $\psi$'s is highest when the signal-to-noise ratio
+is near 1, but only modestly high. The correlation between $V$ and the
+$\psi$'s is highest when the signal-to-noise ratio is large, though
+this time the correlation doesn't get nearly as high.
 
-So we can sum up the dependence between the variance parameters and
-the states, scaled disturbances, and scaled errors thusly. The
-posterior correlation between $V$ and the $\theta$'s as well as between $W$ and
-the $\theta$'s is highest when the signal-to-noise ratio is close to
-1, though it's typically under 0.5. The posterior correlation between
-$V$ and the $\gamma$'s follows a similar pattern --- it's high when
-the signal-to-noise ratio is near 1, but otherwise it's low and it's
-typically less than 0.4. The posterior correlation between $W$ and the
-$\gamma$'s, however, is high when the signal-to-noise ratio is small,
-and it gets very high in the extreme cases: around 0.99. When we
-consider the $\psi$'s, the posterior correlation between $W$ and the
-$\psi$'s is, once again, high when the signal-to-noise ratio is near 1
-and small otherwise, though it get's near 0.6. The posterior
-correlation between $V$ and the $\psi$'s, however, is high when the
-signal-to-noise ratio is small and small otherwise, getting as high as
-about 0.5 typically.
+There's one more pattern worth noting in these plots. As the sample
+size increases, the posterior correlation uniformly increases (in
+magnitude). We see the same pheomnenon in the correlation between $V$
+and $V$ in Figure \ref{postplotVW}. The same basic general pattern is
+seen here as well --- $cor(V,W)$ is highest when the signal-to-noise
+ratio is near 1 and small otherwise. Note that $V$ and $W$ are
+negatively correlated. This is precisely what we should expect from
+the correlation between the two variance parameters given
+the structure of the model. Such a sign pattern wasn't nearly as stark with
+the correlation between either $V$ or $W$ and any of the states,
+disturbances, or errors.
 
-
-In Table \ref{tableCorsVW} we can see the posterior correlation
-between $V$ and $W$. We see the main basic pattern we've seen before:
-the correlation is high when the signal-to-noise ratio is near 1 and
-small otherwise, topping out at around 0.6. So in general, the
-correlation between the set of parameters is the highest when the
-signal-to-noise ratio is near 1 and smaller otherwise. The exception
-is if you transform the states into a scaled version of
-themselves. Then the transformed version of the states become
-correlated in the posterior with the thing you scaled with in low
-signal-to-noise cases. In the case of the scaled disturbances, we
+So in general, the correlation between the set of parameters is the
+highest when the signal-to-noise ratio is near 1 and smaller
+otherwise. The exception is if you transform the states into a scaled
+version of themselves. Then the transformed version of the states
+become correlated in the posterior with the thing you scaled with in
+high signal-to-noise cases. In the case of the scaled disturbances, we
 scaled by $\sqrt{W}$ so now $W$ and the scaled disturbances have a high
-correlation in low signal-to-noise cases. In the case of the scaled
+correlation in high signal-to-noise cases. In the case of the scaled
 errors, we scaled by $\sqrt{V}$ so now $V$ and the scaled errors have
 a high correlation in low signal-to-noise cases. The variance
 uninvolved in the scaling, however, has roughly the same relationship
@@ -551,7 +526,8 @@ with the transformed states as it had with the original states ---
 higher posterior correlation when the signal-to-noise ratio is near 1
 and low otherwise.
 
-<<postplotsetup>>=
+
+<<postplotsetup, echo=FALSE>>=
 postcordat <- data.frame(Cor=NULL, V=NULL, W=NULL, T=NULL, parameter=NULL, statevar=NULL)
 for(i in 1:3){
   postcordat <- rbind(postcordat, data.frame(Cor=c(vthcors[[i]]), V=rep(Vs,6), W=rep(Ws, each=6), T=Ts[i], parameter="V", statevar="theta"))
