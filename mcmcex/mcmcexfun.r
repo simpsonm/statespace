@@ -22,10 +22,9 @@ samsim <- function(sampler, simdata, n, burn, a1, a2){
   sam <- ddply(simdata, .(V.T, W.T, T.T, ch), samwrap, .parallel=parallel,
                n=n, a1=a1, a2=a2, samp=sampler)
   samnam <- paste(sampler, "SAM.RData", sep="")
-  ##colnam <- grep("(V.T|W.T|T.T|ch|V|W|time|theta(0|1|10|100|1000)$)",
-                 ##colnames(sam))
-  save(sam, file=samnam)
-  write.csv(sam, file="test.csv", row.names=FALSE)
+  colnam <- grep("(V.T|W.T|T.T|ch|V|W|time|theta(0|1|10|100|1000)$)",
+                 colnames(sam))
+  save(sam[,colnam], file=samnam)
   out <- ddply(sam[sam$ch==1,], .(V.T, W.T, T.T), samsummary,
                .parallel=parallel, dat=simdata[simdata$ch==1,], burn=burn,
                sampler=sampler)
