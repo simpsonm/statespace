@@ -28,4 +28,5 @@ samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sams <- sams
 
 system.time(test <- fullsim(samplers, simdata1, 4, 1, 5, 5))
+save(test, file="summary.RData")
 
