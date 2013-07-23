@@ -16,7 +16,7 @@ fullsim <- function(samplers, simdata, n, burn, a1, a2){
 ## simulates from a given sampler for each dataset and for multiple
 ## chains, and returns summary info on the first chain.
 samsim <- function(sampler, simdata, n, burn, a1, a2){
-  sampler <- samplers$sams[1]
+  sampler <- sampler$sams[1]
   print(sampler)
   parallel <- require(doMC, quietly=TRUE)
   sam <- ddply(simdata, .(V.T, W.T, T.T, ch), samwrap, .parallel=parallel,
