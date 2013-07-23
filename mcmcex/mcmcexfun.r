@@ -10,7 +10,7 @@ fullsim <- function(samplers, simdata, n, burn, a1, a2){
   if(parallel){
     registerDoMC()
   }
-  out <- ddply(samplers, .(sams), samsim, .parallel=parallel,
+  out <- ddply(samplers, .(sampler), samsim, .parallel=parallel,
                simdata=simdata, n=n, burn=burn, a1=a1, a2=a2)
   return(out)
 }
@@ -18,27 +18,27 @@ fullsim <- function(samplers, simdata, n, burn, a1, a2){
 
 ## simulates from a given sampler for each dataset and for multiple
 ## chains, and returns summary info on the first chain.
-samsim <- function(sampler, simdata, n, burn, a1, a2){
-  sampler <- sampler$sams[1]
+samsim <- function(samplers, simdata, n, burn, a1, a2){
+  sampler <- samplers$sampler[1]
   print(sampler)
   parallel <- require(doMC, quietly=TRUE)
-  sam <- ddply(simdata, .(V.T, W.T, T.T, ch), samwrap, .parallel=parallel,
+  sam <- ddply(simdata, .(V.T, W.T, T.T), samwrap, .parallel=parallel,
                n=n, a1=a1, a2=a2, samp=sampler)
   samnam <- paste(sampler, "SAM.RData", sep="")
-  colnam <- grep("(V.T|W.T|T.T|ch|V|W|time)$)",
+  colnam <- grep("(V.T|W.T|T.T|V|W|time)$)",
                  colnames(sam))
   samshort <- sam[,colnam]
   save(samshort, file=samnam)
-  rm(samsamshort)
-  out <- ddply(sam[sam$ch==1,], .(V.T, W.T, T.T), samsummary,
-               .parallel=parallel, dat=simdata[simdata$ch==1,], burn=burn,
+  rm(samshort)
+  out <- ddply(sam, .(V.T, W.T, T.T), samsummary,
+               .parallel=parallel, dat=simdata, burn=burn,
                sampler=sampler)
   if(sampler=="trialt"){
-    posteriorcors <- ddply(sam[sam$ch==1,], .(V.T, W.T, T.T), postcor, .parallel=parallel,
-                           dat=simdata[simdata$ch==1,], burn=burn)
-    save(posteriorcors, file="postcors.RData")
+    postcors <- ddply(sam, .(V.T, W.T, T.T), postcor, .parallel=parallel,
+                           dat=simdata, burn=burn)
+    save(postcors, file="postcors.RData")
+    rm(postcors)
   }
-
   rm(sam)
   return(out)
 }
@@ -49,10 +49,10 @@ postcor <- function(sam, dat, burn){
   T.T <- sam$T.T[1]
   V <- sam$V[-c(1:burn)]
   W <- sam$W[-c(1:burn)]
-  theta0s <- sam[,grep("theta", colnames(sam))]
-  theta0s <- theta0s[-c(1:burn),1:(T.T+1)]
-  thetas <- theta0s[-c(1:burn),-1]
-  theta0 <- sam$theta0[-c(1:burn)]
+  theta0s <- sam[-c(1:burn),grep("theta", colnames(sam))]
+  theta0s <- theta0s[,1:(T.T+1)]
+  thetas <- theta0s[,-1]
+  theta0 <- theta0s[,1]
   data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
   gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
   colnames(gammas) <- paste("gamma", 1:T.T, sep="")
@@ -65,8 +65,8 @@ postcor <- function(sam, dat, burn){
   Wthcors <- cor(W, thetas)
   Vgacors <- cor(V, gammas)
   Wgacors <- cor(W, gammas)
-  Vgacors <- cor(V, psis)
-  Wgacors <- cor(W, psis)
+  Vpscors <- cor(V, psis)
+  Wpscors <- cor(W, psis)
   Vthmaxcor <- Vthcors[1,which.max(abs(Vthcors))]
   Wthmaxcor <- Wthcors[1,which.max(abs(Wthcors))]
   Vgamaxcor <- Vgacors[1,which.max(abs(Vgacors))]
@@ -80,6 +80,7 @@ postcor <- function(sam, dat, burn){
                     VpsiT=Vpscors[1,T.T], WpsiT=Wpscors[1,T.T], Vtheta=Vthmaxcor,
                     Wtheta=Wthmaxcor, Vgamma=Vgamaxcor, Wgamma=Wgamaxcor, Vpsi=Vpsmaxcor,
                     Wpsi=Wpsmaxcor)
+  rownames(out)[1] <- ""
   return(out)
 }
 
@@ -91,13 +92,13 @@ samsummary <- function(sam, dat, burn, sampler){
   T.T <- sam$T.T[1]
   V <- sam$V[-c(1:burn)]
   W <- sam$W[-c(1:burn)]
-  theta0s <- sam[,grep("theta", colnames(sam))]
-  theta0s <- theta0s[-c(1:burn),1:(T.T+1)]
-  thetas <- theta0s[-c(1:burn),-1]
-  theta0 <- sam$theta0[-c(1:burn)]
+  theta0s <- sam[-c(1:burn),grep("theta", colnames(sam))]
+  theta0s <- theta0s[,1:(T.T + 1)]
+  thetas <- theta0s[,-1]
+  theta0 <- theta0s[,1]
   data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
-  time <- mean(sam$time[-c(1:burn)])
-  init <- data.frame(sampler=sampler, time=time)
+  time <- mean(sam$time)
+  init <- data.frame(time=time)
   gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
   colnames(gammas) <- paste("gamma", 1:T.T, sep="")
   psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
@@ -149,9 +150,8 @@ corfun <- function(x){
 ## Wrapper for quickly simulating from all samplers
 samwrap <- function(par, n, a1, a2, samp){
   dat <- par$y[order(par$t)]
-  M <- c(1, 1/100, 100)
-  ch <- par$ch[1]
-  start <- c(par$V[1], par$W[1])*M[ch]
+  T <- length(dat)
+  start <- c(par$V[1], par$W[1])
   b1 <- (a1-1)*par$V[1]
   b2 <- (a2-1)*par$W[1]
   if(samp=="state")
@@ -176,7 +176,7 @@ samwrap <- function(par, n, a1, a2, samp){
       out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 3)
   if(samp=="trialt")
       out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(FALSE, FALSE), 4)
-  return(data.frame(out))
+  return(data.frame(out[,c(T+4, T+2, T+3, 1:(T+1))]))
 }
 
 
@@ -197,6 +197,16 @@ samwrapper <- function(n, start, dat, a1, a2, b1, b2, inter, samp){
   }
   return(out)
 }
+
+## Wrapper for llsim for use with expand.grid and ddply
+lldsim <- function(df, m0, C0){
+  T <- df$T[1]
+  V <- df$V[1]
+  W <- df$W[1]
+  out <- llsim(T, V, W, m0, C0)
+  return(data.frame(t=1:T, y=out))
+}
+
 
 ## Simulates from a local level model
 llsim <- function(T, V, W, m0, C0){
