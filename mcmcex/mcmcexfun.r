@@ -33,7 +33,53 @@ samsim <- function(sampler, simdata, n, burn, a1, a2){
   out <- ddply(sam[sam$ch==1,], .(V.T, W.T, T.T), samsummary,
                .parallel=parallel, dat=simdata[simdata$ch==1,], burn=burn,
                sampler=sampler)
+  if(sampler=="trialt"){
+    posteriorcors <- ddply(sam[sam$ch=1,], .(V.T, W.T, T.T), postcor, .parallel=parallel,
+                           dat=simdata[simdata$ch==1,], burn=burn)
+    save(posteriorcors, file="postcors.RData")
+  }
+
   rm(sam)
+  return(out)
+}
+
+postcor <- function(sam, dat, burn){
+  V.T <- sam$V.T[1]
+  W.T <- sam$W.T[1]
+  T.T <- sam$T.T[1]
+  V <- sam$V[-c(1:burn)]
+  W <- sam$W[-c(1:burn)]
+  theta0s <- sam[,grep("theta", colnames(sam))]
+  theta0s <- theta0s[-c(1:burn),1:(T.T+1)]
+  thetas <- theta0s[-c(1:burn),-1]
+  theta0 <- sam$theta0[-c(1:burn)]
+  data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
+  gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
+  colnames(gammas) <- paste("gamma", 1:T.T, sep="")
+  psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
+  colnames(psis) <- paste("psi", 1:T.T, sep="")
+  VWcor <- cor(V,W)
+  Vth0cor <- cor(V,theta)
+  Wth0cor <- cor(W,theta)
+  Vthcors <- cor(V, thetas)
+  Wthcors <- cor(W, thetas)
+  Vgacors <- cor(V, gammas)
+  Wgacors <- cor(W, gammas)
+  Vgacors <- cor(V, psis)
+  Wgacors <- cor(W, psis)
+  Vthmaxcor <- Vthcors[1,which.max(abs(Vthcors))]
+  Wthmaxcor <- Wthcors[1,which.max(abs(Wthcors))]
+  Vgamaxcor <- Vgacors[1,which.max(abs(Vgacors))]
+  Wgamaxcor <- Wgacors[1,which.max(abs(Wgacors))]
+  Vpsmaxcor <- Vpscors[1,which.max(abs(Vpscors))]
+  Wpsmaxcor <- Wpscors[1,which.max(abs(Wpscors))]
+  out <- data.frame(VW=VWcor, Vtheta0=Vth0cor, Wtheta0=Wth0cor, Vtheta1=Vthcors[1,1],
+                    Wtheta1=Wthcors[1,1], VthetaT=Vthcors[1,T.T], WthetaT=Wthcors[1,T.T],
+                    Vgamma1=Vgacors[1,1], Wgamma1=Wgacors[1,1], VgammaT=Vgacors[1,T.T],
+                    WgammaT=Wgacors[1,T.T], Vpsi1=Vpscors[1,1], Wpsi1=Wpscors[1,1],
+                    VpsiT=Vpscors[1,T.T], WpsiT=Wpscors[1,T.T], Vtheta=Vthmaxcor,
+                    Wtheta=Wthmaxcor, Vgamma=Vgamaxcor, Wgamma=Wgamaxcor, Vpsi=Vpsmaxcor,
+                    Wpsi=Wpsmaxcor)
   return(out)
 }
 
@@ -92,7 +138,6 @@ samsummary <- function(sam, dat, burn, sampler){
                theta.ES, gamma1.ES, gammaT.ES, gamma.ES, psi1.ES,
                psiT.ES, psi.ES)
   rownames(out) <- ""
-
   return(out)
 }
 
