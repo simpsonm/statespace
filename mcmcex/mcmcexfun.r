@@ -7,6 +7,9 @@ library(plyr)
 
 fullsim <- function(samplers, simdata, n, burn, a1, a2){
   parallel <- require(doMC, quietly=TRUE)
+  if(parallel){
+    registerDoMC()
+  }
   out <- ddply(samplers, .(sams), samsim, .parallel=parallel,
                simdata=simdata, n=n, burn=burn, a1=a1, a2=a2)
   return(out)
