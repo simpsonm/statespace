@@ -34,7 +34,7 @@ samsim <- function(sampler, simdata, n, burn, a1, a2){
                .parallel=parallel, dat=simdata[simdata$ch==1,], burn=burn,
                sampler=sampler)
   if(sampler=="trialt"){
-    posteriorcors <- ddply(sam[sam$ch=1,], .(V.T, W.T, T.T), postcor, .parallel=parallel,
+    posteriorcors <- ddply(sam[sam$ch==1,], .(V.T, W.T, T.T), postcor, .parallel=parallel,
                            dat=simdata[simdata$ch==1,], burn=burn)
     save(posteriorcors, file="postcors.RData")
   }
