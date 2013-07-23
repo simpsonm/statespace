@@ -24,6 +24,12 @@ epsfig, multicol}
 
 <<setup, include=FALSE, cache=FALSE>>=
 options(replace.assign=TRUE,width=90)
+opts_knit$set(eval.after = "fig.cap")
+opts_chunk$set(dev="pdf",
+               fig.lp = "",
+               fig.keep="high",
+               fig.show="hold",
+               fig.align="center")
 source("../mcmcexfun.r")
 library(xtable)
 library(coda)
@@ -32,7 +38,6 @@ library(coda)
 \section{Results}
 
 <<tablesetup, echo=FALSE, cache=TRUE>>=
-
 load("../scors.Rdata")
 cnam <- colnames(scors[[2]][[1]])
 rnam <- rownames(scors[[2]][[1]])
@@ -164,9 +169,8 @@ for(i in 1:3){
 @
 
 
-\begin{figure}[htb]
-  \centering
-<<esplotT10, echo=FALSE>>=
+<<esplotT10, echo=FALSE, fig.cap=cap>>=
+cap <- "Effective sample size in posterior sampler for a time series of length $T=10$ for $V$ and $W$ and for the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $1500$."
 ggplot(data=effdat[effdat$T==10,], aes(x=V, y=W, fill=ES)) + #$
     geom_tile() +
     scale_fill_gradient("EffSize", low=muted("red"), high="white",
@@ -178,20 +182,9 @@ ggplot(data=effdat[effdat$T==10,], aes(x=V, y=W, fill=ES)) + #$
     ggtitle("Effective Sample Size for V and W, T=10") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @
-\caption{Effective sample size in posterior sampler for a time series
-  of length $T=10$ for $V$ and $W$ and for the state, scaled
-  disturbance, and scaled error samplers. $X$ and $Y$ axes
-  indicate the true values of $V$ and $W$ respectively for the
-  simulated data. Note that the signal-to-noise ratio is constant
-  moving up any diagonal. In the upper left the signal is high, in the
-  lower right the noise is high. Also note that the actual sample size
-  is $1500$.}
-\label{esplotT10}
-\end{figure}
 
-\begin{figure}[htb]
-  \centering
-<<esplotT100, echo=FALSE>>=
+<<esplotT100, echo=FALSE, fig.cap=cap>>=
+cap <- "Effective sample size in posterior sampler for a time series of length $T=100$ for $V$ and $W$ and for the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $1500$."
 ggplot(data=effdat[effdat$T==100,], aes(x=V, y=W, fill=ES)) + #$
     geom_tile() +
     scale_fill_gradient("EffSize", low=muted("red"), high="white",
@@ -203,20 +196,9 @@ ggplot(data=effdat[effdat$T==100,], aes(x=V, y=W, fill=ES)) + #$
     ggtitle("Effective Sample Size for V and W, T=100") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @
-\caption{Effective sample size in posterior sampler for a time series
-  of length $T=100$ for $V$ and $W$ and for the state, scaled
-  disturbance, and scaled error samplers. $X$ and $Y$ axes
-  indicate the true values of $V$ and $W$ respectively for the
-  simulated data. Note that the signal-to-noise ratio is constant
-  moving up any diagonal. In the upper left the signal is high, in the
-  lower right the noise is high. Also note that the actual sample size
-  is $1500$.}
-\label{esplotT100}
-\end{figure}
 
-\begin{figure}[htb]
-  \centering
-<<esplotT1000, echo=FALSE>>=
+<<esplotT1000, echo=FALSE, fig.cap=cap>>=
+cap <- "Effective sample size in posterior sampler for a time series of length $T=1000$ for $V$ and $W$ and for the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $1500$."
 ggplot(data=effdat[effdat$T==1000,], aes(x=V, y=W, fill=ES)) + #$
     geom_tile() +
     scale_fill_gradient("EffSize", low=muted("red"), high="white",
@@ -228,17 +210,6 @@ ggplot(data=effdat[effdat$T==1000,], aes(x=V, y=W, fill=ES)) + #$
     ggtitle("Effective Sample Size for V and W, T=1000") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @
-\caption{Effective sample size in posterior sampler for a time series
-  of length $T=100$ for $V$ and $W$ and for the state, scaled
-  disturbance, and scaled error samplers. $X$ and $Y$ axes
-  indicate the true values of $V$ and $W$ respectively for the
-  simulated data. Note that the signal-to-noise ratio is constant
-  moving up any diagonal. In the upper left the signal is high, in the
-  lower right the noise is high. Also note that the actual sample size
-  is $1500$.}
-\label{esplotT1000}
-\end{figure}
-
 
 \subsection{Results for the $\theta$'s}
 <<maxcor, echo=FALSE>>=
@@ -281,9 +252,8 @@ some of the time, there can be some persistence in the chain, but it
 isn't necessarily a large problem.
 
 
-\begin{figure}[htb]
-  \centering
-<<thetaplotT10, echo=FALSE>>=
+<<thetaplotT10, echo=FALSE, fig.cap=cap>>=
+cap <- "Effective sample size in posterior sampler for a time series of length $T=10$ for $\\theta_0$ and $\\theta_T$ and for the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $1500$."
 ggplot(data=thetaeffdat[thetaeffdat$T==10,], aes(x=V, y=W, fill=ES)) + #$
     geom_tile() +
     scale_fill_gradient("EffSize", low=muted("red"), high="white",
@@ -296,20 +266,9 @@ ggplot(data=thetaeffdat[thetaeffdat$T==10,], aes(x=V, y=W, fill=ES)) + #$
     ggtitle(expression(paste("Effective Sample Size for ", theta[0], " and ", theta[T], ", T=10"))) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @
-\caption{Effective sample size in posterior sampler for a time series of
-  length $T=10$ for $\theta_0$ and $\theta_T$ and for the state, scaled
-  disturbance, and scaled error samplers. $X$ and $Y$ axes
-  indicate the true values of $V$ and $W$ respectively for the
-  simulated data. Note that the signal-to-noise ratio is constant
-  moving up any diagonal. In the upper left the signal is high, in the
-  lower right the noise is high. Also note that the actual sample size
-  is $1500$.}
-\label{thetaplotT10}
-\end{figure}
 
-\begin{figure}[htb]
-  \centering
-<<thetaplotT100, echo=FALSE>>=
+<<thetaplotT100, echo=FALSE, fig.cap=cap>>=
+cap <- "Effective sample size in posterior sampler for a time series of length $T=100$ for $\\theta_0$ and $\\theta_T$ and for the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $1500$."
 ggplot(data=thetaeffdat[thetaeffdat$T==100,], aes(x=V, y=W, fill=ES)) + #$
     geom_tile() +
     scale_fill_gradient("EffSize", low=muted("red"), high="white",
@@ -322,20 +281,9 @@ ggplot(data=thetaeffdat[thetaeffdat$T==100,], aes(x=V, y=W, fill=ES)) + #$
     ggtitle(expression(paste("Effective Sample Size for ", theta[0], " and ", theta[T], ", T=100"))) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @
-\caption{Effective sample size in posterior sampler for a time series of
-  length $T=100$ for $\theta_0$ and $\theta_T$ and for the state, scaled
-  disturbance, and scaled error samplers. $X$ and $Y$ axes
-  indicate the true values of $V$ and $W$ respectively for the
-  simulated data. Note that the signal-to-noise ratio is constant
-  moving up any diagonal. In the upper left the signal is high, in the
-  lower right the noise is high. Also note that the actual sample size
-  is $1500$.}
-\label{thetaplotT100}
-\end{figure}
 
-\begin{figure}[htb]
-  \centering
-<<thetaplotT1000, echo=FALSE>>=
+<<thetaplotT1000, echo=FALSE, fig.cap=cap>>=
+cap <- "Effective sample size in posterior sampler for a time series of length $T=1000$ for $\\theta_0$ and $\\theta_T$ and for the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $1500$."
 ggplot(data=thetaeffdat[thetaeffdat$T==1000,], aes(x=V, y=W, fill=ES)) + #$
     geom_tile() +
     scale_fill_gradient("EffSize", low=muted("red"), high="white",
@@ -348,17 +296,6 @@ ggplot(data=thetaeffdat[thetaeffdat$T==1000,], aes(x=V, y=W, fill=ES)) + #$
     ggtitle(expression(paste("Effective Sample Size for ", theta[0], " and ", theta[T], ", T=1000"))) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @
-\caption{Effective sample size in posterior sampler for a time series of
-  length $T=100$ for $\theta_0$ and $\theta_T$ and for the state, scaled
-  disturbance, and scaled error samplers. $X$ and $Y$ axes
-  indicate the true values of $V$ and $W$ respectively for the
-  simulated data. Note that the signal-to-noise ratio is constant
-  moving up any diagonal. In the upper left the signal is high, in the
-  lower right the noise is high. Also note that the actual sample size
-  is $1500$.}
-\label{thetaplotT1000}
-\end{figure}
-
 
 \section{Correlation in the Posterior}
 
@@ -553,10 +490,8 @@ label_both_parsed <- function(variable, value){
 }
 @
 
-
-\begin{figure}[htb]
-  \centering
-<<postplotT10, echo=FALSE>>=
+<<postplotT10, echo=FALSE, fig.cap=cap>>=
+cap <- "Maximum (in magnitude) of the posterior correlations between either $V$ or $W$ and either the $\\theta$'s, $\\gamma$'s, and $\\psi$'s for a time series of length $T=10$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 ggplot(data=postcordat[postcordat$T==10,], aes(x=V, y=W, fill=Cor)) + #$
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -569,19 +504,9 @@ ggplot(data=postcordat[postcordat$T==10,], aes(x=V, y=W, fill=Cor)) + #$
     ggtitle(expression(paste("Max Correlation Between V or W and the ", theta, "'s, ", gamma, "'s, or ", psi, "'s, T=10"))) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @
-\caption{Maximum (in magnitude) of the posterior correlations between
-  either $V$ or $W$ and either the $\theta$'s, $\gamma$'s, and
-  $\psi$'s for a time series of length $T=10$. $X$ and $Y$ axes
-  indicate the true values of $V$ and $W$ respectively for the
-  simulated data. Note that the signal-to-noise ratio is constant
-  moving up any diagonal. In the upper left the signal is high, in the
-  lower right the noise is high.}
-\label{postplotT10}
-\end{figure}
 
-\begin{figure}[htb]
-  \centering
-<<postplotT100, echo=FALSE>>=
+<<postplotT100, echo=FALSE, fig.cap=cap>>=
+cap <- "Maximum (in magnitude) of the posterior correlations between either $V$ or $W$ and either the $\\theta$'s, $\\gamma$'s, and $\\psi$'s for a time series of length $T=100$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 ggplot(data=postcordat[postcordat$T==100,], aes(x=V, y=W, fill=Cor)) + #$
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -594,19 +519,9 @@ ggplot(data=postcordat[postcordat$T==100,], aes(x=V, y=W, fill=Cor)) + #$
     ggtitle(expression(paste("Max Correlation Between V or W and the ", theta, "'s, ", gamma, "'s, or ", psi, "'s, T=100"))) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @
-\caption{Maximum (in magnitude) of the posterior correlations between
-  either $V$ or $W$ and either the $\theta$'s, $\gamma$'s, and
-  $\psi$'s for a time series of length $T=100$. $X$ and $Y$ axes
-  indicate the true values of $V$ and $W$ respectively for the
-  simulated data. Note that the signal-to-noise ratio is constant
-  moving up any diagonal. In the upper left the signal is high, in the
-  lower right the noise is high.}
-\label{postplotT100}
-\end{figure}
 
-\begin{figure}[htb]
-  \centering
-<<postplotT1000, echo=FALSE>>=
+<<postplotT1000, echo=FALSE, fig.cap=cap>>=
+cap <- "Maximum (in magnitude) of the posterior correlations between either $V$ or $W$ and either the $\\theta$'s, $\\gamma$'s, and $\\psi$'s for a time series of length $T=100$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 ggplot(data=postcordat[postcordat$T==1000,], aes(x=V, y=W, fill=Cor)) + #$
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -619,19 +534,9 @@ ggplot(data=postcordat[postcordat$T==1000,], aes(x=V, y=W, fill=Cor)) + #$
     ggtitle(expression(paste("Max Correlation Between V or W and the ", theta, "'s, ", gamma, "'s, or ", psi, "'s, T=1000"))) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @
-\caption{Maximum (in magnitude) of the posterior correlations between
-  either $V$ or $W$ and either the $\theta$'s, $\gamma$'s, and
-  $\psi$'s for a time series of length $T=10$. $X$ and $Y$ axes
-  indicate the true values of $V$ and $W$ respectively for the
-  simulated data. Note that the signal-to-noise ratio is constant
-  moving up any diagonal. In the upper left the signal is high, in the
-  lower right the noise is high.}
-\label{postplotT1000}
-\end{figure}
 
-\begin{figure}[htb]
-  \centering
-<<postplotVW, echo=FALSE, fig.height=3>>=
+<<postplotVW, echo=FALSE, fig.height=3, fig.cap=cap>>=
+cap <- "Posterior correlation between $V$ and $W$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 ggplot(data=vwpostcordat, aes(x=V, y=W, fill=Cor)) + #$
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -643,13 +548,5 @@ ggplot(data=vwpostcordat, aes(x=V, y=W, fill=Cor)) + #$
     ggtitle("Posterior Correlation Between V and W") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @
-\caption{Posterior correlation between $V$ and $W$. $X$ and $Y$ axes
-  indicate the true values of $V$ and $W$ respectively for the
-  simulated data. Note that the signal-to-noise ratio is constant
-  moving up any diagonal. In the upper left the signal is high, in the
-  lower right the noise is high.}
-\label{postplotVW}
-\end{figure}
-
 
 \end{document}

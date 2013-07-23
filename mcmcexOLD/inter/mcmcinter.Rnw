@@ -24,6 +24,12 @@ epsfig, multicol}
 
 <<setup, include=FALSE, cache=FALSE>>=
 options(replace.assign=TRUE,width=90)
+opts_knit$set(eval.after = "fig.cap")
+opts_chunk$set(dev="pdf",
+               fig.lp = "",
+               fig.keep="high",
+               fig.show="hold",
+               fig.align="center")
 @
 
 \author{Matt Simpson}
@@ -91,9 +97,7 @@ for(samp in 1:4){
 }
 @
 
-
-<<corrplots, echo=FALSE>>=
-
+<<corsetup, echo=FALSE, cache=TRUE>>=
 cornam <- matrix(0, ncol=2, nrow=4)
 samps <- c("sd", "se", "de", "tr")
 sampsfull <- c("state-dist", "state-error", "dist-error", "triple")
@@ -106,7 +110,6 @@ for(samp in 1:4){
     cornam[samp,int] <- paste(tnam, cend, sep="")
   }
 }
-
 Ts <- c(10, 100, 1000)
 cordat <- data.frame(ACV=NULL, ACW=NULL, V=NULL, W=NULL, sampler=NULL, type=NULL, T=NULL)
 for(i in 1:4){
@@ -121,10 +124,14 @@ for(i in 1:4){
     }
   }
 }
-
 library(ggplot2)
 library(scales) #for muted
 
+@
+
+
+<<corVT10plots, echo=FALSE, fig.cap=cap>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=10$ for $V$ and for alternating or interweaving between the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 ggplot(data=cordat[cordat$T==10,], aes(x=V, y=W, fill=ACV)) +
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -134,8 +141,9 @@ ggplot(data=cordat[cordat$T==10,], aes(x=V, y=W, fill=ACV)) +
     scale_y_log10("W = signal", breaks=c(1, 10, 100)) +
     facet_grid(sampler~type, scales="free", labeller=label_both) +
     ggtitle("Autocorrelation for V, T=10")
-
-
+@
+<<corWT10plots, echo=FALSE, fig.cap=cap>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=10$ for $W$ and for alternating or interweaving between the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 ggplot(data=cordat[cordat$T==10,], aes(x=V, y=W, fill=ACW)) +
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -145,8 +153,9 @@ ggplot(data=cordat[cordat$T==10,], aes(x=V, y=W, fill=ACW)) +
     scale_y_log10("V = noise", breaks=c(1, 10, 100)) +
     facet_grid(sampler~type, scales="free", labeller=label_both) +
     ggtitle("Autocorrelation for W, T=10")
-
-
+@
+<<corVT100plots, echo=FALSE, fig.cap=cap>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=100$ for $V$ and for alternating or interweaving between the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 ggplot(data=cordat[cordat$T==100,], aes(x=V, y=W, fill=ACV)) +
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -156,8 +165,9 @@ ggplot(data=cordat[cordat$T==100,], aes(x=V, y=W, fill=ACV)) +
     scale_y_log10("W = signal", breaks=c(1, 10, 100)) +
     facet_grid(sampler~type, scales="free", labeller=label_both) +
     ggtitle("Autocorrelation for V, T=100")
-
-
+@
+<<corWT100plots, echo=FALSE, fig.cap=cap>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=100$ for $W$ and for alternating or interweaving between the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 ggplot(data=cordat[cordat$T==100,], aes(x=V, y=W, fill=ACW)) +
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -167,8 +177,9 @@ ggplot(data=cordat[cordat$T==100,], aes(x=V, y=W, fill=ACW)) +
     scale_y_log10("W = signal", breaks=c(1, 10, 100)) +
     facet_grid(sampler~type, scales="free", labeller=label_both) +
     ggtitle("Autocorrelation for W, T=100")
-
-
+@
+<<corVT1000plots, echo=FALSE, fig.cap=cap>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=1000$ for $V$ and for alternating or interweaving between the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 ggplot(data=cordat[cordat$T==1000,], aes(x=V, y=W, fill=ACV)) +
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -178,8 +189,9 @@ ggplot(data=cordat[cordat$T==1000,], aes(x=V, y=W, fill=ACV)) +
     scale_y_log10("W = signal", breaks=c(1, 10, 100)) +
     facet_grid(sampler~type, scales="free", labeller=label_both) +
     ggtitle("Autocorrelation for V, T=1000")
-
-
+@
+<<corWT1000plots, echo=FALSE, fig.cap=cap>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=1000$ for $W$ and for alternating or interweaving between the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 ggplot(data=cordat[cordat$T==1000,], aes(x=V, y=W, fill=ACW)) +
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -189,12 +201,9 @@ ggplot(data=cordat[cordat$T==1000,], aes(x=V, y=W, fill=ACW)) +
     scale_y_log10("W = signal", breaks=c(1, 10, 100)) +
     facet_grid(sampler~type, scales="free", labeller=label_both) +
     ggtitle("Autocorrelation for W, T=1000")
-
 @
 
 \end{document}
 
-<<testing>>=
 
-@
 
