@@ -27,8 +27,8 @@ sams <- c("state", "dist", "error", "sdint", "seint", "deint",
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sams <- sams
 
-n <- 2000
-burn <- 500
+n <- 5
+burn <- 1
 
 system.time(samout <- fullsim(samplers, simdata1, n, burn, 5, 5))
 save(samout, file="samout.RData")
