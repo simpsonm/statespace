@@ -25,7 +25,7 @@ samsim <- function(sampler, simdata, n, burn, a1, a2){
   sam <- ddply(simdata, .(V.T, W.T, T.T, ch), samwrap, .parallel=parallel,
                n=n, a1=a1, a2=a2, samp=sampler)
   samnam <- paste(sampler, "SAM.RData", sep="")
-  colnam <- grep("(V.T|W.T|T.T|ch|V|W|time|theta(0|1|10|100|1000)$)",
+  colnam <- grep("(V.T|W.T|T.T|ch|V|W|time)$)",
                  colnames(sam))
   samshort <- sam[,colnam]
   save(samshort, file=samnam)
@@ -59,8 +59,8 @@ postcor <- function(sam, dat, burn){
   psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
   colnames(psis) <- paste("psi", 1:T.T, sep="")
   VWcor <- cor(V,W)
-  Vth0cor <- cor(V,theta)
-  Wth0cor <- cor(W,theta)
+  Vth0cor <- cor(V,theta0)
+  Wth0cor <- cor(W,theta0)
   Vthcors <- cor(V, thetas)
   Wthcors <- cor(W, thetas)
   Vgacors <- cor(V, gammas)
