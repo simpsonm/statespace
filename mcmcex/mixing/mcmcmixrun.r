@@ -1,6 +1,6 @@
-source("mcmcexfun.r")
+source("../mcmcexfun.r")
 set.seed(152893627)
-T <- c(1, 10, 100)
+T <- c(10, 100, 1000)
 V <- 10^(c(0:10)/2-2)
 W <- V
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
