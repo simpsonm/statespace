@@ -5,6 +5,43 @@ library(MCMCpack)
 library(ars)
 library(plyr)
 
+mean.diag <- function(ns, simdata, a1, a2, parallel){
+  n <- ns$n[1]
+  G.D.full <- ddply(samplers, .(sampler, iter), fullsam.diag, simdata=simdata,
+                    n=n, a1=a1, a2=a2, parallel=parallel, .parallel=parallel)
+  G.D.full$iter <- NULL
+  G.D.mean <- ddply(G.D.full, .(sampler, V.T, W.T, T.T), function(x){
+    data.frame(G.D.M=mean(x$G.D.M), G.D.V=mean(x$G.D.V), G.D.W=mean(x$G.D.W))
+    }, .parallel=parallel)
+  return(G.D.mean)
+}
+
+
+fullsam.diag <- function(samplers, simdata, n, a1, a2, parallel=parallel){
+  sampler <- samplers$sampler[1]
+  sam <- ddply(simdata, .(V.T, W.T, T.T, V.S, W.S), samwrapstart,
+               n=n, a1=a1, a2=a2, samp=sampler)
+  samdiag <- ddply(sam, .(V.T, W.T, T.T), sam.diag, .parallel=parallel, parallel=parallel)
+  return(samdiag)
+}
+
+
+sam.diag <- function(sam, parallel){
+  T <- sam$T.T[1]
+  namid <- grep("(V.T|W.T|T.T|time)", colnames(sam))
+  sam.par <- sam[,-namid]
+  sam.par <- sam.par[,1:(T+1+4)]
+  sam.list <- dlply(sam.par, .(V.S, W.S), function(x){
+    namid <- grep("(V.S|W.S)", colnames(x))
+    x.par <- x[,-namid]
+    return(mcmc(x.par))
+  }, .parallel=parallel)
+  GD <- gelman.diag(mcmc.list(sam.list))
+  G.D <- data.frame(G.D.M=GD[[2]], G.D.V=GD[[1]][1,1], G.D.W=GD[[1]][2,1])
+  return(G.D)
+}
+
+
 fullsim <- function(samplers, simdata, n, burn, a1, a2){
   parallel <- require(doMC, quietly=TRUE)
   if(parallel){
