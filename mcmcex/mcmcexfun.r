@@ -147,12 +147,19 @@ corfun <- function(x){
   acf(x, lag.max=1, plot=FALSE)[[1]][2]
 }
 
+## used to quickly create the simulation grid, used because we don't
+## want a full grid of starting values, just a grid of dispersed points
+## plus one point at the true values
+dfun <- function(M, simgrid){
+  data.frame(M, simgrid)
+}
 
-
-samwrapconv <- function(par, n, a1, a2, samp){
+## Wrapper for quickly simulating from all samplers w/ multiple
+## chains at diff starting values
+samwrapstart <- function(par, n, a1, a2, samp){
   dat <- par$y[order(par$t)]
   T <- length(dat)
-  start <- c(par$V.S[1], par$W.S[1])
+  start <- c(par$V.S[1]*par$V.T[1], par$W.S[1]*par$W.T[1])
   b1 <- (a1-1)*par$V.T[1]
   b2 <- (a2-1)*par$W.T[1]
   if(samp=="state")
@@ -234,9 +241,9 @@ samwrapper <- function(n, start, dat, a1, a2, b1, b2, inter, samp){
 
 ## Wrapper for llsim for use with expand.grid and ddply
 lldsim <- function(df, m0, C0){
-  T <- df$T[1]
-  V <- df$V[1]
-  W <- df$W[1]
+  T <- df$T.T[1]
+  V <- df$V.T[1]
+  W <- df$W.T[1]
   out <- llsim(T, V, W, m0, C0)
   return(data.frame(t=1:T, y=out))
 }
