@@ -147,13 +147,47 @@ corfun <- function(x){
   acf(x, lag.max=1, plot=FALSE)[[1]][2]
 }
 
+
+
+samwrapconv <- function(par, n, a1, a2, samp){
+  dat <- par$y[order(par$t)]
+  T <- length(dat)
+  start <- c(par$V.S[1], par$W.S[1])
+  b1 <- (a1-1)*par$V.T[1]
+  b2 <- (a2-1)*par$W.T[1]
+  if(samp=="state")
+      out <- statesam(n, start, dat, a1, a2, b1, b2)
+  if(samp=="dist")
+      out <- distsam(n, start, dat, a1, a2, b1, b2)
+  if(samp=="error")
+      out <- errorsam(n, start, dat, a1, a2, b1, b2)
+  if(samp=="sdint")
+      out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 1)
+  if(samp=="seint")
+      out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 2)
+  if(samp=="deint")
+      out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 3)
+  if(samp=="triint")
+      out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(TRUE, TRUE), 4)
+  if(samp=="sdalt")
+      out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 1)
+  if(samp=="sealt")
+      out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 2)
+  if(samp=="dealt")
+      out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 3)
+  if(samp=="trialt")
+      out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(FALSE, FALSE), 4)
+  return(data.frame(out[,c(T+4, T+2, T+3, 1:(T+1))]))
+}
+
+
 ## Wrapper for quickly simulating from all samplers
 samwrap <- function(par, n, a1, a2, samp){
   dat <- par$y[order(par$t)]
   T <- length(dat)
   start <- c(par$V[1], par$W[1])
-  b1 <- (a1-1)*par$V[1]
-  b2 <- (a2-1)*par$W[1]
+  b1 <- (a1-1)*par$V.T[1]
+  b2 <- (a2-1)*par$W.T[1]
   if(samp=="state")
       out <- statesam(n, start, dat, a1, a2, b1, b2)
   if(samp=="dist")
