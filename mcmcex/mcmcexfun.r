@@ -349,7 +349,8 @@ errorsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
     a <- sum(Lpsi^2)/2/W
     b <- sum(Lpsi*Ly)/W
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
-    if(logcon(b, a1, b1)){
+    ##if(logcon(b, a1, b1)){
+    if(FALSE){
       V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
     }
     else{
@@ -412,7 +413,8 @@ distsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
     a <- sum( cgam^2 )/2/V
     b <- sum( (dat - gam0) * cgam ) /V
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
-    if(logcon(b, a2, b2)){
+##    if(logcon(b, a2, b2)){
+    if(FALSE){
       W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
     }
     else{
@@ -481,7 +483,8 @@ statedistinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
     a <- sum( cgam^2 )/2/V
     b <- sum( (dat - gam0) * cgam ) /V
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
-    if(logcon(b, a2, b2)){
+##    if(logcon(b, a2, b2)){
+    if(FALSE){
       W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
     }
     else{
@@ -551,7 +554,8 @@ stateerrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
     a <- sum(Lpsi^2)/2/W
     b <- sum(Lpsi*Ly)/W
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
-    if(logcon(b, a1, b1)){
+##    if(logcon(b, a1, b1)){
+    if(FALSE){
       V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
     }
     else{
@@ -612,7 +616,8 @@ disterrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
     a <- sum( cgam^2 )/2/V
     b <- sum( (dat - gam0) * cgam ) /V
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
-    if(logcon(b, a2, b2)){
+##    if(logcon(b, a2, b2)){
+    if(FALSE){
       W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
     }
     else{
@@ -661,7 +666,8 @@ disterrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
     a <- sum(Lpsi^2)/2/W
     b <- sum(Lpsi*Ly)/W
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
-    if(logcon(b, a1, b1)){
+##    if(logcon(b, a1, b1)){
+    if(FALSE){
       V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
     }
     else{
@@ -733,7 +739,8 @@ tripleinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=c(TRUE, TRU
     a <- sum( cgam^2 )/2/V
     b <- sum( (dat - gam0) * cgam ) /V
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
-    if(logcon(b, a2, b2)){
+##    if(logcon(b, a2, b2)){
+    if(FALSE){
       W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
     }
     else{
@@ -782,7 +789,8 @@ tripleinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=c(TRUE, TRU
     a <- sum(Lpsi^2)/2/W
     b <- sum(Lpsi*Ly)/W
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
-    if(logcon(b, a1, b1)){
+##    if(logcon(b, a1, b1)){
+    if(FALSE){
       V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
     }
     else{
