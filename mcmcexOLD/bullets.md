@@ -12,7 +12,7 @@ Basic Samplers
 
 * When *R >> 1* the state sampler tends to have high autocorrelation for *V* and low autocorrelation for *W*. This results in both poor mixing and poor convergence for *V*.
 
-* When *R* is near 1, the state sampler tends to have acceptable levels of autocorrelation for both *V* and *W* and no problems with mixing or convergence with eiter.
+* When *R* is near 1, the state sampler tends to have acceptable levels of autocorrelation for both *V* and *W* and no problems with mixing or convergence with either.
 
 ### Scaled Disturbance Sampler
 * When *R << 1* the scaled disturbance sampler has low autocorrelation, good mixing and good convergence for both *V* and *W*.
