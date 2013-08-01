@@ -25,7 +25,7 @@ Basic Samplers
 * When *R* << 1 the scaled error sampler has high autocorrelation for both *V* and *W*. Both *V* and *W* mix slowly but still converge quickly, at least in the range of the parameter space tested.
 
 ### Across all samplers
-* Increasing the length of the time series, *T*, exacerates all autocorrelation, mixing, and convergence problems.
+* Increasing the length of the time series, *T*, exacerbates all autocorrelation, mixing, and convergence problems.
 
 * Changing the values of *V* and *W* doesn't seem to affect convergence unless it changes the signal to noise ratio, *R = W/V*.
 
@@ -53,7 +53,7 @@ Posterior Correlation
 Interweaving and Alternating Samplers
 ----------------------
 
-* Whether you alternate or interweave doesn't appear to affect convergence or mixing when looking at trace plots.
+* Whether you alternate or interweave doesn't appear to affect convergence or mixing when looking at trace plots or first order autocorrelation.
 
 ### State-Disturbance Samplers
 * The state-disturbance samplers have poor mixing for *V* when *R* > 1, poor convergence when *R* >> 1, and good mixing and covergence everywhere else.
@@ -71,6 +71,6 @@ Interweaving and Alternating Samplers
 * Notably, both the state-error and state-disturbance samplers appear to work well for larger regions of the parameter space than any of the more basic samplers.
 
 ### Dist-Error and Triple Samplers
-* The dist-error samplers appear to always have good convergence and mixing for both *V* and *W*.
+* The dist-error samplers appear to always have good convergence and mixing for both *V* and *W*, except with *R* is significantly different from 1 (indicating that *V* and *W* are significantly different) the smaller of *V* and *W* will have worse mixing. I.e. when *V << W*, *V* will have relatively poor mixing, and *W* has relatively poor mixing when *V >> W*.
 
 * The triple samplers appear identical to the dist-error samplers.
