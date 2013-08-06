@@ -15,7 +15,7 @@ samplers <- expand.grid(sampler=sams[1], iter=1:K)
 samplers$sampler <- as.character(samplers$sampler)
 parallel <- require(doMC, quietly=TRUE)
 if(parallel){
-  registerDoMC()
+  registerDoMC(4)
 }
 a1 <- 5
 a2 <- a1
