@@ -1,9 +1,12 @@
 source("../mcmcexfun.r")
+parallel <- require(doMC, quietly=TRUE)
+if(parallel){
+  registerDoMC(2)
+}
 set.seed(152893627)
 T <- c(10, 100, 1000)
 V <- 10^(c(0:10)/2-2)
 W <- V
-
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 M <- expand.grid(ch=1, V.S=c(1/100, 100), W.S=c(1/100, 100))
 M[5,] <- c(1,1,1)
@@ -15,10 +18,6 @@ sams <- c("state", "dist", "error", "sdint", "seint", "deint",
           "sekern", "dekern", "trikern")
 samplers <- expand.grid(sampler=sams, iter=1:K)
 samplers$sampler <- as.character(samplers$sampler)
-parallel <- require(doMC, quietly=TRUE)
-if(parallel){
-  registerDoMC(4)
-}
 a1 <- 5
 a2 <- a1
 ns <- data.frame(n=c(50, 100, 500, 1000))
