@@ -5,39 +5,52 @@ library(MCMCpack)
 library(ars)
 library(plyr)
 
-mean.diag <- function(ns, simdata, a1, a2, parallel){
+
+
+chains.diag <- function(ns, samplers, simdata, a1, a2, parallel, mix=FALSE){
   n <- ns$n[1]
   G.D.full <- ddply(samplers, .(sampler, iter), fullsam.diag, simdata=simdata,
-                    n=n, a1=a1, a2=a2, parallel=parallel, .parallel=parallel)
-  G.D.full$iter <- NULL
-  G.D.mean <- ddply(G.D.full, .(sampler, V.T, W.T, T.T), function(x){
-    data.frame(G.D.M=mean(x$G.D.M), G.D.V=mean(x$G.D.V), G.D.W=mean(x$G.D.W))
-    }, .parallel=parallel)
-  return(G.D.mean)
+                    n=n, a1=a1, a2=a2, parallel=parallel, .parallel=parallel, mix=mix)
+  return(G.D.full)
 }
 
 
-fullsam.diag <- function(samplers, simdata, n, a1, a2, parallel=parallel){
+fullsam.diag <- function(samplers, simdata, n, a1, a2, parallel=parallel, mix=FALSE){
   sampler <- samplers$sampler[1]
-  sam <- ddply(simdata, .(V.T, W.T, T.T, V.S, W.S), samwrapstart,
+  sam <- ddply(simdata, .(V.T, W.T, T.T, V.S, W.S, ch), samwrapstart,
                n=n, a1=a1, a2=a2, samp=sampler)
-  samdiag <- ddply(sam, .(V.T, W.T, T.T), sam.diag, .parallel=parallel, parallel=parallel)
+  samdiag <- ddply(sam, .(V.T, W.T, T.T), sam.diag, .parallel=parallel,
+                   parallel=parallel, mix=mix)
   return(samdiag)
 }
 
-
-sam.diag <- function(sam, parallel){
+sam.diag <- function(sam, parallel, mix=FALSE){
   T <- sam$T.T[1]
   namid <- grep("(V.T|W.T|T.T|time)", colnames(sam))
   sam.par <- sam[,-namid]
-  sam.par <- sam.par[,1:(T+1+4)]
-  sam.list <- dlply(sam.par, .(V.S, W.S), function(x){
-    namid <- grep("(V.S|W.S)", colnames(x))
-    x.par <- x[,-namid]
-    return(mcmc(x.par))
-  }, .parallel=parallel)
-  GD <- gelman.diag(mcmc.list(sam.list))
-  G.D <- data.frame(G.D.M=GD[[2]], G.D.V=GD[[1]][1,1], G.D.W=GD[[1]][2,1])
+  sam.par <- sam.par[,1:(T+1+2+2+1)]
+  if(!mix){
+    sam.list <- dlply(sam.par, .(ch, V.S, W.S), function(x){
+      namid <- grep("(V.S|W.S|ch)", colnames(x))
+      x.par <- x[,-namid]
+      return(mcmc(x.par))
+    }, .parallel=parallel)
+    GD <- gelman.diag(mcmc.list(sam.list))
+    G.D <- data.frame(G.D.M=GD[[2]], G.D.V=GD[[1]][1,1], G.D.W=GD[[1]][2,1])
+  }
+  else{
+    ns <- seq(from=100, to=dim(sam.par)[1]/5, by= 100)
+    G.D <- NULL
+    for(n in ns){
+      sam.list <- dlply(sam.par, .(ch, V.S, W.S), function(x,n){
+        namid <- grep("(V.S|W.S|ch)", colnames(x))
+        x.par <- x[1:n,-namid]
+        return(mcmc(x.par))
+      }, .parallel=parallel, n=n)
+      GD <- gelman.diag(mcmc.list(sam.list))
+      G.D <- rbind(G.D, data.frame(n2=n, G.D.M=GD[[2]], G.D.V=GD[[1]][1,1], G.D.W=GD[[1]][2,1]))
+    }
+  }
   return(G.D)
 }
 
@@ -200,27 +213,35 @@ samwrapstart <- function(par, n, a1, a2, samp){
   b1 <- (a1-1)*par$V.T[1]
   b2 <- (a2-1)*par$W.T[1]
   if(samp=="state")
-      out <- statesam(n, start, dat, a1, a2, b1, b2)
+    out <- statesam(n, start, dat, a1, a2, b1, b2)
   if(samp=="dist")
-      out <- distsam(n, start, dat, a1, a2, b1, b2)
+    out <- distsam(n, start, dat, a1, a2, b1, b2)
   if(samp=="error")
-      out <- errorsam(n, start, dat, a1, a2, b1, b2)
+    out <- errorsam(n, start, dat, a1, a2, b1, b2)
   if(samp=="sdint")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 1)
+    out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 1)
   if(samp=="seint")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 2)
+    out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 2)
   if(samp=="deint")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 3)
+    out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 3)
   if(samp=="triint")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(TRUE, TRUE), 4)
+    out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(TRUE, TRUE), 4)
   if(samp=="sdalt")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 1)
+    out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 1)
   if(samp=="sealt")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 2)
+    out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 2)
   if(samp=="dealt")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 3)
+    out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 3)
   if(samp=="trialt")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(FALSE, FALSE), 4)
+    out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(FALSE, FALSE), 4)
+  if(samp=="sdkern")
+    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(1/2, 1/2, 0))
+  if(samp=="sekern")
+    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(1/2, 0, 1/2))
+  if(samp=="dekern")
+    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(0, 1/2, 1/2))
+  if(samp=="trikern")
+    out <- randkernsam(n, start, dat, a1, a2, b1, b2)
   return(data.frame(out[,c(T+4, T+2, T+3, 1:(T+1))]))
 }
 
@@ -254,6 +275,15 @@ samwrap <- function(par, n, a1, a2, samp){
       out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 3)
   if(samp=="trialt")
       out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(FALSE, FALSE), 4)
+  if(samp=="sdkern")
+    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(1/2, 1/2, 0))
+  if(samp=="sekern")
+    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(1/2, 0, 1/2))
+  if(samp=="dekern")
+    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(0, 1/2, 1/2))
+  if(samp=="trikern")
+    out <- randkernsam(n, start, dat, a1, a2, b1, b2)
+
   return(data.frame(out[,c(T+4, T+2, T+3, 1:(T+1))]))
 }
 
@@ -304,15 +334,12 @@ statesam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
   W <- start[2]
   out <- mcmc(matrix(0, nrow=n, ncol=T+4))
   colnames(out) <- c(paste("theta",0:T,sep=""),"V","W", "time")
-
-
   for(i in 1:n){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
-    mod <- dlmModPoly(order=1, dV=V, dW=W)
-    filt <- dlmFilter(dat, mod)
-    theta <- dlmBSample(filt)
-    V <- rinvgamma(1, a1 + T/2, b1 + sum((dat-theta[-1])^2)/2)
-    W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
+    theta <- thetaiter(dat, V, W)
+    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    V <- VWiter[1]
+    W <- VWiter[2]
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     time <- time2-time
     out[i,] <- c(theta,V,W, time)
@@ -328,58 +355,16 @@ errorsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
   W <- start[2]
   out <- mcmc(matrix(0, nrow=n, ncol=T+4))
   colnames(out) <- c(paste("theta",0:T,sep=""),"V","W", "time")
-
   for(i in 1:n){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
-    mod <- dlmModPoly(order=1, dV=V, dW=W)
-    filt <- dlmFilter(dat, mod)
-    theta <- dlmBSample(filt)
-    A <- diag(-1/sqrt(V), T+1 )
-    A[1,1] <- 1
-    ytild <- c(0, dat/sqrt(V))
-    psi <- ytild + A%*%theta
-    Wa <- a2 + T/2
-    Wb <- b2 + sum( (theta[-1] - theta[-(T+1)])^2 )/2
-    W <- rinvgamma(1, Wa, Wb)
-    psi0 <- psi[1]
-    psiLT <- c(0,psi[-1])
-    Lpsi <- psiLT[-1] - psiLT[-(T+1)]
-    ys <- c(psi0, dat)
-    Ly <- ys[-1] - ys[-(T+1)]
-    a <- sum(Lpsi^2)/2/W
-    b <- sum(Lpsi*Ly)/W
-    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
-    ##if(logcon(b, a1, b1)){
-    if(FALSE){
-      V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
-    }
-    else{
-      propvar <- - 1 /( (a1 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b1*mn^(-3) )
-      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a1, b12=b1, mn=mn, propvar=propvar)
-      M <- d$objective
-      df <- d$minimum
-      rej <- TRUE
-      while(rej){
-        prop <- rtprop(1, mn, propvar, df)
-        if(prop>0){
-          R <- logpirej(prop, a, b, a1, b1, mn, propvar, df) - M
-          u <- runif(1,0,1)
-          if(log(u)<R){
-            V <- prop
-            rej <- FALSE
-          }
-        }
-      }
-    }
-
-    A <- diag(-1/sqrt(V), T+1 )
-    A[1,1] <- 1
-    ytild <- c(0, dat/sqrt(V))
-    theta <- solve(A)%*%(psi - ytild)
+    theta <- thetaiter(dat, V, W)
+    psi <- psitrans(dat, theta, V)
+    V <- Vpsiiter(dat, psi, W, a1, b1)
+    W <- Wpsiiter(dat, psi, V,  a2, b2)
+    theta <- thetapsitrans(dat, psi, V)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     time <- time2-time
-    out[i,] <- c(theta,V,W,time)
-
+    out[i,] <- c(theta,V,W, time)
   }
   return(out)
 }
@@ -393,51 +378,13 @@ distsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
   W <- start[2]
   out <- mcmc(matrix(0, nrow=n, ncol=T+4))
   colnames(out) <- c(paste("theta",0:T,sep=""),"V","W", "time")
-  B <- diag(1,T+1,T+1)
-  C <- diag(-1,T,T)
-  B <- rbind(rep(0,T+1),cbind(C,rep(0,T))) + B
-
   for(i in 1:n){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
-    mod <- dlmModPoly(order=1, dV=V, dW=W)
-    filt <- dlmFilter(dat, mod)
-    theta <- dlmBSample(filt)
-    A <- B/sqrt(W)
-    A[1,1] <- 1
-    gam <- A%*%theta
-    cgam <- cumsum(gam[-1])
-    gam0 <- gam[1]
-    Va <- a1 + T/2
-    Vb <- b1 + sum( (dat - theta[-1])^2 )/2
-    V <- rinvgamma(1, Va, Vb)
-    a <- sum( cgam^2 )/2/V
-    b <- sum( (dat - gam0) * cgam ) /V
-    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
-##    if(logcon(b, a2, b2)){
-    if(FALSE){
-      W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
-    }
-    else{
-      propvar <- - 1 /( (a2 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b2*mn^(-3) )
-      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a2, b12=b2, mn=mn, propvar=propvar)
-      M <- d$objective
-      df <- d$minimum
-      rej <- TRUE
-      while(rej){
-        prop <- rtprop(1, mn, propvar, df)
-        if(prop>0){
-          R <- logpirej(prop, a, b, a2, b2, mn, propvar, df) - M
-          u <- runif(1,0,1)
-          if(log(u)<R){
-            W <- prop
-            rej <- FALSE
-          }
-        }
-      }
-    }
-    A <- B/sqrt(W)
-    A[1,1] <- 1
-    theta <- solve(A)%*%gam
+    theta <- thetaiter(dat, V, W)
+    gam <- gamtrans(theta, W)
+    V <- Vgamiter(dat, gam, W, a1, b1)
+    W <- Wgamiter(dat, gam, V, a2, b2)
+    theta <- thetagamtrans(gam, W)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     time <- time2-time
     out[i,] <- c(theta,V,W, time)
@@ -452,63 +399,21 @@ statedistinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
   W <- start[2]
   out <- mcmc(matrix(0, nrow=n, ncol=T+4))
   colnames(out) <- c(paste("theta",0:T,sep=""),"V","W", "time")
-  B <- diag(1,T+1,T+1)
-  C <- diag(-1,T,T)
-  B <- rbind(rep(0,T+1),cbind(C,rep(0,T))) + B
-
   for(i in 1:n){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
-    ## sample states
-    mod <- dlmModPoly(order=1, dV=V, dW=W)
-    filt <- dlmFilter(dat, mod)
-    theta <- dlmBSample(filt)
-    ## sampler V,W conditional on states
-    V <- rinvgamma(1, a1 + T/2, b1 + sum((dat-theta[-1])^2)/2)
-    W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
-    ## If not interweaving, sample states again
+    ## state sampler
+    theta <- thetaiter(dat, V, W)
+    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    V <- VWiter[1]
+    W <- VWiter[2]
+    ## scaled disturbance sampler
     if(!inter){
-      mod <- dlmModPoly(order=1, dV=V, dW=W)
-      filt <- dlmFilter(dat, mod)
-      theta <- dlmBSample(filt)
+      theta <- thetaiter(dat, V, W)
     }
-    ## convert states to disturbances and sample (V,W) conditional on disturbances
-    A <- B/sqrt(W)
-    A[1,1] <- 1
-    gam <- A%*%theta
-    cgam <- cumsum(gam[-1])
-    gam0 <- gam[1]
-    Va <- a1 + T/2
-    Vb <- b1 + sum( (dat - theta[-1])^2 )/2
-    V <- rinvgamma(1, Va, Vb)
-    a <- sum( cgam^2 )/2/V
-    b <- sum( (dat - gam0) * cgam ) /V
-    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
-##    if(logcon(b, a2, b2)){
-    if(FALSE){
-      W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
-    }
-    else{
-      propvar <- - 1 /( (a2 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b2*mn^(-3) )
-      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a2, b12=b2, mn=mn, propvar=propvar)
-      M <- d$objective
-      df <- d$minimum
-      rej <- TRUE
-      while(rej){
-        prop <- rtprop(1, mn, propvar, df)
-        if(prop>0){
-          R <- logpirej(prop, a, b, a2, b2, mn, propvar, df) - M
-          u <- runif(1,0,1)
-          if(log(u)<R){
-            W <- prop
-            rej <- FALSE
-          }
-        }
-      }
-    }
-    ## convert disturbances back to states and save
-    A <- B/sqrt(W)
-    A[1,1] <- 1
-    theta <- solve(A)%*%gam
+    gam <- gamtrans(theta, W)
+    V <- Vgamiter(dat, gam, W, a1, b1)
+    W <- Wgamiter(dat, gam, V, a2, b2)
+    theta <- thetagamtrans(gam, W)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     time <- time2-time
     out[i,] <- c(theta,V,W,time)
@@ -525,62 +430,19 @@ stateerrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
   colnames(out) <- c(paste("theta",0:T,sep=""),"V","W","time")
   for(i in 1:n){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
-    ## sample states
-    mod <- dlmModPoly(order=1, dV=V, dW=W)
-    filt <- dlmFilter(dat, mod)
-    theta <- dlmBSample(filt)
-    ## sample (V,W) conditional on states
-    V <- rinvgamma(1, a1 + T/2, b1 + sum((dat-theta[-1])^2)/2)
-    W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
-    ## if not interweaving, sample states again
+    ## state sampler
+    theta <- thetaiter(dat, V, W)
+    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    V <- VWiter[1]
+    W <- VWiter[2]
+    ## scaled error sampler
     if(!inter){
-      mod <- dlmModPoly(order=1, dV=V, dW=W)
-      filt <- dlmFilter(dat, mod)
-      theta <- dlmBSample(filt)
+      theta <- thetaiter(dat, V, W)
     }
-    ## convert states to errors and sample (V,W) conditional on errors
-    A <- diag(-1/sqrt(V), T+1 )
-    A[1,1] <- 1
-    ytild <- c(0, dat/sqrt(V))
-    psi <- ytild + A%*%theta
-    Wa <- a2 + T/2
-    Wb <- b2 + sum( (theta[-1] - theta[-(T+1)])^2 )/2
-    W <- rinvgamma(1, Wa, Wb)
-    psi0 <- psi[1]
-    psiLT <- c(0,psi[-1])
-    Lpsi <- psiLT[-1] - psiLT[-(T+1)]
-    ys <- c(psi0, dat)
-    Ly <- ys[-1] - ys[-(T+1)]
-    a <- sum(Lpsi^2)/2/W
-    b <- sum(Lpsi*Ly)/W
-    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
-##    if(logcon(b, a1, b1)){
-    if(FALSE){
-      V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
-    }
-    else{
-      propvar <- - 1 /( (a1 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b1*mn^(-3) )
-      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a1, b12=b1, mn=mn, propvar=propvar)
-      M <- d$objective
-      df <- d$minimum
-      rej <- TRUE
-      while(rej){
-        prop <- rtprop(1, mn, propvar, df)
-        if(prop>0){
-          R <- logpirej(prop, a, b, a1, b1, mn, propvar, df) - M
-          u <- runif(1,0,1)
-          if(log(u)<R){
-            V <- prop
-            rej <- FALSE
-          }
-        }
-      }
-    }
-    ## convert errors to states and save
-    A <- diag(-1/sqrt(V), T+1 )
-    A[1,1] <- 1
-    ytild <- c(0, dat/sqrt(V))
-    theta <- solve(A)%*%(psi - ytild)
+    psi <- psitrans(dat, theta, V)
+    V <- Vpsiiter(dat, psi, W, a1, b1)
+    W <- Wpsiiter(dat, psi, V,  a2, b2)
+    theta <- thetapsitrans(dat, psi, V)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     time <- time2-time
     out[i,] <- c(theta,V,W,time)
@@ -595,104 +457,24 @@ disterrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
   W <- start[2]
   out <- mcmc(matrix(0, nrow=n, ncol=T+4))
   colnames(out) <- c(paste("theta",0:T,sep=""),"V","W", "time")
-  B <- diag(1,T+1,T+1)
-  C <- diag(-1,T,T)
-  B <- rbind(rep(0,T+1),cbind(C,rep(0,T))) + B
   for(i in 1:n){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
-    ## sample states and convert to disturbances
-    mod <- dlmModPoly(order=1, dV=V, dW=W)
-    filt <- dlmFilter(dat, mod)
-    theta <- dlmBSample(filt)
-    A <- B/sqrt(W)
-    A[1,1] <- 1
-    gam <- A%*%theta
-    cgam <- cumsum(gam[-1])
-    gam0 <- gam[1]
-    ## sample (V,W) conditional on disturbances
-    Va <- a1 + T/2
-    Vb <- b1 + sum( (dat - theta[-1])^2 )/2
-    V <- rinvgamma(1, Va, Vb)
-    a <- sum( cgam^2 )/2/V
-    b <- sum( (dat - gam0) * cgam ) /V
-    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
-##    if(logcon(b, a2, b2)){
-    if(FALSE){
-      W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
-    }
-    else{
-      propvar <- - 1 /( (a2 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b2*mn^(-3) )
-      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a2, b12=b2, mn=mn, propvar=propvar)
-      M <- d$objective
-      df <- d$minimum
-      rej <- TRUE
-      while(rej){
-        prop <- rtprop(1, mn, propvar, df)
-        if(prop>0){
-          R <- logpirej(prop, a, b, a2, b2, mn, propvar, df) - M
-          u <- runif(1,0,1)
-          if(log(u)<R){
-            W <- prop
-            rej <- FALSE
-          }
-        }
-      }
-    }
-    ## if not interweaving, sample the states. Otherwise convert disturbances
-    ## to states
+    ## scaled disturbance sampler
+    theta <- thetaiter(dat, V, W)
+    gam <- gamtrans(theta, W)
+    V <- Vgamiter(dat, gam, W, a1, b1)
+    W <- Wgamiter(dat, gam, V, a2, b2)
+    ## scaled error sampler
     if(!inter){
-      mod <- dlmModPoly(order=1, dV=V, dW=W)
-      filt <- dlmFilter(dat, mod)
-      theta <- dlmBSample(filt)
+      theta <- thetaiter(dat, V, W)
     }
     else{
-      A <- B/sqrt(W)
-      A[1,1] <- 1
-      theta <- solve(A)%*%gam
+      theta <- thetagamtrans(gam, W)
     }
-    ## convert states to errors and sample (V,W) conditional on errors
-    Ap <- diag(-1/sqrt(V), T+1 )
-    Ap[1,1] <- 1
-    ytild <- c(0, dat/sqrt(V))
-    psi <- ytild + Ap%*%theta
-    Wa <- a2 + T/2
-    Wb <- b2 + sum( (theta[-1] - theta[-(T+1)])^2 )/2
-    W <- rinvgamma(1, Wa, Wb)
-    psi0 <- psi[1]
-    psiLT <- c(0,psi[-1])
-    Lpsi <- psiLT[-1] - psiLT[-(T+1)]
-    ys <- c(psi0, dat)
-    Ly <- ys[-1] - ys[-(T+1)]
-    a <- sum(Lpsi^2)/2/W
-    b <- sum(Lpsi*Ly)/W
-    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
-##    if(logcon(b, a1, b1)){
-    if(FALSE){
-      V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
-    }
-    else{
-      propvar <- - 1 /( (a1 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b1*mn^(-3) )
-      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a1, b12=b1, mn=mn, propvar=propvar)
-      M <- d$objective
-      df <- d$minimum
-      rej <- TRUE
-      while(rej){
-        prop <- rtprop(1, mn, propvar, df)
-        if(prop>0){
-          R <- logpirej(prop, a, b, a1, b1, mn, propvar, df) - M
-          u <- runif(1,0,1)
-          if(log(u)<R){
-            V <- prop
-            rej <- FALSE
-          }
-        }
-      }
-    }
-    ## convert errors to states and save
-    Ap <- diag(-1/sqrt(V), T+1 )
-    A[1,1] <- 1
-    ytild <- c(0, dat/sqrt(V))
-    theta <- solve(Ap)%*%(psi - ytild)
+    psi <- psitrans(dat, theta, V)
+    V <- Vpsiiter(dat, psi, W, a1, b1)
+    W <- Wpsiiter(dat, psi, V,  a2, b2)
+    theta <- thetapsitrans(dat, psi, V)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     time <- time2-time
     out[i,] <- c(theta,V,W,time)
@@ -707,115 +489,31 @@ tripleinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=c(TRUE, TRU
   W <- start[2]
   out <- mcmc(matrix(0, nrow=n, ncol=T+4))
   colnames(out) <- c(paste("theta",0:T,sep=""),"V","W","time")
-  B <- diag(1,T+1,T+1)
-  C <- diag(-1,T,T)
-  B <- rbind(rep(0,T+1),cbind(C,rep(0,T))) + B
-
   for(i in 1:n){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
-    ## sample states
-    mod <- dlmModPoly(order=1, dV=V, dW=W)
-    filt <- dlmFilter(dat, mod)
-    theta <- dlmBSample(filt)
-    ## sample (V,W) conditional on states
-    V <- rinvgamma(1, a1 + T/2, b1 + sum((dat-theta[-1])^2)/2)
-    W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
-    ## If not interweaving, sample the states again
+    ## state sampler
+    theta <- thetaiter(dat, V, W)
+    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    V <- VWiter[1]
+    W <- VWiter[2]
+    ## scaled disturbance sampler
     if(!inter[1]){
-      mod <- dlmModPoly(order=1, dV=V, dW=W)
-      filt <- dlmFilter(dat, mod)
-      theta <- dlmBSample(filt)
+      theta <- thetaiter(dat, V, W)
     }
-    ## Convert states to disturbances
-    A <- B/sqrt(W)
-    A[1,1] <- 1
-    gam <- A%*%theta
-    cgam <- cumsum(gam[-1])
-    gam0 <- gam[1]
-    ## Sample (V,W) conditional on disturbances
-    Va <- a1 + T/2
-    Vb <- b1 + sum( (dat - theta[-1])^2 )/2
-    V <- rinvgamma(1, Va, Vb)
-    a <- sum( cgam^2 )/2/V
-    b <- sum( (dat - gam0) * cgam ) /V
-    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
-##    if(logcon(b, a2, b2)){
-    if(FALSE){
-      W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2)
-    }
-    else{
-      propvar <- - 1 /( (a2 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b2*mn^(-3) )
-      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a2, b12=b2, mn=mn, propvar=propvar)
-      M <- d$objective
-      df <- d$minimum
-      rej <- TRUE
-      while(rej){
-        prop <- rtprop(1, mn, propvar, df)
-        if(prop>0){
-          R <- logpirej(prop, a, b, a2, b2, mn, propvar, df) - M
-          u <- runif(1,0,1)
-          if(log(u)<R){
-            W <- prop
-            rej <- FALSE
-          }
-        }
-      }
-    }
-    ## If not interweaving, sample the states.
-    ## Otherwise, convert disturbances to states
+    gam <- gamtrans(theta, W)
+    V <- Vgamiter(dat, gam, W, a1, b1)
+    W <- Wgamiter(dat, gam, V, a2, b2)
+    ## scaled error sampler
     if(!inter[2]){
-      mod <- dlmModPoly(order=1, dV=V, dW=W)
-      filt <- dlmFilter(dat, mod)
-      theta <- dlmBSample(filt)
+      theta <- thetaiter(dat, V, W)
     }
     else{
-      A <- B/sqrt(W)
-      A[1,1] <- 1
-      theta <- solve(A)%*%gam
+      theta <- thetagamtrans(gam, W)
     }
-    ## Convert states to errors and sample (V,W) conditional on errors
-    Ap <- diag(-1/sqrt(V), T+1 )
-    Ap[1,1] <- 1
-    ytild <- c(0, dat/sqrt(V))
-    psi <- ytild + Ap%*%theta
-    Wa <- a2 + T/2
-    Wb <- b2 + sum( (theta[-1] - theta[-(T+1)])^2 )/2
-    W <- rinvgamma(1, Wa, Wb)
-    psi0 <- psi[1]
-    psiLT <- c(0,psi[-1])
-    Lpsi <- psiLT[-1] - psiLT[-(T+1)]
-    ys <- c(psi0, dat)
-    Ly <- ys[-1] - ys[-(T+1)]
-    a <- sum(Lpsi^2)/2/W
-    b <- sum(Lpsi*Ly)/W
-    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
-##    if(logcon(b, a1, b1)){
-    if(FALSE){
-      V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2), lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1)
-    }
-    else{
-      propvar <- - 1 /( (a1 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b1*mn^(-3) )
-      d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a1, b12=b1, mn=mn, propvar=propvar)
-      M <- d$objective
-      df <- d$minimum
-      rej <- TRUE
-      while(rej){
-        prop <- rtprop(1, mn, propvar, df)
-        if(prop>0){
-          R <- logpirej(prop, a, b, a1, b1, mn, propvar, df) - M
-          u <- runif(1,0,1)
-          if(log(u)<R){
-            V <- prop
-            rej <- FALSE
-          }
-        }
-      }
-    }
-    ## Convert errors to states and save
-    Ap <- diag(-1/sqrt(V), T+1 )
-    A[1,1] <- 1
-    ytild <- c(0, dat/sqrt(V))
-    theta <- solve(Ap)%*%(psi - ytild)
+    psi <- psitrans(dat, theta, V)
+    V <- Vpsiiter(dat, psi, W, a1, b1)
+    W <- Wpsiiter(dat, psi, V,  a2, b2)
+    theta <- thetapsitrans(dat, psi, V)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     time <- time2-time
     out[i,] <- c(theta,V,W,time)
@@ -824,7 +522,7 @@ tripleinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=c(TRUE, TRU
 }
 
 ## returns TRUE if target density of log-concave, FALSE otherwise
-logcon <- function(b, a12, b12, eps=10){
+logcon <- function(b, a12, b12, eps=.1){
   sb <- 1*(b>0) - 1*(b<0)  ##sign(b)
   RHS <- (a12 + 1)^3*(1 - 2/3*sb)*32/9/b12 + eps
   ## + eps to make sure ARS algorithm doesn't fail on
@@ -875,4 +573,212 @@ logpirej <- function(VW, a, b, a12, b12, mn, propvar, df){
 
 
 
+## samples theta conditional on V and W
+thetaiter <- function(dat, V, W){
+  mod <- dlmModPoly(order=1, dV=V, dW=W)
+  filt <- dlmFilter(dat, mod)
+  theta <- dlmBSample(filt)
+  return(theta)
+}
 
+## transforms theta to gamma
+gamtrans <- function(theta, W){
+  T <- length(theta) - 1
+  B <- diag(1,T+1,T+1)
+  C <- diag(-1,T,T)
+  B <- rbind(rep(0,T+1),cbind(C,rep(0,T))) + B
+  A <- B/sqrt(W)
+  A[1,1] <- 1
+  gam <- A%*%matrix(theta, ncol=1)
+  return(gam)
+}
+
+## transforms theta to psi
+psitrans <- function(dat, theta, V){
+  T <- length(dat)
+  A <- diag(-1/sqrt(V), T+1 )
+  A[1,1] <- 1
+  ytild <- c(0, dat/sqrt(V))
+  psi <- ytild + A%*%matrix(theta, ncol=1)
+  return(psi)
+}
+
+## transforms gamma to theta
+thetagamtrans <- function(gam, W){
+  T <- length(gam) - 1
+  B <- diag(1,T+1,T+1)
+  C <- diag(-1,T,T)
+  B <- rbind(rep(0,T+1),cbind(C,rep(0,T))) + B
+  A <- B/sqrt(W)
+  A[1,1] <- 1
+  theta <- solve(A)%*%matrix(gam, ncol=1)
+  return(theta)
+}
+
+## transforms psi to theta
+thetapsitrans <- function(dat, psi, V){
+  T <- length(dat)
+  A <- diag(-1/sqrt(V), T+1 )
+  A[1,1] <- 1
+  ytild <- c(0, dat/sqrt(V))
+  theta <- solve(A)%*%(matrix(psi, ncol=1) - matrix(ytild, ncol=1))
+  return(theta)
+}
+
+## samples V,W conditional on theta
+VWthetaiter <- function(dat, theta, a1, a2, b1, b2){
+  T <- length(dat)
+  V <- rinvgamma(1, a1 + T/2, b1 + sum((dat-theta[-1])^2)/2)
+  W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
+  return(c(V,W))
+}
+
+## samples W conditional on V,gamma
+Wgamiter <- function(dat, gam, V, a2, b2){
+  T <- length(dat)
+  cgam <- cumsum(gam[-1])
+  gam0 <- gam[1]
+  a <- sum( cgam^2 )/2/V
+  b <- sum( (dat - gam0) * cgam )/V
+  mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
+  adrej <- logcon(b, a2, b2)
+  if(adrej){
+    tryCatch(W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2),
+                      lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2))
+    if(W==0){
+      adrej <- FALSE
+    }
+  }
+  if(!adrej){
+    propvar <- - 1 /( (a2 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b2*mn^(-3) )
+    d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a2, b12=b2,
+                  mn=mn, propvar=propvar)
+    M <- d$objective
+    df <- d$minimum
+    rej <- TRUE
+    while(rej){
+      prop <- rtprop(1, mn, propvar, df)
+      if(prop>0){
+        R <- logpirej(prop, a, b, a2, b2, mn, propvar, df) - M
+        u <- runif(1,0,1)
+        if(log(u)<R){
+          W <- prop
+          rej <- FALSE
+        }
+      }
+    }
+  }
+  return(W)
+}
+
+## samples V conditional on W,gamma
+Vgamiter <- function(dat, gam, W, a1, b1){
+  T <- length(dat)
+  theta <- thetagamtrans(gam, W)
+  Va <- a1 + T/2
+  Vb <- b1 + sum( (dat - theta[-1])^2 )/2
+  V <- rinvgamma(1, Va, Vb)
+  return(V)
+}
+
+
+## samples V conditional on W,psi 
+Vpsiiter <- function(dat, psi, W, a1, b1){
+  T <- length(dat)
+  psi0 <- psi[1]
+  psiLT <- c(0,psi[-1])
+  Lpsi <- psiLT[-1] - psiLT[-(T+1)]
+  ys <- c(psi0, dat)
+  Ly <- ys[-1] - ys[-(T+1)]
+  a <- sum(Lpsi^2)/2/W
+  b <- sum(Lpsi*Ly)/W
+  mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
+  adrej <- logcon(b, a1, b1, eps=0)
+  if(adrej){
+    tryCatch(V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2),
+                 lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1))
+    if(V==0){
+      adrej <- FALSE
+    }
+  }
+  if(!adrej){
+    propvar <- - 1 /( (a1 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b1*mn^(-3) )
+    d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a1, b12=b1,
+                  mn=mn, propvar=propvar)
+    M <- d$objective
+    df <- d$minimum
+    rej <- TRUE
+    while(rej){
+      prop <- rtprop(1, mn, propvar, df)
+      if(prop>0){
+        R <- logpirej(prop, a, b, a1, b1, mn, propvar, df) - M
+        u <- runif(1,0,1)
+        if(log(u)<R){
+          V <- prop
+          rej <- FALSE
+        }
+      }
+    }
+  }
+  return(V)
+}
+
+
+## samples W conditional on V,psi
+Wpsiiter <- function(dat, psi, V,  a2, b2){
+  T <- length(dat)
+  theta <- thetapsitrans(dat, psi, V)
+  theta <- c(theta)
+  Wa <- a2 + T/2
+  Wb <- b2 + sum( (theta[-1] - theta[-(T+1)])^2 )/2
+  W <- rinvgamma(1, Wa, Wb)
+  return(W)
+}
+
+randkerniter <- function(dat, V, W, theta, a1, a2, b1, b2, probs=c(1/3, 1/3, 1/3)){
+  kernels <- c("state", "dist", "error")
+  kernel <- sample(kernels, 1, prob=probs)
+  if(kernel=="state"){
+    theta <- thetaiter(dat, V, W)
+    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    V <- VWiter[1]
+    W <- VWiter[2]
+  }
+  if(kernel=="error"){
+    theta <- thetaiter(dat, V, W)
+    psi <- psitrans(dat, theta, V)
+    V <- Vpsiiter(dat, psi, W, a1, b1)
+    W <- Wpsiiter(dat, psi, V,  a2, b2)
+    theta <- thetapsitrans(dat, psi, V)
+  }
+  if(kernel=="dist"){
+    theta <- thetaiter(dat, V, W)
+    gam <- gamtrans(theta, W)
+    V <- Vgamiter(dat, gam, W, a1, b1)
+    W <- Wgamiter(dat, gam, V, a2, b2)
+    theta <- thetagamtrans(gam, W)
+  }
+  out <- list(theta=theta, V=V, W=W, kernel=kernel)
+  return(out)
+}
+
+randkernsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, probs=c(1/3, 1/3, 1/3)){
+  T <- length(dat)
+  V <- start[1]
+  W <- start[2]
+  out <- data.frame(matrix(0, nrow=n, ncol=T+5))
+  colnames(out) <- c(paste("theta",0:T,sep=""),"V","W", "time", "kernel")
+  for(i in 1:n){
+    time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
+    iter <- randkerniter(dat, V, W, theta, a1, a2, b1, b2, probs)
+    theta <- iter$theta
+    V <- iter$V
+    W <- iter$W
+    kernel <- iter$kernel
+    time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
+    time <- time2-time
+    out[i,1:(T+4)] <- c(theta,V,W, time)
+    out[i,T+5] <- kernel
+  }
+  return(out)
+}

@@ -13,41 +13,40 @@ datMH11 <- apply(datheat2011,1,mean)[100:200]
 MLEest11 <- dlmMLE(datMH11, rep(0,4), mymodMLE, other=c(2,24,3))
 MLEstart <- exp(MLEest11$par) # my estimates don't replicate
 
-priorIG <- list(rep(1,8), rep(.1,8), rep(.01,8))
+priorIG <- list(rep(.1,8), rep(.01,8), rep(.001,8))
 priorU <- list(rep(10000,4), rep(10000000,4), rep(10000000000,4))
-priorHT <- list(c(rep(50,4), rep(1,4)), c(rep(1,4), rep(1,4)), c(rep(1,4), rep(10,4)))
-priortest <- c(rep(100,4), rep(1,4))
-
-test <- postsamHT(100, datMH11, priortest, MLEstart)
-
+priorHT <- list(c(rep(25,4), rep(1,4)), c(rep(25,4), rep(10,4)), c(rep(10,4), rep(1,4)))
 chains <- 3
 n <- 100
-IGsam <- list()
-URsam <- list()
-UMsam <- list()
-HTsam <- list()
+IGsam <- data.frame(NULL)
+URsam <- data.frame(NULL)
+UMsam <- data.frame(NULL)
+HTsam <- data.frame(NULL)
 starts <- list()
 starts[[1]] <- MLEstart*1/100
 starts[[2]] <- MLEstart
 starts[[3]] <- MLEstart*100
 
-for(j in 1:3){
-  IGsam[[j]] <- list()
-  URsam[[j]] <- list()
-  UMsam[[j]] <- list()
-  HTsam[[j]] <- list()
-  for(i in 1:chains){
-    print(c(i,j))
-    ##IGsam[[j]][[i]] <- postsamIG(n, datMH11, priorIG[[j]], starts[[i]])
-    print("IG finished")
-    ##URsam[[i]] <- postsamUR(n, datMH11, priorU[[3]], MLEstart)
-    print("UR finished")
-    ##UMsam[[j]][[i]] <- postsamUM(n, datMH11, priorU[[j]], starts[[i]])
-    print("UM finished")
-    HTsam[[j]][[i]] <- postsamHT(n, datMH11, priorHT[[j]], starts[[i]])
-    print("HT finished")
+## inverse cdf is probably better for UR and UM sam
+system.time(
+  for(j in 1:3){
+    for(i in 1:chains){
+      print(c(i,j))
+      IGsamtemp <- postsamIG(n, datMH11, priorIG[[j]], starts[[i]])
+      IGsam <- rbind(IGsam, data.frame(IGsamtemp, prior="IG", chain=i, hyper=j))
+      print("IG finished")
+      URsamtemp <- postsamUR(n, datMH11, priorU[[j]], MLEstart)
+      URsam <- rbind(URsam, data.frame(URsamtemp, prior="UR", chain=i, hyper=j))
+      print("UR finished")
+      UMsamtemp <- postsamUM(n, datMH11, priorU[[j]], starts[[i]])
+      UMsam <- rbind(UMsam, data.frame(UMsamtemp, prior="UM", chain=i, hyper=j))
+      print("UM finished")
+      HTsamtemp <- postsamHT(n, datMH11, priorHT[[j]], starts[[i]])
+      HTsam <- rbind(HTsam, data.frame(HTsamtemp, prior="HT", chain=i, hyper=j))
+      print("HT finished")
+    }
   }
-}
+  )
 
 ##plot ergodic means from multiple chains
 k <- 1
@@ -80,27 +79,45 @@ for(j in 1:3){
   lines(ts(cumsum(HTsam[[j]][[3]][,k])/1:n), col="blue")
 }
 
+lims <- c(.005, 3e-11, .005, .0000000001)
+k <- 4
+
 par(mfrow=c(3,3))
 for(i in 1:3){
   for(j in 1:3){
-    plot(ts(HTsam[[i]][[j]][,k]), main=paste(i,j))
+    plot(ts(HTsam[[i]][[j]][,k]), main=paste(i,j), ylim=c(0,lims[k]))
   }
 }
 
-  for(i in 1:chains){
-    ##lines(ts(cumsum(URsam[[i]][,j])/1:n), col="red")
+
+par(mfrow=c(3,3))
+for(i in 1:3){
+  for(j in 1:3){
+    plot(ts(URsam[[i]][[j]][,k]), main=paste(i,j), ylim=c(0,lims[k]))
   }
-  for(i in 1:chains){
-    lines(ts(cumsum(UMsam[[i]][,j])/1:n), col="blue")
-  }
-  for(i in 1:chains){
-    lines(ts(cumsum(HTsam[[i]][,j])/1:n), col="green")
-  }
-  legend("topright", c("IG", "UR", "UM", "HT"), lty=c(1,1,1,1), col=c("black", "red", "blue", "green"))
 }
+
+
+par(mfrow=c(3,3))
+for(i in 1:3){
+  for(j in 1:3){
+    plot(ts(UMsam[[i]][[j]][,k]), main=paste(i,j), ylim=c(0,lims[k]))
+  }
+}
+
+lims <- c(.005, 3e-11, .005, .001)
+par(mfrow=c(3,3))
+for(i in 1:3){
+  for(j in 1:3){
+    plot(ts(IGsam[[i]][[j]][,k]), main=paste(i,j), ylim=c(0,lims[k]))
+  }
+}
+
+
 
 plot(ts(HTsam[[1]][,2]))
 
+X11.options(type="Xlib")
 source("varfun.r")
 V <- 1
 W <- 1

@@ -88,6 +88,10 @@ postsamUR <- function(n, data, prior, start){
   T <- length(data)
   out <- mcmc(matrix(0,ncol=4, nrow=n))
   colnames(out) <- c("V", "Wmu", "Wbeta", "Wseas")
+  Va <- T/2 + 1/2
+  W1a <- T/2 + 1/2
+  W2a <- T/2 + 1/2
+  W3a <- 3*T + 1/2
   for(i in 1:n){
     print(i)
     mod <- mymod(parm, c(2,24,3))
@@ -141,6 +145,10 @@ postsamUM <- function(n, data, prior, start){
   T <- length(data)
   out <- mcmc(matrix(0,ncol=4, nrow=n))
   colnames(out) <- c("V", "Wmu", "Wbeta", "Wseas")
+  Va <- T/2 + 1/2
+  W1a <- T/2 + 1/2
+  W2a <- T/2 + 1/2
+  W3a <- 3*T + 1/2
   for(i in 1:n){
     mod <- mymod(parm, c(2,24,3))
     FF <- mod$FF
@@ -199,7 +207,7 @@ postsamHT <- function(n, data, prior, start){
   out <- mcmc(matrix(0,ncol=4, nrow=n))
   colnames(out) <- c("V", "Wmu", "Wbeta", "Wseas")
   for(i in 1:n){
-    print(c(i,round(parm,10)))
+    ##print(c(i,round(parm,10)))
     mod <- mymod(parm, c(2,24,3))
     FF <- mod$FF
     GG <- mod$GG
