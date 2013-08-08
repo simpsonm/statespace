@@ -6,7 +6,7 @@ W <- V
 
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 M <- expand.grid(ch=1, V.S=c(1/100, 100), W.S=c(1/100, 100))
-M[5,] <- c(1,1)
+M[5,] <- c(1,1,1)
 simdatatemp <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
 simdata <- ddply(M, .(ch, V.S, W.S), dfun, simgrid=simdatatemp)
 K <- 100
