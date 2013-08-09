@@ -55,23 +55,18 @@ sam.diag <- function(sam, parallel, mix=FALSE){
 }
 
 
-fullsim <- function(samplers, simdata, n, burn, a1, a2){
-  parallel <- require(doMC, quietly=TRUE)
-  if(parallel){
-    registerDoMC()
-  }
+fullsim <- function(samplers, simdata, n, burn, a1, a2, parallel){
   out <- ddply(samplers, .(sampler), samsim, .parallel=parallel,
-               simdata=simdata, n=n, burn=burn, a1=a1, a2=a2)
+               simdata=simdata, n=n, burn=burn, a1=a1, a2=a2, parallel=parallel)
   return(out)
 }
 
 
 ## simulates from a given sampler for each dataset and for multiple
 ## chains, and returns summary info on the first chain.
-samsim <- function(samplers, simdata, n, burn, a1, a2){
+samsim <- function(samplers, simdata, n, burn, a1, a2, parallel){
   sampler <- samplers$sampler[1]
   print(sampler)
-  parallel <- require(doMC, quietly=TRUE)
   sam <- ddply(simdata, .(V.T, W.T, T.T), samwrap, .parallel=parallel,
                n=n, a1=a1, a2=a2, samp=sampler)
   samnam <- paste(sampler, "SAM.RData", sep="")

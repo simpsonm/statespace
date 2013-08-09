@@ -9,11 +9,6 @@
 # Outputs that you can compile yourself!!       #
 # (See README.md for how to compile .Rnw files) #
 #################################################
-mcmcex.pdf
-mcmcex.tex
-mcmcex.log
-mcmcex.aux
-mcmcex.out
 
 # These output folders come from knitr #
 /auto

@@ -1,0 +1,300 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol}
+\usepackage{booktabs}
+\usepackage{caption}
+\begin{document}
+
+% \SweaveOpts{fig.path='figure/', fig.align='center', fig.show='hold'}
+%                out.width=".47\\textwidth",
+<<setup, include=FALSE, cache=FALSE>>=
+options(replace.assign=TRUE,width=90)
+opts_knit$set(eval.after = "fig.cap")
+opts_chunk$set(dev="pdf",
+               fig.lp = "",
+               fig.keep="high",
+               fig.show="hold",
+               fig.align="center")
+@
+
+
+\title{MCMC Examples for DLMs}
+\author{Matt Simpson}
+\maketitle
+
+<<loaddata, echo=FALSE>>=
+load("mixing/samout.RData")
+load("mixing/postcors.RData")
+library(ggplot2)
+library(scales)
+library(plyr)
+library(xtable)
+library(reshape2)
+sams <- c("error", "state", "dist")
+meltedsam <- melt(samout, id=c("sampler", "V.T", "W.T", "T.T"))
+Vs <- unique(meltedsam$V.T)
+Ws <- Vs
+breaks <- round(Vs, 3)
+label_both_parsed <- function(variable, value){
+  llply(as.character(paste(variable, value, sep = ": ")), function(x) parse(text = x))
+}
+label_both_parsed_split <- function(variable, value){
+  llply(as.character(paste(variable, value, sep = ": ")), 
+        function(x) parse(text = strsplit(x, "\\.")[[1]][1]))
+}
+meltedcors <- melt(postcors, id=c("V.T", "W.T", "T.T"))
+@ 
+\section{Autocorrelations and Effective Sampler Sizes}
+<<basecorplotT10, fig.cap=cap, echo=FALSE, fig.width=10>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=10$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the state, scaled disturbance, and scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==10 & sampler %in% sams ))
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+    scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+    ggtitle("Autocorrelation for V and W, T=10") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+
+
+<<basecorplotT100, fig.cap=cap, echo=FALSE, fig.width=10>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=100$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the state, scaled disturbance, and scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==100 & sampler %in% sams ))
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+    scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+    ggtitle("Autocorrelation for V and W, T=100") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+
+
+<<basecorplotT1000, fig.cap=cap, echo=FALSE, fig.width=10>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=1000$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the state, scaled disturbance, and scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==1000 & sampler %in% sams ))
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+    scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+    ggtitle("Autocorrelation for V and W, T=1000") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+
+<<baseESplotT10, fig.cap=cap, echo=FALSE, fig.width=10>>=
+cap <- "Effective sample size in posterior sampler for a time series of length $T=10$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the state, scaled disturbance, and scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$."
+vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==10 & sampler %in% sams ))
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+  geom_tile() +
+  scale_fill_gradient("EffSize", low="white", high=muted("red"),
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,2500), na.value=muted("red")) +
+  facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+  ggtitle("Effective Sample Size for V and W, T=10") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+
+<<baseESplotT100, fig.cap=cap, echo=FALSE, fig.width=10>>=
+cap <- "Effective sample size in posterior sampler for a time series of length $T=100$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the state, scaled disturbance, and scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$."
+vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==100 & sampler %in% sams ))
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+  geom_tile() +
+  scale_fill_gradient("EffSize", low="white", high=muted("red"),
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,2500), na.value=muted("red")) +
+  facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+  ggtitle("Effective Sample Size for V and W, T=100") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+
+<<baseESplotT1000, fig.cap=cap, echo=FALSE, fig.width=10>>=   
+cap <- "Effective sample size in posterior sampler for a time series of length $T=1000$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the state, scaled disturbance, and scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$."
+vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==1000 & sampler %in% sams ))
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+  geom_tile() +
+  scale_fill_gradient("EffSize", low="white", high=muted("red"),
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,2500), na.value=muted("red")) +
+  facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+  ggtitle("Effective Sample Size for V and W, T=1000") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+
+<<not3ESplotT10, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=10>>=   
+cap <- "create me"
+vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars & T.T==10 & 
+                     !(sampler %in% c(sams, "trialt", "triint")) ))
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+  geom_tile() +
+  scale_fill_gradient("EffSize", low="white", high=muted("red"),
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,2500), na.value=muted("red")) +
+  facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+  ggtitle("Effective Sample Size for V and W, T=10") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+
+<<not3ESplotT100, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=10>>=   
+cap <- "create me"
+vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars & T.T==100 & 
+                     !(sampler %in% c(sams, "trialt", "triint")) ))
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+  geom_tile() +
+  scale_fill_gradient("EffSize", low="white", high=muted("red"),
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,2500), na.value=muted("red")) +
+  facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+  ggtitle("Effective Sample Size for V and W, T=100") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+
+<<not3ESplotT1000, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=10>>=   
+cap <- "create me"
+vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars & T.T==1000 & 
+                     !(sampler %in% c(sams, "trialt", "triint")) ))
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+  geom_tile() +
+  scale_fill_gradient("EffSize", low="white", high=muted("red"),
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,2500), na.value=muted("red")) +
+  facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+  ggtitle("Effective Sample Size for V and W, T=1000") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+\section{Posterior Correlations}
+
+
+<<postplotT10, echo=FALSE, fig.cap=cap>>=
+cap <- "Maximum (in magnitude) of the posterior correlations between either $V$ or $W$ and either the $\\theta$'s, $\\gamma$'s, and $\\psi$'s for a time series of length $T=10$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+vars <- c("Vgamma", "Wgamma", "Vpsi", "Wpsi", "Vtheta", "Wtheta")
+castedcors <- dcast(meltedcors, formula=V.T + W.T + variable ~ .,
+                    subset=.(variable %in% vars & T.T==10))
+colnames(castedcors)[4] <- "value"
+castedcors$parameter <- substr(as.character(castedcors$variable), 1, 1)
+castedcors$statevar <- substr(as.character(castedcors$variable), 2, length(castedcors$variable))
+ggplot(data=castedcors, aes(x=V.T, y=W.T, fill=value)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(statevar~parameter, scales="free",
+               labeller=label_both_parsed) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle(expression(paste("Max Correlation Between V or W and the ", theta, "'s, ", 
+        gamma, "'s, or ", psi, "'s, T=10"))) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+
+
+<<postplotT100, echo=FALSE, fig.cap=cap>>=
+cap <- "Maximum (in magnitude) of the posterior correlations between either $V$ or $W$ and either the $\\theta$'s, $\\gamma$'s, and $\\psi$'s for a time series of length $T=100$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+vars <- c("Vgamma", "Wgamma", "Vpsi", "Wpsi", "Vtheta", "Wtheta")
+castedcors <- dcast(meltedcors, formula=V.T + W.T + variable ~ .,
+                    subset=.(variable %in% vars & T.T==100))
+colnames(castedcors)[4] <- "value"
+castedcors$parameter <- substr(as.character(castedcors$variable), 1, 1)
+castedcors$statevar <- substr(as.character(castedcors$variable), 2, length(castedcors$variable))
+ggplot(data=castedcors, aes(x=V.T, y=W.T, fill=value)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(statevar~parameter, scales="free",
+               labeller=label_both_parsed) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle(expression(paste("Max Correlation Between V or W and the ", theta, "'s, ", 
+        gamma, "'s, or ", psi, "'s, T=100"))) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+
+
+<<postplotT1000, echo=FALSE, fig.cap=cap>>=
+cap <- "Maximum (in magnitude) of the posterior correlations between either $V$ or $W$ and either the $\\theta$'s, $\\gamma$'s, and $\\psi$'s for a time series of length $T=1000$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+vars <- c("Vgamma", "Wgamma", "Vpsi", "Wpsi", "Vtheta", "Wtheta")
+castedcors <- dcast(meltedcors, formula=V.T + W.T + variable ~ .,
+                    subset=.(variable %in% vars & T.T==1000))
+colnames(castedcors)[4] <- "value"
+castedcors$parameter <- substr(as.character(castedcors$variable), 1, 1)
+castedcors$statevar <- substr(as.character(castedcors$variable), 2, length(castedcors$variable))
+ggplot(data=castedcors, aes(x=V.T, y=W.T, fill=value)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(statevar~parameter, scales="free",
+               labeller=label_both_parsed) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle(expression(paste("Max Correlation Between V or W and the ", theta, "'s, ", 
+        gamma, "'s, or ", psi, "'s, T=1000"))) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+
+<<postplotVW, echo=FALSE, fig.height=3, fig.cap=cap>>=
+cap <- "Posterior correlation between $V$ and $W$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+ggplot(data=postcors, aes(x=V.T, y=W.T, fill=VW)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white") +
+    facet_grid(.~T.T, scales="free",
+               labeller=label_both_parsed_split) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle("Posterior Correlation Between V and W") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@
+
+
+\end{document}
