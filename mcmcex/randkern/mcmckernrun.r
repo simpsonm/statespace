@@ -17,7 +17,7 @@ a2 <- a1
 set.seed(25212342) ## new seed for simulations
 parallel <- require(doMC, quietly=TRUE)
 if(parallel){
-  registerDoMC(2)
+  registerDoMC(1)
 }
 system.time(samout <- fullsim(samplers, simdata, n, burn,
                               a1, a2, parallel))
