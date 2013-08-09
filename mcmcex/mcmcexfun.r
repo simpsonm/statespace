@@ -56,8 +56,8 @@ sam.diag <- function(sam, parallel, mix=FALSE){
 
 
 fullsim <- function(samplers, simdata, n, burn, a1, a2, parallel){
-  out <- ddply(samplers, .(sampler), samsim, .parallel=parallel,
-               simdata=simdata, n=n, burn=burn, a1=a1, a2=a2, parallel=parallel)
+  out <- ddply(samplers, .(sampler), samsim, simdata=simdata, n=n,
+               burn=burn, a1=a1, a2=a2, parallel=parallel)
   return(out)
 }
 
