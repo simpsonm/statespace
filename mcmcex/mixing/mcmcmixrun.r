@@ -16,7 +16,7 @@ a1 <- 5
 a2 <- a1
 parallel <- require(doMC, quietly=TRUE)
 if(parallel){
-  registerDoMC(2)
+  registerDoMC(4)
 }
 system.time(samout <- fullsim(samplers, simdata, n, burn, a1, a2, parallel))
 save(samout, file="samout.RData")
