@@ -70,7 +70,7 @@ samsim <- function(samplers, simdata, n, burn, a1, a2, parallel){
   sam <- ddply(simdata, .(V.T, W.T, T.T), samwrap, .parallel=parallel,
                n=n, a1=a1, a2=a2, samp=sampler)
   samnam <- paste(sampler, "SAM.RData", sep="")
-  colnam <- grep("(V.T|W.T|T.T|V|W|time)$)",
+  colnam <- grep("(V.T|W.T|T.T|V|W|time)$",
                  colnames(sam))
   samshort <- sam[,colnam]
   save(samshort, file=samnam)
@@ -118,13 +118,45 @@ postcor <- function(sam, dat, burn){
   Wgamaxcor <- Wgacors[1,which.max(abs(Wgacors))]
   Vpsmaxcor <- Vpscors[1,which.max(abs(Vpscors))]
   Wpsmaxcor <- Wpscors[1,which.max(abs(Wpscors))]
-  out <- data.frame(VW=VWcor, Vtheta0=Vth0cor, Wtheta0=Wth0cor, Vtheta1=Vthcors[1,1],
-                    Wtheta1=Wthcors[1,1], VthetaT=Vthcors[1,T.T], WthetaT=Wthcors[1,T.T],
-                    Vgamma1=Vgacors[1,1], Wgamma1=Wgacors[1,1], VgammaT=Vgacors[1,T.T],
-                    WgammaT=Wgacors[1,T.T], Vpsi1=Vpscors[1,1], Wpsi1=Wpscors[1,1],
-                    VpsiT=Vpscors[1,T.T], WpsiT=Wpscors[1,T.T], Vtheta=Vthmaxcor,
-                    Wtheta=Wthmaxcor, Vgamma=Vgamaxcor, Wgamma=Wgamaxcor, Vpsi=Vpsmaxcor,
-                    Wpsi=Wpsmaxcor)
+  Vthavgcor <- mean(abs(Vthcors[1,]))
+  Wthavgcor <- mean(abs(Wthcors[1,]))
+  Vgaavgcor <- mean(abs(Vgacors[1,]))
+  Wgaavgcor <- mean(abs(Wgacors[1,]))
+  Vpsavgcor <- mean(abs(Vpscors[1,]))
+  Wpsavgcor <- mean(abs(Wpscors[1,]))
+
+
+  out <- data.frame(VW=VWcor, Vtheta0=Vth0cor, Wtheta0=Wth0cor,
+                    Vtheta1=Vthcors[1,1], Wtheta1=Wthcors[1,1],
+                    VthetaT=Vthcors[1,T.T], WthetaT=Wthcors[1,T.T],
+                    Vgamma1=Vgacors[1,1], Wgamma1=Wgacors[1,1],
+                    VgammaT=Vgacors[1,T.T], WgammaT=Wgacors[1,T.T],
+                    Vpsi1=Vpscors[1,1], Wpsi1=Wpscors[1,1],
+                    VpsiT=Vpscors[1,T.T], WpsiT=Wpscors[1,T.T],
+                    VthetaMax=Vthmaxcor, WthetaMax=Wthmaxcor,
+                    VgammaMax=Vgamaxcor, WgammaMax=Wgamaxcor,
+                    VpsiMax=Vpsmaxcor, WpsiMax=Wpsmaxcor,
+                    VthetaAvg=Vthavgcor, WthetaAvg=Wthavgcor,
+                    VgammaAvg=Vgaavgcor, WgammaAvg=Wgaavgcor,
+                    VpsiAvg=Vpsavgcor, WpsiAvg=Wpsavgcor,
+                    VthT4 = Vthcors[1, ceiling(T.T/4)],
+                    VthT2 = Vthcors[1, T.T/2],
+                    Vth3T4 = Vthcors[1, floor(3*T.T/4)],
+                    WthT4 = Wthcors[1, ceiling(T.T/4)],
+                    WthT2 = Wthcors[1, T.T/2],
+                    Wth3T4 = Wthcors[1, floor(3*T.T/4)],
+                    VgaT4 = Vgacors[1, ceiling(T.T/4)],
+                    VgaT2 = Vgacors[1, T.T/2],
+                    Vga3T4 = Vgacors[1, floor(3*T.T/4)],
+                    WgaT4 = Wgacors[1, ceiling(T.T/4)],
+                    WgaT2 = Wgacors[1, T.T/2],
+                    Wga3T4 = Wgacors[1, floor(3*T.T/4)],
+                    VpsT4 = Vpscors[1, ceiling(T.T/4)],
+                    VpsT2 = Vpscors[1, T.T/2],
+                    Vps3T4 = Vpscors[1, floor(3*T.T/4)],
+                    WpsT4 = Wpscors[1, ceiling(T.T/4)],
+                    WpsT2 = Wpscors[1, T.T/2],
+                    Wps3T4 = Wpscors[1, floor(3*T.T/4)])
   rownames(out)[1] <- ""
   return(out)
 }
@@ -156,33 +188,67 @@ samsummary <- function(sam, dat, burn, sampler){
   psiES <- apply(psis, 2, effectiveSize)
   theta0.AC <- corfun(theta0)
   theta1.AC <- thetaAC[1]
+  thetaT4.AC <- thetaAC[ceiling(T.T/4)]
+  thetaT2.AC <- thetaAC[T.T/2]
+  theta3T4.AC <- thetaAC[floor(3*T.T/4)]
   thetaT.AC <- thetaAC[T.T]
   gamma1.AC <- gammaAC[1]
+  gammaT4.AC <- gammaAC[ceiling(T.T/4)]
+  gammaT2.AC <- gammaAC[T.T/2]
+  gamma3T4.AC <- gammaAC[floor(3*T.T/4)]
   gammaT.AC <- gammaAC[T.T]
   psi1.AC <- psiAC[1]
+  psiT4.AC <- psiAC[ceiling(T.T/4)]
+  psiT2.AC <- psiAC[T.T/2]
+  psi3T4.AC <- psiAC[floor(3*T.T/4)]
   psiT.AC <- psiAC[T.T]
-  theta.AC <- thetaAC[which.max(abs(thetaAC))]
-  gamma.AC <- gammaAC[which.max(abs(gammaAC))]
-  psi.AC <- psiAC[which.max(abs(psiAC))]
+  theta.ACmax <- thetaAC[which.max(abs(thetaAC))]
+  gamma.ACmax <- gammaAC[which.max(abs(gammaAC))]
+  psi.ACmax <- psiAC[which.max(abs(psiAC))]
+  theta.ACavg <- mean(abs(thetaAC))
+  gamma.ACavg <- mean(abs(gammaAC))
+  psi.ACavg <- mean(abs(psiAC))
   theta0.ES <- effectiveSize(theta0)
   theta1.ES <- thetaES[1]
+  thetaT4.ES <- thetaES[ceiling(T.T/4)]
+  thetaT2.ES <- thetaES[T.T/2]
+  theta3T4.ES <- thetaES[floor(3*T.T/4)]
   thetaT.ES <- thetaES[T.T]
   gamma1.ES <- gammaES[1]
+  gammaT4.ES <- gammaES[ceiling(T.T/4)]
+  gammaT2.ES <- gammaES[T.T/2]
+  gamma3T4.ES <- gammaES[floor(3*T.T/4)]
   gammaT.ES <- gammaES[T.T]
   psi1.ES <- psiES[1]
+  psiT4.ES <- psiES[ceiling(T.T/4)]
+  psiT2.ES <- psiES[T.T/2]
+  psi3T4.ES <- psiES[floor(3*T.T/4)]
   psiT.ES <- psiES[T.T]
-  theta.ES <- thetaES[which.min(thetaES)]
-  gamma.ES <- gammaES[which.min(gammaES)]
-  psi.ES <- psiES[which.min(psiES)]
+  theta.ESmin <- thetaES[which.min(thetaES)]
+  gamma.ESmin <- gammaES[which.min(gammaES)]
+  psi.ESmin <- psiES[which.min(psiES)]
+  theta.ESavg <- mean(thetaES)
+  gamma.ESavg <- mean(gammaES)
+  psi.ESavg <- mean(psiES)
   V.AC <- corfun(V)
   W.AC <- corfun(W)
   V.ES <- effectiveSize(V)
   W.ES <- effectiveSize(W)
-  out <- cbind(init, V.AC, W.AC, theta0.AC, theta1.AC, thetaT.AC,
-               theta.AC, gamma1.AC, gammaT.AC, gamma.AC, psi1.AC, psiT.AC,
-               psi.AC, V.ES, W.ES, theta0.ES, theta1.ES, thetaT.ES,
-               theta.ES, gamma1.ES, gammaT.ES, gamma.ES, psi1.ES,
-               psiT.ES, psi.ES)
+  
+  out <- cbind(init, V.AC, W.AC, theta0.AC,
+               theta1.AC, thetaT4.AC, thetaT2.AC, theta3T4.AC,
+               thetaT.AC, theta.ACmax,theta.ACavg,
+               gamma1.AC, gammaT4.AC, gammaT2.AC, gamma3T4.AC,
+               gammaT.AC, gamma.ACmax, gamma.ACavg,
+               psi1.AC, psiT4.AC, psiT2.AC, psi3T4.AC, psiT.AC,
+               psi.ACmax, psi.ACavg,
+               V.ES, W.ES, theta0.ES,
+               theta1.ES, thetaT4.ES, thetaT2.ES, theta3T4.ES,
+               thetaT.ES, theta.ESmin, theta.ESavg,
+               gamma1.ES, gammaT4.ES, gammaT2.ES, gamma3T4.ES,
+               gammaT.ES, gamma.ESmin, gamma.ESavg,
+               psi1.ES, psiT4.ES, psiT2.ES, psi3T4.ES,
+               psiT.ES, psi.ESmin, psi.ESavg)
   rownames(out) <- ""
   return(out)
 }
