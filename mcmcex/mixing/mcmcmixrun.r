@@ -14,6 +14,10 @@ n <- 3000
 burn <- 500
 a1 <- 5
 a2 <- a1
-system.time(samout <- fullsim(samplers, simdata, n, burn, a1, a2))
+parallel <- require(doMC, quietly=TRUE)
+if(parallel){
+  registerDoMC(2)
+}
+system.time(samout <- fullsim(samplers, simdata, n, burn, a1, a2, parallel))
 save(samout, file="samout.RData")
 
