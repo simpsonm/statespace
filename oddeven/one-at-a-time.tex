@@ -1,0 +1,45 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+
+\begin{document}
+
+General dynamic linear model (DLM):
+\begin{align*}
+y_t &= F_t\theta_t +v_t &v_t&\stackrel{ind}{\sim} N(0,V_t) \\
+\theta_t &= G_t\theta_{t-1} + w_t & w_t&\stackrel{ind}{\sim} N(0,W_t) \\
+\theta_0 & \sim N(m_0,C_0) 
+\end{align*}
+where $y_t$ has dimension $d$ and $\theta_t$ has dimension $p$. 
+
+Full conditional distributions are
+\begin{align*}
+p(\theta_t|\theta_{-t},y_{1:t}) &= p(\theta_t|\theta_{t-1},\theta_{t+1},y_t) \\
+&\propto p(\theta_t|\theta_{t-1})p(y_t|\theta_t)p(\theta_{t+1}|\theta_t) \\
+&= N(\theta_t;G_t\theta_{t-1},W_t) N(y_t;F_t'\theta_t,V_t) N(\theta_{t+1};G_{t+1}\theta_t,W_{t+1}) \\
+&= N(u_t,U_t) \\
+U_t &= \left(W_t^{-1}+F_t^\top V_t^{-1}F_t + G_t^\top W_{t+1}^{-1}G_t \right)^{-1} \\
+u_t &= U_t^{-1} \left( W_t^{-1}G_t\theta_{t-1} + F_t^\top V_t^{-1} y_t + G_t^\top W_{t+1}^{-1} \theta_{t+1}  \right)
+\end{align*}
+for with $W_0^{-1}\stackrel{d}{=}0$ and $V_0^{-1}\stackrel{d}{=}0$. 
+
+\section*{One-at-a-time sampler}
+
+One-at-a-time state sampler proceeds sequentially through $t$ to sample from the full conditionals using the most recent values of the state. More specifically, given a sample $\theta_{0:T}^{(i)}$ at iteration $i$, perform the following steps:
+\begin{itemize}
+\item Step 0: $\theta_0^{(i+1)} \sim p\left(\theta_0\left|\theta_1^{(i)}\right.\right)$.
+\item Step t: $\theta_t^{(i+1)} \sim p\left(\theta_t\left|\theta_{t-1}^{(i+1)},\theta_{t+1}^{(i)},y_t\right.\right)$ for $t=1,\ldots,T-1$.
+\item Step T: $\theta_T^{(i+1)} \sim p\left(\theta_T\left|\theta_{T-1}^{(i+1)},y_T\right.\right)$.
+\end{itemize}
+to obtain a a sample $\theta_{0:T}^{(i+1)}$ at iteration $i+1$.
+
+\section*{Odd/even sampler}
+
+The odd/even sampler jointly samples all odd indices and then jointly samples all even indices. The key is that conditional on the states with even indices, the states with odd indices are independent and vice versa. So, given a sample $\theta_{0:T}^{(i)}$ at iteration $i$, perform the following steps:
+
+\begin{itemize}
+\item Step 1: For $t$ odd, sample independently $\theta_t^{(i+1)} \sim p\left(\theta_t\left|\theta_{t-1}^{(i)},\theta_{t+1}^{(i)},y_t\right.\right)$.
+\item Step 2: For $t$ even, sample independently $\theta_t^{(i+1)} \sim p\left(\theta_t\left|\theta_{t-1}^{(i+1)},\theta_{t+1}^{(i+1)},y_t\right.\right)$.
+\end{itemize}
+
+\end{document}
