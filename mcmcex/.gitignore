@@ -14,6 +14,8 @@ mcmcex.tex
 mcmcex.log
 mcmcex.aux
 mcmcex.out
+mcmcex.bbl
+mcmcex.blg
 
 # These output folders come from knitr #
 /auto

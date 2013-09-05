@@ -125,7 +125,6 @@ postcor <- function(sam, dat, burn){
   Vpsavgcor <- mean(abs(Vpscors[1,]))
   Wpsavgcor <- mean(abs(Wpscors[1,]))
 
-
   out <- data.frame(VW=VWcor, Vtheta0=Vth0cor, Wtheta0=Wth0cor,
                     Vtheta1=Vthcors[1,1], Wtheta1=Wthcors[1,1],
                     VthetaT=Vthcors[1,T.T], WthetaT=Wthcors[1,T.T],
@@ -303,6 +302,10 @@ samwrapstart <- function(par, n, a1, a2, samp){
     out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(0, 1/2, 1/2))
   if(samp=="trikern")
     out <- randkernsam(n, start, dat, a1, a2, b1, b2)
+  if(samp=="partialcis")
+    out <- partialcissam(n, start, dat, a1, a2, b1, b2)
+  if(samp=="fullcis")
+    out <- fullcissam(n, start, dat, a1, a2, b1, b2)
   return(data.frame(out[,c(T+4, T+2, T+3, 1:(T+1))]))
 }
 
@@ -344,6 +347,10 @@ samwrap <- function(par, n, a1, a2, samp){
     out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(0, 1/2, 1/2))
   if(samp=="trikern")
     out <- randkernsam(n, start, dat, a1, a2, b1, b2)
+  if(samp=="partialcis")
+    out <- partialcissam(n, start, dat, a1, a2, b1, b2)
+  if(samp=="fullcis")
+    out <- fullcissam(n, start, dat, a1, a2, b1, b2)
 
   return(data.frame(out[,c(T+4, T+2, T+3, 1:(T+1))]))
 }
@@ -693,7 +700,6 @@ VWthetaiter <- function(dat, theta, a1, a2, b1, b2){
   W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
   return(c(V,W))
 }
-
 ## samples W conditional on V,gamma
 Wgamiter <- function(dat, gam, V, a2, b2){
   T <- length(dat)
@@ -840,6 +846,53 @@ randkernsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, probs=c(1/3, 1/3,
     time <- time2-time
     out[i,1:(T+4)] <- c(theta,V,W, time)
     out[i,T+5] <- kernel
+  }
+  return(out)
+}
+
+partialcissam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
+  T <- length(dat)
+  V <- start[1]
+  W <- start[2]
+  out <- data.frame(matrix(0, nrow=n, ncol=T+4))
+  colnames(out) <- c(paste("theta",0:T,sep=""),"V","W", "time")
+  for(i in 1:n){
+    time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
+    theta <- thetaiter(dat, V, W)
+    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    V <- VWiter[1]
+    W <- VWiter[2]
+    gam <- gamtrans(theta, W)
+    W <- Wgamiter(dat, gam, V, a2, b2)
+    theta <- thetagamtrans(gam, W)
+    time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
+    time <- time2-time
+    out[i,] <- c(theta,V,W, time)
+  }
+  return(out)
+}
+
+
+fullcissam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
+  T <- length(dat)
+  V <- start[1]
+  W <- start[2]
+  out <- data.frame(matrix(0, nrow=n, ncol=T+4))
+  colnames(out) <- c(paste("theta",0:T,sep=""),"V","W", "time")
+  for(i in 1:n){
+    time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
+    theta <- thetaiter(dat, V, W)
+    V <- rinvgamma(1, a1 + T/2, b1 + sum((dat-theta[-1])^2)/2)
+    psi <- psitrans(dat, theta, V)
+    V <- Vpsiiter(dat, psi, W, a1, b1)
+    theta <- thetapsitrans(dat, psi, V)
+    W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
+    gam <- gamtrans(theta, W)
+    W <- Wgamiter(dat, gam, V, a2, b2)
+    theta <- thetagamtrans(gam, W)
+    time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
+    time <- time2-time
+    out[i,] <- c(theta,V,W, time)
   }
   return(out)
 }

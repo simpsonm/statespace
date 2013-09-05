@@ -1,0 +1,197 @@
+<<set-parent, echo=FALSE, cache=FALSE>>=
+set_parent('mcmcex.Rnw')
+@
+
+\section{Introduction}
+
+In this note, I compare the performance of two samplers
+for exploring the posterior distribution of a local level state space
+model. Suppose we have a univariate time series $y_t$ for
+$t=1,2,...,T$. The local level model says
+\begin{align*}
+  y_t &= \theta_t + v_t\\
+  \theta_t & = \theta_{t-1} + w_t
+\end{align*}
+for $t=1,2,...,T$ with
+\[
+\begin{bmatrix} v_t \\ w_t \end{bmatrix} \stackrel{iid}{\sim}
+N\left(\begin{bmatrix} 0\\0\end{bmatrix}, \begin{bmatrix} V & 0 \\ 0 &
+    W \end{bmatrix}\right)
+\]
+and
+\[
+\theta_0\sim N(m_0, C_0)
+\]
+
+$V$ and $W$ are treated as unkown, and we put independent inverse gamma
+priors on each, i.e. $V\sim IG(\alpha_1, \beta_1)$ and $W\sim
+IG(\alpha_2, \beta_2)$. The goal, then, is to simulate from the posterior
+distribution of $(V,W,\theta_{0:T} | y_{0:T})$.
+
+\subsection{Algorithm 1: The State Sampler}
+
+The standard algorithm for doing this, which I'm calling the ``state
+sampler,'' relies on Forward Filtering Backward Sampling (FFBS). FFBS
+is an algorithm for sampling from the latent states, $\theta_{0:T}$,
+conditional on any unknown parameters. The algorithm samples the
+states conditional on $(V,W)$, then samples $(V,W)$ conditional on the
+states, hence the name. In detail, the algorithm is as follows.
+
+\begin{enumerate}
+  \item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{1:T})$
+    using FFBS
+  \item Simulate $(V,W)$ from $\pi(V,W|\theta_{0:T},y_{1:T})$:
+
+    $V$ and $W$ are conditionally independent (conditional on
+    $\theta_{0:T},y_{1:T}$), with distributions
+    \[
+    V|\theta_{0:T},y_{1:T} \sim IG(a_V, b_V)
+    \]
+    \[
+    W|\theta_{0:T},y_{1:T} \sim IG(a_W, b_W)
+    \]
+    where
+    \begin{align*}
+      a_V =& \alpha_1 + T/2\\
+      b_V = & \beta_1 + \sum_{t=1}^T(y_t-\theta_t)^2/2
+    \end{align*}
+    and
+    \begin{align*}
+      a_W =& \alpha_2 + T/2\\
+      b_W = & \beta_1 + \sum_{t=1}^T(\theta_t-\theta_{t-1})^2/2
+    \end{align*}
+\end{enumerate}
+
+\subsection{Algorithm 2: The Scaled Disturbance Sampler}
+
+A second algorithm worth considering  samples $V$ and $W$ conditional
+on $\gamma_{0:T}$ instead of conditional on $\theta_{0:T}$,  with
+$\gamma_t = (\theta_t - \theta_{t-1})/\sqrt{W}$ for $t=1,2,...,T$ and
+$\gamma_0=\theta_0$. Note that for $t>0$, $\gamma_t = w_t/\sqrt{W}$,
+i.e. the $\gamma$'s are the disturbances from the system equation, but
+scaled so that they have a $N(0,1)$ distribution a priori. The basic
+idea here is to sample the scaled disturbances conditional on $(V,W)$,
+then sample $V$ conditional on the scaled disturbances and $W$, then
+$W$ conditional on the scaled disturbances and $V$. Sampling the
+scaled disturbances can be accomplished using FFBS to sample the
+states, then transforming the states to the scaled disturbances using the
+formulas above, or by sampling them directly using the disturbance
+smoother. The full algorithm is as follows:
+
+\begin{enumerate}
+  \item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{0:T})$
+    using FFBS and form $\gamma_{0:T}$.
+  \item Simulate $V$ from $\pi(V|\gamma_{0:T},W,y_{1:T})$:
+    \[
+    V|\gamma_{0:T},W,y_{1:T} \sim IG(a_V, b_V)
+    \]
+    where
+    \begin{align*}
+      a_V =& \alpha_1 + T/2\\
+      b_V = & \beta_1 + \sum_{t=1}^T(y_t-\gamma_0 -
+      \sqrt{W}\sum_{j=1}^t\gamma_j)^2/2
+    \end{align*}
+  \item Simulate $W$ from $\pi(W|\gamma_{0:T},V,y_{1:T})$:
+    \[
+    \mathcal{L} \equiv \log \pi(W|\gamma_{0:T},V,y_{1:T}) = -aW +
+    b\sqrt{W} - (\alpha_2 + 1)\log W -\beta_2/W +C
+    \]
+    where $C$ is some constant we can ignore for sampling purposes,
+    $a=\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and
+    $b=\sum_{t=1}^T(y_t-\gamma_0)(\sum_{j=1}^t\gamma_j)/V$.
+\end{enumerate}
+
+Step 3 of this algorithm is of some interest since the distribution to
+be simulated from isn't standard. One possibility (suggested by
+Dr. Roy) is to use an adaptive rejection sampling algorithm that
+depends on the density being log-concave. This doesn't always work
+because the target density isn't log-concave in general. When $W/V$, the signal-to-noise ratio, is above 1 the density tends to be log-concave and adaptive rejection sampling works well. When the signal-to-noise ratio is below 1, the density is often not
+log concave. In this case a proposal density from the location-scale
+family of $t$ distributions works, albeit with some additional
+computational cost. In this case, setting the location parameter equal
+to the target density's mode and the scale parameter equal to the
+square root of the negative second derivative of the log of the target
+density results in a family of proposal densities defined by the
+degrees of freedom parameter, $df$. Then it's just a matter of
+choosing $df$ to minimize the rejection rate.
+
+\subsection{Algorithm 3: The Scaled Error Sampler}
+
+A final sampler samples $V$ and $W$ conditional
+on $\psi_{0:T}$ instead of conditional on $\theta_{0:T}$,  with
+$\psi_t = (y_t - \theta_{t})/\sqrt{V}$ for $t=1,2,...,T$ and
+$\psi_0=\theta_0$. Note that for $t>0$, $\psi_t = v_t/\sqrt{V}$,
+i.e. the $\psi$'s are the errors from the observation equation, but
+scaled so that they have a $N(0,1)$ distribution a priori. The basic
+idea here is to sample the scaled errors conditional on $(V,W)$,
+then sample $W$ conditional on the scaled errors and $V$, then
+$V$ conditional on the scaled errors and $W$. Sampling the
+scaled errors, like the scaled disturbances, can be accomplished using
+FFBS to sample the states, then transform the states to the scaled
+errors using the formulas above, or by sampling them directly using
+the disturbance smoother. The full algorithm is as follows:
+
+\begin{enumerate}
+  \item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{0:T})$
+    using FFBS and form $\psi_{0:T}$.
+  \item Simulate $W$ from $\pi(W|\psi_{0:T},V,y_{1:T})$:
+    \[
+    W|\psi_{0:T},V,y_{1:T} \sim IG(a_W, b_W)
+    \]
+    where
+    \begin{align*}
+      a_W =& \alpha_2 + T/2\\
+      b_W = & \beta_2 + \sum_{t=1}^T(y_t- y_{t-1} -
+      \sqrt{V}(\psi_t-\psi_{t-1}))^2/2
+    \end{align*}
+    (defining $y_0=0$)
+  \item Simulate $V$ from $\pi(V|\psi_{0:T},W,y_{1:T})$:
+    \[
+    \mathcal{L} \equiv \log \pi(V|\psi_{0:T},W,y_{1:T}) = -aV +
+    b\sqrt{V} - (\alpha_1 + 1)\log V -\beta_1/V +C
+    \]
+    where $C$ is some constant we can ignore for sampling purposes,
+    $a=\sum_{t=1}^T(L\psi_t)^2/2W$ and
+    $b=\sum_{t=1}^T(L\psi_tLy_t)/W$ where
+    \begin{align*}
+      L\psi_t &= \begin{cases} \psi_t - \psi_{t-1} &\text{for } t=2,3,...,T\\
+                                \psi_1 & \text{for } t=1\end{cases}\\
+      Ly_t & =\begin{cases} y_t - y_{t-1} &\text{for } t=2,3,...,T\\
+                                y_1 - \psi_0 & \text{for } t=1\end{cases}\\
+    \end{align*}
+\end{enumerate}
+
+Step 3 of this algorithm is again of some interest since the
+distribution to be simulated from isn't standard. Notice that the
+target density has the same form as the target in algorithm 2, so we
+can use the same methods to directly simulate from it.
+
+
+\section{Combining Algorithms}
+
+There are several ways to combine the above MCMC algorithms into a hybrid algorithm. The most straightforward method is an ``alternating'' algorithm. An alternating algorithm combines two or more samplers by drawing each sampler sequentially in a single iteration. For example, the alternating sampler that combines the state and scaled disturbance sampler is as follows. Let $(\theta_{0:T}^{(k)},V^k,W^k)$ denote the $k$'th iteration of the chain. To obtain the $k+1$'st iteration, run the following:
+
+\begin{enumerate}
+  \item Simulate $(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$
+  \item Simulate $(V,W|\theta_{0:T},y_{1:T})$
+  \item Simulate $(\gamma_{0:T}|V,W,y_{0:T})$
+  \item Simulate $(V^{(k+1)}|W^{(k+1)},\gamma_{0:T},y_{1:T})$
+  \item Simulate $(W^{(k+1)}|V^{(k+1)},\gamma_{0:T},y_{1:T})$
+  \item Form $\theta^{(k+1)}_{0:T}$ from $(\gamma_{0:T}^{(k+1)}, V^{(k+1)},W^{(k+1)}, y_{0:T})$
+\end{enumerate}
+
+
+In other words to get from $(\theta_{0:T}^{(k)},V^{(k)},W^{(k)})$ to $(\theta_{0:T}^{(k+1)},V^{(k+1)},W^{(k+1)})$, you run one iteration of the state sampler to obtain an intermediate iteration, then run one iteration from the scaled disturbance sampler to obtain the desired sample sample. In this way, any two or all three of the original three algorithms can be combined into an alternating algorithm. 
+
+Another approach is given in \citet{yu2011center}. In their paper, Yu and Meng define an interweaving strategy. In the language and notation of the local level model, a single iteration of an interweaving strategy has the following steps, e.g. when interweaving between the state and scaled disturbance samplers:
+
+\begin{enumerate}
+  \item Simulate $(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$
+  \item Simulate $(V,W|\theta_{0:T},y_{1:T})$
+  \item Form $\gamma_{0:T}$ from $(\theta_{0:T},V,W,y_{0:T})$
+  \item Simulate $(V^{(k+1)}|W^{(k+1)},\gamma_{0:T},y_{1:T})$
+  \item Simulate $(W^{(k+1)}|V^{(k+1)},\gamma_{0:T},y_{1:T})$
+  \item Form $\theta^{(k+1)}_{0:T}$ from $(\gamma_{0:T}^{(k+1)}, V^{(k+1)},W^{(k+1)}, y_{0:T})$
+\end{enumerate}
+
+The key difference here is in what happens in step 3. Here instead of drawing $\gamma_{0:T}$ from $p(\gamma_{0:T}|V,W,y_{0:T})$, we're drawing it from $p(\gamma_{0:T}|\theta_{0:T},V,W,y_{0:T})$ which happens to be a degenerate distribution. Changing this one speeds up the computation since drawing the full vector $\gamma_{0:T}$ (or $\theta_{0:T}$) is costly, but computing the transformation is cheap. In addition, \citeauthor{yu2011center} found that when one of the two samplers being interweaved uses an ancillary augmentation while the other uses a sufficient augmentation, the interweaving sampler has much better convergence properties than the corresponding alternating sampler or either of the two samplers the interweaving and alternating samplers are composed of.
