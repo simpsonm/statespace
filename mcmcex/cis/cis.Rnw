@@ -1,0 +1,186 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol}
+\usepackage{fullpage}
+\usepackage[maxfloats=48]{morefloats} %for >18 figures
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage[numbers]{natbib}
+\begin{document}
+
+<<setup, include=FALSE, cache=FALSE>>=
+options(replace.assign=TRUE,width=90)
+opts_knit$set(eval.after = "fig.cap")
+opts_chunk$set(dev="pdf",
+               fig.lp = "",
+               fig.keep="high",
+               fig.show="hold",
+               fig.align="center")
+@
+
+
+\title{Componentwise Interweaving for the Local Level Model} 
+\author{Matt Simpson}
+\maketitle
+
+Suppose we have a univariate time series $y_{1:T}$. Define the local model for the data; for $t=1,2,...,T$:
+
+\begin{align*}
+  y_t &= \theta_t + v_t\\
+  \theta_t & = \theta_{t-1} + w_t
+\end{align*}
+for $t=1,2,...,T$ with
+\[
+\begin{bmatrix} v_t \\ w_t \end{bmatrix} \stackrel{iid}{\sim}
+\left(\begin{bmatrix} 0\\0\end{bmatrix}, \begin{bmatrix} V & 0 \\ 0 &
+    W \end{bmatrix}\right)
+\]
+
+$\theta_0$, $V$ and $W$ are treated as unkown in general, but we'll ignore priors for them for the moment.
+
+If we rewrite the model in a slightly different form, the standard data augmentation algorithm becomes obvious:
+
+\begin{align}\label{DA1}
+  y_t|\theta_{0:T},V,W &\stackrel{ind}{\sim} N(\theta_{t}, V)\notag \\
+  \theta_{t}|\theta_{0:t-1},V,W & \sim N(\theta_{t-1}, W)
+\end{align}
+for $t=1,2,...,T$. The algorithm is
+
+\begin{enumerate}
+  \item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{1:T})$
+    using FFBS (Forward Filtering Backward Sampling).
+  \item Simulate $(V,W)$ from $\pi(V,W|\theta_{0:T},y_{1:T})$
+\end{enumerate}
+
+The promise of interweaving strategies of \citet{yu2011center} lies in having two separate augmentations -- a sufficient augmentation, where the data are independent of the parameters of the model, conditional on the augmented data vector, and an ancillary augmentation, where the augmented vector is independent of the parameters of the model. Using \citeauthor{yu2011center}'s terminology, we can see from \ref{DA1} that $\theta_{0:T}$ provides a sufficient augmentation for $V$ if we treat $W$ as fixed, i.e. for $V|W$, and an ancillary augmentation for $W$ if we treat $V$ as fixed, i.e. for $W|V$. Unfortunately, $\theta_{0:T}$ is not sufficient nor ancillary for $(V,W)$. \citeauthor{yu2011center} note that finding an SA-AA pair is rather difficult, but an alternative that takes advantage of the benefits of SA-AA pairs but is easier to implement is {\it componentwise} interweaving. The basic idea of componentwise interweaving is a gibbs sampler that interweaves between two separate data augmentations for each component of the gibbs sampler. I.e. if the parameter vector is $(\phi_1, \phi_2)$, to sample $\phi_1|\phi_2$, an interweaving strategy is employed and to sample $\phi_2|\phi_1$, a separate interweaving strategy is employed potentially using a different set of data augmentations. 
+
+For example, suppose the parameter vector is $(\phi_1, \phi_2)$, where each element is potentially a vector, and we have four data augmentations: $\theta_{i,j}$ for $i=A,S$ and $j=1,2$. $\theta_{A,j}$ is ancillary for $\phi_j$ and $\theta_{S,j}$ is sufficient for $\phi_j$, they form a SA-AA pair for $\phi_j$. Suppose further that each augmentation is a one-to-one transformation of any other augmentation. An examble componentwise interweaving strategy based on these augmentations is as follows. Given a previous draw $(\phi^{(k)}_1, \phi^{(k)}_2)$, obtain $(\phi_1^{(k+1)},\phi_2{(k+1)})$ by performing the following:
+\begin{enumerate}
+  \item Draw $\theta_{S,1}$ from $p(\theta_{S,1}|\phi_1^{(k)}, \phi_2^{(k)}, y_{1:T})$
+  \item Draw $\phi_1^{(k+.5)}$ from $p(\phi_1|\phi_2^{(k)}, \theta_{S,1}, y_{1:T})$
+  \item Update $\theta_{A,1}$ from $(\theta_{S,1}, \phi_1^{(k+.5)}, \phi_2^{(k)}, y_{1:T})$.
+  \item Draw $\phi_1^{(k+1)}$ from $p(\phi_1|\phi_2^{(k)}, \theta_{A,1}, y_{1:T})$
+  \item Update $\theta_{S,2}$ from $(\theta_{A,1}, \phi_1^{(k+1)}, \phi_2^{(k)}, y_{1:T})$.
+  \item Draw $\phi_2^{(k+.5)}$ from $p(\phi_2|\phi_1^{(k+1)}, \theta_{S,2}, y_{1:T})$
+  \item Update $\theta_{A,2}$ from $(\theta_{S,2}, \phi_1^{(k+1)}, \phi_2^{(k+.5)}, y_{1:T})$.
+  \item Draw $\phi_2^{(k+1)}$ from $p(\phi_2|\phi_1^{(k+1)}, \theta_{A,2}, y_{1:T})$
+\end{enumerate}
+
+This strategy is useful because it's a lot easier to find {\it conditional } SA's and AA's, in other words it's easier to find data augmentations that are SA or AA for a component of the parameter vector conditional on the rest of the parameter vector. One nice feature of this strategy is that it isn't necessary to interweave in every step of the Gibb's sampler --- if, for example, no SA can be found for $\phi_1$, a normal Gibbs step can be used there instead of an interweaving step. One key is that the conditional distributions used in steps 2 and 4 must be different --- i.e. we must have
+\[
+p(\phi_1|\phi_2, \theta_{S,1}, y_{1:T}) \neq p(\phi_1|\phi_2, \theta_{A,1}(\theta_{S,1}), y_{1:T})
+\]
+Otherwise, the extra interweaving steps don't accomplish anything. There's a similar requirement for steps 6 and 8.
+
+The standard data augmentation for the local level model, $\theta_{0:T}$, is a SA for $W|V$ and an AA for $V|W$. If we can find another data augmentation that is AA for $W|V$ and SA for $V|W$, the CIS algorithm is quite simple. Equation \ref{DA1} suggests one approach: somehow move $W$ to line 1 and $V$ to line 2 of the equation. It turns out that if we augment with $v_{0:T}$ where $v_0=\theta_0$ instead of with $\theta_{0:T}$, exactly this occurs, but the resulting algorithm is actually equivalent to the original algorithm (the state sampler). Instead, we would like to use a different secondary data augmentation for each of the two steps of our gibbs sampler. What we need is one augmentation that is AA for $W|V$ and another augmentation that is SA for $V|W$. It turns out that $\gamma_t=(\theta_t-\theta_{t-1})/\sqrt{W}$ (with $\gamma_0=\theta_0$) is AA for $W|V$ -- actually for $(V,W)$ jointly. To see this, note that
+\[
+p(y_{1:T},\gamma_{1:T}|V,W,\gamma_0) \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\gamma_t^2\right] V^{-T/2}\exp\left[-\frac{1}{2V}\sum_{t=1}^T(y_t - \gamma_0 - \sqrt{W}\sum_{s=1}^t\gamma_t)^2\right]
+\]
+so that we can write the model as, for $t=1,2,...,T$:
+\begin{align}\label{DA2}
+  y_t | \gamma_{0:T},V,W &\stackrel{ind}{\sim} N(\gamma_0 + \sqrt{W}\sum_{s=1}^t\gamma_s, V)\notag \\
+  \gamma_t | V,W &\stackrel{iid}{\sim} N(0,1)
+\end{align}
+
+So we can see that the $\gamma_{0:T}$ augmentation is not a SA for either case, but it is an AA for $(V,W)$ jointly, and thus for each one conditional on the other. It turns out that the same result holds for the $\psi_t=(y_t-\theta_t)/\sqrt{V}$ augmentation --- it's also not a SA for either case and is an AA for $(V,W)$ jointly. In this case we have
+\[
+p(y_{1:T},\psi_{1:T}|V,W,\psi_0) \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\psi_t^2\right] W^{-T/2}\exp\left[-\frac{1}{2W}\sum_{t=1}^T(y_t - y_{t-1} - \sqrt{V}(\psi_t - \psi_{t-1})^2\right]
+\]
+Now we can write the model as, for $t=1,2,...,T$, defining $y_0=0$:
+\begin{align}\label{DA3}
+  y_t | \psi_{0:T}, y_{0:t-1}, V,W &\stackrel{ind}{\sim} N(y_{t-1} + \sqrt{V}(\psi_t - \psi_{t-1}), W)\notag \\
+  \psi_t | V,W &\stackrel{iid}{\sim} N(0,1)
+\end{align}
+
+So all we need is a SA for $V|W$ or ideally for $(V,W)$. Before we get into that, we can still implement a partial CIS algorithm as follows:
+
+\begin{enumerate}
+  \item Draw $\theta_{0:T}$ from $p(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$ using FFBS.
+  \item Draw $V^{(k+1)}$ from $p(V|W^{(k)},\theta_{0:T},y_{1:T})$
+  \item Draw $W^{(k+.5)}$ from $p(W|V^{(k+.5)},\theta_{0:T},y_{1:T})$
+  \item Update $\gamma_{0:T}$ where $\gamma_0=\theta_0$ and $\gamma_t=(\theta_t-\theta_{t-1})/\sqrt{W}$.
+  \item Draw $W^{(k+1)}$ from $p(W|V^{(k+1)},\gamma_{0:T},y_{1:T})$
+\end{enumerate}
+
+Note that in step 4, we have to use the $\gamma$ data augmentation even though the $\psi$ augmentation is also ancillary for $W$. The issue is that the distribution of $W|V,\theta,y$ and the distribution of $W|V,\psi,y$ are the same --- the transformation from $\theta$ to $\psi$ doesn't impact the density of $W$. In the case of inverse gamma priors for $V$ and $W$, the conditional density is also inverse gamma and the parameters of these distribution don't depend on whether we conditioned on $\theta$ or $\psi$. So the interweaving steps (steps 4 and 5) don't actually change the usual Gibbs sampler (a.k.a. the state sampler).
+
+Now in order to introduce a full CIS algorithm, let's introduce two new data agumentations: $\tilde{\gamma}_t=\gamma_t\sqrt{W}/\sqrt{V}$ for $t=1,..,T$ with $\tilde{\gamma}_0=\gamma_0=\theta_0$ and $\tilde{\psi}_t=\psi_t\sqrt{V}/\sqrt{W}$ for $t=1,..,T$ with $\tilde{psi}_0=\psi_0=\theta_0$. For $\tilde{\gamma}$ this results in
+\[
+p(\tilde{\gamma}_{1:T},y_{1:T}|V,W,\tilde{\gamma}_0)\propto (W/V)^{-T/2}\exp\left[-\frac{1}{2W/V}\sum_{t=1}^T\tilde{\gamma}_t^2\right] V^{-T/2}\exp\left[-\frac{1}{2V}\sum_{t=1}^T(y_t - \tilde{\gamma}_0 - \sqrt{V}\sum_{s=1}^{t-1}\tilde{\gamma}_s)^2\right]
+\]
+Then we can write the model in terms of $\tilde{\gamma}_{0:T}$ as
+\begin{align}\label{DA4}
+  y_t|\tilde{\gamma}_{0:T}, V, W &\stackrel{ind}{\sim} N(\tilde{\gamma}_0 + \sqrt{V}\sum_{s=1}^{t-1}\tilde{\gamma}_s, V)\notag\\
+  \tilde{\gamma}_t|V,W &\stackrel{iid}{\sim} N(0, W/V)
+\end{align}
+We can immediately see that $\tilde{\gamma}$ is a SA for $W|V$, but not a SA or an AA for anything else.
+
+If we do the same for $\tilde{\psi}$, we get
+\[
+p(\tilde{\psi}_{1:T},y_{1:T}|V,W,\tilde{\psi}_0) \propto (V/W)^{-T/2}\exp\left[-\frac{1}{2V/W}\sum_{t=1}^T\tilde{\psi}_t^2\right] W^{-T/2}\exp\left[-\frac{1}{2W}\sum_{t=1}^T(y_t-y_{t-1}-\sqrt{W}(\tilde{\psi}_t -\tilde{\psi}_{t-1})^2\right]
+\]
+so that we can write the model as, for $t=1,2,...T$:
+\begin{align}\label{DA5}
+  y_t|\tilde{\psi}_{0:T}, y_{0:t-1}, V, W & \sim N(y_{t-1} + \sqrt{W}(\tilde{\psi}_t - \tilde{\psi}_{t-1}), W)\notag\\
+  \tilde{\psi}_t|V,W &\stackrel{iid}{\sim}N(0,V/W)
+\end{align}
+We see immediately that $\tilde{\psi}$ is a SA for $V|W$ and not a SA nor an AA for anything else.
+
+So now $\tilde{\gamma}$ and $\gamma$ are a SA-AA pair for $W|V$ while $\tilde{\psi}$ and $\psi$ are a SA-AA pair for $V|W$. In particular, both pairs draw the relevant parameter from separate distributions. For $\tilde{\gamma}$ and $\gamma$, we have
+\begin{align*}
+  p(W|V, \gamma_{0:T}, y_{1:T}) &\propto \exp\left[-\frac{1}{2V}\sum_{t=1}^T(y_t - \gamma_0 - \sqrt{W}\sum_{s=1}^{t-1}\gamma_s)^2\right]p(W|V,\gamma_0)\\
+  p(W|V, \tilde{\gamma}_{0:T}, y_{1:T}) &\propto W^{-T/2}\exp\left[-\frac{1}{2W}V\sum_{t=1}^T\tilde{\gamma}_t^2\right]p(W|V,\tilde{\gamma}_0)
+\end{align*}
+where $p(W|V,\tilde{\gamma}_0)=p(W|V,\gamma_0)=p(W|V,\theta_0)$ is the conditional prior for $W$ given $V$ and $\theta_0=\gamma_0=\tilde{\gamma}_0$. Since these two densities are different, we can interweave between them successfully.
+
+Now for $\tilde{\psi}$ and $\psi$ we have
+\begin{align*}
+  p(V|W, \psi_{0:T}, y_{1:T}) &\propto \exp\left[-\frac{1}{2W}\sum_{t=1}^T(y_t - y_{t-1} -\sqrt{V}(\psi_t - \psi_{t-1}))^2\right]p(V|W,\psi_0)\\
+  p(V|W, \tilde{\psi}_{0:T}, y_{1:T}) & \propto V^{-T/2}\exp\left[-\frac{1}{2V}W\sum_{t=1}^T\tilde{\psi}_t^2\right]p(V|W,\tilde{\psi}_0)
+\end{align*}
+where $p(V|W,\tilde{\psi}_0)=p(V|W,\psi_0)=p(V|W,\theta_0)$ is the conditional prior for $V$ given $W$ and $\theta_0=\psi_0=\tilde{\psi}_0$. Once again, since these two densities are different, we can interweave between them successfully.
+
+The full componentwise interweaving algorithm is then:
+\begin{enumerate}
+  \item Draw $\tilde{\psi}_{0:T}$ from $p(\tilde{\psi}_{0:T}|V^{(k)},W^{(k)},y_{1:T})$.
+  \item Draw $V^{(k+.5)}$ from $p(V|W^{(k)}, \tilde{\psi}_{0:T}, y_{1:T})$.
+  \item Update $\psi_{0:T}$.
+  \item Draw $V^{(k+1)}$ from $p(V|W^{(k)}, \psi_{0:T}, y_{1:T})$.
+  \item Update $\tilde{\gamma}_{0:T}$.
+  \item Draw $W^{(k+.5)}$ from $p(W|V^{(k+1)}, \tilde{\gamma}_{0:T}, y_{1:T})$.
+  \item Update $\gamma_{0:T}$.
+  \item Draw $W^{(k+1)}$ from $p(W|V^{(k+1)}, \gamma_{0:T}, y_{1:T})$.
+\end{enumerate}
+
+In this algorithm we've ignored the $\theta_{0:T}$ augmentation despite the fact that we could have used it in step 6 since $\theta_{0:T}$ is a SA for $W|V$. It turns out, though, drawing $W|V,\theta,y$ and drawing $W|V,\tilde{\gamma},y$ are equivlent. To see this note that
+\begin{align*}
+  p(W|V, \tilde{\gamma}_{0:T}, y_{1:T}) &\propto W^{-T/2}\exp\left[-\frac{1}{2W}V\sum_{t=1}^T\tilde{\gamma}_t^2\right]p(W|V,\tilde{\gamma}_0)\\
+  p(W|V,\theta_{0:T},y_{1:T}) & \propto W^{-T/2}\exp\left[-\frac{1}{2W}\sum_{t=1}^T(\theta_t-\theta_{t-1})^2\right]p(W|V,\theta_0)
+\end{align*}
+
+Since $\sqrt{V}\tilde{\gamma}_t=\sqrt{W}\gamma_t=\theta_t-\theta_{t-1}$ and $\theta_0=\tilde{\gamma}_0$, these two densities are the same. So it doesn't matter whether we use $\theta$ or $\tilde{\gamma}$ to make this draw.
+
+It turns out that this same sort equivalence holds between $\tilde{\psi}$ and $\theta$ for $V|W$, though $\theta$ isn't a SA for $V|$ while $\tilde{\psi}$ is. To see that drawing from $p(V|W,\tilde{\psi}_{0:T}, y_{1:T})$ is equivalent to drawing from $p(V|W,\theta_{0:T},y_{1:T})$:
+\begin{align*}
+    p(V|W, \tilde{\psi}_{0:T}, y_{1:T}) & \propto V^{-T/2}\exp\left[-\frac{1}{2V}W\sum_{t=1}^T\tilde{\psi}_t^2\right]p(V|W,\tilde{\psi}_0)\\
+    p(V|W, \theta_{0:T}, y_{1:T}) & \propto V^{-T/2}\exp\left[-\frac{1}{2V}\sum_{t=1}^T(y_t - \theta_t)^2\right]p(V|W,\theta_0)
+\end{align*}
+Again since $\sqrt{W}\tilde{\psi}=\sqrt{V}\psi=y_t-\theta_t$ and $\theta_0=\tilde{\psi}_0$, these two densities are equivalent. So it turns out that even though $\theta_{0:T}$ isn't SA $V|W$, drawing from $p(V|W,\theta_{0:T},y_{1:T})$ is equivalent to drawing from $p(V|W,\tilde{\psi}_{0:T},y_{1:T})$ so that we can replace step 2 this draw. Thus an equivalent version of the full componentwise interweaving algorithm with the $\theta$'s replacing both the $\tilde{\psi}$'s and the $\tilde{\gamma}$'s is
+\begin{enumerate}
+  \item Draw $\theta_{0:T}$ from $p(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$.
+  \item Draw $V^{(k+.5)}$ from $p(V|W^{(k)}, \theta_{0:T}, y_{1:T})$.
+  \item Update $\psi_{0:T}$.
+  \item Draw $V^{(k+1)}$ from $p(V|W^{(k)}, \psi_{0:T}, y_{1:T})$.
+  \item Update $\theta_{0:T}$.
+  \item Draw $W^{(k+.5)}$ from $p(W|V^{(k+1)}, theta_{0:T}, y_{1:T})$.
+  \item Update $\gamma_{0:T}$.
+  \item Draw $W^{(k+1)}$ from $p(W|V^{(k+1)}, \gamma_{0:T}, y_{1:T})$.
+\end{enumerate}
+Now step 1 can be performed directly using FFBS, which is nice. Note that there are several variations of this algorithm where we change the order of drawing $V$ and $W$, or the order of the conditional densities we draw $V$ from and/or $W$ from. \citeauthor{yu2011center} note, however, that these sorts of variations tend to not make much of a difference in terms of convergence --- at least relative to the decision of whether or not to interweave.
+
+\bibliographystyle{plainnat}
+\bibliography{../mcmcex}
+\end{document}
+
+
+
