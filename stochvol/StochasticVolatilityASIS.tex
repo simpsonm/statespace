@@ -1,0 +1,57 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol}
+\usepackage{fullpage}
+\usepackage[maxfloats=48]{morefloats} %for >18 figures
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage[numbers]{natbib}
+
+\author{Matt Simpson}
+\title{Full ASIS MCMC Sampler for Stochastic Volatility Models}
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This document gives a rough idea for an ancillarity-sufficiency interweaving sampler (ASIS) for sampling from the stochastic volatility model. \citet{kastner2013ancillarity} provides one such scheme, but it's not, strictly speaking, ASIS (though it is interweaving).
+
+\section{Stochastic Volatility Model}
+
+The stochastic volatility model is a state space model used for, e.g., describing the log-returns of various assests without deterministically modeling the volatilities. Formally, let $y_t$ denote the log-return in period $t$ (or some other time series of interest). Then the model says
+\begin{align}
+y_t|h_{0:T} & \stackrel{ind}{\sim}N(0, e^{h_t/2}) \label{C1}\\
+h_t |h_{0:t-1} &\sim N( \mu + \phi(h_{t-1}-\mu), \sigma^2) \label{C2}
+\end{align}
+The standard data augmentation uses the $h_t$'s and, as we can see above, is a SA for all model parameters: $(\mu, \phi, \sigma^2)$. This is because none of the parameters enter the observation equation, i.e. none are in \ref{C1}. 
+
+\citeauthor{kastner2013ancillarity} note that a common reparameterization of this model sets
+\[
+\tilde{h}_t = \frac{h_t - \mu}{\sigma}
+\]
+yielding the model in this form
+\begin{align}
+y_t|\tilde{h}_{0:T} & \stackrel{ind}{\sim}N(0, e^\mu e^{h_t/2}) \label{NC1}\\
+\tilde{h}_t|\tilde{h}_{0:t-1} & \sim N(\phi\tilde{h}_{t-1}, 1) \label{NC2}
+\end{align}
+\citeauthor{kastner2013ancillarity} call this the ``fully noncentered'' parameterisation or just ``noncentered'' parameterisation (NC or NCP) and the standard parameterisation the ``centered'' parameterisation (C or CP). This parameterisation is an AA for $(\mu,\sigma^2|\phi)$ since $\mu$ and $\sigma$ don't enter \ref{NC2}. However, it's not an AA for all three parameters since $\phi$ does enter \ref{NC2}.
+
+\citeauthor{kastner2013ancillarity} set up an interweaving strategy between C and NC, but strictly speaking it's not a full ASIS strategy since NC is only ancillary for part of the parameter vector - it's not ancillary for $\phi$. A simple transformation of $\tilde{h}_t$ is fully ancillary, however. Define
+\[
+\eta_t = \tilde{h}_t - \phi\tilde{h}_{t-1}
+\]
+for $t=1,...,T$ and $\eta_0=\tilde{h}_0$. Then
+\[
+\tilde{h}_t = \phi^t \eta_0 + \sum_{s=1}^t \phi^{t-s}\eta_s
+\]
+The jacobian of this transformation is triangular with 1's along the diagonal, so its determinant is 1. Thus we can rewrite the model as
+\begin{align}
+y_t|\eta_{0:T} & \stackrel{ind}{\sim} N(0, \exp(\mu + \sigma\sum_{s=0}^t\phi^{t-s}\eta_s))\label{PNC1}\\
+\eta_t & \stackrel{iid}{\sim} N(0,1)\label{PNC2}\\
+\end{align}
+Note that this parameterisation IS fully ancillary for $(\mu,\phi,\sigma^2)$, so we can create a full ASIS sampling strategy based on this.
+
+(Note to self: READ THE REST OF THEIR PAPER CAREFULLY: they have some interesting stuff on sampling the latent states, and on transforming this model to be essentially a dlm using mixtures of normal distributions, making it easier to sample from.)
+\bibliographystyle{plainnat}
+\bibliography{stochvol}
+\end{document}
