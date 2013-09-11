@@ -710,9 +710,9 @@ Wgamiter <- function(dat, gam, V, a2, b2){
   mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
   adrej <- logcon(b, a2, b2)
   if(adrej){
-    tryCatch(W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2),
+    er <- try(W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2),
                       lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2))
-    if(W==0){
+    if(!is.numeric(er)){
       adrej <- FALSE
     }
   }
@@ -762,9 +762,9 @@ Vpsiiter <- function(dat, psi, W, a1, b1){
   mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
   adrej <- logcon(b, a1, b1, eps=0)
   if(adrej){
-    tryCatch(V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2),
+    er <- try(V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2),
                  lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1))
-    if(V==0){
+    if(!is.numeric(er)){
       adrej <- FALSE
     }
   }
