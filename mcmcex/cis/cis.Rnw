@@ -178,6 +178,215 @@ Again since $\sqrt{W}\tilde{\psi}=\sqrt{V}\psi=y_t-\theta_t$ and $\theta_0=\tild
 \end{enumerate}
 Now step 1 can be performed directly using FFBS, which is nice. Note that there are several variations of this algorithm where we change the order of drawing $V$ and $W$, or the order of the conditional densities we draw $V$ from and/or $W$ from. \citeauthor{yu2011center} note, however, that these sorts of variations tend to not make much of a difference in terms of convergence --- at least relative to the decision of whether or not to interweave.
 
+\subsection{Results for $(V,W)$}
+
+<<plotsetup, echo=FALSE>>=
+library(ggplot2)
+library(scales)
+library(plyr)
+library(xtable)
+library(reshape2)
+load("cissamout.RData")
+samout1 <- samout
+load("../mixing/OldSims/samout.RData")
+sams <- c("GISsd", "GISse", "GISde", "GIStri")
+sams1 <- c("CISfull", "CISpart")
+samout1$type <- "cis"
+samout$type <- "gis"
+samout$sampler[samout$sampler=="sdint"] <- "GISsd"
+samout$sampler[samout$sampler=="seint"] <- "GISse"
+samout$sampler[samout$sampler=="deint"] <- "GISde"
+samout$sampler[samout$sampler=="triint"] <- "GIStri"
+samout1$sampler[samout1$sampler=="fullcis"] <- "CISfull"
+samout1$sampler[samout1$sampler=="partialcis"] <- "CISpart"
+samout$samplers <- samout$sampler
+samout1$samplers <- samout1$sampler
+
+meltedsam <- melt(samout, id=c("type", "samplers", "sampler", "V.T", "W.T", 
+                            "T.T"))
+meltedsam1 <- melt(samout1, id=c("type", "samplers", "sampler", "V.T", "W.T", 
+                            "T.T"))
+Vs <- unique(meltedsam$V.T)
+Ws <- Vs
+breaks <- round(Vs, 3)
+label_both_parsed <- function(variable, value){
+  llply(as.character(paste(variable, value, sep = ": ")), function(x) parse(text = x))
+}
+label_both_parsed_split <- function(variable, value){
+  llply(as.character(paste(variable, value, sep = ": ")), 
+        function(x) parse(text = strsplit(x, "\\.")[[1]][1]))
+}
+label_parsed_split <- function(variable, value){
+  llply(as.character(value), 
+        function(x) parse(text = strsplit(x, "\\.")[[1]][1]))
+}
+bigfw <- 10
+bigfh <- bigfw 
+##bigfh2 <- bigfw*4or5/7 
+bigow <- '1\\textwidth' 
+@ 
+
+
+<<ciscorplotT10, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh, out.width=bigow>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=10$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the full and partial componentwise interweaving samplers and all global interweaving samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
+vars1 <- c("V.AC", "W.AC", "theta.ACmax", "gamma.ACmax", "psi.ACmax")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==10 & sampler %in% sams ))
+castedsam1 <- dcast(meltedsam1, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars1  & T.T==10 & sampler %in% sams1 ))
+castedsam$variable <- as.character(castedsam$variable)
+castedsam1$variable <- as.character(castedsam1$variable)
+castedsam$variable[castedsam$variable=="theta.AC"] <- "theta.ACmax"
+castedsam$variable[castedsam$variable=="gamma.AC"] <- "gamma.ACmax"
+castedsam$variable[castedsam$variable=="psi.AC"] <- "psi.ACmax"
+castedsam <- rbind(castedsam, castedsam1)
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(sampler~variable, scales="free", labeller=label_parsed_split) +
+    scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+    ggtitle("Autocorrelation for V and W in the CIS and GIS samplers, T=10") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+<<ciscorplotT100, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh, out.width=bigow>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=100$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the full and partial componentwise interweaving samplers and all global interweaving samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
+vars1 <- c("V.AC", "W.AC", "theta.ACmax", "gamma.ACmax", "psi.ACmax")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==100 & sampler %in% sams ))
+castedsam1 <- dcast(meltedsam1, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars1  & T.T==100 & sampler %in% sams1 ))
+castedsam$variable <- as.character(castedsam$variable)
+castedsam1$variable <- as.character(castedsam1$variable)
+castedsam$variable[castedsam$variable=="theta.AC"] <- "theta.ACmax"
+castedsam$variable[castedsam$variable=="gamma.AC"] <- "gamma.ACmax"
+castedsam$variable[castedsam$variable=="psi.AC"] <- "psi.ACmax"
+castedsam <- rbind(castedsam, castedsam1)
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(sampler~variable, scales="free", labeller=label_parsed_split) +
+    scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+    ggtitle("Autocorrelation for V and W in the CIS and GIS samplers, T=100") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+<<ciscorplotT1000, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh, out.width=bigow>>=
+cap <- "Autocorrelation in posterior sampler for a time series of length $T=1000$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the full and partial componentwise interweaving samplers and all global interweaving samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
+vars1 <- c("V.AC", "W.AC", "theta.ACmax", "gamma.ACmax", "psi.ACmax")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==1000 & sampler %in% sams ))
+castedsam1 <- dcast(meltedsam1, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars1  & T.T==1000 & sampler %in% sams1 ))
+castedsam$variable <- as.character(castedsam$variable)
+castedsam1$variable <- as.character(castedsam1$variable)
+castedsam$variable[castedsam$variable=="theta.AC"] <- "theta.ACmax"
+castedsam$variable[castedsam$variable=="gamma.AC"] <- "gamma.ACmax"
+castedsam$variable[castedsam$variable=="psi.AC"] <- "psi.ACmax"
+castedsam <- rbind(castedsam, castedsam1)
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white",
+                         guide=guide_colorbar(barheight=20)) +
+    facet_grid(sampler~variable, scales="free", labeller=label_parsed_split) +
+    scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+    ggtitle("Autocorrelation for V and W in the CIS and GISsamplers, T=1000") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+<<cisESplotT10, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh, out.width=bigow>>=
+cap <- "Effective sample size as a proportion of the actual sample size in posterior sampler for a time series of length $T=10$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the full and partial componentwise interweaving samplers and all global interweaving samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$ and that for plotting purposes, effective samples sizes larger than $2500$ were rounded down to $2500$"
+vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+vars1 <- c("V.ES", "W.ES", "theta.ESmin", "gamma.ESmin", "psi.ESmin")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==10 & sampler %in% sams ))
+castedsam1 <- dcast(meltedsam1, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars1  & T.T==10 & sampler %in% sams1 ))
+castedsam$variable <- as.character(castedsam$variable)
+castedsam1$variable <- as.character(castedsam1$variable)
+castedsam$variable[castedsam$variable=="theta.ES"] <- "theta.ESmin"
+castedsam$variable[castedsam$variable=="gamma.ES"] <- "gamma.ESmin"
+castedsam$variable[castedsam$variable=="psi.ES"] <- "psi.ESmin"
+castedsam <- rbind(castedsam, castedsam1)
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
+  geom_tile() +
+  scale_fill_gradient("EffSize", low=muted("red"), high="white",
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,1), na.value="white") +
+  facet_grid(sampler~variable, scales="free", labeller=label_parsed_split) +
+  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+  ggtitle("Effective Sample Size for V and W in the CIS and GIS samplers, T=10") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+
+<<cisESplotT100, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh, out.width=bigow>>=
+cap <- "Effective sample size as a proportion of the actual sample size in posterior sampler for a time series of length $T=100$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the full and partial componentwise interweaving samplers and all global interweaving samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$ and that for plotting purposes, effective samples sizes larger than $2500$ were rounded down to $2500$"
+vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+vars1 <- c("V.ES", "W.ES", "theta.ESmin", "gamma.ESmin", "psi.ESmin")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==100 & sampler %in% sams ))
+castedsam1 <- dcast(meltedsam1, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars1  & T.T==100 & sampler %in% sams1 ))
+castedsam$variable <- as.character(castedsam$variable)
+castedsam1$variable <- as.character(castedsam1$variable)
+castedsam$variable[castedsam$variable=="theta.ES"] <- "theta.ESmin"
+castedsam$variable[castedsam$variable=="gamma.ES"] <- "gamma.ESmin"
+castedsam$variable[castedsam$variable=="psi.ES"] <- "psi.ESmin"
+castedsam <- rbind(castedsam, castedsam1)
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
+  geom_tile() +
+  scale_fill_gradient("EffSize", low=muted("red"), high="white",
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,1), na.value="white") +
+  facet_grid(sampler~variable, scales="free", labeller=label_parsed_split) +
+  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+  ggtitle("Effective Sample Size for V and W in the CIS and GIS samplers, T=100") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+<<cisESplotT1000, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh, out.width=bigow>>=
+cap <- "Effective sample size as a proportion of the actual sample size in posterior sampler for a time series of length $T=1000$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the full and partial componentwise interweaving samplers and all global interweaving samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$ and that for plotting purposes, effective samples sizes larger than $2500$ were rounded down to $2500$"
+vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+vars1 <- c("V.ES", "W.ES", "theta.ESmin", "gamma.ESmin", "psi.ESmin")
+castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars  & T.T==1000 & sampler %in% sams ))
+castedsam1 <- dcast(meltedsam1, formula=sampler + V.T + W.T + variable ~ ., 
+                   subset=.(variable %in% vars1  & T.T==1000 & sampler %in% sams1 ))
+castedsam$variable <- as.character(castedsam$variable)
+castedsam1$variable <- as.character(castedsam1$variable)
+castedsam$variable[castedsam$variable=="theta.ES"] <- "theta.ESmin"
+castedsam$variable[castedsam$variable=="gamma.ES"] <- "gamma.ESmin"
+castedsam$variable[castedsam$variable=="psi.ES"] <- "psi.ESmin"
+castedsam <- rbind(castedsam, castedsam1)
+colnames(castedsam)[5] <- "value"
+ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
+  geom_tile() +
+  scale_fill_gradient("EffSize", low=muted("red"), high="white",
+                         guide=guide_colorbar(barheight=20),
+                         limits=c(0,1), na.value="white") +
+  facet_grid(sampler~variable, scales="free", labeller=label_parsed_split) +
+  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+  ggtitle("Effective Sample Size for V and W in the CIS and GIS samplers, T=1000") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
+
+
+\clearpage
+
+
 \bibliographystyle{plainnat}
 \bibliography{../mcmcex}
 \end{document}
