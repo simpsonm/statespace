@@ -23,7 +23,7 @@ The stochastic volatility model is a state space model used for, e.g., describin
 y_t|h_{0:T} & \stackrel{ind}{\sim}N(0, e^{h_t/2}) \label{C1}\\
 h_t |h_{0:t-1} &\sim N( \mu + \phi(h_{t-1}-\mu), \sigma^2) \label{C2}
 \end{align}
-The standard data augmentation uses the $h_t$'s and, as we can see above, is a SA for all model parameters: $(\mu, \phi, \sigma^2)$. This is because none of the parameters enter the observation equation, i.e. none are in \ref{C1}. 
+The standard data augmentation uses the $h_t$'s and, as we can see above, is a SA for all model parameters: $(\mu, \phi, \sigma^2)$. This is because none of the parameters enter the observation equation, i.e. none are in \ref{C1}.  
 
 \citeauthor{kastner2013ancillarity} note that a common reparameterization of this model sets
 \[
