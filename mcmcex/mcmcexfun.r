@@ -85,7 +85,8 @@ samsim <- function(samplers, simdata, n, burn, a1, a2, parallel){
     rm(postcors)
   }
   rm(sam)
-  save(out, file=paste(sampler, "OUT.RData", sep="")
+  save(out, file=paste(sampler, "OUT.RData", sep=""))
+  print(paste(sampler, "finished", sep=" "))
   return(out)
 }
 
@@ -217,7 +218,7 @@ samsummary <- function(sam, dat, burn, sampler){
   gamma1.ES <- gammaES[1]
   gammaT4.ES <- gammaES[ceiling(T.T/4)]
   gammaT2.ES <- gammaES[T.T/2]
-n  gamma3T4.ES <- gammaES[floor(3*T.T/4)]
+  gamma3T4.ES <- gammaES[floor(3*T.T/4)]
   gammaT.ES <- gammaES[T.T]
   psi1.ES <- psiES[1]
   psiT4.ES <- psiES[ceiling(T.T/4)]
