@@ -24,11 +24,11 @@ opts_chunk$set(dev="pdf",
 \maketitle
 
 <<loaddata, echo=FALSE>>=
-load("mixing/samout.RData")
-samout1 <- samout
-load("mixing/postcors.RData")
-load("randkern/samoutinit.RData")
-samout <- rbind(samout1, samout)
+load("../mixing/OldSims/samout.RData")
+##samout1 <- samout
+load("../mixing/OldSims/postcors.RData")
+##load("../randkern/samoutinit.RData")
+##samout <- rbind(samout1, samout)
 library(ggplot2)
 library(scales)
 library(plyr)
@@ -236,58 +236,58 @@ ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
 
 
 <<kerncorplotT10, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh2, out.width=bigow>>=
-cap <- "Autocorrelation in posterior sampler for a time series of length $T=10$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the basic random kernel samplers that combine any two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
-vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
-castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
-                   subset=.(variable %in% vars  & T.T==10 & sampler %in% kerns))
-colnames(castedsam)[5] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
-    geom_tile() +
-    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
-                         limits=c(-1,1), mid="white",
-                         guide=guide_colorbar(barheight=20)) +
-    facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
-    scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
-    ggtitle("Autocorrelation for V and W in the random kernel samplers, T=10") +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+## cap <- "Autocorrelation in posterior sampler for a time series of length $T=10$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the basic random kernel samplers that combine any two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+## vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
+## castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+##                    subset=.(variable %in% vars  & T.T==10 & sampler %in% kerns))
+## colnames(castedsam)[5] <- "value"
+## ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+##     geom_tile() +
+##     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+##                          limits=c(-1,1), mid="white",
+##                          guide=guide_colorbar(barheight=20)) +
+##     facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+##     scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+##     ggtitle("Autocorrelation for V and W in the random kernel samplers, T=10") +
+##     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @ 
 
 
 
 <<kernscorplotT100, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh2, out.width=bigow>>=
-cap <- "Autocorrelation in posterior sampler for a time series of length $T=100$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the basic random kernel samplers that combine any two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
-vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
-castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
-                   subset=.(variable %in% vars  & T.T==100 & sampler %in% kerns))
-colnames(castedsam)[5] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
-    geom_tile() +
-    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
-                         limits=c(-1,1), mid="white",
-                         guide=guide_colorbar(barheight=20)) +
-    facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
-    scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
-    ggtitle("Autocorrelation for V and W in the random kernel samplers, T=100") +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+## cap <- "Autocorrelation in posterior sampler for a time series of length $T=100$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the basic random kernel samplers that combine any two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+## vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
+## castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+##                    subset=.(variable %in% vars  & T.T==100 & sampler %in% kerns))
+## colnames(castedsam)[5] <- "value"
+## ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+##     geom_tile() +
+##     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+##                          limits=c(-1,1), mid="white",
+##                          guide=guide_colorbar(barheight=20)) +
+##     facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+##     scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+##     ggtitle("Autocorrelation for V and W in the random kernel samplers, T=100") +
+##     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @ 
 
 
 
 <<kerncorplotT1000, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh2, out.width=bigow>>=
-cap <- "Autocorrelation in posterior sampler for a time series of length $T=1000$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the basic random kernel samplers that combine two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
-vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
-castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
-                   subset=.(variable %in% vars  & T.T==1000 & sampler %in% kerns))
-colnames(castedsam)[5] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
-    geom_tile() +
-    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
-                         limits=c(-1,1), mid="white",
-                         guide=guide_colorbar(barheight=20)) +
-    facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
-    scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
-    ggtitle("Autocorrelation for V and W in the random kernel samplers, T=1000") +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+## cap <- "Autocorrelation in posterior sampler for a time series of length $T=1000$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s, and the $\\psi$'s and for the basic random kernel samplers that combine two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported autocorrelation is the highest autocorrelation among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+## vars <- c("V.AC", "W.AC", "theta.AC", "gamma.AC", "psi.AC")
+## castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+##                    subset=.(variable %in% vars  & T.T==1000 & sampler %in% kerns))
+## colnames(castedsam)[5] <- "value"
+## ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+##     geom_tile() +
+##     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+##                          limits=c(-1,1), mid="white",
+##                          guide=guide_colorbar(barheight=20)) +
+##     facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+##     scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+##     ggtitle("Autocorrelation for V and W in the random kernel samplers, T=1000") +
+##     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @ 
 
 
@@ -452,58 +452,58 @@ ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
 @ 
 
 <<kernESplotT10, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh2, out.width=bigow>>=
-cap <- "Effective sample size as a proportion of the actual sample size in posterior sampler for a time series of length $T=10$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the basic random kernel samplers that combine two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$ and that for plotting purposes, effective samples sizes larger than $2500$ were rounded down to $2500$"
-vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
-castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
-                   subset=.(variable %in% vars & T.T==10 & sampler %in% kerns))
-colnames(castedsam)[5] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
-  geom_tile() +
-  scale_fill_gradient("EffSize", low=muted("red"), high="white",
-                         guide=guide_colorbar(barheight=20),
-                         limits=c(0,1), na.value="white") +
-  facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
-  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
-  ggtitle("Effective Sample Size for V and W in the random kernel samplers, T=10") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+## cap <- "Effective sample size as a proportion of the actual sample size in posterior sampler for a time series of length $T=10$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the basic random kernel samplers that combine two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$ and that for plotting purposes, effective samples sizes larger than $2500$ were rounded down to $2500$"
+## vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+## castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+##                    subset=.(variable %in% vars & T.T==10 & sampler %in% kerns))
+## colnames(castedsam)[5] <- "value"
+## ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
+##   geom_tile() +
+##   scale_fill_gradient("EffSize", low=muted("red"), high="white",
+##                          guide=guide_colorbar(barheight=20),
+##                          limits=c(0,1), na.value="white") +
+##   facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+##   scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+##   ggtitle("Effective Sample Size for V and W in the random kernel samplers, T=10") +
+##   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @ 
 
 
 <<kernESplotT100, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh2, out.width=bigow>>=
-cap <- "Effective sample size as a proportion of the actual sample size in posterior sampler for a time series of length $T=100$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the basic random kernel samplers that combine two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$ and that for plotting purposes, effective samples sizes larger than $2500$ were rounded down to $2500$"
-vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
-castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
-                   subset=.(variable %in% vars & T.T==100 & sampler %in% kerns))
-colnames(castedsam)[5] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
-  geom_tile() +
-  scale_fill_gradient("EffSize", low=muted("red"), high="white",
-                         guide=guide_colorbar(barheight=20),
-                         limits=c(0,1), na.value="white") +
-  facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
-  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
-  ggtitle("Effective Sample Size for V and W in the random kernel samplers, T=100") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+## cap <- "Effective sample size as a proportion of the actual sample size in posterior sampler for a time series of length $T=100$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the basic random kernel samplers that combine two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$ and that for plotting purposes, effective samples sizes larger than $2500$ were rounded down to $2500$"
+## vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+## castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+##                    subset=.(variable %in% vars & T.T==100 & sampler %in% kerns))
+## colnames(castedsam)[5] <- "value"
+## ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
+##   geom_tile() +
+##   scale_fill_gradient("EffSize", low=muted("red"), high="white",
+##                          guide=guide_colorbar(barheight=20),
+##                          limits=c(0,1), na.value="white") +
+##   facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+##   scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+##   ggtitle("Effective Sample Size for V and W in the random kernel samplers, T=100") +
+##   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @ 
 
 
 <<kernESplotT1000, fig.cap=cap, echo=FALSE, fig.width=bigfw, fig.height=bigfh2, out.width=bigow>>=
-cap <- "Effective sample size as a proportion of the actual sample size in posterior sampler for a time series of length $T=1000$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the basic random kernel samplers that combine two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$ and that for plotting purposes, effective samples sizes larger than $2500$ were rounded down to $2500$"
-vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
-castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
-                   subset=.(variable %in% vars & T.T==1000 & sampler %in% kerns))
-colnames(castedsam)[5] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
-  geom_tile() +
-  scale_fill_gradient("EffSize", low=muted("red"), high="white",
-                         guide=guide_colorbar(barheight=20),
-                         limits=c(0,1), na.value="white") +
-  facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
-  scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
-  ggtitle("Effective Sample Size for V and W in the random kernel samplers, T=1000") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+## cap <- "Effective sample size as a proportion of the actual sample size in posterior sampler for a time series of length $T=1000$ for $V$, $W$, the $\\theta$'s, the $\\gamma$'s and the $\\psi$'s and for the basic random kernel samplers that combine two or three of the state, scaled disturbance, or scaled error samplers. Note that for the $\\theta$'s, $\\gamma$'s and $\\psi$'s the reported effective sample size is the lowest ESS among any of the elements of the vector. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that the actual sample size is $2500$ and that for plotting purposes, effective samples sizes larger than $2500$ were rounded down to $2500$"
+## vars <- c("V.ES", "W.ES", "theta.ES", "gamma.ES", "psi.ES")
+## castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable ~ ., 
+##                    subset=.(variable %in% vars & T.T==1000 & sampler %in% kerns))
+## colnames(castedsam)[5] <- "value"
+## ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
+##   geom_tile() +
+##   scale_fill_gradient("EffSize", low=muted("red"), high="white",
+##                          guide=guide_colorbar(barheight=20),
+##                          limits=c(0,1), na.value="white") +
+##   facet_grid(sampler~variable, scales="free", labeller=label_both_parsed_split) +
+##   scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+##   ggtitle("Effective Sample Size for V and W in the random kernel samplers, T=1000") +
+##   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @ 
-
+\end{document}
 
 <<postplotT10, echo=FALSE, fig.cap=cap>>=
 cap <- "Maximum (in magnitude) of the posterior correlations between either $V$ or $W$ and either the $\\theta$'s, $\\gamma$'s, and $\\psi$'s for a time series of length $T=10$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
