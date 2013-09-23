@@ -25,6 +25,10 @@ opts_chunk$set(dev="pdf",
 <<algorithms-child, child='algorithms-child.Rnw', eval=TRUE>>=
 @ 
 
+<<mixing-child, child='algorithms-child.Rnw', eval=TRUE>>=
+@ 
+
+\clearpage
 
 \bibliographystyle{plainnat}
 \bibliography{mcmcex}
