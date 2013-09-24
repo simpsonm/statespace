@@ -20,7 +20,8 @@ where $m_0$, $C_0$, $\alpha_v$, $\beta_v$, $\alpha_w$, and $\beta_w$ are known h
 The usual way to estimate the model is via data augmentation using forward filtering backward sampling (FFBS), as in \cite{fruhwirth1994data} and \cite{carter1994gibbs}. The basic idea is to implement a Gibbs sampler with two or more blocks. The first block samples the states conditional on the data and model parameters while the second block samples the parameters conditonal on the states and the data. Naturally, the second block can be broken down into sub-blocks if necessary. We're calling this algorithm the ``state sampler.'' The FFBS step consists of running the Kalman filter to obtain a draw from $\theta_T|V,W,y_{1:T}$, then moving backward to obtain draws from $\theta_{t}|V,W,y_{1:T},\theta_{t+1:T}$ for $t=t-1, t-2, ..., 0$. \citet{fruhwirth1994data} and \citet{petris2009dynamic} contain the details of this process.
 
 For the local level model, the algorithm cashes out like this:
-\begin{enumerate}
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{statealg}
   \item Simulate $\theta_{0:T}$ from $p(\theta_{0:T}|V,W,y_{1:T})$
     using FFBS
   \item Simulate $(V,W)$ from $p(V,W|\theta_{0:T},y_{1:T})$:
@@ -44,6 +45,7 @@ For the local level model, the algorithm cashes out like this:
       b_w = & \beta_w + \sum_{t=1}^T(\theta_t-\theta_{t-1})^2/2
     \end{align*}
 \end{enumerate}
+\end{alg}
 
 To see this, note that the full posterior can be written as
 \begin{align}
@@ -60,8 +62,8 @@ Note that $p(V|W,\theta_{0:T},y_{1:T})=p(V|\theta_{0:T},y_{1:T})$ and $p(W|V,\th
 
 The main problem with this algorithm is that computation time increases quickly with the length of the time series because the Kalman filter essentially requires drawing from $\theta_t|V,W,\theta_{0:t},y_{0:T}$ for $t=0,1,...,T$, so the FFBS step represents $2T$ univariate draws. A second problem is that in some regions of the parameter space, the markov chain mixes poorly for some of the parameters. In particular, it's known that if $W$ is too small, mixing will be poor in similar models \cite{fruhwirth2004efficient}.  One tried and true method for dealing with this issue is reparameterization. In the hierarchical models literature, for example, \citet{papaspiliopoulos2007general} describe the centered, noncentered and partially noncentered parameterizations. \citet{fruhwirth2004efficient} applies some of these ideas in the context of a particular DLM --- a dynamic univariate regression with a stationary AR(1) regression coefficient.
 
-\subsection{Algorithm 2: The Scaled Disturbance Sampler}
-Strictly speaking, the results of \citeauthor{papaspiliopoulos2007general} don't apply to time series models, though that doesn't mean they can't be generalized. Rather than trying to directly apply their results, we'll first look at some intuitive reparameterizations of the model. One possible reparameterization is to consider the model in terms of the disturbances of the system equation plus the initial state, i.e. $(w_0, w_1, w_2, ..., w_T)$ where we define $w_0=\theta_0$. This doesn't quite work, but the excercise is worth performing in order to understand why. The jacobian of the transformation is upper triangular with 1's along the diagonal, so it's determinant is 1. Then we can rewrite the model from \ref{statepost} as
+\subsection{Algorithm 2: The Scaled Disturbance Sampler}\label{sec:dist}
+Strictly speaking, the results of \citeauthor{papaspiliopoulos2007general} don't apply to time series models, though that doesn't mean they can't be generalized. Rather than trying to directly apply their results, we'll first look at some intuitive reparameterizations of the model. One possible reparameterization is to consider the model in terms of the disturbances of the system equation plus the initial state, i.e. $(w_0, w_1, w_2, ..., w_T)$ where we define $w_0=\theta_0$. This doesn't quite work, but the excercise is worth performing in order to understand why. The jacobian of the transformation is upper triangular with 1's along the diagonal, so it's determinant is 1. Then we can rewrite the model from \eqref{statepost} as
 \begin{align}
   p(V,W,w_{0:T}|y_{1:T}) \propto & V^{-T/2}\exp\left[-\frac{1}{2V}\sum_{t=1}^T\left(y_t-\sum_{s=0}^tw_s\right)^2\right]  W^{-T/2}\exp\left[-\frac{1}{2W}\sum_{t=1}^Tw_t^2\right] \times \nonumber\\
   & V^{-\alpha_v-1} \exp\left[-\frac{\beta_v}{V}\right] W^{-\alpha_w-1} \exp\left[-\frac{\beta_w}{W}\right]\times \exp\left[-\frac{1}{2C_0}(w_0 - m_0)^2\right] \label{statepost}
@@ -72,10 +74,15 @@ so that
   \intertext{and}
   p(W|V, w_{0:T}, y_{1:T}) \propto & W^{-T/2 - \alpha_w -1 }\exp\left[-\frac{1}{W}\left(\beta_w + \frac{1}{2}\sum_{t=1}^Tw_t^2\right)\right] \label{distW}
 \end{align}
-But note that \ref{stateV} \& \ref{stateW} and \ref{distV} \& \ref{distW} are draws from the same distribution since $\theta_t = \sum_{s=0}^tw_s$ --- $(V,W)$ is drawn from the same pair of inverse gamma distributions whether we condition of $\theta_{0:T}$ or $w_{0:T}$. So the new parameterization doesn't actually change the properties of the sampling algorithm, or actually change the sampling algorithm at all.
+But note that \eqref{stateV} \& \eqref{stateW} and \eqref{distV} \& \eqref{distW} are draws from the same distribution since $\theta_t = \sum_{s=0}^tw_s$ --- $(V,W)$ is drawn from the same pair of inverse gamma distributions whether we condition of $\theta_{0:T}$ or $w_{0:T}$. So the new parameterization doesn't actually change the properties of the sampling algorithm, or actually change the sampling algorithm at all.
 
-There is an easy way to fix this --- scale the $w_t$'s by their standard deviation. Define the scaled disturbances $\gamma_t = (\theta_t - \theta_{t-1})/\sqrt{W}=w_t/\sqrt{w_t}$ for $t=1,2,...,T$ and
-$\gamma_0=\theta_0$. \citet{fruhwirth2004efficient} use the analogue of this parameterization in a dynamic regression model, noting that it is noncentered for $(V,W)$. Mathematically what this means is that $p(\gamma_{0:T}|V,W)=p(\gamma_{0:T})$, or equivalently that $\gamma_{0:T}$ is an ancillary statistic in the full augmented data model.
+There is an easy way to fix this --- scale the $w_t$'s by their standard deviation. Define the scaled disturbances:
+\begin{align}
+\gamma_t &= (\theta_t - \theta_{t-1})/\sqrt{W}=w_t/\sqrt{w_t}\text{ for }t=1,2,...,T\nonumber
+\intertext{and}
+\gamma_0&=\theta_0 \label{gammadef}
+\end{align}
+\citet{fruhwirth2004efficient} use the analogue of this parameterization in a dynamic regression model, noting that it is noncentered for $(V,W)$. Mathematically what this means is that $p(\gamma_{0:T}|V,W)=p(\gamma_{0:T})$, or equivalently that $\gamma_{0:T}$ is an ancillary statistic in the full augmented data model.
 
 The Gibbs sampler in this case, then, is to sample the scaled disturbances conditional on $(V,W)$, 
 then sample $V$ conditional on the scaled disturbances and $W$, then
@@ -112,7 +119,8 @@ where $C$ is some constant, $a=\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and $b=\
 
 The full scaled disturbance algorithm is as follows:
 
-\begin{enumerate}
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{distalg}
   \item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{0:T})$
     using FFBS and form $\gamma_{0:T}$, or simulate $\gamma_{0:T}$ directly.
   \item Simulate $V$ from $\pi(V|\gamma_{0:T},W,y_{1:T})$:
@@ -127,6 +135,7 @@ The full scaled disturbance algorithm is as follows:
     \end{align*}
   \item Simulate $W$ from $p(W|\gamma_{0:T},V,y_{1:T})$, possibly using adaptive rejection sampling. 
 \end{enumerate}
+\end{alg}
 
 Note that under the scaled disturbance parameterization, we can write the model as
 \begin{align}
@@ -134,9 +143,15 @@ Note that under the scaled disturbance parameterization, we can write the model 
   \gamma_t & \stackrel{iid}{\sim}N(0,1) \label{distsyseq}
 \end{align}
 
-\subsection{Algorithm 3: The Scaled Error Sampler}
+\subsection{Algorithm 3: The Scaled Error Sampler}\label{sec:error}
 
-An alternative parameterization might use the $v_t$'s, i.e. the errors, in an analogous way. In fact, almost everything about trying to use the $v_t$'s is analogous to using the $w_t$'s. First, using the $v_t$'s directly results is writing down the state state sampler in a different form. So define $\psi_t = (y_t - \theta_{t})/\sqrt{V}=v_t/\sqrt{V}$ for $t=1,2,...,T$ and $\psi_0=\theta_0$, i.e. the scaled errors. Now we need the full conditional distributions of $V$ and $W$. Define $y_0=0$. We can write the transformation fro $\theta_{0:T}$ to $\psi_{0:T}$ as $\psi_{0:T} = y_{0:T}/sqrt{V} + A \theta_{0:T}$ where
+An alternative parameterization might use the $v_t$'s, i.e. the errors, in an analogous way. In fact, almost everything about trying to use the $v_t$'s is analogous to using the $w_t$'s. First, using the $v_t$'s directly results is writing down the state state sampler in a different form. So define the scaled erros:
+\begin{align}
+  \psi_t &= (y_t - \theta_{t})/\sqrt{V}=v_t/\sqrt{V}\text{ for }t=1,2,...,T\nonumber\\ 
+  \intertext{and} 
+  \psi_0&=\theta_0 \label{psidef}
+\end{align}
+Now we need the full conditional distributions of $V$ and $W$. Define $y_0=0$. We can write the transformation fro $\theta_{0:T}$ to $\psi_{0:T}$ as $\psi_{0:T} = y_{0:T}/sqrt{V} + A \theta_{0:T}$ where
 \begin{align}
 A=\frac{1}{\sqrt{V}}\begin{bmatrix} \sqrt{V} & 0 & 0 & \hdots & 0 & 0 \\
   -1 & 1 & 0 & \hdots & 0 & 0 \\
@@ -153,10 +168,11 @@ Now define $Ly_t=y_t-y_{t-1}$ for $t=2,3,...,T$ \& $Ly_1= y_1 - \psi_0$ and $L\p
 \begin{align}
   \log p(W|V\gamma_{0:T},y_{1:T}) =& -aW + b\sqrt{W} - (\alpha_2 + 1)\log W -\beta_2/W + C\label{errorlogVgivenW}
 \end{align}
-where $C$ is some constant. Since this the same form as \ref{distlogWgivenV} then once again this density is log concave so long as $b^2 > \frac{32}{9\beta_v}(\alpha_v+1)^3(1 - 2sgn(b)/3)$. This tends to hold when $W$ isn't much larger than $V$, i.e. in the opposite case.
+where $C$ is some constant. Since this the same form as \eqref{distlogWgivenV} then once again this density is log concave so long as $b^2 > \frac{32}{9\beta_v}(\alpha_v+1)^3(1 - 2sgn(b)/3)$. This tends to hold when $W$ isn't much larger than $V$, i.e. in the opposite case.
 
 Now we can write down the full scaled error algorithm:
-\begin{enumerate}
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{erroralg}
 \item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{0:T})$
   using FFBS and form $\psi_{0:T}$ or simulate $\psi_{0:T}$ directly..
 \item Simulate $W$ from $p(W|\psi_{0:T},V,y_{1:T})$:
@@ -171,6 +187,7 @@ Now we can write down the full scaled error algorithm:
   (defining $y_0=0$)
 \item Simulate $V$ from $p(V|\psi_{0:T},W,y_{1:T})$, possibly using adaptive rejection sampling.
 \end{enumerate}
+\end{alg}
 
 Under the scaled error parameterization, we can write the model as
 \begin{align}

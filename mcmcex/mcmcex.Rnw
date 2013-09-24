@@ -6,6 +6,11 @@ epsfig, multicol}
 \usepackage{booktabs}
 \usepackage{caption}
 \usepackage[numbers]{natbib}
+%Independent: use as X \ind Y | Z
+\newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newtheorem{alg}{Algorithm}
+\newtheorem{theorem}{Theorem}
 \begin{document}
 
 <<setup, include=FALSE, cache=FALSE>>=

@@ -4,7 +4,7 @@ set_parent('mcmcex.Rnw')
 
 \section{Hybrid Results}
 
-<<plotsetup, echo=FALSE>>=
+<<plotsetup2, echo=FALSE>>=
 library(ggplot2)
 library(scales)
 ## load("scors.Rdata")

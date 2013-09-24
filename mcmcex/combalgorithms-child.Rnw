@@ -3,50 +3,47 @@ set_parent('mcmcex.Rnw')
 @
 
 
-\section{Combining Algorithms}
+\section{Hybrid Algorithms: Alternating and Interweaving}
 
-There are several ways to combine the above MCMC algorithms into a hybrid algorithm. The most straightforward method is an ``alternating'' algorithm. An alternating algorithm combines two or more samplers by drawing each sampler sequentially in a single iteration. For example, the alternating sampler that combines the state and scaled disturbance sampler is as follows. Let $(\theta_{0:T}^{(k)},V^k,W^k)$ denote the $k$'th iteration of the chain. To obtain the $k+1$'st iteration, run the following:
 
-\begin{enumerate}
-  \item Simulate $(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$
-  \item Simulate $(V,W|\theta_{0:T},y_{1:T})$
-  \item Simulate $(\gamma_{0:T}|V,W,y_{0:T})$
-  \item Simulate $(V^{(k+1)}|W^{(k+1)},\gamma_{0:T},y_{1:T})$
-  \item Simulate $(W^{(k+1)}|V^{(k+1)},\gamma_{0:T},y_{1:T})$
-  \item Form $\theta^{(k+1)}_{0:T}$ from $(\gamma_{0:T}^{(k+1)}, V^{(k+1)},W^{(k+1)}, y_{0:T})$
+In their seminal paper, \citet{yu2011center} introduce the concept of an interweaving algorithm for MCMC sampling. Parts of this section follow parts of \citeauthor{yu2011center} closely. The interweaving idea is pretty simple --- suppose $Z$ denotes the parameter vector, i.e. $Z=(V,W)$ in our case, and $\theta$ denotes an augmented data vector while $y$ denotes the data vector. Let $\gamma$ denote an alternate augmented data vector, e.g. a transformation of $\theta$ that potentially depends on $Z$ and $y$. Furthermore suppose the joint distribution of $(Z, \theta, \gamma)$ is well defined (though possibly singular). Then an MCMC algorithm that interweaves between $\theta$ and $\gamma$ performs the following steps in a single iteration:
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{inter}
+\item Sample $\theta$ from $p(\theta|Z^{(k)},y)$
+\item Sample $\gamma^{(k+1)}$ from $p(\gamma|\theta,y)$
+\item Sample $Z^{(k+1)}$ from $p(Z|\gamma^{(k+1)},y)$
 \end{enumerate}
-
-
-In other words to get from $(\theta_{0:T}^{(k)},V^{(k)},W^{(k)})$ to $(\theta_{0:T}^{(k+1)},V^{(k+1)},W^{(k+1)})$, you run one iteration of the state sampler to obtain an intermediate iteration, then run one iteration from the scaled disturbance sampler to obtain the desired sample sample. In this way, any two or all three of the original three algorithms can be combined into an alternating algorithm. 
-
-Another approach is given in \citet{yu2011center}. In their paper, Yu and Meng define an interweaving strategy. In the language and notation of the local level model, a single iteration of an interweaving strategy has the following steps, e.g. when interweaving between the state and scaled disturbance samplers:
-
-\begin{enumerate}
-  \item Simulate $(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$
-  \item Simulate $(V,W|\theta_{0:T},y_{1:T})$
-  \item Form $\gamma_{0:T}$ from $(\theta_{0:T},V,W,y_{0:T})$
-  \item Simulate $(V^{(k+1)}|W^{(k+1)},\gamma_{0:T},y_{1:T})$
-  \item Simulate $(W^{(k+1)}|V^{(k+1)},\gamma_{0:T},y_{1:T})$
-  \item Form $\theta^{(k+1)}_{0:T}$ from $(\gamma_{0:T}^{(k+1)}, V^{(k+1)},W^{(k+1)}, y_{0:T})$
+\end{alg}
+This is called a {\it global} interweaving strategy (GIS) since interweaving occurs globally across the entire parameter vector. It's possible to define a {\it componentwise} interweaving strategy (CIS) the interweaves within specific steps of a Gibbs sampler as well. Step two of the GIS algorithm is typically accomplished by sampling $Z|\theta,y$ and then $\gamma|\theta,Z,y$. The result of this algorithm is a markov chain with stationary distribution $p(Z|y)$ or even $p(Z,\gamma|y)$. In addition, if the full joint distribution of $(\theta, \gamma, Z| y)$ or perhaps just $p(Z,\theta|y)$ is desired, then an additional step to sample $\theta|\gamma,Z,y$ is needed. This results in the following:
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{inter2}
+\item Sample $\theta$ from $p(\theta|Z^{(k)},y)$
+\item Sample $Z$ from $p(Z|\theta,y)$
+\item Sample $\gamma^{(k+1)}$ from $p(\gamma|\theta,Z,y)$
+\item Sample $Z^{(k+1)}$ from $p(Z|\gamma^{(k+1)},y)$
+\item Sample $\theta^{(k+1)}$ from $p(\theta|\gamma^{(k+1)},Z^{(k+1)},y)$
 \end{enumerate}
+\end{alg}
+Steps 2 and 3 replace step 2 from above in algorithm \eqref{inter} while step 5 is necessary to obtain a valid sample from $\theta$, though strictly speaking isn't necessary to sample from $(Z,\gamma|y)$. Often the transformation from $\theta$ to $\gamma$ is one-to-one conditional on $y$ and $Z$. This results in a singular joint distribution for $(\theta,\gamma,y)$ but doesn't cause any problems --- it actually makes things easier since steps 3 and 5 become transformations of previously sampled parameters and the data. \citeauthor{yu2011center} note that while often one-to-one transformations are typically simple and effective, in many cases a many-to-one transformation is needed to achieve satisfactory mixing --- this is where the generality of the interweaving idea shines.
 
-The key difference here is in what happens in step 3. Here instead of drawing $\gamma_{0:T}$ from $p(\gamma_{0:T}|V,W,y_{0:T})$, we're drawing it from $p(\gamma_{0:T}|\theta_{0:T},V,W,y_{0:T})$ which happens to be a degenerate distribution. Changing this one step speeds up the computation since drawing the full vector $\gamma_{0:T}$ (or $\theta_{0:T}$) is costly, but computing the transformation is cheap. In addition, \citeauthor{yu2011center} found that when one of the two samplers being interweaved uses an ancillary augmentation (AA) while the other uses a sufficient augmentation (SA), the interweaving sampler has much better convergence properties than the corresponding alternating sampler or either of the two samplers the interweaving and alternating samplers are composed of. In this case, combining any two of the base samplers (parameterizations) doesn't result in an AA-SA pair, but these are the natural parameterizations to consider. Note that when there is more than two parameterizations to choose between, there's a possibility of a hybrid alternating/interweaving sampler --- i.e. it alternates between the first two samplers but interweaves between the second one and the third one, or vice versa. We won't consider these samplers here.
+The GIS algorithm is directly comparable to an {\it alternating algorithm} which helps motivate the name ``interweaving''. Given the same two data augmentations, $\theta$ and $\gamma$, and parameter vector $Z$, the alternating algorithm for sampling from $p(Z|y)$ is as follows
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{alt}
+\item Sample $\theta$ from $p(\theta|Z^{(k)},y)$
+\item Sample $Z$ from $p(Z|\theta,y)$
+\item Sample $\gamma$ from $p(\gamma|Z,y)$
+\item Sample $Z^{(k+1)}$ from $p(Z|\gamma,y)$
+\end{enumerate}
+\end{alg}
+Compared to algorithm \eqref{inter2} there are two differences. The first difference is step 5 is missing in algorithm \eqref{alt} --- this is merely because we're only sampling from $p(Z|y)$ instead of $p(Z,\theta,\gamma|y)$ and so is immaterial. A similar step 5 would have to be added in order to sample from $p(Z,\theta,\gamma|y)$ jointly. The key difference is in step 3: instead of sampling from $p(\gamma|\theta,Z,y)$, the alternating algorithm samples from $p(\gamma|Z,y)$. In other words it alternates between two data augmentation algorithms in a single iteration. The interweaving algorithm, on the other hand, interweaves $\theta$ and $\gamma$ together by sampling $\gamma$ conditonal on $\theta$ in addition to everything else.
 
-A final way to combine the original three samplers is a random kernel sampler. For each iteration, the random kernel sampler chooses one of the three basic samplers randomly, then obtains the next iteration using that parameter vector. The probability of choosing any given sampler must remain constant throughout the sampling process --- at least after burn in. This makes it possible to somehow learn the optimal probabilities during the burn in, then use the probabilties to obtain the desired chain. We focus on random kernel samplers with a uniform distribution over possible parameterizations. Combined with the previous samplers, this gives us three base samplers and three samplers that are composed of any two or three of the base samplers for a total of 15 samplers. Table \ref{table:sams} displays all possible sampling schemes.
+\citeauthor{yu2011center} show that the global interweavinig sampler has a geometric rate of convergence no worse than the worst of the two underlying algorithms. In models with ``nice'' priors in some sense, they also show that if the two augmentations are one-to-one transformations of each other (conditional on $\theta$ and $y$) and form a ``beauty and the beast'' pair, then the GIS algorithm is the same as the optimal PX-DA algorithm of \citet{meng1999seeking}, \citet{liu1999parameter}, \citet{van2001art} and \citet{hobert2008theoretical}. Specifically, the theorem requires that one of $\theta$ and $\gamma$ is a sufficient augmentation while the other is an ancillary augmentation. Mathematically, $\theta$ is a sufficient augmentation for $Z$, or a SA if $p(y|\theta, Z) = p(y|\theta)$, i.e. $\theta$ is a sufficient statistic for $Z$. Equivalently, $y\ind Z | \theta$. $\gamma$ is an ancillary augmentation for $Z$, or an AA if $p(\theta|Z)=p(\theta)$, i.e. $\theta$ is an ancillary statistic for $Z$, or equivalently $\theta\ind Z$. \citeauthor{yu2011center}'s SA and AA are the same as \citet{papaspiliopoulos2007general}'s centered and noncentered parameterizations respectively (CP and NCP). \citeauthor{yu2011center} call a GIS algorithm based on an AA-SA pair an ancillary sufficient interweaving strategy, or an ASIS algorithm.
 
-\begin{table}[h]
-  \centering
-  \scalebox{.9}{
-  \begin{tabular}{|l|cccc|}\hline
-    Base: & State (S) & Scaled Disturbance (SD) & Scaled Error (SE) & \\
-    Alternating: & S + SD & S + SE & SD + SE & S + SD + SE\\
-    Interweaving: & S + SD & S + SE & SD + SE & S + SD + SE\\
-    Random Kernel: & $\frac{1}{2}$S + $\frac{1}{2}$SD & $\frac{1}{2}$S + $\frac{1}{2}$SE & $\frac{1}{2}$SD + $\frac{1}{2}$SE & $\frac{1}{3}$S + $\frac{1}{3}$SD + $\frac{1}{3}$SE\\
-    \hline
-  \end{tabular}
-  }
-  \caption{All posterior samplers considered for the local level model. The fractions in the random kernel sampler indicate the probability that each base sampler is chosen in a given iteration. Note that there are two samplers omitted which are a sort of hybrid between alternating and interweaving: the sampler that alternates between S and SD, then interweaves between SD and SE, and the sampler which reverses which steps are interweaving and which are alternating.}
-  \label{table:sams}
-\end{table}
 
+\subsection{The near futile search for an ASIS algorithm for the local level model}
+
+Ideally, then, we'd like to contruct an SA-AA pair of data augmentations. Now since \eqref{stateobseq} contains $V$ and \eqref{statesyseq} contains $W$, we see immediately that $\theta_{0:T}$ (i.e. the usual data augmentation) is neither a SA nor an AA for $(V,W)$. However from \eqref{distsyseq} and \eqref{errorsyseq} we see that both $\gamma_{0:T}$ and $\psi_{0:T}$, defined in \eqref{gammadef} and \eqref{psidef} respectively, are AA for $(V,W)$. With two options for an AA, we need only find a SA to construct an ASIS algorithm. This sounds simple but ends up being a difficult nut to crack. The following theorem explains just how difficult it is.
+
+\begin{theorem} In the local level model, there is no one-to-one transformation of $\theta_{0:T}$ that possibly depends on $y_{0:T}$ and $(V,W)$ such that the determinant of the jacobian is free of $y_{0:T}$ and the transformation is a SA for $(V,W)$.
+\end{theorem}
 
