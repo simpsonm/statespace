@@ -1,0 +1,18 @@
+<<set-parent-combmix, echo=FALSE, cache=FALSE>>=
+set_parent('mcmcex.Rnw')
+@
+
+\section{Hybrid Results}
+
+<<plotsetup, echo=FALSE>>=
+library(ggplot2)
+library(scales)
+## load("scors.Rdata")
+## load("dcors.Rdata")
+## load("ecors.Rdata")
+## cnam <- colnames(scors[[2]][[1]])
+## rnam <- rownames(scors[[2]][[1]])
+@ 
+
+
+INSERT RESULTS OF THE VARIETY OF HYBRID ALGORITHMS HERE

@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
 epsfig, multicol}
+\usepackage{fullpage}
 \usepackage[maxfloats=48]{morefloats} %for >18 figures
 \usepackage{booktabs}
 \usepackage{caption}
@@ -22,10 +23,19 @@ opts_chunk$set(dev="pdf",
 \author{Matt Simpson}
 \maketitle
 
-<<algorithms-child, child='algorithms-child.Rnw', eval=TRUE>>=
+<<model-child, child='model-child.Rnw', eval=TRUE>>=
 @ 
 
-<<mixing-child, child='algorithms-child.Rnw', eval=TRUE>>=
+<<basealgorithms-child, child='basealgorithms-child.Rnw', eval=TRUE>>=
+@ 
+
+<<basemixing-child, child='basemixing-child.Rnw', eval=TRUE>>=
+@ 
+
+<<combalgorithms-child, child='combalgorithms-child.Rnw', eval=TRUE>>=
+@ 
+
+<<combmixing-child, child='combmixing-child.Rnw', eval=TRUE>>=
 @ 
 
 \clearpage
