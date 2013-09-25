@@ -1,6 +1,6 @@
 \documentclass{article}
 \usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
-epsfig, multicol}
+epsfig, multicol, amsthm}
 \usepackage{fullpage}
 \usepackage[maxfloats=48]{morefloats} %for >18 figures
 \usepackage{booktabs}
@@ -42,6 +42,13 @@ opts_chunk$set(dev="pdf",
 
 <<combmixing-child, child='combmixing-child.Rnw', eval=TRUE>>=
 @ 
+
+<<compalgorithms-child, child='compalgorithms-child.Rnw', eval=TRUE>>=
+@ 
+
+<<compmixing-child, child='compmixing-child.Rnw', eval=TRUE>>=
+@ 
+
 
 \clearpage
 
