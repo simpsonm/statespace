@@ -89,7 +89,7 @@ then sample $V$ conditional on the scaled disturbances and $W$, then
 $W$ conditional on the scaled disturbances and $V$. Sampling the
 scaled disturbances can be accomplished using FFBS to sample the
 states, then transforming the states to the scaled disturbances using the
-formulas above, or by sampling them directly using the simulation
+formulas above or by sampling them directly using the simulation
 smoother of \citet{de1995simulation}. $V$ and $W$ are now drawn in separate blocks because they are no longer independent. To obtain the full conditional distributions of $V$ and $W$, note that we can write the transformation from $\theta_{0:T}$ to $\gamma_{0:T}$ as $\gamma_{0:T}=A\theta_{0:T}$ where
 \begin{align}
 A=\frac{1}{\sqrt{W}}\begin{bmatrix} \sqrt{W} & 0 & 0 & \hdots & 0 & 0 \\
@@ -113,12 +113,18 @@ which is essentially the same inverse gamma draw as in the state sampler. Howeve
 \end{align*}
 This density isn't any known form and is difficult to sample from. The log density can be written as
 \begin{align}
-\log p(W|V\gamma_{0:T},y_{1:T}) =& -aW + b\sqrt{W} - (\alpha_2 + 1)\log W -\beta_2/W + C\label{distlogWgivenV}
+\log p(W|V,\gamma_{0:T},y_{1:T}) =& -aW + b\sqrt{W} - (\alpha_2 + 1)\log W -\beta_2/W + C\label{distlogWgivenV}
 \end{align}
-where $C$ is some constant, $a=\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and $b=\sum_{t=1}^T(y_t-\gamma_0)(\sum_{j=1}^t\gamma_j)/V$. It can be shown that $b^2 > \frac{32}{9\beta_w}(\alpha_w+1)^3(1 - 2sgn(b)/3)$ implies that the density is log concave, and it turns out that this tends to hold over a wide region of the parameter space --- so long as $V$ isn't much larger than $W$. This allows for the use of adaptive rejection sampling in order to sampler from this distribution in many cases \cite{gilks1992adaptive}. An alternative is to use a $t$ approximation to the conditional density as a proposal in a rejection sampler.
+where $C$ is some constant, $a=\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and $b=\sum_{t=1}^T(y_t-\gamma_0)(\sum_{j=1}^t\gamma_j)/V$. It can be shown that $b^2 > \frac{32}{9\beta_w}(\alpha_w+1)^3(1 - 2sgn(b)/3)$ implies that the density is log concave where
+\begin{align*}
+  sgn(b) & = \begin{cases} 1 &\text{if } b>0\\
+    0 & \text{if } b=0\\
+    -1 & \text{if } b<0\\
+    \end{cases}
+\end{align*}
+This condition is equivalent to $\partial^2\log p(W|V,\gamma_{0:T},y_{1:T})/\partial W^2 < 0$ at the $W^*$ that maximizes it, and hence globally. It turns out that this tends to hold over a wide region of the parameter space --- so long as $V$ is smaller or isn't much larger than $W$. This allows for the use of adaptive rejection sampling in order to sample from this distribution in many cases \cite{gilks1992adaptive}. An alternative is to use a $t$ approximation to the conditional density as a proposal in a rejection sampler, but this is much more computationally expensive.
 
 The full scaled disturbance algorithm is as follows:
-
 \begin{alg}\mbox{}\\[-\baselineskip]
 \begin{enumerate}\label{distalg}
   \item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{0:T})$
