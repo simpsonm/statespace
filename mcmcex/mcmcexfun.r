@@ -768,9 +768,10 @@ Wgamiter <- function(dat, gam, V, a2, b2){
       rejit <- rejit + 1
       if(rejit%%1000000==0){
         print(paste("Rejection sampler appears to be stuck for W|V, ",
-                    rejit, " iterations", sep="")
+                    rejit, " iterations", sep=""))
         print(paste("Last value of V in the chain: ", V, sep=""))
         print(paste("Values of a and b:", a, b, sep="  "))
+        print(paste("T = ", T, sep=""))
         print(paste("Prior values of alphaV and betaV:", a2, b2, sep="  "))
         print(paste("Attempted df: ", df, sep=""))
         print(paste("Attempted mean and variance:", mn, propvar, sep="  "))
@@ -832,7 +833,8 @@ Vpsiiter <- function(dat, psi, W, a1, b1){
       rejit <- rejit + 1
       if(rejit%%1000000==0){
         print("Rejection sampler appears to be stuck for V|W, ",
-              rejit, " iterations.", sep="")
+              rejit, " iterations.", sep=""))
+        print(paste("T = ", T, sep=""))
         print(paste("Last value of W in the chain: ", W, sep=""))
         print(paste("Values of a and b:", a, b, sep="  "))
         print(paste("Prior values of alphaV and betaV:", a1, b1, sep="  "))
