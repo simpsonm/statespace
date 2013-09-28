@@ -832,7 +832,7 @@ Vpsiiter <- function(dat, psi, W, a1, b1){
       }
       rejit <- rejit + 1
       if(rejit%%1000000==0){
-        print("Rejection sampler appears to be stuck for V|W, ",
+        print(paste("Rejection sampler appears to be stuck for V|W, ",
               rejit, " iterations.", sep=""))
         print(paste("T = ", T, sep=""))
         print(paste("Last value of W in the chain: ", W, sep=""))
