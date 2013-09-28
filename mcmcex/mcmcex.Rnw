@@ -24,9 +24,14 @@ opts_chunk$set(dev="pdf",
 @
 
 
-\title{MCMC Examples for DLMs} 
+\title{Ancillarity-Sufficiency or not; Interweaving to Improve MCMC Estimation of the Local Level DLM}
 \author{Matt Simpson}
 \maketitle
+
+\begin{abstract}
+In dynamic linear models (DLMs), MCMC sampling can often be very slow for estimating the posterior density --- especially for longer time series. In particular, in some regions of the parameter space the standard data augmentation algorithm can mix very slowly. Recently ancillarity-sufficiency interweaving has been introduced as a method to take advantage of alternate parameterizations in multilevel models in order to improve the mixing and convergence properties of the chain. Focusing on the local level DLM, we explore alternate parameterizations and various interweaving algorithms through simulation in order to improve mixing. We conclude by explaining what our results may mean for MCMC in a more general DLM.
+\end{abstract}
+
 
 <<model-child, child='model-child.Rnw', eval=TRUE>>=
 @ 
