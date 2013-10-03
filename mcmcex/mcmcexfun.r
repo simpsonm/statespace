@@ -176,7 +176,7 @@ samsummary <- function(sam, dat, burn, sampler){
   theta0 <- theta0s[,1]
   data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
   time <- mean(sam$time)
-  logconV <- mean(sam$logconV
+  logconV <- mean(sam$logconV, na.rm=TRUE)
   adrejV <- mean(sam$adrejV, na.rm=TRUE)
   logconW <- mean(sam$logconW, na.rm=TRUE)
   adrejW <- mean(sam$adrejW, na.rm=TRUE)
