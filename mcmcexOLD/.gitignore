@@ -12,6 +12,9 @@ statsam.RData
 #################################################
 mcmcex.pdf
 mcmcex.tex
+*.aux
+*.log
+*.out
 
 # These output folders come from knitr #
 /auto
