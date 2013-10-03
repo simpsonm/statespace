@@ -82,7 +82,7 @@ There is an easy way to fix this --- scale the $w_t$'s by their standard deviati
 \intertext{and}
 \gamma_0&=\theta_0 \label{gammadef}
 \end{align}
-\citet{fruhwirth2004efficient} use the analogue of this parameterization in a dynamic regression model, noting that it is noncentered for $(V,W)$. Mathematically what this means is that $p(\gamma_{0:T}|V,W)=p(\gamma_{0:T})$, or equivalently that $\gamma_{0:T}$ is an ancillary statistic in the full augmented data model.
+\citet{fruhwirth2004efficient} use the analogue of this parameterization in a dynamic regression model, noting that it is noncentered for $(V,W)$. Mathematically what this means is that $p(\gamma_{0:T}|V,W)=p(\gamma_{0:T})$, or equivalently that $\gamma_{0:T}$ is an ancillary statistic {\it NOT ACTUALLY A STATISTIC} in the full augmented data model.
 
 The Gibbs sampler in this case, then, is to sample the scaled disturbances conditional on $(V,W)$, 
 then sample $V$ conditional on the scaled disturbances and $W$, then
