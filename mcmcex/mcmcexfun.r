@@ -176,10 +176,10 @@ samsummary <- function(sam, dat, burn, sampler){
   theta0 <- theta0s[,1]
   data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
   time <- mean(sam$time)
-  logconV <- mean(sam$logconV)
-  adrejV <- mean(sam$adrejV)
-  logconW <- mean(sam$logconW)
-  adrejW <- mean(sam$adrejW)
+  logconV <- mean(sam$logconV
+  adrejV <- mean(sam$adrejV, na.rm=TRUE)
+  logconW <- mean(sam$logconW, na.rm=TRUE)
+  adrejW <- mean(sam$adrejW, na.rm=TRUE)
   init <- data.frame(time=time, logconV=logconV, adrejV=adrejV,
                      logconW=logconW, adrejW=adrejW)
   gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
