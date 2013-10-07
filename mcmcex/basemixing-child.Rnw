@@ -37,6 +37,9 @@ label_both_parsed_split <- function(variable, value){
   llply(as.character(paste(variable, value, sep = ": ")), 
         function(x) parse(text = strsplit(x, "\\.")[[1]][1]))
 }
+label_parsed_split <- function(variable, value){
+  llply(as.character(value), function(x) parse(text = strsplit(x, "\\.")[[1]][1]))
+}
 meltedcors <- melt(postcors, id=c("V.T", "W.T", "T.T"))
 opts_chunk$set(fig.width=7, fig.height=4, out.width='1\\textwidth', 
                fig.pos='!ht')

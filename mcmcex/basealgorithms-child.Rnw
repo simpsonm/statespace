@@ -2,79 +2,89 @@
 set_parent('mcmcex.Rnw')
 @
 
-\section{Estimating the Model}
-
-The dynamic linear model can be estimated via maximum likelihood, but we're interested in Bayesian approaches. To complete the specification, we need a prior on $(\theta_0, V, W)$. We'll assume that they're mutually independent a priori and that
-\begin{align*}
-  \theta_0 &\sim N(m_0, C_0)\\
-  V &\sim IG(\alpha_v, \beta_v)\\
-  W &\sim IG(\alpha_w, \beta_w)
-\end{align*}
-where $m_0$, $C_0$, $\alpha_v$, $\beta_v$, $\alpha_w$, and $\beta_w$ are known hyperparameters and $IG(\alpha_w, \beta_w)$ is the inverse gamma density under the shape-scale parameterization, i.e.
-\begin{align*}
-  p(W) \propto W^{-\alpha_w - 1}\exp\left[-\frac{\beta_w}{W}\right]
-\end{align*}
-
-\subsection{Algorithm 1: The State Sampler}
-
-The usual way to estimate the model is via data augmentation using forward filtering backward sampling (FFBS), as in \cite{fruhwirth1994data} and \cite{carter1994gibbs}. The basic idea is to implement a Gibbs sampler with two or more blocks. The first block samples the states conditional on the data and model parameters while the second block samples the parameters conditonal on the states and the data. Naturally, the second block can be broken down into sub-blocks if necessary. We're calling this algorithm the ``state sampler.'' The FFBS step consists of running the Kalman filter to obtain a draw from $\theta_T|V,W,y_{1:T}$, then moving backward to obtain draws from $\theta_{t}|V,W,y_{1:T},\theta_{t+1:T}$ for $t=t-1, t-2, ..., 0$. \citet{fruhwirth1994data} and \citet{petris2009dynamic} contain the details of this process.
-
-For the local level model, the algorithm cashes out like this:
+\section{Estimating the Model via Data Augmentation: Parameterization Issues}
+The usual way to estimate the model is via data augmentation (DA) using forward filtering backward sampling (FFBS), as in \citet{fruhwirth1994data} and \citet{carter1994gibbs}. The basic idea is to implement a Gibbs sampler with two blocks. The generic DA algorithm with parameter $\phi$, augmented data $\theta$, and data $y$ obtains the $k+1$'st state of the Markov chain, $\phi^{(k+1)}$, from the $k$'th state, $\phi^{(k)}$ as follows:
+\begin{alg}\mbox{}\\[-\baselineskip]
+  \begin{enumerate}\label{DAalg}
+  \item Draw $\theta$ from $p(\theta|\phi^{(k)},y)$
+  \item Draw $\phi^{(k+1)}$ from $p(\phi|\theta,y)$
+  \end{enumerate}
+\end{alg}
+The first block samples the states conditional on the data and model parameters while the second block samples the parameters conditonal on the states and the data. We're calling this algorithm the ``state sampler.'' The FFBS step consists of running the Kalman filter to obtain a draw from $\theta_T|V,W,y_{1:T}$, then moving backward to obtain draws from $\theta_{t}|V,W,y_{1:T},\theta_{t+1:T}$ for $t=T-1, T-2, ..., 0$. \citet{fruhwirth1994data}, \citet{carter1994gibbs}, and \citet{petris2009dynamic} contain the details of this process. For the local level model, the algorithm cashes out like this (see \cite{petris2009dynamic} for the full details):
 \begin{alg}\mbox{}\\[-\baselineskip]
 \begin{enumerate}\label{statealg}
-  \item Simulate $\theta_{0:T}$ from $p(\theta_{0:T}|V,W,y_{1:T})$
+  \item Draw $\theta_{0:T}$ from $p(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$
     using FFBS
-  \item Simulate $(V,W)$ from $p(V,W|\theta_{0:T},y_{1:T})$:
+  \item Draw $(V^{(k+1)},W^{(k+1)})$ from $p(V,W|\theta_{0:T},y_{1:T})$:
 
-    $V$ and $W$ are conditionally independent (conditional on
-    $\theta_{0:T},y_{1:T}$), with distributions
-    \[
-    V|\theta_{0:T},y_{1:T} \sim IG(a_v, b_v)
-    \]
-    \[
-    W|\theta_{0:T},y_{1:T} \sim IG(a_w, b_w)
-    \]
+    $V$ and $W$ are conditionally independent given $(\theta_{0:T},y_{1:T})$, with distributions
+    \begin{align*}
+      V|\theta_{0:T},y_{1:T} &\sim IG(a_v, b_v) &   W|\theta_{0:T},y_{1:T} &\sim IG(a_w, b_w)
+    \end{align*}
     where
-    \begin{align*}
-      a_v =& \alpha_v + T/2\\
-      b_v = & \beta_v + \sum_{t=1}^T(y_t-\theta_t)^2/2
-    \end{align*}
-    and
-    \begin{align*}
-      a_w =& \alpha_w + T/2\\
-      b_w = & \beta_w + \sum_{t=1}^T(\theta_t-\theta_{t-1})^2/2
-    \end{align*}
+    \begin{align}
+      a_v =& \alpha_v + T/2 & b_v = & \beta_v + \sum_{t=1}^T(y_t-\theta_t)^2/2\nonumber
+      \intertext{and}
+      a_w =& \alpha_w + T/2 & b_w = & \beta_w + \sum_{t=1}^T(\theta_t-\theta_{t-1})^2/2 \label{IGparm}
+    \end{align}
 \end{enumerate}
 \end{alg}
+The main problem with this algorithm is that computation time increases quickly with the length of the time series because the Kalman filter essentially requires drawing from $\theta_t|V,W,\theta_{0:t},y_{0:T}$ for $t=0,1,...,T$, so the FFBS step represents $2T$ univariate draws. A second problem is that in some regions of the parameter space, the Markov chain mixes poorly for some of the parameters. In particular, it's known that if $W$ is too small, mixing will be poor in similar models \cite{fruhwirth2004efficient}.
 
-To see this, note that the full posterior can be written as
-\begin{align}
-  p(V,W,\theta_{0:T}|y_{1:T}) \propto & V^{-T/2}\exp\left[-\frac{1}{2V}\sum_{t=1}^T(y_t-\theta_t)^2\right] \times W^{-T/2}\exp\left[-\frac{1}{2W}\sum_{t=1}^T(\theta_t-\theta_{t-1})^2\right] \times \nonumber\\
-  & V^{-\alpha_v-1} \exp\left[-\frac{\beta_v}{V}\right] W^{-\alpha_w-1} \exp\left[-\frac{\beta_w}{W}\right]\times \exp\left[-\frac{1}{2C_0}(\theta_0 - m_0)^2\right] \label{statepost}
-\end{align}
-so that 
-\begin{align}
-  p(V|W, \theta_{0:T}, y_{1:T}) \propto & V^{-T/2 - \alpha_v -1 }\exp\left[-\frac{1}{V}\left(\beta_v + \frac{1}{2}\sum_{t=1}^T(y_t - \theta_t)^2\right)\right] \label{stateV}\\
-  \intertext{and}
-  p(W|V, \theta_{0:T}, y_{1:T}) \propto & W^{-T/2 - \alpha_w -1 }\exp\left[-\frac{1}{W}\left(\beta_w + \frac{1}{2}\sum_{t=1}^T(\theta_t - \theta_{t-1})^2\right)\right] \label{stateW}\\
-\end{align}
-Note that $p(V|W,\theta_{0:T},y_{1:T})=p(V|\theta_{0:T},y_{1:T})$ and $p(W|V,\theta_{0:T},y_{1:T})=p(W|\theta_{0:T},y_{1:T})$ so that $V$ and $W$ are being drawn jointly in the state sampler.
+One well known method of improving mixing and convergence in MCMC samplers is reparameterizing the model. \citet{papaspiliopoulos2007general} is a good summary. Most of the work in some way focuses on what are called centered and noncentered parameterizations. In our general notation where $\phi$ is the parameter, $\theta$ is the DA and $y$ is the data, the parameterization $(\phi,\theta)$ is a {\it centered parameterization} (CP) if $p(y|\theta,\phi)=p(y|\theta$. The parameterization is a {\it noncentered parameterization} (NCP) if $p(\theta|\phi)=p(\theta)$. When $(\phi,\theta)$ is a CP, $\theta$ is called a {\it centered augmentation} (CA) for $\phi$ and when $(\phi,\theta)$ is a NCP, $\theta$ is called a {\it noncentered augmentation} (NCA) for $\phi$. A centered augmentation is sometimes called a {\it sufficient augmentation} (SA) and a noncentered augmentation is sometimes called an {\it ancillary augmentation} (AA), e.g. in \citet{yu2011center}. Like \citeauthor{yu2011center}, we prefer the latter terminology because it immediately suggests the intuiton that a sufficient augmentation is like a sufficient statistic while an ancillary augmentation is like an ancillary statistic. 
 
-The main problem with this algorithm is that computation time increases quickly with the length of the time series because the Kalman filter essentially requires drawing from $\theta_t|V,W,\theta_{0:t},y_{0:T}$ for $t=0,1,...,T$, so the FFBS step represents $2T$ univariate draws. A second problem is that in some regions of the parameter space, the markov chain mixes poorly for some of the parameters. In particular, it's known that if $W$ is too small, mixing will be poor in similar models \cite{fruhwirth2004efficient}.  One tried and true method for dealing with this issue is reparameterization. In the hierarchical models literature, for example, \citet{papaspiliopoulos2007general} describe the centered, noncentered and partially noncentered parameterizations. \citet{fruhwirth2004efficient} applies some of these ideas in the context of a particular DLM --- a dynamic univariate regression with a stationary AR(1) regression coefficient.
+The key reasoning behind the emphasis on SAs and AAs is that typically when the DA algorithm based on the SA has nice mixing and convergence properties the DA algorithm based on the AA has poor mixing and convergence propeties and vice versa. In other words, the two algorithms form a ``beauty and the beast'' pair. This property suggests that there might be some way to combine the two DA algorithms or the two underlying parameterizations in order to construct a sampler which has ``good enough'' properties all the time.  Some work focuses on useing partially noncentered parameterizations that are a sort of bridge between the CP and NCP, e.g. \citeauthor{papaspiliopoulos2007general} for general hierarchical models and \citet{fruhwirth2004efficient} in the context of a partiuclar DLM --- a dynamic univarite regression with a stationary AR(1) coefficient, but this doesn't quite accomplish what we want because it still picks a single parameterization to use that may depend on the region of the parameter space the posterior conentrates most of its mass. The interweaving concept of \citet{yu2011center} does precisely what we want, however. The idea is pretty simple: suppose that $\phi$ denotes the parameter vector, $\theta$ denotes one augmented data vector, $\gamma$ denotes another augmented data vector, and $y$ denotes the data. Then an MCMC algorithm that {\it interweaves} between $\theta$ and $\gamma$ performs the following steps in a single iteration to obtain $k+1$'st draw, $\phi^{(k+1)}$, from the $k$'th draw, $\phi^{(k)}$:
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{inter}
+\item Draw $\theta$ from $p(\theta|\phi^{(k)},y)$
+\item Draw $\gamma^{(k+1)}$ from $p(\gamma|\theta,y)$
+\item Draw $\phi^{(k+1)}$ from $p(\phi|\gamma^{(k+1)},y)$.
+\end{enumerate}
+\end{alg}
+Notice that an additional step is added to algorithm \ref{DAalg}, and the final step now draws $\phi$ conditional on $\gamma$ instead of $\theta$. This is the intuition behind the name ``interweaving''---the draw of the second augmented data vector is weaved inbetween the draws of $\theta$ and $\phi$. This particular method of interweaving is called a {\it global} interweaving strategy (GIS) since interweaving occurs globally across the entire parameter vector. It's possible to define a {\it componentwise} interweaving strategy (CIS) that interweaves within specific steps of a Gibbs sampler as well. Step two of the GIS algorithm is typically accomplished by sampling $\phi|\theta,y$ and then $\gamma|\theta,\phi,y$. In addition, $\gamma$ and $\theta$ are often, but not always, one-to-one transformations of each other conditional on $(\phi,y)$, i.e. $\gamma = M(\theta;\phi,y)$. Where $M(.;\phi,y)$ is a one-to-one function. In this case, the algorithm becomes:
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{inter2}
+\item Draw $\theta$ from $p(\theta|\phi^{(k)},y)$
+\item Draw $\phi$ from $p(\phi|\theta,y)$
+\item Draw $\gamma$ from $p(\gamma|\theta,\phi,y)$
+\item Draw $\phi^{(k+1)}$ from $p(\phi|\gamma,y)$
+\end{enumerate}
+\end{alg}
+When $\gamma$ is a one-to-one transformation of $\theta$, step 4 is an update $\gamma=M(\theta;\phi,y)$. The GIS algorithm is directly comparable to an {\it alternating} algorithm. Given the same two DAs, $\theta$ and $\gamma$, and parameter vector $\phi$, the alternating algorithm for sampling from $p(\phi|y)$ is as follows:
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{alt}
+\item Draw $\theta$ from $p(\theta|\phi^{(k)},y)$
+\item Draw $\phi$ from $p(\phi|\theta,y)$
+\item Draw $\gamma$ from $p(\gamma|\phi,y)$
+\item Draw $\phi^{(k+1)}$ from $p(\phi|\gamma,y)$
+\end{enumerate}
+\end{alg}
+The key difference between this algorithm and algorithm \ref{inter2} is in step 3: instead of drawing from $p(\gamma|\theta,\phi,y)$, the alternating algorithm draws from $p(\gamma|\phi,y)$. In other words it alternates between two data augmentation algorithms in a single iteration. The interweaving algorithm, on the other hand, connects or ``weaves'' the two separate iterations together in step 3 by drawing $\gamma$ conditonal on $\theta$ in addition to $\phi$ and $y$.
+
+\citeauthor{yu2011center} call a GIS approach where one of the DAs is a SA and the other is an AA an {\it ancillary sufficient interweaving strategy}, or an ASIS approach. They show that the GIS algorithm has a geometric rate of convergence no worse than the worst of the two underlying algorithms and in some cases better than the the corresponding alternating algorithm. In models with a ``nice'' prior on $\phi$ in some sense, they also show that the ASIS algorithm is the same as the optimal PX-DA algorithm of \citet{meng1999seeking}, \citet{liu1999parameter}, \citet{van2001art} and \citet{hobert2008theoretical}. Their results suggest that ASIS is a promising approach to improve the speed of MCMC in a variety of models no matter what region of the parameter space the posterior is concentrated. To gain some intuition about why this is so, note that the problem with slow MCMC is that there is high autocorrelation in the Markov chain $\{\phi^{(k)}\}$ for $k=1,2,\cdots,K$ where $K$ is the length of the chain, leading to imprecise estimates of $\mathrm{E}[f(\phi)]$ for some function $f$. Our ultimate goal here is to reduce this dependence. In the usual DA algorithm, e.g. algorithm \ref{DAalg}, when $\phi$ and $\theta$ are highly dependent in the joint posterior the draws from $p(\theta|\phi,y)$ and then from $p(\phi|\theta,y)$ won't move the chain much, resulting in high autocorrelation in the chain. Interweaving helps break this autocorrelation in two ways. First, by inserting the extra step, e.g. steps 2 and 3 together in \ref{inter2}, the chain gets an additional chance to move in a single iteration thereby weaking the autocorrelation. Second, when one of $\theta$ and $\gamma$ is a ``beauty'' and the other is a ``beast'', as is often the case when they form a SA-AA pair, one of steps 2 and 4 in algorithm \ref{inter2} will significantly move the chain even if the other step will not. This intuition demonstrates that the key isn't so much that $\theta$ and $\gamma$ form a SA-AA pair as that they form a beauty and the beast pair. It just so happens that SA-AA pairs are often great at accomplishing this.
+
+Our goal, then, is to apply the ideas of interweaving to sampling from the posterior of the local level model, or the DLM more generally. \citeauthor{papaspiliopoulos2007general} note that typically the usual parameterization results in a SA for the parameter $\phi$. All that's necessary for an ASIS algorithm, then, is to construct an AA for $\phi$. We immediately run into a problem because the standard DA for the local level model (or for the DLM in general) is the latent states $\theta_{0:T}$. From equations \eqref{dlmobseq} and \eqref{dlmsyseq} we see that $V_{1:T}$ is in the observation equation so that $\theta_{0:T}$ isn't a SA for $(V_{1:T},W_{1:T})$ while $W_{1:T}$ is in the system equation so that $\theta_{0:T}$ isn't an AA for $(V_{1:T},W_{1:T})$ either. In the local level model specifically, we see in \eqref{llobseq} and \eqref{llsyseq} that $V$ is in the observation equation and $W$ is in the sytem equation. In order to find a SA we need to somehow move $V$ from the observation equation \eqref{llobseq} to the system equation \eqref{llsyseq} while leaving $W$ in the system equation. Alternatively, to find an AA we need to somehow move $W$ from the system equation to the observation equation while leaving $V$ in the observation equation. A naive thing to try is to condition on the disturbances instead of the states and see if the disturbances for a SA or an AA for $(V,W)$. The disturbances $w_{0:T}$ are defined by $w_t = \theta_t - \theta_{t-1}$ for $t=0,1,...,T$ and we define $\theta_{-1}=0$ so that $w_0=\theta_0$. It turns out that not only is this DA not sufficient nor ancillary for $(V,W$, but $p(V,W|w_{0:T},y_{1:T})=p(V,W|\theta_{0:T},y_{1:T})$ so that any MCMC algorithm that uses $w_{0:T}$ can just use $\theta_{0:T}$ instead. In particular, this means the DA algorithm based on $w_{0:T}$ is equivalent to the DA algorithm based on $\theta_{0:T}$. 
+
+The exercise of showing this is worth performing in order to illustrate one of the issues we often face. First we write the model in terms of the disturbances instead of the states. For $t=1,2,\cdots,T$:
+\begin{align*}
+  y_t|w_{0:T}& \stackrel{ind}{\sim} N(\textstyle\sum_{t=1}^Tw_s,V)\\
+  w_t &\stackrel{iid}{\sim} N(0,W).
+\end{align*}
+This immediately gives us the first claim that $w_{0:T}$ is neither a SA nor an AA for $(V,W)$. Now note that the joint posterior distribution of $(V,W,\theta_{0:T})$ can be written as:
+\begin{align}
+  p(V,W,\theta_{0:T}&|y_{1:T}) \propto V^{-\left(T/2 + \alpha_V + 1\right)} \exp\left[-\frac{1}{V}\left(\beta_V + \frac{1}{2} \textstyle\sum_{t=1}^T\left(y_t-\theta_t\right)^2\right)\right] \nonumber\\
+  \times &W^{-\left(T/2 + \alpha_W + 1\right)} \exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\textstyle\sum_{t=1}^T(\theta_t - \theta_{t-1})^2\right)\right] \exp\left[-\frac{1}{2C_0}(\theta_0 - m_0)^2\right]. \label{statepost}
+\end{align}
+Since this implies that $\theta_t = \sum_{s=0}^t w_s$ the jacobian of the transformation from $w_{0:T}$ to $\theta_{0:T}$ is upper triangular with ones along the diagonal, so it's determinant is one. Then we can write the joint posterior of $(V,W,w_{0:T})$ as
+\begin{align*}
+  p(V,W,w_{0:T}&|y_{1:T}) \propto V^{-\left(T/2 + \alpha_V + 1\right)} \exp\left[-\frac{1}{V}\left(\beta_V + \frac{1}{2} \textstyle\sum_{t=1}^T\left(y_t-\textstyle\sum_{s=0}^tw_s\right)^2\right)\right] \\
+  \times &W^{-\left(T/2 + \alpha_W + 1\right)} \exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\textstyle\sum_{t=1}^Tw_t^2\right)\right] \exp\left[-\frac{1}{2C_0}(\theta_0 - m_0)^2\right]. 
+\end{align*}
+This gives independent inverse gamma distributions for $(V,W|w_{0:T},y_{1:T})$ with the same parameters as in \eqref{IGparm}. Thus we have $p(V,W|w_{0:T},y_{1:T}=p(V,W|\theta_{0:T},y_{1:T}$The lesson here is that two different parameterizations, or in this case two different data augmentations, do not necessarily yield two different sampling algorithms.
+
+\citeauthor{papaspiliopoulos2007general} suggest that in order to obtain an ancillary augmentation for a variance parameter, we must scale the sufficient agumentation by the square root of that parameter. Based on this intuition, note that in the general DLM conditional on $V_{1:T}$, $\theta_{0:T}$ is a SA for $W_{1:T}$ from the observation and system equations, \eqref{dlmobseq} and \eqref{dlmsyseq}, i.e. $\theta_{0:T}$ is a SA for $W|V$.   
 
 \subsection{Algorithm 2: The Scaled Disturbance Sampler}\label{sec:dist}
-Strictly speaking, the results of \citeauthor{papaspiliopoulos2007general} don't apply to time series models, though that doesn't mean they can't be generalized. Rather than trying to directly apply their results, we'll first look at some intuitive reparameterizations of the model. One possible reparameterization is to consider the model in terms of the disturbances of the system equation plus the initial state, i.e. $(w_0, w_1, w_2, ..., w_T)$ where we define $w_0=\theta_0$. This doesn't quite work, but the excercise is worth performing in order to understand why. The jacobian of the transformation is upper triangular with 1's along the diagonal, so it's determinant is 1. Then we can rewrite the model from \eqref{statepost} as
-\begin{align}
-  p(V,W,w_{0:T}|y_{1:T}) \propto & V^{-T/2}\exp\left[-\frac{1}{2V}\sum_{t=1}^T\left(y_t-\sum_{s=0}^tw_s\right)^2\right]  W^{-T/2}\exp\left[-\frac{1}{2W}\sum_{t=1}^Tw_t^2\right] \times \nonumber\\
-  & V^{-\alpha_v-1} \exp\left[-\frac{\beta_v}{V}\right] W^{-\alpha_w-1} \exp\left[-\frac{\beta_w}{W}\right]\times \exp\left[-\frac{1}{2C_0}(w_0 - m_0)^2\right] \label{statepost}
-\end{align}
-so that
-\begin{align}
-  p(V|W, w_{0:T}, y_{1:T}) \propto & V^{-T/2 - \alpha_v -1 }\exp\left[-\frac{1}{V}\left(\beta_v + \frac{1}{2}\sum_{t=1}^T\left(y_t - \sum_{s=0}^tw_s \right)^2\right)\right] \label{distV}
-  \intertext{and}
-  p(W|V, w_{0:T}, y_{1:T}) \propto & W^{-T/2 - \alpha_w -1 }\exp\left[-\frac{1}{W}\left(\beta_w + \frac{1}{2}\sum_{t=1}^Tw_t^2\right)\right] \label{distW}
-\end{align}
-But note that \eqref{stateV} \& \eqref{stateW} and \eqref{distV} \& \eqref{distW} are draws from the same distribution since $\theta_t = \sum_{s=0}^tw_s$ --- $(V,W)$ is drawn from the same pair of inverse gamma distributions whether we condition of $\theta_{0:T}$ or $w_{0:T}$. So the new parameterization doesn't actually change the properties of the sampling algorithm, or actually change the sampling algorithm at all.
 
 There is an easy way to fix this --- scale the $w_t$'s by their standard deviation. Define the scaled disturbances:
 \begin{align}

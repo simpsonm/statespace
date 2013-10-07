@@ -4,28 +4,34 @@ set_parent('mcmcex.Rnw')
 
 \section{Model}
 
-The general dynamic linear model (DLM) is a linear, gaussian, state space model. A state space model has two components --- a sequence of real valued random vectors $\{y_t\}$ denoting an observation for each period and another sequence of real valued random vectors $\{\theta_t\}$ denoting a latent state for each period. The observations range from $t=1,...,T$, i.e. the length of the full time series, and the states range from $t=0,...,T$. The states form a markov chain so that $p(\theta_{t+1}|\theta_{0:T})=p(\theta_{t+1}|\theta_t)$ where $p(.)$ denotes the density of the enclosed random variable. Furthermore, the observations are conditionally independent given the states, i.e. $p(y_{1:T}|\theta_{0:T}) = p(y_1|\theta_1)\times ... \times p(y_T|\theta_T)$. The state space model is then completed by specifying the observation and system equations: for $t=1,2,...,T$
+The general dynamic linear model (DLM) is a linear, gaussian, state space model. A state space model has two components --- a sequence of real valued random vectors $\{y_t\}$ denoting an observation for each period and another sequence of real valued random vectors $\{\theta_t\}$ denoting a latent state for each period. The observations range from $t=1,...,T$, i.e. the length of the full time series, and the states range from $t=0,...,T$. The states form a markov chain so that $p(\theta_{t+1}|\theta_{0:T})=p(\theta_{t+1}|\theta_t)$ where $p(x|z)$ denotes the conditional density of $x$ given $y$. Furthermore, the observations are conditionally independent given the states, i.e. $p(y_{1:T}|\theta_{0:T}) = p(y_1|\theta_1)\times \cdots \times p(y_T|\theta_T)$. The state space model is then completed by specifying the observation and system equations: for $t=1,2,...,T$
 \begin{align}
   y_t & = f(\theta_t, v_t) \label{statespobseq}\\
   \theta_t & = g(\theta_{t-1}, w_t) \label{statespsyseq}
 \end{align}
-where $v_{1:T}$ and $w_{1:T}$ are each iid draws from some distribution and are mutually independent. Equation \eqref{statespobseq} is the observation equation since it describes how the observations depend on the current latent state and \eqref{statespsyseq} is the system equation since it describes how the latent states, or the underlying system, evolve over time. $v_t$ is called the observation error and $w_t$ is called the system error or the system disturbance. The functions $f$ and $g$ and the distributions of $v_{1:T}$ and $w_{1:T}$ may depend on some unknown parameter vector $\phi$ that we wish to estimate. This is not the most general version of the state space model --- in particular both $f$ and $g$ can be time dependent, as in a regression, and more complicated correlation structures between the $v_t$'s and/or the $w_t$'s can be allowed, but these are distractions from our purpose.
+where $v_{1:T}$ and $w_{1:T}$ are each iid draws from some distribution and are mutually independent. Equation \eqref{statespobseq} is known as the observation equation since it describes how the observations depend on the current latent state and \eqref{statespsyseq} is known the system equation since it describes how the latent states, or the underlying system, evolve over time. The random vector $v_t$ is called the observation error and $w_t$ is called the system error or the system disturbance. The functions $f$ and $g$ and the distributions of $v_{1:T}$ and $w_{1:T}$ may depend on some unknown parameter vector $\phi$ that we wish to estimate. This is not the most general version of the state space model --- in particular both $f$ and $g$ can be time dependent, as in a regression, and more complicated correlation structures between the $v_t$'s and/or the $w_t$'s can be allowed, but these are distractions from our purpose.
 
-The dynamic linear model adds a couple constraints to the state space model. First, it requires that both $f$ and $g$ be linear functions. Second, it requires that $(v_{1:T}, w_{1:T})$ is joint normally distributed and usually mean zero. We can then rewrite the DLM as
+The dynamic linear model adds a couple constraints to the state space model. First, it requires that both $f$ and $g$ be linear functions. Second, it requires that $(v_{1:T}, w_{1:T})$ is normally distributed and usually has mean zero. We can then rewrite the DLM as
 \begin{align}
-  y_t & = F\theta_t + v_t \label{dlmobseq}\\
-  \theta_t & = G\theta_{t-1} + w_t \label{dlmsyseq}
+  y_t|\theta_{0:T} &\stackrel{ind}{\sim} N(F_t\theta_t,V_t) \label{dlmobseq}\\
+  \theta_t|\theta_{0:t-1} & \sim N(G_t\theta_{t-1},W_t) \label{dlmsyseq}
 \end{align}
-for $t=1,2,...,T$ where $F$ and $G$ are matrices. If $\theta_t$ is $p\times p$ and $y_t$ is $k\times k$, then $F$ is $p\times k$ and $G$ is $k\times k$. In addition, $v_t\stackrel{iid}{\sim} N_k(0, V)$ and $w_t \stackrel{iid}{\sim} N_p(0, W)$ where $V$ is $k\times k$, $W$ is $p\times p$, and both are symmetric and positive definite matrices. Once again, the general DLM allows for time dependent $F$, $G$, $V$, or $W$ and all four may depend on some unknown parameters --- typically at least $V$ and $W$, but not always. Often $\theta_0$ is estimated as well.
+for $t=1,2,\cdots,T$ where $F_t$ and $G_t$ are matrices, and $V_t$ and $W_t$ are symmetric and positive definite covariance matrices. If $\theta_t$ is $p\times 1$ and $y_t$ is $k\times 1$, then $F_t$ is $k\times p$ and $G$ is $p\times p$ while $V_t$ is $k\times k$ and $W_t$ is $p\times p$. The observation errors, $v_t=y_t-F_t\theta_t$ for $t=1,2,\cdots,T$, and the system disturbances, $w_t=\theta_t - G_t\theta_{t-1}$ for $t=1,2,\cdots,T$ are mutually independent. 
 
-We'll focus our attention on one of the simplest DLMs: the univariate local level model. In a certain sense, the local level is a microcosm for the sampling issues in more general DLMs. In this model, $y_t$ and $\theta_t$ are both scalars, and for $t=1,2,...,T$
+We'll focus our attention on one of the simplest DLMs: the univariate local level model. In a certain sense, the local level is a microcosm for the sampling issues in more general DLMs. In this model, $y_t$ and $\theta_t$ are both scalars, $F_t=1$, $G_t=1$, and $V_t=V$, $W_t=W$. In other words, for $t=1,2,...,T$
 \begin{align}
-  y_t & = \theta_t + v_t \label{llobseq}\\
-  \theta_t & = \theta_{t-1} + w_t \label{llsyseq}
+  y_t | \theta_{0:T}, V, W \stackrel{iid}{\sim}& N(\theta_t,V)\label{llobseq}\\
+  \theta_t | \theta_{0:t-1}, V, W \sim & N(\theta_{t-1}, W).\label{llsyseq}
 \end{align}
-with $v_t\stackrel{iid}{\sim}N(0,V)$ and $w_t\stackrel{iid}{\sim}N(0,W)$ and the full vector $(v_1,...,v_T, w_1,...,w_T)$ mutually independent. In this model, $\theta_t$ represents the mean of the observation $y_t$ in period $t$, and the $\theta_t$'s follow a random walk. The unknown parameters are $(V,W)$ and the initial state, $\theta_0$, is unknown as well. We don't call $\theta_0$ a parameter because it's a compnent of the states $\theta_{0:T}$, which is the data augmentation in the algorithm that we'll eventually use to sample from the posterior distribution. An alternative but convienent way of writing down the model is
-\begin{align}
-  y_t | \theta_{0:T}, V, W \stackrel{iid}{\sim}& N(\theta_t,V)\label{stateobseq}\\
-  \theta_t | \theta_{0:t-1}, V, W \sim & N(\theta_{t-1}, W)\label{statesyseq}
-\end{align}
+In this model, $\theta_t$ represents the mean of the observation $y_t$ in period $t$, and the $\theta_t$'s follow a random walk. The unknown parameters are $(V,W)$. The initial state, $\theta_0$, is unknown as well but we don't call $\theta_0$ a parameter because it's a component of the states, i.e. the augmented data, $\theta_{0:T}$.
+
+To complete the model specification in a Bayesian context, we need priors on $\theta_0$, $V$, and $W$. We'll assume that they're mutually independent a priori and that $\theta_0 \sim N(m_0, C_0)$, $V \sim IG(\alpha_v, \beta_v)$, and $W \sim IG(\alpha_w, \beta_w)$ where $m_0$, $C_0$, $\alpha_v$, $\beta_v$, $\alpha_w$, and $\beta_w$ are known hyperparameters and $IG(\alpha_w, \beta_w)$ denotes the inverse gamma density with the shape-scale parameterization, i.e.
+\begin{align*}
+  p(W) \propto W^{-\alpha_w - 1}\exp\left[-\frac{\beta_w}{W}\right].
+\end{align*}
+
+
+
+
+
 
