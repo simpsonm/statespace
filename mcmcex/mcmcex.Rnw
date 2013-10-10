@@ -1,11 +1,15 @@
 \documentclass{article}
 \usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
-epsfig, multicol, amsthm}
+epsfig, multicol, amsthm, bbm}
+\usepackage{multicol}
+\usepackage{textcomp}
 \usepackage{fullpage}
 \usepackage[maxfloats=48]{morefloats} %for >18 figures
 \usepackage{booktabs}
 \usepackage{caption}
 \usepackage[numbers]{natbib}
+%Indicator function: use as \indicator{X=x}
+\newcommand{\indicator}[1]{\mathbbm{1}{\left\{ {#1} \right\} }}
 %Independent: use as X \ind Y | Z
 \newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
 \def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
@@ -34,6 +38,7 @@ In dynamic linear models (DLMs), MCMC sampling can often be very slow for estima
 
 
 <<model-child, child='model-child.Rnw', eval=TRUE>>=
+
 @ 
 
 <<basealgorithms-child, child='basealgorithms-child.Rnw', eval=TRUE>>=

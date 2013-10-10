@@ -31,7 +31,7 @@ The first block samples the states conditional on the data and model parameters 
 \end{alg}
 The main problem with this algorithm is that computation time increases quickly with the length of the time series because the Kalman filter essentially requires drawing from $\theta_t|V,W,\theta_{0:t},y_{0:T}$ for $t=0,1,...,T$, so the FFBS step represents $2T$ univariate draws. A second problem is that in some regions of the parameter space, the Markov chain mixes poorly for some of the parameters. In particular, it's known that if $W$ is too small, mixing will be poor in similar models \cite{fruhwirth2004efficient}.
 
-One well known method of improving mixing and convergence in MCMC samplers is reparameterizing the model. \citet{papaspiliopoulos2007general} is a good summary. Most of the work in some way focuses on what are called centered and noncentered parameterizations. In our general notation where $\phi$ is the parameter, $\theta$ is the DA and $y$ is the data, the parameterization $(\phi,\theta)$ is a {\it centered parameterization} (CP) if $p(y|\theta,\phi)=p(y|\theta$. The parameterization is a {\it noncentered parameterization} (NCP) if $p(\theta|\phi)=p(\theta)$. When $(\phi,\theta)$ is a CP, $\theta$ is called a {\it centered augmentation} (CA) for $\phi$ and when $(\phi,\theta)$ is a NCP, $\theta$ is called a {\it noncentered augmentation} (NCA) for $\phi$. A centered augmentation is sometimes called a {\it sufficient augmentation} (SA) and a noncentered augmentation is sometimes called an {\it ancillary augmentation} (AA), e.g. in \citet{yu2011center}. Like \citeauthor{yu2011center}, we prefer the latter terminology because it immediately suggests the intuiton that a sufficient augmentation is like a sufficient statistic while an ancillary augmentation is like an ancillary statistic. 
+One well known method of improving mixing and convergence in MCMC samplers is reparameterizing the model. \citet{papaspiliopoulos2007general} is a good summary. Most of the work in some way focuses on what are called centered and noncentered parameterizations. In our general notation where $\phi$ is the parameter, $\theta$ is the DA and $y$ is the data, the parameterization $(\phi,\theta)$ is a {\it centered parameterization} (CP) if $p(y|\theta,\phi)=p(y|\theta)$. The parameterization is a {\it noncentered parameterization} (NCP) if $p(\theta|\phi)=p(\theta)$. When $(\phi,\theta)$ is a CP, $\theta$ is called a {\it centered augmentation} (CA) for $\phi$ and when $(\phi,\theta)$ is a NCP, $\theta$ is called a {\it noncentered augmentation} (NCA) for $\phi$. A centered augmentation is sometimes called a {\it sufficient augmentation} (SA) and a noncentered augmentation is sometimes called an {\it ancillary augmentation} (AA), e.g. in \citet{yu2011center}. Like \citeauthor{yu2011center}, we prefer the latter terminology because it immediately suggests the intuiton that a sufficient augmentation is like a sufficient statistic while an ancillary augmentation is like an ancillary statistic. 
 
 The key reasoning behind the emphasis on SAs and AAs is that typically when the DA algorithm based on the SA has nice mixing and convergence properties the DA algorithm based on the AA has poor mixing and convergence propeties and vice versa. In other words, the two algorithms form a ``beauty and the beast'' pair. This property suggests that there might be some way to combine the two DA algorithms or the two underlying parameterizations in order to construct a sampler which has ``good enough'' properties all the time.  Some work focuses on useing partially noncentered parameterizations that are a sort of bridge between the CP and NCP, e.g. \citeauthor{papaspiliopoulos2007general} for general hierarchical models and \citet{fruhwirth2004efficient} in the context of a partiuclar DLM --- a dynamic univarite regression with a stationary AR(1) coefficient, but this doesn't quite accomplish what we want because it still picks a single parameterization to use that may depend on the region of the parameter space the posterior conentrates most of its mass. The interweaving concept of \citet{yu2011center} does precisely what we want, however. The idea is pretty simple: suppose that $\phi$ denotes the parameter vector, $\theta$ denotes one augmented data vector, $\gamma$ denotes another augmented data vector, and $y$ denotes the data. Then an MCMC algorithm that {\it interweaves} between $\theta$ and $\gamma$ performs the following steps in a single iteration to obtain $k+1$'st draw, $\phi^{(k+1)}$, from the $k$'th draw, $\phi^{(k)}$:
 \begin{alg}\mbox{}\\[-\baselineskip]
@@ -63,16 +63,18 @@ The key difference between this algorithm and algorithm \ref{inter2} is in step 
 
 \citeauthor{yu2011center} call a GIS approach where one of the DAs is a SA and the other is an AA an {\it ancillary sufficient interweaving strategy}, or an ASIS approach. They show that the GIS algorithm has a geometric rate of convergence no worse than the worst of the two underlying algorithms and in some cases better than the the corresponding alternating algorithm. In models with a ``nice'' prior on $\phi$ in some sense, they also show that the ASIS algorithm is the same as the optimal PX-DA algorithm of \citet{meng1999seeking}, \citet{liu1999parameter}, \citet{van2001art} and \citet{hobert2008theoretical}. Their results suggest that ASIS is a promising approach to improve the speed of MCMC in a variety of models no matter what region of the parameter space the posterior is concentrated. To gain some intuition about why this is so, note that the problem with slow MCMC is that there is high autocorrelation in the Markov chain $\{\phi^{(k)}\}$ for $k=1,2,\cdots,K$ where $K$ is the length of the chain, leading to imprecise estimates of $\mathrm{E}[f(\phi)]$ for some function $f$. Our ultimate goal here is to reduce this dependence. In the usual DA algorithm, e.g. algorithm \ref{DAalg}, when $\phi$ and $\theta$ are highly dependent in the joint posterior the draws from $p(\theta|\phi,y)$ and then from $p(\phi|\theta,y)$ won't move the chain much, resulting in high autocorrelation in the chain. Interweaving helps break this autocorrelation in two ways. First, by inserting the extra step, e.g. steps 2 and 3 together in \ref{inter2}, the chain gets an additional chance to move in a single iteration thereby weaking the autocorrelation. Second, when one of $\theta$ and $\gamma$ is a ``beauty'' and the other is a ``beast'', as is often the case when they form a SA-AA pair, one of steps 2 and 4 in algorithm \ref{inter2} will significantly move the chain even if the other step will not. This intuition demonstrates that the key isn't so much that $\theta$ and $\gamma$ form a SA-AA pair as that they form a beauty and the beast pair. It just so happens that SA-AA pairs are often great at accomplishing this.
 
-Our goal, then, is to apply the ideas of interweaving to sampling from the posterior of the local level model, or the DLM more generally. \citeauthor{papaspiliopoulos2007general} note that typically the usual parameterization results in a SA for the parameter $\phi$. All that's necessary for an ASIS algorithm, then, is to construct an AA for $\phi$. We immediately run into a problem because the standard DA for the local level model (or for the DLM in general) is the latent states $\theta_{0:T}$. From equations \eqref{dlmobseq} and \eqref{dlmsyseq} we see that $V_{1:T}$ is in the observation equation so that $\theta_{0:T}$ isn't a SA for $(V_{1:T},W_{1:T})$ while $W_{1:T}$ is in the system equation so that $\theta_{0:T}$ isn't an AA for $(V_{1:T},W_{1:T})$ either. In the local level model specifically, we see in \eqref{llobseq} and \eqref{llsyseq} that $V$ is in the observation equation and $W$ is in the sytem equation. In order to find a SA we need to somehow move $V$ from the observation equation \eqref{llobseq} to the system equation \eqref{llsyseq} while leaving $W$ in the system equation. Alternatively, to find an AA we need to somehow move $W$ from the system equation to the observation equation while leaving $V$ in the observation equation. A naive thing to try is to condition on the disturbances instead of the states and see if the disturbances for a SA or an AA for $(V,W)$. The disturbances $w_{0:T}$ are defined by $w_t = \theta_t - \theta_{t-1}$ for $t=0,1,...,T$ and we define $\theta_{-1}=0$ so that $w_0=\theta_0$. It turns out that not only is this DA not sufficient nor ancillary for $(V,W$, but $p(V,W|w_{0:T},y_{1:T})=p(V,W|\theta_{0:T},y_{1:T})$ so that any MCMC algorithm that uses $w_{0:T}$ can just use $\theta_{0:T}$ instead. In particular, this means the DA algorithm based on $w_{0:T}$ is equivalent to the DA algorithm based on $\theta_{0:T}$. 
+\subsection{The Scaled Disturbances}
 
-The exercise of showing this is worth performing in order to illustrate one of the issues we often face. First we write the model in terms of the disturbances instead of the states. For $t=1,2,\cdots,T$:
+Our goal, then, is to apply the ideas of interweaving to sampling from the posterior of the local level model, or the DLM more generally. \citeauthor{papaspiliopoulos2007general} note that typically the usual parameterization results in a SA for the parameter $\phi$. All that's necessary for an ASIS algorithm, then, is to construct an AA for $\phi$. We immediately run into a problem because the standard DA for the local level model (or for the DLM in general) is the latent states $\theta_{0:T}$. From equations \eqref{dlmobseq} and \eqref{dlmsyseq} we see that $V_{1:T}$ is in the observation equation so that $\theta_{0:T}$ isn't a SA for $(V_{1:T},W_{1:T})$ while $W_{1:T}$ is in the system equation so that $\theta_{0:T}$ isn't an AA for $(V_{1:T},W_{1:T})$ either. In the local level model specifically, we see in \eqref{llobseq} and \eqref{llsyseq} that $V$ is in the observation equation and $W$ is in the sytem equation. In order to find a SA we need to somehow move $V$ from the observation equation \eqref{llobseq} to the system equation \eqref{llsyseq} while leaving $W$ in the system equation. Alternatively, to find an AA we need to somehow move $W$ from the system equation to the observation equation while leaving $V$ in the observation equation. A naive thing to try is to condition on the disturbances instead of the states and see if the disturbances for a SA or an AA for $(V,W)$. The disturbances $w_{0:T}$ are defined by $w_t = \theta_t - \theta_{t-1}$ for $t=0,1,...,T$ and we define $\theta_{-1}=0$ so that $w_0=\theta_0$. It turns out that not only is this DA not sufficient nor ancillary for $(V,W)$, but $p(V,W|w_{0:T},y_{1:T})=p(V,W|\theta_{0:T},y_{1:T})$ so that any MCMC algorithm that uses $w_{0:T}$ can just use $\theta_{0:T}$ instead. In particular, this means the DA algorithm based on $w_{0:T}$ is equivalent to the DA algorithm based on $\theta_{0:T}$. 
+
+Showing this is an exercise worth performing in order to illustrate one of the issues we often face. First we write the model in terms of the disturbances instead of the states. For $t=1,2,\cdots,T$:
 \begin{align*}
   y_t|w_{0:T}& \stackrel{ind}{\sim} N(\textstyle\sum_{t=1}^Tw_s,V)\\
   w_t &\stackrel{iid}{\sim} N(0,W).
 \end{align*}
 This immediately gives us the first claim that $w_{0:T}$ is neither a SA nor an AA for $(V,W)$. Now note that the joint posterior distribution of $(V,W,\theta_{0:T})$ can be written as:
 \begin{align}
-  p(V,W,\theta_{0:T}&|y_{1:T}) \propto V^{-\left(T/2 + \alpha_V + 1\right)} \exp\left[-\frac{1}{V}\left(\beta_V + \frac{1}{2} \textstyle\sum_{t=1}^T\left(y_t-\theta_t\right)^2\right)\right] \nonumber\\
+  p(V,W,\theta_{0:T}&|y_{1:T}) \propto p(V,W,\theta_{0:T},y_{1:T})\propto V^{-\left(T/2 + \alpha_V + 1\right)} \exp\left[-\frac{1}{V}\left(\beta_V + \frac{1}{2} \textstyle\sum_{t=1}^T\left(y_t-\theta_t\right)^2\right)\right] \nonumber\\
   \times &W^{-\left(T/2 + \alpha_W + 1\right)} \exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\textstyle\sum_{t=1}^T(\theta_t - \theta_{t-1})^2\right)\right] \exp\left[-\frac{1}{2C_0}(\theta_0 - m_0)^2\right]. \label{statepost}
 \end{align}
 Since this implies that $\theta_t = \sum_{s=0}^t w_s$ the jacobian of the transformation from $w_{0:T}$ to $\theta_{0:T}$ is upper triangular with ones along the diagonal, so it's determinant is one. Then we can write the joint posterior of $(V,W,w_{0:T})$ as
@@ -80,50 +82,63 @@ Since this implies that $\theta_t = \sum_{s=0}^t w_s$ the jacobian of the transf
   p(V,W,w_{0:T}&|y_{1:T}) \propto V^{-\left(T/2 + \alpha_V + 1\right)} \exp\left[-\frac{1}{V}\left(\beta_V + \frac{1}{2} \textstyle\sum_{t=1}^T\left(y_t-\textstyle\sum_{s=0}^tw_s\right)^2\right)\right] \\
   \times &W^{-\left(T/2 + \alpha_W + 1\right)} \exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\textstyle\sum_{t=1}^Tw_t^2\right)\right] \exp\left[-\frac{1}{2C_0}(\theta_0 - m_0)^2\right]. 
 \end{align*}
-This gives independent inverse gamma distributions for $(V,W|w_{0:T},y_{1:T})$ with the same parameters as in \eqref{IGparm}. Thus we have $p(V,W|w_{0:T},y_{1:T}=p(V,W|\theta_{0:T},y_{1:T}$The lesson here is that two different parameterizations, or in this case two different data augmentations, do not necessarily yield two different sampling algorithms.
+This gives independent inverse gamma distributions for $(V,W|w_{0:T},y_{1:T})$ with the same parameters as in \eqref{IGparm}. Thus we have $p(V,W|w_{0:T},y_{1:T})=p(V,W|\theta_{0:T},y_{1:T})$. The same result holds for $v_{0:T}$ where $v_0=\theta_0$ and $v_t=y_t-\theta_t$ for $t=1,2,\cdots,T$. The lesson here is that two different parameterizations, or in this case two different data augmentations, do not necessarily yield two different sampling algorithms. 
 
-\citeauthor{papaspiliopoulos2007general} suggest that in order to obtain an ancillary augmentation for a variance parameter, we must scale the sufficient agumentation by the square root of that parameter. Based on this intuition, note that in the general DLM conditional on $V_{1:T}$, $\theta_{0:T}$ is a SA for $W_{1:T}$ from the observation and system equations, \eqref{dlmobseq} and \eqref{dlmsyseq}, i.e. $\theta_{0:T}$ is a SA for $W|V$.   
+\citeauthor{papaspiliopoulos2007general} suggest that in order to obtain an ancillary augmentation for a variance parameter, we must scale the sufficient agumentation by the square root of that parameter. Based on this intuition, note that in the general DLM, if we hold $V_{1:T}$ constant then $\theta_{0:T}$ is a SA for $W_{1:T}$ from the observation and system equations, \eqref{dlmobseq} and \eqref{dlmsyseq}, i.e. we say $\theta_{0:T}$ is a SA for $W_{1:T}$ given $V_{1:T}$, or for $W_{1:T}|V_{1:T}$. Similarly $\theta_{0:T}$ is an AA for $V_{1:T}|W_{1:T}$. This suggests that if we scale $\theta_{t}$ by $W_{t}$ for all $t$ appropriately we'll have an ancillary augmentation for $V_{1:T}$ and $W_{1:T}$ jointly. The same intuition suggests scaling $w_{t}=\theta_{t}-G_t\theta_{t-1}$ by $W_{t}$ for all $t$ appropriately in order to find an ancillary augmentation for $(V_{1:T},W_{1:T})$. We'll work with this latter case first. 
 
-\subsection{Algorithm 2: The Scaled Disturbance Sampler}\label{sec:dist}
+Define the scaled disturbances in the general DLM, $\gamma_{0:T}$, where $\gamma_0=\theta_0=w_0$ and for $t=1,2,\cdots,T$, $\gamma_t = L_t(\theta_t - G_t\theta_{t-1}) = L_tw_t$ where $L_t$ is the Cholesky decomposition of $W_t^{-1}$, i.e. $L_t' L_t =W_t^{-1}$. In the local level model this simplifies to $\gamma_0=\theta_0$ and $\gamma_t=(\theta_t - \theta_{t-1})/\sqrt{W}$. That $\gamma_0$ is unscaled is perhaps strange in the context of the local level model and does lead to some inelegance, but in the general DLM with time dependent unkown system variances, $\gamma_t$ is $w_t$ scaled appropriately by $w_t$'s own unknown covariance matrix. Since $w_0=\theta_0$ and $\theta_0$'s covariance matrix is $C_0$, that is what we should scale by $C_0$ if by anything at all. Whether we scale or not is immaterial to the math since $C_0$ is known, so we prefer $\gamma_0$ unscaled because $\theta_0$ has a nice interpretation as the initial position of the latent process while the ``scaled initial state'' is less intuitive.
 
-There is an easy way to fix this --- scale the $w_t$'s by their standard deviation. Define the scaled disturbances:
+That digression on definitions aside, we can confirm our intuition that the scaled disturbances are an AA for $V$ and $W$ jointly in the local level model. We can write that transformation from $\theta_{0:T}$ to $\gamma_{0:T}$ as $\gamma_{0:T}=A\theta_{0:T}$ where
 \begin{align}
-\gamma_t &= (\theta_t - \theta_{t-1})/\sqrt{W}=w_t/\sqrt{w_t}\text{ for }t=1,2,...,T\nonumber
-\intertext{and}
-\gamma_0&=\theta_0 \label{gammadef}
-\end{align}
-\citet{fruhwirth2004efficient} use the analogue of this parameterization in a dynamic regression model, noting that it is noncentered for $(V,W)$. Mathematically what this means is that $p(\gamma_{0:T}|V,W)=p(\gamma_{0:T})$, or equivalently that $\gamma_{0:T}$ is an ancillary statistic {\it NOT ACTUALLY A STATISTIC} in the full augmented data model.
-
-The Gibbs sampler in this case, then, is to sample the scaled disturbances conditional on $(V,W)$, 
-then sample $V$ conditional on the scaled disturbances and $W$, then
-$W$ conditional on the scaled disturbances and $V$. Sampling the
-scaled disturbances can be accomplished using FFBS to sample the
-states, then transforming the states to the scaled disturbances using the
-formulas above or by sampling them directly using the simulation
-smoother of \citet{de1995simulation}. $V$ and $W$ are now drawn in separate blocks because they are no longer independent. To obtain the full conditional distributions of $V$ and $W$, note that we can write the transformation from $\theta_{0:T}$ to $\gamma_{0:T}$ as $\gamma_{0:T}=A\theta_{0:T}$ where
-\begin{align}
-A=\frac{1}{\sqrt{W}}\begin{bmatrix} \sqrt{W} & 0 & 0 & \hdots & 0 & 0 \\
-  -1 & 1 & 0 & \hdots & 0 & 0 \\
-  0 &  -1 & 1 &  \hdots & 0 & 0 \\
+A=\frac{1}{\sqrt{W}}\begin{bmatrix} \sqrt{W} & 0 & 0 & \cdots & 0 & 0 \\
+  -1 & 1 & 0 & \cdots & 0 & 0 \\
+  0 &  -1 & 1 &  \cdots & 0 & 0 \\
   \ddots &   \ddots &   \ddots &\ddots &  \ddots &   \ddots & \\
-  0 & 0 & 0 & \hdots & -1 & 1 \end{bmatrix}
+  0 & 0 & 0 & \cdots & -1 & 1 \end{bmatrix}.
 \end{align}
-Then the determinant of the jacobian of this transformation is $1/|A|=W^{T/2}$ and $\theta_t = \gamma_0 + \sqrt{W}\sum_{s=1}^t\gamma_s$. Then we can write the posterior as
+The determinant of the jacobian of this transformation is $1/|A|=W^{T/2}$ and $\theta_t = \gamma_0 + \sqrt{W}\sum_{s=1}^t\gamma_s$. Then from \eqref{statepost} we can write the full joint distribution as
 \begin{align}
-  p(V,W,\gamma_{0:T}|y_{1:T}) \propto & V^{-T/2}\exp\left[-\frac{1}{2V}\sum_{t=1}^T\left(y_t - \gamma_0 - W\sum_{s=1}^t\gamma_s\right)^2\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T\gamma_t^2\right]\nonumber\\ 
-  &\exp\left[-\frac{1}{2C_0}(\gamma_0-m_0)^2\right]\times V^{-\alpha_v - 1}\exp\left[-\frac{\beta_v}{V}\right]W^{-\alpha_w - 1}\exp\left[-\frac{\beta_w}{W}\right] \label{distpost}
+    p(V,W,\gamma_{0:T},y_{1:T}) &\propto V^{-\left(T/2 + \alpha_V + 1\right)} \exp\left[-\frac{1}{V}\left(\beta_V + \frac{1}{2} \textstyle\sum_{t=1}^T\left(y_t-\gamma_0 - \sqrt{W}\textstyle\sum_{s=1}^{t-1}\gamma_s\right)^2\right)\right] \nonumber\\
+  \times &W^{-\left(\alpha_W + 1\right)} \exp\left[-\frac{1}{W}\beta_W\right]\exp\left[\frac{1}{2}\textstyle\sum_{t=1}^T\gamma_t^2\right] \exp\left[-\frac{1}{2C_0}(\gamma_0 - m_0)^2\right]\label{distjoint}. 
 \end{align}
-Then we have
+So under the scaled disturbance parameterization we can write the model as
 \begin{align*}
-  p(V|W,\gamma_{0:T},y_{1:T}) \propto & V^{-T/2 - \alpha_v - 1}\exp\left[-\frac{1}{V}\left(\beta_v + \frac{1}{2}\sum_{t=1}^T\left(y_t - \gamma_0 - W\sum_{s=1}^t\gamma_s\right)^2\right)\right]
+  y_t|\gamma_{0:T},V,W & \stackrel{ind}{\sim} N\left(\gamma_0 + \sqrt{W}\textstyle\sum_{s=1}^t\gamma_s, V\right)\\
+  \gamma_t & \stackrel{iid}{\sim}N(0,1)
 \end{align*}
-which is essentially the same inverse gamma draw as in the state sampler. However,
+for $t=1,2,\cdots,T$. Neither $V$ nor $W$ are in the system equation, so the scaled disturbances are an AA for $(V,W)$. In fact, \citet{fruhwirth2004efficient} use this parameterization in a dynamic regression model with stationary regression coefficient and also note that it is a noncentered parameterization (NCP), i.e. an AA for $(V,W)$ in our terminology. Note that for the general DLM we can write the model in terms of the scaled disturbance parameterization as
 \begin{align*}
-  p(W|V,\gamma_{0:T},y_{1:T} \propto & W^{-alpha_w - 1}\exp\left[-\frac{1}{2V}\sum_{t=1}^T\left(y_t - \gamma_0 - W\sum_{s=1}^t\gamma_s\right)^2\right]
+  y_t|\gamma_{0:T},V_{1:T},W_{1:T} & \stackrel{ind}{\sim} N\left(\textstyle\sum_{s=0}^tG_{s+1}G_{s+2}\cdots G_{t}L_s^{-1}\gamma_s, V_t\right)\\
+  \gamma_t & \stackrel{iid}{\sim}N(0,I) 
+\end{align*}
+for $t=1,2,\cdots,T$ where $L_t' L_t=W_t$ for $s=1,2,\cdots,T$ and $L_0=I$, the identity matrix with appropriate dimensions. So in the general case $\gamma_{0:T}$ is an AA for $(V_{1:T},W_{1:T})$.
+
+We previously mentioned that the intuition behind the scaled disturbances also suggests trying the scaled states, i.e. $\theta^s_{0:T}$ where $\theta^s_0=\theta_0$ and for $t=1,2,\cdots,T$, $\theta^s_t=L_t\theta_t$. Note that $\theta^s_{0:T}$ and $\gamma_{0:T}$ are completely determined by each other. This suggests (but doesn't imply due to the Borel--Kolmogorov paradox) that the conditional posterior of $(V,W)$ is the same whether we condition on $\gamma_{0:T}$ or $\theta_{0:T}^s$. In fact, this is true and easy to verify as well is the fact that $\theta_{0:T}^s$ is also an AA for $(V,W)$. As such, we have a choice to make between two equivalent representations of what amounts to the same parameterization. We prefer the scaled disturbances ($\gamma_{0:T}$) to the scaled states ($\theta_{0:T}^s$) for two reasons. First, the scaled disturbances are already in the literature, e.g. in \citet{fruhwirth2004efficient} and as a natural extension of the concept of noncentering as it is typically used in hierarchical models (e.g. in \citet{van2001art} where the suggestion is to demean before scaling) to time series models. Second, the scaled disturbances immediately suggest another potential AA that seems like it should be analogous --- the scaled observation errors, or more succinctly the scaled errors. That is, $v_t=y_t - F_t\theta_t$ appropriately scaled by $V_t$ in the general DLM. We'll turn to them shortly, but first we'll construct the DA algorithm based on $\gamma_{0:T}$.
+
+The DA algorithm based on $\gamma_{0:T}$ for the local level model is as follows: 
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{distalg}
+  \item Draw $\gamma_{0:T}$ from $p(\gamma_{0:T}|V^{(k)},W^{(k)},y_{1:T})$
+  \item Draw $(V^{(k+1)},W^{(k+1)})$ from $p(V,W|\gamma_{0:T},y_{1:T})$.
+\end{enumerate}
+\end{alg}
+Step 1 can be accomplished directly with the disturbance smoother of \citet{koopman1993disturbance} or indirectly by using FFBS to draw the states and then transform them to the scaled disturbances. Step 2 ends up being complicated because the joint conditional posterior of $V$ and $W$ isn't a known density. From equation \eqref{distjoint} we have
+\[
+p(V,W|\gamma_{0:T},y_{1:T})\propto V^{-\left(T/2 + \alpha_V + 1\right)} \exp\left[-\frac{1}{V}\left(\beta_V + \frac{1}{2} \textstyle\sum_{t=1}^T\left(y_t-\gamma_0 - \sqrt{W}\textstyle\sum_{s=1}^{t}\gamma_s\right)^2\right)\right] W^{-\left(\alpha_W + 1\right)} \exp\left[-\frac{1}{W}\beta_W\right].
+\]
+So we have three options. First, we can make the effort to come up with an algorithm to obtain an exact sample from $(V,W|\gamma_{0:T},y_{1:T})$. Second, we can give up on sampling $(V,W)$ and instead add another Gibbs step to sample $V$ and $W$ in separate steps. This would still require some effort, but hopefully less. Third, we can give up on the exact sample and instead use a Metropolis step for $(V,W)$. We'll employ the second strategy. 
+
+The full conditional distribution for $V$ can be written as
+\begin{align*}
+  p(V|W,\gamma_{0:T},y_{1:T}) \propto & V^{-T/2 - \alpha_v - 1}\exp\left[-\frac{1}{V}\left(\beta_v + \frac{1}{2}\sum_{t=1}^T\left(y_t - \gamma_0 - W\sum_{s=1}^t\gamma_s\right)^2\right)\right].
+\end{align*}
+It is easy to verify that this is the same as $p(V|W,\theta_{0:T},y_{1:T})$, that is an inverse gamma distribution with the same parameters defined in \eqref{IGparm}. However,
+\begin{align*}
+  p(W|V,\gamma_{0:T},y_{1:T}) \propto & W^{-\alpha_w - 1}\exp\left[-\frac{1}{2V}\sum_{t=1}^T\left(y_t - \gamma_0 - W\sum_{s=1}^t\gamma_s\right)^2\right].
 \end{align*}
 This density isn't any known form and is difficult to sample from. The log density can be written as
 \begin{align}
-\log p(W|V,\gamma_{0:T},y_{1:T}) =& -aW + b\sqrt{W} - (\alpha_2 + 1)\log W -\beta_2/W + C\label{distlogWgivenV}
+\log p(W|V,\gamma_{0:T},y_{1:T}) =& -aW + b\sqrt{W} - (\alpha_W + 1)\log W -\beta_W/W + C \label{sdlogV}
 \end{align}
 where $C$ is some constant, $a=\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and $b=\sum_{t=1}^T(y_t-\gamma_0)(\sum_{j=1}^t\gamma_j)/V$. It can be shown that $b^2 > \frac{32}{9\beta_w}(\alpha_w+1)^3(1 - 2sgn(b)/3)$ implies that the density is log concave where
 \begin{align*}
@@ -132,82 +147,80 @@ where $C$ is some constant, $a=\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and $b=\
     -1 & \text{if } b<0\\
     \end{cases}
 \end{align*}
-This condition is equivalent to $\partial^2\log p(W|V,\gamma_{0:T},y_{1:T})/\partial W^2 < 0$ at the $W^*$ that maximizes it, and hence globally. It turns out that this tends to hold over a wide region of the parameter space --- so long as $V$ is smaller or isn't much larger than $W$. This allows for the use of adaptive rejection sampling in order to sample from this distribution in many cases \cite{gilks1992adaptive}. An alternative is to use a $t$ approximation to the conditional density as a proposal in a rejection sampler, but this is much more computationally expensive.
+This condition is equivalent to $\partial^2\log p(W|.})/\partial W^2 < 0$ at the $W^*$ that maximizes $\partial^2\log p(W|.)/\partial W^2$ and hence guarantees the density is globally log-concave. It turns out that this tends to hold over a wide region of the parameter space --- so long as $V$ is smaller or isn't much larger than $W$. This allows for the use of adaptive rejection sampling in order to sample from this distribution in many cases, e.g. using \citet{gilks1992adaptive}. An alternative is to use a $t$ approximation to the conditional density as a proposal in a rejection sampler, but this is much more computationally expensive when necessary.
 
-The full scaled disturbance algorithm is as follows:
+Based on these full conditionals, the scaled disturbance sampler obtains the $(V^{(k+1)},W^{(k+1)})$ from $(V^{(k)},W^{(k)})$ by performing the following steps:
 \begin{alg}\mbox{}\\[-\baselineskip]
 \begin{enumerate}\label{distalg}
-  \item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{0:T})$
-    using FFBS and form $\gamma_{0:T}$, or simulate $\gamma_{0:T}$ directly.
-  \item Simulate $V$ from $\pi(V|\gamma_{0:T},W,y_{1:T})$:
-    \[
-    V|\gamma_{0:T},W,y_{1:T} \sim IG(a_v, b_v)
-    \]
-    where
-    \begin{align*}
-      a_v =& \alpha_v + T/2\\
-      b_v = & \beta_v + \sum_{t=1}^T(y_t-\gamma_0 -
-      \sqrt{W}\sum_{j=1}^t\gamma_j)^2/2
-    \end{align*}
-  \item Simulate $W$ from $p(W|\gamma_{0:T},V,y_{1:T})$, possibly using adaptive rejection sampling. 
+  \item Draw $\theta_{0:T}$ from $p(\theta_{0:T}|V,W,y_{1:T})$
+    using FFBS and form $\gamma_{0:T}$, or simulate $\gamma_{0:T}$ from $p(\gamma_{0:T}|V,W,y_{1:T})$ directly.
+  \item Simulate $V$ from $p(V|\gamma_{0:T},W,y_{1:T})$, an inverse gamma distribution with parameters $a_v = \alpha_v + T/2$ and $b_v = \beta_v + \sum_{t=1}^T(y_t-\gamma_0 -\sqrt{W}\sum_{j=1}^t\gamma_j)^2/2$.
+  \item Simulate $W$ from $p(W|\gamma_{0:T},V,y_{1:T})$ using adaptive rejection sampling when possible, otherwise using a $t$ approximation in order to rejection sample. 
 \end{enumerate}
 \end{alg}
 
-Note that under the scaled disturbance parameterization, we can write the model as
-\begin{align}
-  y_t|\gamma_{0:T},V,W & \stackrel{ind}{\sim} N(\gamma_0 + \sqrt{W}\displaystyle\sum_{s=1}^t\gamma_s, V)\label{distobseq}\\
-  \gamma_t & \stackrel{iid}{\sim}N(0,1) \label{distsyseq}
-\end{align}
+\subsection{The Scaled Errors}
+In the previous section we noted the possibility of using the scaled errors as an AA for $(V_{1:T},W_{1:T})$ in the general DLM. Define the scaled errors as $\psi_t = K_t(y_t - F_t\theta_t)$ for $t=1,2,\cdots,T$ and $\psi_0=\theta_0$ where $K_t$ is the cholesky decomposition of $V_t$, that is $K_t' K_t=V_t$. This is a bit strange since in general $dim(\psi_0)\neq dim(\psi_t)$ for $t=1,2,\cdots,T$. Ideally we might like an ``$F_0$'' so that we can set $\psi_0=F_0\theta_0$ in order for $\psi_0$ to have the same dimension as $\psi_1$. In general, though, there is no $F_0$. In some DLMs $F_t$ is constant with respect to $t$ so that we could set $F_0=F$, but in dynamic regression for example, $F_0$ will be a different value of all covariates and may be unkown or be an essentially arbitrary choice. The arbitrariness is fine since it is just a definition, but $\psi_0=\theta_0$ seems most natural. On the other hand, it's unclear how natural this is since in the general case $\psi_{0:T}$ is no longer a one-to-one transformation of $\theta_{0:T}$ and it's not as clear how we should write the model.
 
-\subsection{Algorithm 3: The Scaled Error Sampler}\label{sec:error}
-
-An alternative parameterization might use the $v_t$'s, i.e. the errors, in an analogous way. In fact, almost everything about trying to use the $v_t$'s is analogous to using the $w_t$'s. First, using the $v_t$'s directly results is writing down the state state sampler in a different form. So define the scaled erros:
-\begin{align}
-  \psi_t &= (y_t - \theta_{t})/\sqrt{V}=v_t/\sqrt{V}\text{ for }t=1,2,...,T\nonumber\\ 
-  \intertext{and} 
-  \psi_0&=\theta_0 \label{psidef}
-\end{align}
-Now we need the full conditional distributions of $V$ and $W$. Define $y_0=0$. We can write the transformation fro $\theta_{0:T}$ to $\psi_{0:T}$ as $\psi_{0:T} = y_{0:T}/sqrt{V} + A \theta_{0:T}$ where
-\begin{align}
-A=\frac{1}{\sqrt{V}}\begin{bmatrix} \sqrt{V} & 0 & 0 & \hdots & 0 & 0 \\
-  -1 & 1 & 0 & \hdots & 0 & 0 \\
-  0 &  -1 & 1 &  \hdots & 0 & 0 \\
+The local level model, at least, can easily be written in terms of the scaled errors. They simplify to $\psi_t = (y_t - \theta_t)/\sqrt{V}=v_t/\sqrt{V}$ for $t=1,2,\cdots,T$. In order to confirm our intuition that $\psi_{0:T}$ is an AA for $(V,W)$, note that we can write $\psi_{0:T} = y_{0:T}/\sqrt{V} - B \theta_{0:T}$ where we define $y_0=0$ and 
+\begin{align*}
+B=\frac{1}{\sqrt{V}}\begin{bmatrix} \sqrt{V} & 0 & 0 & \cdots & 0 & 0 \\
+  0 & 1 & 0 & \cdots & 0 & 0 \\
+  0 &  0 & 1 &  \cdots & 0 & 0 \\
   \ddots &   \ddots &   \ddots &\ddots &  \ddots &   \ddots & \\
-  0 & 0 & 0 & \hdots & -1 & 1 \end{bmatrix}
-\end{align}
-So the Jacobian is exactly analogous and we get, again with $y_0=0$:,
+  0 & 0 & 0 & \cdots & 0 & 1 \end{bmatrix}.
+\end{align*}
+This means that $|J|=1/|B|=V^{T/2}$, i.e. exactly analogous to the determinant of the Jacobian for the scaled disturbances. Note that $\theta_t = y_t - \sqrt{V}\psi_t$ for $t=1,2,\cdots,T$ and $\theta_0=\psi_0$. Then from \eqref{statepost} we can write the joint distribution of $(V,W,\psi_{0:T},y_{1:T})$ as
 \begin{align}
-  p(W|V,\psi_{0:T}, y_1:T) \propto & W^{-T/2 - \alpha_w - 1}\exp\left[-\frac{1}{W}\left(\beta_w + \frac{1}{2}\sum_{t=2}^T(y_t - y_{t-1} - \sqrt{V}(\psi_t - \psi_{t-1}))^2\right) + \frac{1}{2}(y_1 - \psi_1\sqrt(V) - \psi_0)\right]\\
-  p(V|W,\psi_{0:T}, y_1:T) \propto & V^{-\alpha_v - 1}\exp\left[-\frac{\beta_v}{V} - \frac{1}{2W}\left(\sum_{t=2}^Ty_t - y_{t-1} - \sqrt{V}(\psi_t - \psi_{t-1})^2 - \frac{1}{2}(y_1 - \psi_1\sqrt(V) - \psi_0)\right)\right]
+  p(V,W,\psi_{0:T},y_{1:T}) &\propto W^{-\left(T/2 + \alpha_W + 1\right)} \exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\textstyle\sum_{t=1}^T[ y_t - y_{t-1} - \sqrt{V}\psi_t + \sqrt{V}^{\indicator{t>1}}\psi_{t-1})]^2 \right) \right]  \nonumber\\
+  \times &  V^{-\left(\alpha_V + 1\right)} \exp\left[-\frac{1}{V}\beta_V\right]\exp\left[\frac{1}{2} \textstyle\sum_{t=1}^T\psi_t^2\right] \exp\left[-\frac{1}{2C_0}(\psi_0 - m_0)^2\right]\label{errorjoint}. 
 \end{align}
-Now define $Ly_t=y_t-y_{t-1}$ for $t=2,3,...,T$ \& $Ly_1= y_1 - \psi_0$ and $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ \& $L\psi_1=\psi_1-0$. Then define $a=\sum_{t=1}^T(L\psi_t)^2/2W$ and $b=\sum_{t=1}^T(L\psi_tLy_t)/W$. Then once again we can write
-\begin{align}
-  \log p(W|V\gamma_{0:T},y_{1:T}) =& -aW + b\sqrt{W} - (\alpha_2 + 1)\log W -\beta_2/W + C\label{errorlogVgivenW}
-\end{align}
-where $C$ is some constant. Since this the same form as \eqref{distlogWgivenV} then once again this density is log concave so long as $b^2 > \frac{32}{9\beta_v}(\alpha_v+1)^3(1 - 2sgn(b)/3)$. This tends to hold when $W$ isn't much larger than $V$, i.e. in the opposite case.
+where again $y_0=0$ and $\indicator{}$ is the indicator function. The exponent $\indicator{t>1}$ is needed in the first line because $\psi_0$ is unscaled. This bit of inelegance only appears egregious in the context of constant variance DLMs. In the general DLM, the $\psi_t$'s aren't scaled by the same standard deviation anyway and $\psi_0$ is special since it encodes the initial position of the time series.
 
-Now we can write down the full scaled error algorithm:
+From \eqref{errorjoint} we can write the model in terms of the scaled error parameterization as
+\begin{align*}
+  y_t|y_{0:t-1}\psi_{0:T},V,W & \sim N\left(y_{t-1} + \sqrt{V}\psi_t - \sqrt{V}^{\indicator{t>1}}\psi_{t-1},W\right)\\
+  \psi_t & \stackrel{iid}{\sim}N(0,1)
+\end{align*}
+for $t=1,2,\cdots,T$. Now we see immediately that the scaled errors, $\psi_{0:T}$, are also an AA for $(V,W)$ since neither $V$ nor $W$ are in the system equation.
+ 
+The DA algorithm based on $\psi_{0:T}$ for the local level model is:
 \begin{alg}\mbox{}\\[-\baselineskip]
 \begin{enumerate}\label{erroralg}
-\item Simulate $\theta_{0:T}$ from $\pi(\theta_{0:T}|V,W,y_{0:T})$
+  \item Draw $\psi_{0:T}$ from $p(\psi_{0:T}|V^{(k)},W^{(k)},y_{1:T})$
+  \item Draw $(V^{(k+1)},W^{(k+1)})$ from $p(V,W|\psi_{0:T},y_{1:T})$.
+\end{enumerate}
+\end{alg}
+Once again step one can be accomplished directly with \citeauthor{koopman1993disturbance}'s disturbance smoother or indirectly using FFBS. Step 2 is also once again complicated since the joint conditional posterior of $V$ and $W$ isn't a known density. Equation \eqref{errorjoint} gives
+\begin{align*}
+p(V,W|\psi_{0:T},y_{1:T})\propto &W^{-\left(T/2 + \alpha_W + 1\right)} \exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\textstyle\sum_{t=1}^T\left( y_t - y_{t-1} - \sqrt{V}\psi_t + \sqrt{V}^{\indicator{t>1}}\psi_{t-1})\right)^2 \right) \right] \\
+&\times V^{-\left(\alpha_V + 1\right)} \exp\left[-\frac{1}{V}\beta_V\right]
+\end{align*}
+We'll sample $V$ and $W$ in two separate Gibbs steps, but again note that we could put in work to sample $V$ and $W$ jointly or use a metropolis step for $V$ and $W$ jointly. The full conditional distribution of $W$ is
+\begin{align*}
+  p(W|V,\psi_{0:T},y_{1:T}) \propto & W^{-T/2 - \alpha_W - 1}\exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\sum_{t=1}^T\left(y_t - y_{t-1} - \sqrt{V}\psi_t + \sqrt{V}^{\indicator{t>0}}\psi_{t-1}\right)^2\right)\right].
+\end{align*}
+In other words, an inverse gamma distribution with the same parameters for $W$ as in \eqref{IGparm}. The full conditional distribution for $V$ is more complicated, on the other hand:
+\[
+p(V|W,\psi_{0:T},y_{1:T})\propto \exp\left[-\frac{1}{W}\left(\frac{1}{2}\textstyle\sum_{t=1}^T\left( y_t - y_{t-1} - \sqrt{V}\psi_t + \sqrt{V}^{\indicator{t>1}}\psi_{t-1})\right)^2 \right) \right] V^{-\left(\alpha_V + 1\right)} \exp\left[-\frac{1}{V}\beta_V\right]
+\]
+This is analogous to the full conditional density for $W$ with the scaled disturbances. The log density can be written as
+\begin{align*}
+\log p(V|W,\psi_{0:T},y_{1:T}) =& -aV + b\sqrt{V} - (\alpha_V + 1)\log V -\beta_V/V + C
+\end{align*}
+where $C$ is again some constant, and here $a=\sum_{t=1}^T(L\psi_t)^2/2W$ and $b=\sum_{t=1}^T(L\psi_tLy_t)/W$ with $Ly_t=y_t-y_{t-1}$ for $t=2,3,...,T$, $Ly_1= y_1 - \psi_0$ and $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$, $L\psi_1=\psi_1-0$. Since this density is the same form as in \eqref{sdlogV}, it's also log concave when $b^2 > \frac{32}{9\beta_V}(\alpha_V+1)^3(1 - 2sgn(b)/3)$ with the updated definitions of $a$ and $b$.
+
+Now we can write down the full scaled error algorithm for obtaining $(V^{(k+1)},W^{(k+1)})$ from $(V^{(k)},W^{(k)})$:
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{erroralg}
+\item Simulate $\theta_{0:T}$ from $p(\theta_{0:T}|V^{(k))},W^{(k)},y_{0:T})$
   using FFBS and form $\psi_{0:T}$ or simulate $\psi_{0:T}$ directly..
-\item Simulate $W$ from $p(W|\psi_{0:T},V,y_{1:T})$:
-  \[
-  W|\psi_{0:T},V,y_{1:T} \sim IG(a_w, b_w)
-  \]
-  where
-  \begin{align*}
-    a_w =& \alpha_w + T/2\\
-    b_w = & \beta_w + \sum_{t=1}^T(y_t- y_{t-1} - \sqrt{V}(\psi_t-\psi_{t-1}))^2/2
-  \end{align*}
-  (defining $y_0=0$)
-\item Simulate $V$ from $p(V|\psi_{0:T},W,y_{1:T})$, possibly using adaptive rejection sampling.
+\item Simulate $V^{(k+1)}$ from $p(V|\psi_{0:T},W^{(k)},y_{1:T})$ using adaptive rejection sampling when possible, otherwise using a $t$ approximation in order to rejection sample.
+\item Simulate $W^{(k+1)}$ from $p(W|\psi_{0:T},V^{(k+1)},y_{1:T})$, an inverse gamma distribution with parameters $a_W = \alpha_w + T/2$ and $b_W = \beta_w + \sum_{t=1}^T\left(y_t- y_{t-1} - \sqrt{V}\psi_t + \sqrt{V}^{\indicator{t>1}}\psi_{t-1})\right)^2/2$ with $y_0=0$.
 \end{enumerate}
 \end{alg}
 
-Under the scaled error parameterization, we can write the model as
-\begin{align}
-  y_t|y_{1:t-1},\psi_{0:T},V,W & \stackrel{ind}{\sim} N(y_{t-1} + \sqrt{V}(\psi_t - \psi_{t-1}), W)\label{errorobseq}\\
-  \psi_t & \stackrel{iid}{\sim}N(0,1) \label{errorsyseq}
-\end{align}
-for $t=2,3,...,T$, and for $t=1$ the observation equation has the mean $\sqrt{V}\psi_1 - \psi_0$, but the system equation is unchanged.
+
+{\it OLD STUFF BELOW. STILL NEED TO WORK THE INTERWEAVING, ALTERNATING AND RANDOM KERNEL SAMPLERS INTO THIS, THE COMPONENTWISE SAMPLERS, AND THE RESULTS.}
+
+

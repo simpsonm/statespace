@@ -12,7 +12,6 @@ library(xtable)
 library(reshape2)
 load("mixing/OldSims/samout.RData")
 load("mixing/OldSims/postcors.RData")
-
 sams <- c("error", "state", "dist")
 alts <- c("sdalt", "sealt", "dealt", "trialt")
 ints <- c("sdint", "seint", "deint", "triint")
@@ -24,7 +23,6 @@ samout$samplers[substr(samout$sampler, 1, 2)=="sd"] <- "State-Dist"
 samout$samplers[substr(samout$sampler, 1, 2)=="se"] <- "State-Error" 
 samout$samplers[substr(samout$sampler, 1, 2)=="de"] <- "Dist-Error" 
 samout$samplers[substr(samout$sampler, 1, 3)=="tri"] <- "Triple" 
-
 meltedsam <- melt(samout, id=c("type", "samplers", "sampler", "V.T", "W.T", 
                             "T.T"))
 Vs <- unique(meltedsam$V.T) #$
