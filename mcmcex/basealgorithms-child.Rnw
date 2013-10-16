@@ -56,7 +56,7 @@ When $\gamma$ is a one-to-one transformation of $\theta$, step 4 is an update $\
 \end{alg}
 The key difference between this algorithm and algorithm \ref{inter2} is in step 3: instead of drawing from $p(\gamma|\theta,\phi,y)$, the alternating algorithm draws from $p(\gamma|\phi,y)$. In other words it alternates between two data augmentation algorithms in a single iteration. The interweaving algorithm, on the other hand, connects or ``weaves'' the two separate iterations together in step 3 by drawing $\gamma$ conditonal on $\theta$ in addition to $\phi$ and $y$.
 
-\citeauthor{yu2011center} call a GIS approach where one of the DAs is a SA and the other is an AA an {\it ancillary sufficient interweaving strategy}, or an ASIS approach. They show that the GIS algorithm has a geometric rate of convergence no worse than the worst of the two underlying algorithms and in some cases better than the the corresponding alternating algorithm. In models with a ``nice'' prior on $\phi$ in some sense, they also show that the ASIS algorithm is the same as the optimal PX-DA algorithm of \citet{meng1999seeking}, \citet{liu1999parameter}, \citet{van2001art} and \citet{hobert2008theoretical}. Their results suggest that ASIS is a promising approach to improve the speed of MCMC in a variety of models no matter what region of the parameter space the posterior is concentrated. To gain some intuition about why this is so, note that the problem with slow MCMC is that there is high autocorrelation in the Markov chain $\{\phi^{(k)}\}$ for $k=1,2,\cdots,K$ where $K$ is the length of the chain, leading to imprecise estimates of $\mathrm{E}[f(\phi)]$ for some function $f$. Our ultimate goal here is to reduce this dependence. In the usual DA algorithm, e.g. algorithm \ref{DAalg}, when $\phi$ and $\theta$ are highly dependent in the joint posterior the draws from $p(\theta|\phi,y)$ and then from $p(\phi|\theta,y)$ won't move the chain much, resulting in high autocorrelation in the chain. Interweaving helps break this autocorrelation in two ways. First, by inserting the extra step, e.g. steps 2 and 3 together in \ref{inter2}, the chain gets an additional chance to move in a single iteration thereby weaking the autocorrelation. Second, when one of $\theta$ and $\gamma$ is a ``beauty'' and the other is a ``beast'', as is often the case when they form a SA-AA pair, one of steps 2 and 4 in algorithm \ref{inter2} will significantly move the chain even if the other step will not. This intuition demonstrates that the key isn't so much that $\theta$ and $\gamma$ form a SA-AA pair as that they form a beauty and the beast pair. It just so happens that SA-AA pairs are often great at accomplishing this.
+\citeauthor{yu2011center} call a GIS approach where one of the DAs is a SA and the other is an AA an {\it ancillary sufficient interweaving strategy}, or an ASIS approach. They show that the GIS algorithm has a geometric rate of convergence no worse than the worst of the two underlying algorithms and in some cases better than the the corresponding alternating algorithm. In models with a ``nice'' prior on $\phi$ in some sense, they also show that the ASIS algorithm is the same as the optimal PX-DA algorithm of \citet{meng1999seeking}, \citet{liu1999parameter}, \citet{van2001art} and \citet{hobert2008theoretical}. Their results suggest that ASIS is a promising approach to improve the speed of MCMC in a variety of models no matter what region of the parameter space the posterior is concentrated. To gain some intuition about why this is so, note that the problem with slow MCMC is that there is high autocorrelation in the Markov chain $\{\phi^{(k)}\}$ for $k=1,2,\cdots,K$ where $K$ is the length of the chain, leading to imprecise estimates of $\mathrm{E}[f(\phi)]$ for some function $f$. Our ultimate goal here is to reduce this dependence. In the usual DA algorithm, e.g. algorithm \ref{DAalg}, when $\phi$ and $\theta$ are highly dependent in the joint posterior the draws from $p(\theta|\phi,y)$ and then from $p(\phi|\theta,y)$ won't move the chain much, resulting in high autocorrelation in the chain. Interweaving helps break this autocorrelation in two ways. First, by inserting the extra step, e.g. steps 2 and 3 together in \ref{inter2}, the chain gets an additional chance to move in a single iteration thereby weaking the autocorrelation. Second, when one of $\theta$ and $\gamma$ is a ``beauty'' and the other is a ``beast'', as is often the case when they form a SA-AA pair, one of steps 2 and 4 in algorithm \ref{inter2} will significantly move the chain even if the other step will not. This intuition suggests that the key isn't so much that $\theta$ and $\gamma$ form a SA-AA pair as that they form a beauty and the beast pair. It just so happens that SA-AA pairs are often great at accomplishing this.
 
 \subsection{The Scaled Disturbances}
 
@@ -82,11 +82,11 @@ for $t=1,2,\cdots,T$. This gives us the first claim that $w_{0:T}$ is neither a 
 \citeauthor{papaspiliopoulos2007general} suggest that in order to obtain an ancillary augmentation for a variance parameter, we must scale the sufficient agumentation by the square root of that parameter. Based on this intuition, note that if we hold $V_{1:T}$ constant then $\theta_{0:T}$ is a SA for $W_{1:T}$ from the observation and system equations, \eqref{dlmobseq} and \eqref{dlmsyseq}, i.e. we say $\theta_{0:T}$ is a SA for $W_{1:T}$ given $V_{1:T}$, or for $W_{1:T}|V_{1:T}$. Similarly $\theta_{0:T}$ is an AA for $V_{1:T}|W_{1:T}$. This suggests that if we scale $\theta_{t}$ by $W_{t}$ for all $t$ appropriately we'll have an ancillary augmentation for $V_{1:T}$ and $W_{1:T}$ jointly. The same intuition suggests scaling $w_{t}=\theta_{t}-G_t\theta_{t-1}$ by $W_{t}$ for all $t$ appropriately in order to find an ancillary augmentation for $(V_{1:T},W_{1:T})$. We'll work with this latter case first. 
 
 Define the scaled disturbances in the general DLM, $\gamma_{0:T}$, where $\gamma_0=\theta_0=w_0$ and for $t=1,2,\cdots,T$, $\gamma_t = L_t(\theta_t - G_t\theta_{t-1}) = L_tw_t$ where $L_t$ is the Cholesky decomposition of $W_t^{-1}$, i.e. $L_t' L_t =W_t^{-1}$. We can confirm our intuition that the scaled disturbances are an AA for $V_{1:T}$ and $W_{1:T}$ jointly. Let $L_0=I_p$, the $p\times p$ identity matrix. Then $\theta_t = L_t^{-1}\gamma_t + \sum_{s=1}^{t+1}H^t_sL_{s-1}^{-1}\gamma_{s-1}$ for $t=1,2,\cdots,T$ and $\theta_0=\gamma_0$. Then the Jacobian is block upper triangular with $L_t^{-1}$'s as the diagonal blocks, so $|J|=\prod_{t=1}^T|L_t^{-1}|=\prod_{t=1}^T|W_t|^{1/2}$. Then from \eqref{dlmjoint} we can write the full joint distribution of $(V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T})$ as
- \begin{align*}
+ \begin{align}
   p(&V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\theta_0-m_0)'C_0^{-1}(\theta_0-m_0)\right] \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Psi_tV_t^{-1}\right)\right] \nonumber\\
   &\times  |V_t|^{-1/2}\exp\left[-\frac{1}{2}\left(y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_sL_{s-1}^{-1}\gamma_{s-1}\right)'V_t^{-1}\left(y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_sL_{s-1}^{-1}\gamma_{s-1}\right)\right]\nonumber\\
-   & \times |W_t|^{-(\delta_t + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\gamma_t'\gamma_t\right]
- \end{align*}
+   & \times |W_t|^{-(\delta_t + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\gamma_t'\gamma_t\right]\label{dlmdistjoint}
+ \end{align}
 where again $H^t_s=G_tG_{t-1}\cdots G_s$ for $s=0,1,\cdots,T$ and $H_{t+1}^t=I_p$.
 
 So under the scaled disturbance parameterization we can write the model as
@@ -131,5 +131,46 @@ The DA algorithm based on $\psi_{0:T}$ is:
 \end{alg}
 Once again step one can be accomplished directly with \citeauthor{koopman1993disturbance}'s disturbance smoother or indirectly using FFBS. Step 2 is also once again complicated since the joint conditional posterior of $V_{1:T}$ and $W_{1:T}$ isn't a known density. 
 
-{\it OLD STUFF BELOW. STILL NEED TO WORK THE INTERWEAVING, ALTERNATING AND RANDOM KERNEL SAMPLERS INTO THIS, THE COMPONENTWISE SAMPLERS, AND THE RESULTS.}
+\subsection{Interweaving in the DLM: Global and Componentwise}
+We now have three DAs for the generic DLM with $dim(y_t)=dim(\theta_t)$, known $F_t$'s and $G_t$'s, and $F_t$ invertible for $t=1,2,\cdots,T$: the states, $\theta_{0:T}$, the scaled disturbances $\gamma_{0:T}$, and the scaled errors $\psi_{0:T}$. This allows to construct four separate GIS algorithms based on algorithm \ref{inter2}: three algorithms that interweave between any two of $\theta_{0:T}$, $\gamma_{0:T}$, and $\psi_{0:T}$, the state-dist, state-error, and dist-error interweaving algorithms, and one algorithm that interweaves between all three, the triple interweaving algorithm. Note that because Strictly speaking, the order in which we sample the DAs in the algorithm does matter, but \citeauthor{yu2011center} note that this tends to make very little difference. So we'll use the same order in all algorithms --- states, then scaled disturbances, then scaled errors. Algorithm \ref{sdintalg} is the state-dist interweaving algorithm, for example:
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{sdintalg}
+\item Draw $\theta_{1:T}$ from $p(\theta_{1:T}|V_{1:T}^{(k)},W_{1:T}^{(k)},y_{1:T})$
+\item Draw $(V^{(k+0.5)}_{1:T},W^{(k+0.5)}_{1:T})$ from $p(V_{1:T},W_{1:T}|\theta_{0:T},y_{1:T})$
+\item Update $\gamma_{1:T}^{(k+1)}$ from $gamma_0=\theta_0$ and $\gamma_t = L^{(k+0.5)}_t(\theta_t - G_t\theta_{t-1}$ for $t=1,2,\cdots,T$
+\item Draw $(V_{1:T}^{(k+1)},W_{1:T}^{(k+1)}$ from $p(V_{1:T},W_{1:T}|\gamma_{0:T},y_{1:T})$
+\end{enumerate}
+\end{alg}
+where again $L^{(k+0.5)}_t$ is the Cholesky decomposition of $(W^{(k+0.5)}_t)^{-1}$, i.e. $(L^{(k+0.5)}_t)'L^{(k+0.5)}_t=(W^{(k+0.5)}_t)^{-1}$. Steps 1 and 2 are the same as steps 1 and 2 in algorithm \ref{statealg}, and step 4 is the same as step 2 of algorithm \ref{distalg}. The triple interweaving algorithm is the same as algorithm \ref{sdintalg} except it adds two more steps at the end: an update of $\psi_{0:T}$ from $\gamma_{0:T}$ and the draw of $(V_{1:T},W_{1:T})$ in step 4, and then a draw from $(V_{1:T},W_{1:T}|\psi_{0:T},y_{1:T})$. In practice we may want to break up step 4 into two steps if it's easier to draw from the full conditionals of $V_{1:T}$ and $W_{1:T}$ rather than drawing them jointly. Algorithm \ref{sdintalg2} below is exactly this.
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{sdintalg2}
+\item Draw $\theta_{1:T}$ from $p(\theta_{1:T}|V_{1:T}^{(k)},W_{1:T}^{(k)},y_{1:T})$
+\item Draw $(V_{1:T},W_{1:T})$ from $p(V_{1:T},W_{1:T}|\theta_{0:T},y_{1:T})$
+\item Update $\gamma_{1:T}^{(k+1)}$ from $gamma_0=\theta_0$ and $\gamma_t = L_t(\theta_t - G_t\theta_{t-1}$ for $t=1,2,\cdots,T$
+\item Draw $(V_{1:T}^{(k+1)}$ from $p(V_{1:T}|W_{1:T},\gamma_{0:T},y_{1:T})$
+\item Draw $(W_{1:T}^{(k+1)}$ from $p(W_{1:T}|V^{(k+1)}_{1:T},\gamma_{0:T},y_{1:T})$
+\end{enumerate}
+\end{alg}
+Step 4 actually draws $V_{1:T}$ from the same density as in step 2 and so is extraneous and can be removed. To see this, note that $V_{1:T}$ and $W_{1:T}$ are independent in their conditional posterior given $\theta_{0:T}$ with each $V_t$ and $W_t$ having inverse Wishart distributions given in Algorithm \ref{statealg}. In particular, $p(V_{1:T}|W^{(k)}_{1:T},\theta_{0:T},y_{1:T})$ is the product of indepedent inverse Wishart distributions with parameters $\Psi_{t} + v_tv_t'$ and $\eta_{t} + 1$ with $v_t=y_t - F_t\theta_t$. But $p(V_{1:T}|W^{(k)}_{1:T},\theta_{0:T},y_{1:T})$ is identical to this since by \eqref{dlmdistjoint}:
+\begin{align*}
+  p(&V_{1:T}|W_{1:T},\gamma_{0:T},y_{1:T}) \propto p(V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T}) \propto \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 3)/2}\exp\left[-\frac{1}{2}tr\left((\Psi_t (\nu_t\nu_t')V_t^{-1}\right)\right]
+\end{align*}
+where $\nu_t = y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_s(L^{(k+0.5)}_{s-1})^{-1}\gamma_{s-1}$. In other words, independent inverse Wishart distributions with parameters $\Psi_t + \nu_t\nu_t'$ and $\eta_t + 1$. Now $\theta_t = \textstyle\sum_{s=1}^{t+1}H^t_s(L^{(k+0.5)}_{s-1})^{-1}\gamma_{s-1}$ because this is just the back transform of step 4 of Algorithm \ref{pcisalg} or step 3 of Algorithm \ref{sdintalg}, so $\nu_t=v_t$ and thus the distributions are the same.
 
+Note that none of these GIS algorithms are ASIS algorithms --- none of the DAs are a SA for $(V_{1:T},W_{1:T})$. The states, $\theta_{0:T}$, are a SA for $W_{1:T}|V_{1:T}$ though, so this motivates a CIS algorithm. A partial CIS algorithm is immediate:
+\begin{alg}\mbox{}\\[-\baselineskip]
+\begin{enumerate}\label{pcisalg}
+\item Draw $\theta_{1:T}$ from $p(\theta_{1:T}|V_{1:T}^{(k)},W_{1:T}^{(k)},y_{1:T})$
+\item Draw $V_{1:T}^{(k+1)}$ from $p(V_{1:T}|W_{1:T}^{(k)},\theta_{0:T},y_{1:T})$
+\item Draw $W^{(k+0.5)}_{1:T}$ from $p(W_{1:T}|V_{1:T}^{(k+1)},\theta_{0:T},y_{1:T})$
+\item Update $\gamma_{1:T}^{(k+1)}$ from $gamma_0=\theta_0$ and $\gamma_t = L^{(k+0.5)}_t(\theta_t - G_t\theta_{t-1})$ for $t=1,2,\cdots,T$
+\item Draw $(W_{1:T}^{(k+1)}$ from $p(W_{1:T}|V^{(k+1)},\gamma_{0:T},y_{1:T})$
+\end{enumerate}
+\end{alg}
+This algorithm is actually the same as a version of the state-dist interweaving algorithm, specifically Algorithm \ref{sdintalg2}. So we can construct a partial CIS algorithm, but it's actually the exact same algorithm as a GIS algorithm.
+
+With a little more work, we can also construct a full CIS algorithm that also turns out to be the same as another GIS algorithm.
+\section{Application: The Local Level Model}
+ 
+
+{\it OLD STUFF BELOW. STILL NEED TO WORK THE INTERWEAVING, ALTERNATING AND RANDOM KERNEL SAMPLERS INTO THIS, THE COMPONENTWISE SAMPLERS, AND THE RESULTS.}
