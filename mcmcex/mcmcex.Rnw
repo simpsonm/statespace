@@ -15,6 +15,7 @@ epsfig, multicol, amsthm, bbm}
 \def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
 \newtheorem{alg}{Algorithm}
 \newtheorem{theorem}{Theorem}
+\DeclareMathOperator{\Tr}{Tr}
 \begin{document}
 
 <<setup, include=FALSE, cache=FALSE>>=
@@ -25,6 +26,7 @@ opts_chunk$set(dev="pdf",
                fig.keep="high",
                fig.show="hold",
                fig.align="center")
+
 @
 
 
@@ -38,7 +40,6 @@ In dynamic linear models (DLMs), MCMC sampling can often be very slow for estima
 
 
 <<model-child, child='model-child.Rnw', eval=TRUE>>=
-
 @ 
 
 <<basealgorithms-child, child='basealgorithms-child.Rnw', eval=TRUE>>=
