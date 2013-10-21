@@ -4,8 +4,7 @@
 # .RData files that are HUGE #
 ##############################
 *SAM.RData
-samout.RData
-postcors.RData
+*OUT.RData
 
 # Outputs that you can compile yourself!!       #
 # (See README.md for how to compile .Rnw files) #
@@ -16,3 +15,10 @@ mcmcex.tex
 # These output folders come from knitr #
 /auto
 /figure
+
+# These folders were used for quickly transfering files to the server for running #
+/sandbox
+/sandbox2
+
+# This folder contains old simulations -  large files #
+/OldSims

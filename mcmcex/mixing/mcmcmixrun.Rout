@@ -1,0 +1,90 @@
+
+R version 3.0.1 (2013-05-16) -- "Good Sport"
+Copyright (C) 2013 The R Foundation for Statistical Computing
+Platform: x86_64-unknown-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> source("../mcmcexfun.r")
+Loading required package: lattice
+Loading required package: MASS
+##
+## Markov Chain Monte Carlo Package (MCMCpack)
+## Copyright (C) 2003-2013 Andrew D. Martin, Kevin M. Quinn, and Jong Hee Park
+##
+## Support provided by the U.S. National Science Foundation
+## (Grants SES-0350646 and SES-0350613)
+##
+> set.seed(152893627)
+> T <- c(10, 100, 1000)
+> V <- 10^(c(0:10)/2-2)
+> W <- V
+> simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
+> simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
+> sams <- c("state", "dist", "error", "sdint", "seint", "deint",
++           "triint", "sdalt", "sealt", "dealt", "trialt",
++           "sdkern", "sekern", "dekern", "trikern")
+> samplers <- data.frame(sams=rep(1,length(sams)))
+> samplers$sampler <- sams
+> n <- 3000
+> burn <- 500
+> a1 <- 5
+> a2 <- a1
+> parallel <- require(doMC, quietly=TRUE)
+> if(parallel){
++   registerDoMC(4)
++ }
+> system.time(samout <- fullsim(samplers, simdata, n, burn, a1, a2, parallel))
+[1] "dealt"
+[1] "dealt finished"
+[1] "deint"
+[1] "deint finished"
+[1] "dekern"
+[1] "dekern finished"
+[1] "dist"
+[1] "dist finished"
+[1] "error"
+[1] "error finished"
+[1] "sdalt"
+[1] "sdalt finished"
+[1] "sdint"
+[1] "sdint finished"
+[1] "sdkern"
+[1] "sdkern finished"
+[1] "sealt"
+[1] "sealt finished"
+[1] "seint"
+[1] "seint finished"
+[1] "sekern"
+[1] "sekern finished"
+[1] "state"
+[1] "state finished"
+[1] "trialt"
+[1] "trialt finished"
+[1] "triint"
+
+Error in sobroutine sample_...
+ifault= 7 
+[1] "triint finished"
+[1] "trikern"
+[1] "trikern finished"
+      user     system    elapsed 
+8752506.08    4316.91 2261231.24 
+> save(samout, file="samout.RData")
+> 
+> 
+> proc.time()
+       user      system     elapsed 
+8752510.213    4317.042 2261236.413 

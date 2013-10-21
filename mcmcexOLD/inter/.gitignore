@@ -1,6 +1,0 @@
-##ignore only in this folder##
-/cache
-/figure
-mcmcinter.tex
-mcmcinter.pdf
-*.Rdata

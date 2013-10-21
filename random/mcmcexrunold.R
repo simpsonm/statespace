@@ -1,4 +1,4 @@
-source("mcmcexfun.r")
+source("mcmcexfunold.R")
 
 n <- 5000
 T <- 15

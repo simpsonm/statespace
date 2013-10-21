@@ -1,6 +1,6 @@
 ## code snippets for dealing with the data and fitting model 3b
 
-source("repfun.r")
+source("repfun.R")
 
 dat2010 <- read.csv("../data/GYE_SoilMoistureTemperatureData_2010.csv")
 dat2011 <- read.csv("../data/GYE_SoilMoistureTemperatureData_2011.csv")

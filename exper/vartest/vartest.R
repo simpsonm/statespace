@@ -1,4 +1,4 @@
-source("varfun.r")
+source("varfun.R")
 
 dat2010 <- read.csv("../data/GYE_SoilMoistureTemperatureData_2010.csv")
 dat2011 <- read.csv("../data/GYE_SoilMoistureTemperatureData_2011.csv")

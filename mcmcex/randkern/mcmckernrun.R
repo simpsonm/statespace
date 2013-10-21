@@ -1,4 +1,4 @@
-source("../mcmcexfun.r")
+source("../mcmcexfun.R")
 set.seed(152893627) ## same simulated data as before
 T <- c(10, 100, 1000)
 V <- 10^(c(0:10)/2-2)

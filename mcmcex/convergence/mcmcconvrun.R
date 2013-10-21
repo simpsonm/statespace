@@ -1,4 +1,4 @@
-source("../mcmcexfun.r")
+source("../mcmcexfun.R")
 parallel <- require(doMC, quietly=TRUE)
 if(parallel){
   registerDoMC(2)
@@ -12,7 +12,7 @@ M <- expand.grid(ch=1, V.S=c(1/100, 100), W.S=c(1/100, 100))
 M[5,] <- c(1,1,1)
 simdatatemp <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
 simdata <- ddply(M, .(ch, V.S, W.S), dfun, simgrid=simdatatemp)
-K <- 100
+K <- 1
 sams <- c("state", "dist", "error", "sdint", "seint", "deint",
           "triint", "sdalt", "sealt", "dealt", "trialt", "sdkern",
           "sekern", "dekern", "trikern")
@@ -34,7 +34,7 @@ rm(meanconv.diag)
 
 M <- data.frame(ch=1:5, V.S=c(1,1,1,1,1), W.S=c(1,1,1,1,1))
 simdata <- ddply(M, .(ch, V.S, W.S), dfun, simgrid=simdatatemp)
-K <- 10
+K <- 1
 sams <- c("state", "dist", "error", "sdint", "seint", "deint",
           "triint", "sdalt", "sealt", "dealt", "trialt", "sdkern",
           "sekern", "dekern", "trikern")
