@@ -32,7 +32,7 @@ Now strictly speaking, CIS doesn't require a SA-AA pair each parameter block, bu
 
 We saw before in section {\it REFERENCE} that both $\gamma_{0:T}$ and $\psi_{0:T}$ are AA for $(V,W)$ jointly but neither is SA for either $V|W$ or $W|V$. So all we need is a SA for $V|W$. Before we make an attempt at that, however, implement a partial CIS algorithm as follows:
 \begin{alg}\mbox{}\\[-\baselineskip]
-\begin{enumerate}\label{partialcis}
+\begin{enumerate}%\label{partialcis}
   \item Draw $\theta_{0:T}$ from $p(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$ using FFBS.
   \item Draw $V^{(k+1)}$ from $p(V|W^{(k)},\theta_{0:T},y_{1:T})$
   \item Draw $W^{(k+.5)}$ from $p(W|V^{(k+.5)},\theta_{0:T},y_{1:T})$
@@ -47,7 +47,7 @@ Now in order to introduce a full CIS algorithm, let's introduce two new data agu
 p(\tilde{\gamma}_{1:T},y_{1:T}|V,W,\tilde{\gamma}_0)&\propto (W/V)^{-T/2}\exp\left[-\frac{1}{2W/V}\sum_{t=1}^T\tilde{\gamma}_t^2\right] V^{-T/2}\exp\left[-\frac{1}{2V}\sum_{t=1}^T(y_t - \tilde{\gamma}_0 - \sqrt{V}\sum_{s=1}^{t-1}\tilde{\gamma}_s)^2\right]
 \end{align}
 Then we can write the model in terms of $\tilde{\gamma}_{0:T}$ as
-\begin{align}\label{gammatilde}
+\begin{align}%\label{gammatilde}
   y_t|\tilde{\gamma}_{0:T}, V, W &\stackrel{ind}{\sim} N(\tilde{\gamma}_0 + \sqrt{V}\sum_{s=1}^{t-1}\tilde{\gamma}_s, V)\notag\\
   \tilde{\gamma}_t|V,W &\stackrel{iid}{\sim} N(0, W/V)
 \end{align}
@@ -58,7 +58,7 @@ If we do the same for $\tilde{\psi}$, we get
 p(\tilde{\psi}_{1:T},y_{1:T}|V,W,\tilde{\psi}_0) &\propto (V/W)^{-T/2}\exp\left[-\frac{1}{2V/W}\sum_{t=1}^T\tilde{\psi}_t^2\right] W^{-T/2}\exp\left[-\frac{1}{2W}\sum_{t=1}^T(y_t-y_{t-1}-\sqrt{W}(\tilde{\psi}_t -\tilde{\psi}_{t-1})^2\right]
 \end{align}
 so that we can write the model as, for $t=1,2,...T$:
-\begin{align}\label{psitilde}
+\begin{align}%\label{psitilde}
   y_t|\tilde{\psi}_{0:T}, y_{0:t-1}, V, W & \sim N(y_{t-1} + \sqrt{W}(\tilde{\psi}_t - \tilde{\psi}_{t-1}), W)\notag\\
   \tilde{\psi}_t|V,W &\stackrel{iid}{\sim}N(0,V/W)
 \end{align}
@@ -80,7 +80,7 @@ where $p(V|W,\tilde{\psi}_0)=p(V|W,\psi_0)=p(V|W,\theta_0)$ is the conditional p
 
 The full componentwise interweaving algorithm is then:
 \begin{alg}\mbox{}\\[-\baselineskip]
-\begin{enumerate}\label{fullcis}
+\begin{enumerate}%\label{fullcis}
   \item Draw $\tilde{\psi}_{0:T}$ from $p(\tilde{\psi}_{0:T}|V^{(k)},W^{(k)},y_{1:T})$.
   \item Draw $V^{(k+.5)}$ from $p(V|W^{(k)}, \tilde{\psi}_{0:T}, y_{1:T})$.
   \item Update $\psi_{0:T}$.
@@ -106,7 +106,7 @@ It turns out that this same sort equivalence holds between $\tilde{\psi}$ and $\
 \end{align}
 Again since $\sqrt{W}\tilde{\psi}=\sqrt{V}\psi=y_t-\theta_t$ and $\theta_0=\tilde{\psi}_0$, these two densities are equivalent. So it turns out that even though $\theta_{0:T}$ isn't SA $V|W$, drawing from $p(V|W,\theta_{0:T},y_{1:T})$ is equivalent to drawing from $p(V|W,\tilde{\psi}_{0:T},y_{1:T})$ so that we can replace step 2 this draw. Thus an equivalent version of the full componentwise interweaving algorithm with the $\theta$'s replacing both the $\tilde{\psi}$'s and the $\tilde{\gamma}$'s is
 \begin{alg}\mbox{}\\[-\baselineskip]
-\begin{enumerate}\label{fullcis2}
+\begin{enumerate}%\label{fullcis2}
   \item Draw $\theta_{0:T}$ from $p(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$.
   \item Draw $V^{(k+.5)}$ from $p(V|W^{(k)}, \theta_{0:T}, y_{1:T})$.
   \item Update $\psi_{0:T}$.

@@ -2,7 +2,7 @@
 set_parent('mcmcex.Rnw')
 @ 
 
-\section{Model}
+\section{Model}\label{modelsec}
 
 The general dynamic linear model (DLM) is a linear, gaussian, state space model. A state space model has two components --- a sequence of real valued random vectors $\{y_t\}$ denoting an observation for each period and another sequence of real valued random vectors $\{\theta_t\}$ denoting a latent state for each period. The observations range from $t=1,...,T$, i.e. the length of the full time series, and the states range from $t=0,...,T$. The states form a markov chain so that $p(\theta_{t+1}|\theta_{0:T})=p(\theta_{t+1}|\theta_t)$ where $p(x|z)$ denotes the conditional density of $x$ given $z$. Furthermore, the observations are conditionally independent given the states, i.e. $p(y_{1:T}|\theta_{0:T}) = p(y_1|\theta_1)\times \cdots \times p(y_T|\theta_T)$. The state space model is then completed by specifying the observation and system equations: for $t=1,2,...,T$
 \begin{align}
