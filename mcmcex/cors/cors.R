@@ -8,7 +8,6 @@ simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
 set.seed(234134530)
 samshort$iter <- 1:length(samshort[,1])
-dat <- samshort[1:100,]
 y <- simdata
 
 itsim <- function(dat, y){
@@ -27,7 +26,7 @@ itsim <- function(dat, y){
   return(out)
 }
 
-samcor <- ddply(.data=dat, .variables=.(iter), .fun=itsim, y=simdata)
+samcor <- ddply(.data=samshort, .variables=.(iter), .fun=itsim, y=simdata)
 rm(samshort)
 
 newcors <- function(samcor){
@@ -49,4 +48,4 @@ if(parallel){
 }
 
 newpostcors <- ddply(.data=samcor, .variables=.(V.T, W.T, T.T), .fun=newcors, .parallel=parallel)
-save(newpostcors, file="newpostcors.RData"))
+save(newpostcors, file="newpostcors.RData")
