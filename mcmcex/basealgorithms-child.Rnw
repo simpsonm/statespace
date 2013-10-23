@@ -328,13 +328,12 @@ Now $V$ and $W$ are no longer conditionally independent given $\gamma_{0:T}$ and
 \begin{enumerate}\label{llmdistalg}
 \item Draw $\gamma_{0:T}$ from $p(\gamma_{0:T}|V^{(k)},W^{(k)},y_{1:T})$, possibly using FFBS to sample $\theta_{0:T}$ then transforming.
 \item Draw $V^{(k+1)}$ from $p(V|W^{(k)},\gamma_{0:T},y_{1:T})$.
-\itme Draw $W^{(k+1)}$ from $p(W|V^{(k+1)},\gamma_{0:T},y_{1:T})$.
+\item Draw $W^{(k+1)}$ from $p(W|V^{(k+1)},\gamma_{0:T},y_{1:T})$.
 \end{enumerate}
 \end{alg}
 In step 3, $V$ is drawn from the same inverse gamma distribution as in step 2 of Algorithm \ref{llmstatealg}. In step 4, the draw of $W$ is more complicated. The density can be written as
 \begin{align*}
-  p(W|V,\gamma_{0:T},y_{1:T}) \propto & W^{-\alpha_w - 1}\exp\left[-\frac{1}{2V}\sum_{t=1}^T\left(y_t - \gamma_0 - \sqrt{W}\sum_{s=1}^t\gamma_s\right)^2\right].\\
-
+  p(W|V,\gamma_{0:T},y_{1:T}) \propto & W^{-\alpha_w - 1}\exp\left[-\frac{1}{2V}\sum_{t=1}^T\left(y_t - \gamma_0 - \sqrt{W}\sum_{s=1}^t\gamma_s\right)^2\right].
 \end{align*}
 This density isn't any known form and is difficult to sample from. The log density can be written as
 \begin{align*}
@@ -347,6 +346,6 @@ where $C$ is some constant, $a=\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and $b=\
     -1 & \text{if } b<0.\\
     \end{cases}
 \end{align*}
-This condition is equivalent to $\partial^2\log p(W|.})/\partial W^2 < 0$ at the $W^*$ that maximizes $\partial^2\log p(W|.)/\partial W^2$ and hence guarantees the density is globally log-concave. It turns out that this tends to hold over a wide region of the parameter space --- so long as $V$ is smaller or isn't much larger than $W$. This allows for the use of adaptive rejection sampling in order to sample from this distribution in many cases, e.g. using \citet{gilks1992adaptive}. An alternative is to use a $t$ approximation to the conditional density as a proposal in a rejection sampler, but this is much more computationally expensive when necessary.
+This condition is equivalent to $\partial^2\log p(W|.)/\partial W^2 < 0$ at the $W^*$ that maximizes $\partial^2\log p(W|.)/\partial W^2$ and hence guarantees the density is globally log-concave. It turns out that this tends to hold over a wide region of the parameter space --- so long as $V$ is smaller or isn't much larger than $W$. This allows for the use of adaptive rejection sampling in order to sample from this distribution in many cases, e.g. using \citet{gilks1992adaptive}. An alternative is to use a $t$ approximation to the conditional density as a proposal in a rejection sampler, but this is much more computationally expensive when necessary.
 
 {\it OLD STUFF BELOW.}
