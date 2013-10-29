@@ -1,6 +1,7 @@
-<<set-parent-basealg, echo=FALSE, cache=FALSE>>=
+<<set-parent-DLMest, echo=FALSE, cache=FALSE>>=
 set_parent('mcmcex.Rnw')
 @
+
 
 \section{Estimating the Model via Data Augmentation: Parameterization Issues}
 The usual way to estimate the model is via data augmentation (DA) using forward filtering backward sampling (FFBS), as in \citet{fruhwirth1994data} and \citet{carter1994gibbs}. The basic idea is to implement a Gibbs sampler with two blocks. The generic DA algorithm with parameter $\phi$, augmented data $\theta$, and data $y$ obtains the $k+1$'st state of the Markov chain, $\phi^{(k+1)}$, from the $k$'th state, $\phi^{(k)}$ as follows:
@@ -133,7 +134,7 @@ The DA algorithm based on $\psi_{0:T}$ is:
 \end{alg}
 Once again step one can be accomplished directly with \citeauthor{koopman1993disturbance}'s disturbance smoother or indirectly using FFBS. Step 2 is also once again complicated since the joint conditional posterior of $V_{1:T}$ and $W_{1:T}$ isn't a known density. 
 
-\subsection{Interweaving in the DLM: Global and Componentwise}
+\subsection{Interweaving in the DLM: Global and Componentwise}\label{sec:dlminter}
 We now have three DAs for the generic DLM with known $F_t$'s and $G_t$'s. For simplicity we'll assume that $dim(y_t)=dim(\theta_t)$ and $F_t$ invertible for $t=1,2,\cdots,T$ so that the scaled errors are easy to work with. The three DAs are the states, $\theta_{0:T}$, the scaled disturbances $\gamma_{0:T}$, and the scaled errors $\psi_{0:T}$. This allows to construct four separate GIS algorithms based on algorithm \ref{inter2}: three algorithms that interweave between any two of $\theta_{0:T}$, $\gamma_{0:T}$, and $\psi_{0:T}$, the state-dist, state-error, and dist-error interweaving algorithms, and one algorithm that interweaves between all three, the triple interweaving algorithm. Note that strictly speaking, the order in which we sample the DAs in the algorithm does matter, but \citeauthor{yu2011center} note that this tends to make very little difference so while we actually have twelve separate GIS samplers (two of each GIS sampler depending on two DAs, and six GIS samplers depending on all three), effectively we only have four. For example, Algorithm \ref{sdintalg} is the state-dist GIS algorithm, for example:
 \begin{alg}\mbox{}\\[-\baselineskip]
 \begin{enumerate}\label{sdintalg}
@@ -292,60 +293,3 @@ Now note that the draw of $W_{1:T}^{(k+0.5)}$ in step 3 actually only depends on
 \end{enumerate}
 \end{alg}
 which is identical to Algorithm \ref{fullcis2}. So one version of the full CIS algorithm based on $\psi_{0:T}$, $\tilde{\psi}_{0:T}$, $\gamma_{0:T}$, and $\tilde{\gamma}_{0:T}$ is identical to a GIS algorithm. As long as we believe \citeauthor{yu2011center} and don't think the order in which we use each of the DAs in a CIS or GIS algorithm matters much, there doesn't appear to be any benefit to using CIS for DLMs. 
-
-\section{Application: The Local Level Model}
-
-{\it INSERT A PARAGRAPH MOTIVATING WHY WE LOOK AT THE LOCAL LEVEL MODEL}
-
-The local level model (LLM) is a DLM with univariate data $y_t$ for $t=1,2,\cdots,T$ and a univariate latent state $\theta_t$ for $t=0,2,\cdots,T$ that satisfies
-\begin{align}
-  y_t |\theta_{0:T}& \stackrel{ind}{\sim} N(\theta_t,V) \label{llmobseq}\\
-  \theta_t |\theta_{0:t-1}& \sim N(\theta_{t-1},W) \label{llmsyseq}
-\end{align}
-with $\theta_0\sim N(m_0,C_0)$. Here $\theta_t=E[y_t|\theta_{0:T}]$, i.e. the average value of $y_t$. The states are $\theta_{0:T}$, the scaled disturbances are $\gamma_{0:T}$ with $\gamma_0=\theta_0$ and $\gamma_t=(\theta_t - \theta_{t-1})/\sqrt{W}$ for $t=1,2,\cdots,T$, and the scaled errors are $\psi_{0:T}$ with $\psi_0=\theta_0$ and $\psi_t=(y_t - \theta_t)/\sqrt{V}$ for $t=1,2,\cdots,T$. The independent inverse Wishart priors on $V$ and $W$ in Section \ref{modelsec} cash out to independent inverse gamma priors for the local level model, i.e. $V\sim IG(\alpha_V,\beta_V)$ and $W\sim IG(\alpha_W,\beta_W)$. 
-
-The joint density of $(V,W,\theta_{0:T},y_{1:T})$ is:
-\begin{align*}
-  p(&V_,W,\theta_{0:T},y_{1:T}) \propto V^{-(\alpha_V + 1 + T/2)} \exp\left[-\frac{1}{V}\left(\beta_V + \frac{1}{2}\textstyle\sum_{t=1}^T(y_t - \theta_{t})^2\right)\right]\nonumber\\
-  &W^{-(\alpha_W + 1 + T/2)}\exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\textstyle\sum_{t=1}^T(\theta_t - \theta_{t-1})^2\right) \right] \exp\left[-\frac{1}{2C_0}(\theta_0 - m_0)^2\right]%\label{llmstatejoint}
-\end{align*}
-This immediately gives the state sampler:
-\begin{alg}[State Sampler for LLM]\mbox{}\\[-\baselineskip]
-\begin{enumerate}\label{llmstatealg}
-\item Draw $\theta_{0:T}$ from $p(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$ using FFBS.
-\item Draw $(V^{(k+1)},W^{(k+1)})$ from $p(V,W|\theta_{0:T},y_{1:T})$.
-\end{enumerate}
-\end{alg}
-In step 2, $V$ and $W$ are independent with $V\sim IG(a_V,b_V)$ and $W\sim IG(a_W, b_W)$ where $a_V = \alpha_V + T/2$, $b_V = \beta_V + \sum_{t=1}^T(y_t - \theta_t)^2/2$, $a_W = \alpha_W + T/2$, and $b_W = \beta_W + \sum_{t=1}^T(\theta_t - \theta_{t-1})^2/2$.
-
-The scaled disturbance sampler, the DA based on the scaled disturbances, is a bit more complicated. Following \eqref{dlmdistjoint}, we can write the joint posterior of $(V,W,\gamma_{0:T})$ as
-\begin{align*}
-  p(&V,W,\gamma_{0:T}|y_{1:T}) \propto V^{-(\alpha_V + 1 + T/2)}\exp\left[-\frac{1}{V}\left(\beta_V + \frac{1}{2}\textstyle\sum_{t=1}^T(y_t - \gamma_0 - \sqrt{W}\textstyle\sum_{s=1}^t\gamma_s)^2\right)\right] \nonumber\\
-  & \times W^{-(\alpha_W + 1)}\exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\textstyle\sum_{t=1}^T\gamma_t^2\right)\right]\exp\left[-\frac{1}{2C_0}(\gamma_0-m_0)^2\right]%\label{llmdistpost}
-\end{align*}
-Now $V$ and $W$ are no longer conditionally independent given $\gamma_{0:T}$ and $y_{1:T}$. Instead of attempting the usual DA algorithm, we'll add an extra Gibbs step and draw $V$ and $W$ separately. This gives us the scaled disturbance sampler:
-\begin{alg}[Scaled Disturbance Sampler for LLM]\mbox{}\\[-\baselineskip]
-\begin{enumerate}\label{llmdistalg}
-\item Draw $\gamma_{0:T}$ from $p(\gamma_{0:T}|V^{(k)},W^{(k)},y_{1:T})$, possibly using FFBS to sample $\theta_{0:T}$ then transforming.
-\item Draw $V^{(k+1)}$ from $p(V|W^{(k)},\gamma_{0:T},y_{1:T})$.
-\item Draw $W^{(k+1)}$ from $p(W|V^{(k+1)},\gamma_{0:T},y_{1:T})$.
-\end{enumerate}
-\end{alg}
-In step 3, $V$ is drawn from the same inverse gamma distribution as in step 2 of Algorithm \ref{llmstatealg}. In step 4, the draw of $W$ is more complicated. The density can be written as
-\begin{align*}
-  p(W|V,\gamma_{0:T},y_{1:T}) \propto & W^{-\alpha_w - 1}\exp\left[-\frac{1}{2V}\sum_{t=1}^T\left(y_t - \gamma_0 - \sqrt{W}\sum_{s=1}^t\gamma_s\right)^2\right].
-\end{align*}
-This density isn't any known form and is difficult to sample from. The log density can be written as
-\begin{align*}
-\log p(W|V,\gamma_{0:T},y_{1:T}) =& -aW + b\sqrt{W} - (\alpha_W + 1)\log W -\beta_W/W + C 
-\end{align*}
-where $C$ is some constant, $a=\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and $b=\sum_{t=1}^T(y_t-\gamma_0)(\sum_{j=1}^t\gamma_j)/V$. It can be shown that $b^2 > \frac{32}{9\beta_w}(\alpha_w+1)^3(1 - 2sgn(b)/3)$ implies that the density is log concave where
-\begin{align*}
-  sgn(b) & = \begin{cases} 1 &\text{if } b>0\\
-    0 & \text{if } b=0\\
-    -1 & \text{if } b<0.\\
-    \end{cases}
-\end{align*}
-This condition is equivalent to $\partial^2\log p(W|.)/\partial W^2 < 0$ at the $W^*$ that maximizes $\partial^2\log p(W|.)/\partial W^2$ and hence guarantees the density is globally log-concave. It turns out that this tends to hold over a wide region of the parameter space --- so long as $V$ is smaller or isn't much larger than $W$. This allows for the use of adaptive rejection sampling in order to sample from this distribution in many cases, e.g. using \citet{gilks1992adaptive}. An alternative is to use a $t$ approximation to the conditional density as a proposal in a rejection sampler, but this is much more computationally expensive when necessary.
-
-{\it OLD STUFF BELOW.}

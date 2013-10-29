@@ -7,7 +7,7 @@ epsfig, multicol, amsthm, bbm}
 \usepackage[maxfloats=48]{morefloats} %for >18 figures
 \usepackage{booktabs}
 \usepackage{caption}
-\usepackage[numbers]{natbib}
+\usepackage[authoryear]{natbib} %numbers instead of authoryear for [1] instead of [1980]
 %Indicator function: use as \indicator{X=x}
 \newcommand{\indicator}[1]{\mathbbm{1}{\left\{ {#1} \right\} }}
 %Independent: use as X \ind Y | Z
@@ -42,23 +42,12 @@ In dynamic linear models (DLMs), MCMC sampling can often be very slow for estima
 <<model-child, child='model-child.Rnw', eval=TRUE>>=
 @ 
 
-<<basealgorithms-child, child='basealgorithms-child.Rnw', eval=TRUE>>=
+<<DLMest-child, child='DLMest-child.Rnw', eval=TRUE>>=
 @ 
 
-<<basemixing-child, child='basemixing-child.Rnw', eval=TRUE>>=
+<<LLMest-child, child='LLMest-child.Rnw', eval=TRUE>>=
 @ 
 
-<<combalgorithms-child, child='combalgorithms-child.Rnw', eval=TRUE>>=
-@ 
-
-<<combmixing-child, child='combmixing-child.Rnw', eval=TRUE>>=
-@ 
-
-<<compalgorithms-child, child='compalgorithms-child.Rnw', eval=TRUE>>=
-@ 
-
-<<compmixing-child, child='compmixing-child.Rnw', eval=TRUE>>=
-@ 
 
 
 \clearpage
@@ -66,4 +55,7 @@ In dynamic linear models (DLMs), MCMC sampling can often be very slow for estima
 \bibliographystyle{plainnat}
 \bibliography{mcmcex}
 \end{document}
+
+
+
 
