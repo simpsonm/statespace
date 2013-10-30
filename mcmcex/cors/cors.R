@@ -8,18 +8,19 @@ simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
 set.seed(234134530)
 samshort$iter <- 1:length(samshort[,1])
-y <- simdata
 
 itsim <- function(dat, y){
-  V <- dat$V.T[1]
-  W <- dat$W.T[1]
-  T <- dat$T.T[1]
-  yt <- y$y[y$V.T==V & y$W.T==W & y$T.T==T]
+  V.T <- dat$V.T[1]
+  W.T <- dat$W.T[1]
+  T.T <- dat$T.T[1]
+  V <- dat$V[1]
+  W <- dat$V[1]
+  yt <- y$y[y$V.T==V.T & y$W.T==W.T & y$T.T==T.T]
   mod <- dlmModPoly(order=1, dV=V, dW=W)
   filt <- dlmFilter(yt, mod)
   theta <- dlmBSample(filt)
   v2 <- sum( (yt - theta[-1])^2 )
-  w2 <- sum( (theta[-1] - theta[-(T+1)])^2 )
+  w2 <- sum( (theta[-1] - theta[-(T.T+1)])^2 )
   out <- dat
   out$v2 <- v2
   out$w2 <- w2
