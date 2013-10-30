@@ -7,18 +7,18 @@ library(plyr)
 
 
 
-chains.diag <- function(ns, samplers, simdata, a1, a2, parallel, mix=FALSE){
+chains.diag <- function(ns, samplers, simdata, av, aw, parallel, mix=FALSE){
   n <- ns$n[1]
   G.D.full <- ddply(samplers, .(sampler, iter), fullsam.diag, simdata=simdata,
-                    n=n, a1=a1, a2=a2, parallel=parallel, .parallel=parallel, mix=mix)
+                    n=n, av=av, aw=aw, parallel=parallel, .parallel=parallel, mix=mix)
   return(G.D.full)
 }
 
 
-fullsam.diag <- function(samplers, simdata, n, a1, a2, parallel=parallel, mix=FALSE){
+fullsam.diag <- function(samplers, simdata, n, av, aw, parallel=parallel, mix=FALSE){
   sampler <- samplers$sampler[1]
   sam <- ddply(simdata, .(V.T, W.T, T.T, V.S, W.S, ch), samwrapstart,
-               n=n, a1=a1, a2=a2, samp=sampler)
+               n=n, av=av, aw=aw, samp=sampler)
   samdiag <- ddply(sam, .(V.T, W.T, T.T), sam.diag, .parallel=parallel,
                    parallel=parallel, mix=mix)
   return(samdiag)
@@ -55,20 +55,20 @@ sam.diag <- function(sam, parallel, mix=FALSE){
 }
 
 
-fullsim <- function(samplers, simdata, n, burn, a1, a2, parallel){
+fullsim <- function(samplers, simdata, n, burn, parallel){
   out <- ddply(samplers, .(sampler), samsim, simdata=simdata, n=n,
-               burn=burn, a1=a1, a2=a2, parallel=parallel)
+               burn=burn, parallel=parallel)
   return(out)
 }
 
 
 ## simulates from a given sampler for each dataset and for multiple
 ## chains, and returns summary info on the first chain.
-samsim <- function(samplers, simdata, n, burn, a1, a2, parallel){
+samsim <- function(samplers, simdata, n, burn, parallel){
   sampler <- samplers$sampler[1]
   print(sampler)
   sam <- ddply(simdata, .(V.T, W.T, T.T), samwrap, .parallel=parallel,
-               n=n, a1=a1, a2=a2, samp=sampler)
+               n=n, samp=sampler)
   samnam <- paste(sampler, "SAM.RData", sep="")
   colnam <- grep("(V.T|W.T|T.T|V|W|time|logconW|adrejW|logconV|adrejV|kernel)$",
                  colnames(sam))
@@ -277,91 +277,93 @@ dfun <- function(M, simgrid){
 
 ## Wrapper for quickly simulating from all samplers w/ multiple
 ## chains at diff starting values
-samwrapstart <- function(par, n, a1, a2, samp){
+samwrapstart <- function(par, n, av, aw, samp){
   dat <- par$y[order(par$t)]
   T <- length(dat)
   start <- c(par$V.S[1]*par$V.T[1], par$W.S[1]*par$W.T[1])
-  b1 <- (a1-1)*par$V.T[1]
-  b2 <- (a2-1)*par$W.T[1]
+  bv <- (av-1)*par$V.T[1]
+  bw <- (aw-1)*par$W.T[1]
   if(samp=="state")
-    out <- statesam(n, start, dat, a1, a2, b1, b2)
+    out <- statesam(n, start, dat, av, aw, bv, bw)
   if(samp=="dist")
-    out <- distsam(n, start, dat, a1, a2, b1, b2)
+    out <- distsam(n, start, dat, av, aw, bv, bw)
   if(samp=="error")
-    out <- errorsam(n, start, dat, a1, a2, b1, b2)
+    out <- errorsam(n, start, dat, av, aw, bv, bw)
   if(samp=="sdint")
-    out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 1)
+    out <- samwrapper(n, start, dat, av, aw, bv, bw, TRUE, 1)
   if(samp=="seint")
-    out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 2)
+    out <- samwrapper(n, start, dat, av, aw, bv, bw, TRUE, 2)
   if(samp=="deint")
-    out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 3)
+    out <- samwrapper(n, start, dat, av, aw, bv, bw, TRUE, 3)
   if(samp=="triint")
-    out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(TRUE, TRUE), 4)
+    out <- samwrapper(n, start, dat, av, aw, bv, bw, c(TRUE, TRUE), 4)
   if(samp=="sdalt")
-    out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 1)
+    out <- samwrapper(n, start, dat, av, aw, bv, bw, FALSE, 1)
   if(samp=="sealt")
-    out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 2)
+    out <- samwrapper(n, start, dat, av, aw, bv, bw, FALSE, 2)
   if(samp=="dealt")
-    out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 3)
+    out <- samwrapper(n, start, dat, av, aw, bv, bw, FALSE, 3)
   if(samp=="trialt")
-    out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(FALSE, FALSE), 4)
+    out <- samwrapper(n, start, dat, av, aw, bv, bw, c(FALSE, FALSE), 4)
   if(samp=="sdkern")
-    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(1/2, 1/2, 0))
+    out <- randkernsam(n, start, dat, av, aw, bv, bw, c(1/2, 1/2, 0))
   if(samp=="sekern")
-    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(1/2, 0, 1/2))
+    out <- randkernsam(n, start, dat, av, aw, bv, bw, c(1/2, 0, 1/2))
   if(samp=="dekern")
-    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(0, 1/2, 1/2))
+    out <- randkernsam(n, start, dat, av, aw, bv, bw, c(0, 1/2, 1/2))
   if(samp=="trikern")
-    out <- randkernsam(n, start, dat, a1, a2, b1, b2)
+    out <- randkernsam(n, start, dat, av, aw, bv, bw)
   if(samp=="partialcis")
-    out <- partialcissam(n, start, dat, a1, a2, b1, b2)
+    out <- partialcissam(n, start, dat, av, aw, bv, bw)
   if(samp=="fullcis")
-    out <- fullcissam(n, start, dat, a1, a2, b1, b2)
+    out <- fullcissam(n, start, dat, av, aw, bv, bw)
   return(data.frame(out[,c(T+4, T+2, T+3, 1:(T+1))]))
 }
 
 
 ## Wrapper for quickly simulating from all samplers
-samwrap <- function(par, n, a1, a2, samp){
+samwrap <- function(par, n, samp){
   dat <- par$y[order(par$t)]
   T <- length(dat)
-  start <- c(par$V[1], par$W[1])
-  b1 <- (a1-1)*par$V.T[1]
-  b2 <- (a2-1)*par$W.T[1]
+  start <- c(par$V.T[1], par$W.T[1])
+  av <- par$av[1]
+  aw <- par$aw[1]
+  bv <- par$bv[1]
+  bw <- par$bw[1]
   if(samp=="state")
-      out <- statesam(n, start, dat, a1, a2, b1, b2)
+      out <- statesam(n, start, dat, av, aw, bv, bw)
   if(samp=="dist")
-      out <- distsam(n, start, dat, a1, a2, b1, b2)
+      out <- distsam(n, start, dat, av, aw, bv, bw)
   if(samp=="error")
-      out <- errorsam(n, start, dat, a1, a2, b1, b2)
+      out <- errorsam(n, start, dat, av, aw, bv, bw)
   if(samp=="sdint")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 1)
+      out <- samwrapper(n, start, dat, av, aw, bv, bw, TRUE, 1)
   if(samp=="seint")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 2)
+      out <- samwrapper(n, start, dat, av, aw, bv, bw, TRUE, 2)
   if(samp=="deint")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, TRUE, 3)
+      out <- samwrapper(n, start, dat, av, aw, bv, bw, TRUE, 3)
   if(samp=="triint")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(TRUE, TRUE), 4)
+      out <- samwrapper(n, start, dat, av, aw, bv, bw, c(TRUE, TRUE), 4)
   if(samp=="sdalt")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 1)
+      out <- samwrapper(n, start, dat, av, aw, bv, bw, FALSE, 1)
   if(samp=="sealt")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 2)
+      out <- samwrapper(n, start, dat, av, aw, bv, bw, FALSE, 2)
   if(samp=="dealt")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, FALSE, 3)
+      out <- samwrapper(n, start, dat, av, aw, bv, bw, FALSE, 3)
   if(samp=="trialt")
-      out <- samwrapper(n, start, dat, a1, a2, b1, b2, c(FALSE, FALSE), 4)
+      out <- samwrapper(n, start, dat, av, aw, bv, bw, c(FALSE, FALSE), 4)
   if(samp=="sdkern")
-    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(1/2, 1/2, 0))
+    out <- randkernsam(n, start, dat, av, aw, bv, bw, c(1/2, 1/2, 0))
   if(samp=="sekern")
-    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(1/2, 0, 1/2))
+    out <- randkernsam(n, start, dat, av, aw, bv, bw, c(1/2, 0, 1/2))
   if(samp=="dekern")
-    out <- randkernsam(n, start, dat, a1, a2, b1, b2, c(0, 1/2, 1/2))
+    out <- randkernsam(n, start, dat, av, aw, bv, bw, c(0, 1/2, 1/2))
   if(samp=="trikern")
-    out <- randkernsam(n, start, dat, a1, a2, b1, b2)
+    out <- randkernsam(n, start, dat, av, aw, bv, bw)
   if(samp=="partialcis")
-    out <- partialcissam(n, start, dat, a1, a2, b1, b2)
+    out <- partialcissam(n, start, dat, av, aw, bv, bw)
   if(samp=="fullcis")
-    out <- fullcissam(n, start, dat, a1, a2, b1, b2)
+    out <- fullcissam(n, start, dat, av, aw, bv, bw)
 
   return(data.frame(out[,c(T+4, T+2, T+3, (T+5):(T+8), 1:(T+1))]))
 }
@@ -369,18 +371,18 @@ samwrap <- function(par, n, a1, a2, samp){
 
 ## A wrapper for quickly simulating from each of the interweaving/
 ## alternating samplers.
-samwrapper <- function(n, start, dat, a1, a2, b1, b2, inter, samp){
+samwrapper <- function(n, start, dat, av, aw, bv, bw, inter, samp){
   if(samp==1){
-    out <- statedistinter(n, start, dat, a1, a2, b1, b2, inter)
+    out <- statedistinter(n, start, dat, av, aw, bv, bw, inter)
   }
   if(samp==2){
-    out <- stateerrorinter(n, start, dat, a1, a2, b1, b2, inter)
+    out <- stateerrorinter(n, start, dat, av, aw, bv, bw, inter)
   }
   if(samp==3){
-    out <- disterrorinter(n, start, dat, a1, a2, b1, b2, inter)
+    out <- disterrorinter(n, start, dat, av, aw, bv, bw, inter)
   }
   if(samp==4){
-    out <- tripleinter(n, start, dat, a1, a2, b1, b2, c(inter, inter))
+    out <- tripleinter(n, start, dat, av, aw, bv, bw, c(inter, inter))
   }
   return(out)
 }
@@ -407,7 +409,7 @@ llsim <- function(T, V, W, m0, C0){
 }
 
 ## state sampler: samples V and W conditional on states
-statesam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
+statesam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -417,7 +419,7 @@ statesam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
   for(i in 1:n){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     theta <- thetaiter(dat, V, W)
-    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
     V <- VWiter[1]
     W <- VWiter[2]
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
@@ -429,7 +431,7 @@ statesam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
 
 ## scaled error sampler: samples V and W conditional on the scaled observation
 ## errors (plus the initial state, theta_0)
-errorsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
+errorsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -440,10 +442,10 @@ errorsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     theta <- thetaiter(dat, V, W)
     psi <- psitrans(dat, theta, V)
-    Vout <- Vpsiiter(dat, psi, W, a1, b1)
+    Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
     rejsV <- Vout[2:3]
-    W <- Wpsiiter(dat, psi, V,  a2, b2)
+    W <- Wpsiiter(dat, psi, V,  aw, bw)
     theta <- thetapsitrans(dat, psi, V)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     time <- time2-time
@@ -455,7 +457,7 @@ errorsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
 
 ## scaled disturbance sampler: samples V and W conditional on the scaled
 ## system disturbances (plus the initial state, theta_0)
-distsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
+distsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -466,8 +468,8 @@ distsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     theta <- thetaiter(dat, V, W)
     gam <- gamtrans(theta, W)
-    V <- Vgamiter(dat, gam, W, a1, b1)
-    Wout <- Wgamiter(dat, gam, V, a2, b2)
+    V <- Vgamiter(dat, gam, W, av, bv)
+    Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
     rejsW <- Wout[2:3]
     theta <- thetagamtrans(gam, W)
@@ -479,7 +481,7 @@ distsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
 }
 
 ## state + dist interveaving or alternating sampler
-statedistinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
+statedistinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, inter=TRUE){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -490,7 +492,7 @@ statedistinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     ## state sampler
     theta <- thetaiter(dat, V, W)
-    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
     V <- VWiter[1]
     W <- VWiter[2]
     ## scaled disturbance sampler
@@ -498,8 +500,8 @@ statedistinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
       theta <- thetaiter(dat, V, W)
     }
     gam <- gamtrans(theta, W)
-    V <- Vgamiter(dat, gam, W, a1, b1)
-    Wout <- Wgamiter(dat, gam, V, a2, b2)
+    V <- Vgamiter(dat, gam, W, av, bv)
+    Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
     rejsW <- Wout[2:3]
     theta <- thetagamtrans(gam, W)
@@ -511,7 +513,7 @@ statedistinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
 }
 
 ## state + error interveaving/alternating sampler
-stateerrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
+stateerrorinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, inter=TRUE){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -522,7 +524,7 @@ stateerrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     ## state sampler
     theta <- thetaiter(dat, V, W)
-    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
     V <- VWiter[1]
     W <- VWiter[2]
     ## scaled error sampler
@@ -530,10 +532,10 @@ stateerrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
       theta <- thetaiter(dat, V, W)
     }
     psi <- psitrans(dat, theta, V)
-    Vout <- Vpsiiter(dat, psi, W, a1, b1)
+    Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
     rejsV <- Vout[2:3]
-    W <- Wpsiiter(dat, psi, V,  a2, b2)
+    W <- Wpsiiter(dat, psi, V,  aw, bw)
     theta <- thetapsitrans(dat, psi, V)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     time <- time2-time
@@ -543,7 +545,7 @@ stateerrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
 }
 
 ## dist + error interveaving/alternating sampler
-disterrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
+disterrorinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, inter=TRUE){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -555,8 +557,8 @@ disterrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
     ## scaled disturbance sampler
     theta <- thetaiter(dat, V, W)
     gam <- gamtrans(theta, W)
-    V <- Vgamiter(dat, gam, W, a1, b1)
-    Wout <- Wgamiter(dat, gam, V, a2, b2)
+    V <- Vgamiter(dat, gam, W, av, bv)
+    Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
     rejsW <- Wout[2:3]
     ## scaled error sampler
@@ -567,10 +569,10 @@ disterrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
       theta <- thetagamtrans(gam, W)
     }
     psi <- psitrans(dat, theta, V)
-    Vout <- Vpsiiter(dat, psi, W, a1, b1)
+    Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
     rejsV <- Vout[2:3]
-    W <- Wpsiiter(dat, psi, V,  a2, b2)
+    W <- Wpsiiter(dat, psi, V,  aw, bw)
     theta <- thetapsitrans(dat, psi, V)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     time <- time2-time
@@ -580,7 +582,7 @@ disterrorinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=TRUE){
 }
 
 ## state + dist + error interweaving/alternating sampler
-tripleinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=c(TRUE, TRUE)){
+tripleinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, inter=c(TRUE, TRUE)){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -591,7 +593,7 @@ tripleinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=c(TRUE, TRU
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     ## state sampler
     theta <- thetaiter(dat, V, W)
-    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
     V <- VWiter[1]
     W <- VWiter[2]
     ## scaled disturbance sampler
@@ -599,8 +601,8 @@ tripleinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=c(TRUE, TRU
       theta <- thetaiter(dat, V, W)
     }
     gam <- gamtrans(theta, W)
-    V <- Vgamiter(dat, gam, W, a1, b1)
-    Wout <- Wgamiter(dat, gam, V, a2, b2)
+    V <- Vgamiter(dat, gam, W, av, bv)
+    Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
     rejsW <- Wout[2:3]
     ## scaled error sampler
@@ -611,10 +613,10 @@ tripleinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=c(TRUE, TRU
       theta <- thetagamtrans(gam, W)
     }
     psi <- psitrans(dat, theta, V)
-    Vout <- Vpsiiter(dat, psi, W, a1, b1)
+    Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
     rejsV <- Vout[2:3]
-    W <- Wpsiiter(dat, psi, V,  a2, b2)
+    W <- Wpsiiter(dat, psi, V,  aw, bw)
     theta <- thetapsitrans(dat, psi, V)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     time <- time2-time
@@ -624,9 +626,9 @@ tripleinter <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, inter=c(TRUE, TRU
 }
 
 ## returns TRUE if target density of log-concave, FALSE otherwise
-logcon <- function(b, a12, b12, eps=.1){
+logcon <- function(b, avw, bvw, eps=.1){
   sb <- 1*(b>0) - 1*(b<0)  ##sign(b)
-  RHS <- (a12 + 1)^3*(1 - 2/3*sb)*32/9/b12 + eps
+  RHS <- (a12 + 1)^3*(1 - 2/3*sb)*32/9/bvw + eps
   ## + eps to make sure ARS algorithm doesn't fail on
   ## near non-log-concave cases
   LHS <- b^2
@@ -634,8 +636,8 @@ logcon <- function(b, a12, b12, eps=.1){
   return(out)
 }
 ## compute M in logtarget - logprop <= M
-propM <- function(df, a, b, a12, b12, mn, propvar){
-  M <- optimize(logpirej, c(0,10^10), maximum=TRUE, a, b, a12, b12, mn, propvar, df)
+propM <- function(df, a, b, avw, bvw, mn, propvar){
+  M <- optimize(logpirej, c(0,10^10), maximum=TRUE, a, b, avw, bvw, mn, propvar, df)
   return(M$objective)
 }
 
@@ -656,20 +658,20 @@ rtprop <- function(n, mn, var, df){
 }
 
 ## log of the conditional posterior density of W (V) given V (W), gamma (psi), data
-logpiVW <- function(VW, a, b, a12, b12){
-  out <- -a*VW + b*sqrt(VW) - (a12 + 1)*log(VW) - b12/VW
+logpiVW <- function(VW, a, b, avw, bvw){
+  out <- -a*VW + b*sqrt(VW) - (a12 + 1)*log(VW) - bvw/VW
   return(out)
 }
 
 ## first derivative of log of the conditional posterior of W (V)
-logpiVWprime <- function(VW, a, b, a12, b12){
-  out <- -a + b/2/sqrt(VW) - (a12 + 1)/VW + b12/(VW^2)
+logpiVWprime <- function(VW, a, b, avw, bvw){
+  out <- -a + b/2/sqrt(VW) - (a12 + 1)/VW + bvw/(VW^2)
   return(out)
 }
 
 ## difference between log conditional posterior of W (V) and the proposal density
-logpirej <- function(VW, a, b, a12, b12, mn, propvar, df){
-  out <- logpiVW(VW, a, b, a12, b12) - dtprop(VW, mn, propvar, df)
+logpirej <- function(VW, a, b, avw, bvw, mn, propvar, df){
+  out <- logpiVW(VW, a, b, avw, bvw) - dtprop(VW, mn, propvar, df)
   return(out)
 }
 
@@ -728,32 +730,32 @@ thetapsitrans <- function(dat, psi, V){
 }
 
 ## samples V,W conditional on theta
-VWthetaiter <- function(dat, theta, a1, a2, b1, b2){
+VWthetaiter <- function(dat, theta, av, aw, bv, bw){
   T <- length(dat)
-  V <- rinvgamma(1, a1 + T/2, b1 + sum((dat-theta[-1])^2)/2)
-  W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
+  V <- rinvgamma(1, av + T/2, bv + sum((dat-theta[-1])^2)/2)
+  W <- rinvgamma(1, aw + T/2, bw + sum((theta[-1]-theta[-(T+1)])^2)/2)
   return(c(V,W))
 }
 ## samples W conditional on V,gamma
-Wgamiter <- function(dat, gam, V, a2, b2){
+Wgamiter <- function(dat, gam, V, aw, bw){
   T <- length(dat)
   cgam <- cumsum(gam[-1])
   gam0 <- gam[1]
   a <- sum( cgam^2 )/2/V
   b <- sum( (dat - gam0) * cgam )/V
-  mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a2, b12=b2)$maximum
-  adrej <- logcon(b, a2, b2)
+  mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, avw=aw, bvw=bw)$maximum
+  adrej <- logcon(b, aw, bw)
   adrej1 <- adrej
   if(adrej){
     try(W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2),
-                      lb=TRUE, xlb=0, a=a, b=b, a12=a2, b12=b2))
+                      lb=TRUE, xlb=0, a=a, b=b, avw=aw, bvw=bw))
     if(W==0){
       adrej <- FALSE
     }
   }
   if(!adrej){
-    propvar <- - 1 /( (a2 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b2*mn^(-3) )
-    d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a2, b12=b2,
+    propvar <- - 1 /( (aw + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*bw*mn^(-3) )
+    d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, avw=aw, bvw=bw,
                   mn=mn, propvar=propvar)
     M <- d$objective
     df <- d$minimum
@@ -762,7 +764,7 @@ Wgamiter <- function(dat, gam, V, a2, b2){
     while(rej){
       prop <- rtprop(1, mn, propvar, df)
       if(prop>0){
-        R <- logpirej(prop, a, b, a2, b2, mn, propvar, df) - M
+        R <- logpirej(prop, a, b, aw, bw, mn, propvar, df) - M
         u <- runif(1,0,1)
         if(log(u)<R){
           W <- prop
@@ -776,7 +778,7 @@ Wgamiter <- function(dat, gam, V, a2, b2){
         print(paste("Last value of V in the chain: ", V, sep=""))
         print(paste("Values of a and b:", a, b, sep="  "))
         print(paste("T = ", T, sep=""))
-        print(paste("Prior values of alphaV and betaV:", a2, b2, sep="  "))
+        print(paste("Prior values of alphaV and betaV:", aw, bw, sep="  "))
         print(paste("Attempted df: ", df, sep=""))
         print(paste("Attempted mean and variance:", mn, propvar, sep="  "))
       }
@@ -786,18 +788,18 @@ Wgamiter <- function(dat, gam, V, a2, b2){
 }
 
 ## samples V conditional on W,gamma
-Vgamiter <- function(dat, gam, W, a1, b1){
+Vgamiter <- function(dat, gam, W, av, bv){
   T <- length(dat)
   theta <- thetagamtrans(gam, W)
-  Va <- a1 + T/2
-  Vb <- b1 + sum( (dat - theta[-1])^2 )/2
+  Va <- av + T/2
+  Vb <- bv + sum( (dat - theta[-1])^2 )/2
   V <- rinvgamma(1, Va, Vb)
   return(V)
 }
 
 
 ## samples V conditional on W,psi 
-Vpsiiter <- function(dat, psi, W, a1, b1){
+Vpsiiter <- function(dat, psi, W, av, bv){
   T <- length(dat)
   psi0 <- psi[1]
   psiLT <- c(0,psi[-1])
@@ -806,19 +808,19 @@ Vpsiiter <- function(dat, psi, W, a1, b1){
   Ly <- ys[-1] - ys[-(T+1)]
   a <- sum(Lpsi^2)/2/W
   b <- sum(Lpsi*Ly)/W
-  mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, a12=a1, b12=b1)$maximum
-  adrej <- logcon(b, a1, b1, eps=0)
+  mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, avw=av, bvw=bv)$maximum
+  adrej <- logcon(b, av, bv, eps=0)
   adrej1 <- adrej
   if(adrej){
     try(V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2),
-                 lb=TRUE, xlb=0, a=a, b=b, a12=a1, b12=b1))
+                 lb=TRUE, xlb=0, a=a, b=b, avw=av, bvw=bv))
     if(V==0){
       adrej <- FALSE
     }
   }
   if(!adrej){
-    propvar <- - 1 /( (a1 + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*b1*mn^(-3) )
-    d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, a12=a1, b12=b1,
+    propvar <- - 1 /( (av + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*bv*mn^(-3) )
+    d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, avw=av, bvw=bv,
                   mn=mn, propvar=propvar)
     M <- d$objective
     df <- d$minimum
@@ -827,7 +829,7 @@ Vpsiiter <- function(dat, psi, W, a1, b1){
     while(rej){
       prop <- rtprop(1, mn, propvar, df)
       if(prop>0){
-        R <- logpirej(prop, a, b, a1, b1, mn, propvar, df) - M
+        R <- logpirej(prop, a, b, av, bv, mn, propvar, df) - M
         u <- runif(1,0,1)
         if(log(u)<R){
           V <- prop
@@ -841,7 +843,7 @@ Vpsiiter <- function(dat, psi, W, a1, b1){
         print(paste("T = ", T, sep=""))
         print(paste("Last value of W in the chain: ", W, sep=""))
         print(paste("Values of a and b:", a, b, sep="  "))
-        print(paste("Prior values of alphaV and betaV:", a1, b1, sep="  "))
+        print(paste("Prior values of alphaV and betaV:", av, bv, sep="  "))
         print(paste("Attempted df: ", df, sep=""))
         print(paste("Attempted mean and variance:", mn, propvar, sep="  "))
       }
@@ -852,22 +854,22 @@ Vpsiiter <- function(dat, psi, W, a1, b1){
 
 
 ## samples W conditional on V,psi
-Wpsiiter <- function(dat, psi, V,  a2, b2){
+Wpsiiter <- function(dat, psi, V,  aw, bw){
   T <- length(dat)
   theta <- thetapsitrans(dat, psi, V)
   theta <- c(theta)
-  Wa <- a2 + T/2
-  Wb <- b2 + sum( (theta[-1] - theta[-(T+1)])^2 )/2
+  Wa <- aw + T/2
+  Wb <- bw + sum( (theta[-1] - theta[-(T+1)])^2 )/2
   W <- rinvgamma(1, Wa, Wb)
   return(W)
 }
 
-randkerniter <- function(dat, V, W, theta, a1, a2, b1, b2, probs=c(1/3, 1/3, 1/3)){
+randkerniter <- function(dat, V, W, theta, av, aw, bv, bw, probs=c(1/3, 1/3, 1/3)){
   kernels <- c("state", "dist", "error")
   kernel <- sample(kernels, 1, prob=probs)
   if(kernel=="state"){
     theta <- thetaiter(dat, V, W)
-    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
     V <- VWiter[1]
     W <- VWiter[2]
     rejsW <- c(NA,NA)
@@ -876,18 +878,18 @@ randkerniter <- function(dat, V, W, theta, a1, a2, b1, b2, probs=c(1/3, 1/3, 1/3
   if(kernel=="error"){
     theta <- thetaiter(dat, V, W)
     psi <- psitrans(dat, theta, V)
-    Vout <- Vpsiiter(dat, psi, W, a1, b1)
+    Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
     rejsV <- Vout[2:3]
-    W <- Wpsiiter(dat, psi, V,  a2, b2)
+    W <- Wpsiiter(dat, psi, V,  aw, bw)
     rejsW <- c(NA,NA)
     theta <- thetapsitrans(dat, psi, V)
   }
   if(kernel=="dist"){
     theta <- thetaiter(dat, V, W)
     gam <- gamtrans(theta, W)
-    V <- Vgamiter(dat, gam, W, a1, b1)
-    Wout <- Wgamiter(dat, gam, V, a2, b2)
+    V <- Vgamiter(dat, gam, W, av, bv)
+    Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
     rejsW <- Wout[2:3]
     rejsV <- c(NA,NA)
@@ -897,7 +899,7 @@ randkerniter <- function(dat, V, W, theta, a1, a2, b1, b2, probs=c(1/3, 1/3, 1/3
   return(out)
 }
 
-randkernsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, probs=c(1/3, 1/3, 1/3)){
+randkernsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, probs=c(1/3, 1/3, 1/3)){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -906,7 +908,7 @@ randkernsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, probs=c(1/3, 1/3,
                                       "logconV", "adrejV", "logconW", "adrejW", "kernel")
   for(i in 1:n){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
-    iter <- randkerniter(dat, V, W, theta, a1, a2, b1, b2, probs)
+    iter <- randkerniter(dat, V, W, theta, av, aw, bv, bw, probs)
     theta <- iter$theta
     V <- iter$V
     W <- iter$W
@@ -920,7 +922,7 @@ randkernsam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0, probs=c(1/3, 1/3,
   return(out)
 }
 
-partialcissam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
+partialcissam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -930,11 +932,11 @@ partialcissam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
   for(i in 1:n){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     theta <- thetaiter(dat, V, W)
-    VWiter <- VWthetaiter(dat, theta, a1, a2, b1, b2)
+    VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
     V <- VWiter[1]
     W <- VWiter[2]
     gam <- gamtrans(theta, W)
-    Wout <- Wgamiter(dat, gam, V, a2, b2)
+    Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
     theta <- thetagamtrans(gam, W)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
@@ -945,7 +947,7 @@ partialcissam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
 }
 
 
-fullcissam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
+fullcissam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -955,14 +957,14 @@ fullcissam <- function(n, start, dat, a1=0, a2=0, b1=0, b2=0){
   for(i in 1:n){
     time <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
     theta <- thetaiter(dat, V, W)
-    V <- rinvgamma(1, a1 + T/2, b1 + sum((dat-theta[-1])^2)/2)
+    V <- rinvgamma(1, av + T/2, bv + sum((dat-theta[-1])^2)/2)
     psi <- psitrans(dat, theta, V)
-    Vout <- Vpsiiter(dat, psi, W, a1, b1)
+    Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
     theta <- thetapsitrans(dat, psi, V)
-    W <- rinvgamma(1, a2 + T/2, b2 + sum((theta[-1]-theta[-(T+1)])^2)/2)
+    W <- rinvgamma(1, aw + T/2, bw + sum((theta[-1]-theta[-(T+1)])^2)/2)
     gam <- gamtrans(theta, W)
-    Wout <- Wgamiter(dat, gam, V, a2, b2)
+    Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
     theta <- thetagamtrans(gam, W)
     time2 <- sum(as.numeric(unlist(strsplit(format(Sys.time(), "%M:%OS3"), ":")))*c(60, 1))
