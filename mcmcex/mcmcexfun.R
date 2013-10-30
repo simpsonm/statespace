@@ -628,7 +628,7 @@ tripleinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, inter=c(TRUE, TRU
 ## returns TRUE if target density of log-concave, FALSE otherwise
 logcon <- function(b, avw, bvw, eps=.1){
   sb <- 1*(b>0) - 1*(b<0)  ##sign(b)
-  RHS <- (a12 + 1)^3*(1 - 2/3*sb)*32/9/bvw + eps
+  RHS <- (avw + 1)^3*(1 - 2/3*sb)*32/9/bvw + eps
   ## + eps to make sure ARS algorithm doesn't fail on
   ## near non-log-concave cases
   LHS <- b^2
@@ -659,13 +659,13 @@ rtprop <- function(n, mn, var, df){
 
 ## log of the conditional posterior density of W (V) given V (W), gamma (psi), data
 logpiVW <- function(VW, a, b, avw, bvw){
-  out <- -a*VW + b*sqrt(VW) - (a12 + 1)*log(VW) - bvw/VW
+  out <- -a*VW + b*sqrt(VW) - (avw + 1)*log(VW) - bvw/VW
   return(out)
 }
 
 ## first derivative of log of the conditional posterior of W (V)
 logpiVWprime <- function(VW, a, b, avw, bvw){
-  out <- -a + b/2/sqrt(VW) - (a12 + 1)/VW + bvw/(VW^2)
+  out <- -a + b/2/sqrt(VW) - (avw + 1)/VW + bvw/(VW^2)
   return(out)
 }
 
