@@ -3,7 +3,7 @@ set_parent('mcmcex.Rnw')
 @
 
 
-\section{Estimating the Model via Data Augmentation: Parameterization Issues}
+\section{Estimating the Model via Data Augmentation: Parameterization Issues}\label{sec:DLMest}
 The usual way to estimate the model is via data augmentation (DA) using forward filtering backward sampling (FFBS), as in \citet{fruhwirth1994data} and \citet{carter1994gibbs}. The basic idea is to implement a Gibbs sampler with two blocks. The generic DA algorithm with parameter $\phi$, augmented data $\theta$, and data $y$ obtains the $k+1$'st state of the Markov chain, $\phi^{(k+1)}$, from the $k$'th state, $\phi^{(k)}$ as follows:
 \begin{alg}\mbox{}\\[-\baselineskip]
   \begin{enumerate}\label{DAalg}

@@ -154,10 +154,15 @@ library(reshape2)
 library(gridExtra)
 load("mixing/samout.RData")
 load("mixing/postcors.RData")
-sams <- c("error", "state", "dist")
+samouttemp <- samout
+load("cis/cissamout.RData")
+samout1 <- samout
+samout <- rbind(samout1,samouttemp)
+base <- c("error", "state", "dist")
 alts <- c("sdalt", "sealt", "dealt", "trialt")
 ints <- c("sdint", "seint", "deint", "triint")
 kerns <- c("sdkern", "sekern", "dekern", "trikern")
+cis <- c("fullcis", "partialcis")
 samout$V.ES[samout$sampler %in% kerns] <- samout$V.ES[samout$sampler %in% kerns]*2
 samout$W.ES[samout$sampler %in% kerns] <- samout$W.ES[samout$sampler %in% kerns]*2
 samout$V.ES[samout$sampler == "trikern"] <- samout$V.ES[samout$sampler == "trikern"]*(3/2)
@@ -166,14 +171,20 @@ samout$type <- "Base" #$
 samout$type[samout$sampler %in% alts] <- "Alt" 
 samout$type[samout$sampler %in% ints] <- "GIS" 
 samout$type[samout$sampler %in% kerns] <- "RKern" 
-samout$samplers <- "Base" #$
+samout$type[samout$sampler %in% cis] <- "CIS" 
+samout$samplers <- "Base"
 samout$samplers[substr(samout$sampler, 1, 2)=="sd"] <- "State-Dist" 
 samout$samplers[substr(samout$sampler, 1, 2)=="se"] <- "State-Error" 
 samout$samplers[substr(samout$sampler, 1, 2)=="de"] <- "Dist-Error" 
 samout$samplers[substr(samout$sampler, 1, 3)=="tri"] <- "Triple" 
+samout$samplers[samout$sampler=="fullcis"] <- "FullCIS"
+samout$samplers[samout$sampler=="partialcis"] <- "PartialCIS"
 samout$samplers[samout$sampler=="error"] <- "Error"
 samout$samplers[samout$sampler=="dist"] <- "Dist"
 samout$samplers[samout$sampler=="state"] <- "State"
+samlevels <- c("State", "Dist", "Error", "State-Dist", "State-Error", "Dist-Error", 
+               "Triple", "FullCIS", "PartialCIS")
+samout$samplers <- factor(samout$samplers, levels=samlevels)
 meltedsam <- melt(samout, id=c("type", "samplers", "sampler", "V.T", "W.T", 
                             "T.T"))
 Vs <- unique(meltedsam$V.T)[1:9] #$
@@ -192,7 +203,7 @@ label_parsed_split <- function(variable, value){
 meltedcors <- melt(postcors, id=c("V.T", "W.T", "T.T"))
 ## opts_chunk$set(fig.width=7, fig.height=4, out.width='1\\textwidth', 
 ##               fig.pos='!ht') #$
-plotfun <- function(meltedsam, vars, sams, T){
+plotfun <- function(meltedsam, vars, sams, T, title){
   castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable + samplers ~ ., 
                      subset=.(variable %in% vars  & T.T==T & sampler %in% sams ))
   colnames(castedsam)[6] <- "value"
@@ -201,13 +212,31 @@ plotfun <- function(meltedsam, vars, sams, T){
          scale_fill_gradient("ESP", low=muted("red"), high="white",
            guide=guide_colorbar(barheight=10),
            limits=c(0,1), na.value="white") +
-         facet_grid(variable~samplers, scales="free", labeller=label_both_parsed_split) +
+         facet_grid(variable~samplers, scales="free", labeller=label_parsed_split) +
          scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
-         ggtitle("ESP for V and W in the base samplers, T=10") +
+         ggtitle(paste(title, T, sep="")) +
          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
   return(out)
 }
-
+plotfun2 <- function(vars, sams, T){
+  var <- substr(vars[1], 1, 1)
+  castedsam <- dcast(meltedsam, 
+                     formula=samplers + V.T + W.T + variable + type ~ ., 
+                     subset=.(variable %in% vars  & T.T==T & 
+                       sampler %in% sams ))
+  colnames(castedsam)[6] <- "value"
+  out <- ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
+          geom_tile() +
+          scale_fill_gradient("ESP", low=muted("red"), high="white",
+                        guide=guide_colorbar(barheight=10),
+                        limits=c(0,1), na.value="white") +
+          facet_grid(type~samplers, scales="free", labeller=label_parsed_split) +
+          scale_x_log10("V = noise", breaks=breaks) + 
+          scale_y_log10("W = signal", breaks=breaks) +
+          ggtitle(paste("ESP for ", var, "; T=",T,sep="")) +
+          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+  return(out)
+}
 @ 
 
 Figure \ref{baseESplot} contains plots of ESP for $V$ and $W$ in each chain of each base sampler for each of $T=10$, $T=100$, and $T=1000$. We'll focus on $T=10$ first. The state sampler has a low ESP for $V$ and a high ESP for $W$ when the signal-to-noise ratio, $W/V$, is larger than one. When the signal-to-noise ratio is smaller than one, on the other hand, the state sampler has a low ESP for $W$ and a high ESP for $V$. In the usual case where the signal to noise ratio isn't too different from one, the state sampler has a modest to low ESP for both $V$ and $W$. Note that the particular values of $V$ and $W$ don't seem to matter at all --- just their relative values, i.e. the signal-to-noise ratio $W/V$. Moving up any diagonal on the plots for $V$ and $W$ in the state sampler, $W/V$ is constant and the ESS appears roughly constant. The basic lesson here is that the state sampler has mixing issues for whichever of $V$ or $W$ is smaller. 
@@ -216,122 +245,51 @@ Figure \ref{baseESplot} tells a different story for the scaled disturbance sampl
 
 The plots for $T=100$ and $T=1000$ in Figure \ref{baseESplot} tell basically the same story, with a twist. Increasing the length of the time series seems to exacerbate all problems without changing the basic conclusions. As $T$ increases, $W/V$ has to be smaller and smaller for the scaled disturbance sampler to have decent mixing, and similarly $W/V$ has to be larger and larger for the scaled error sampler to have decent mixing. Interestingly, the scaled error sampler appears to mix well for both $V$ and $W$ over a larger region of the space $W/V<1$ than the scaled disturbance sampler does over $W/V>1$. The state sampler is stuck between a rock and a hard place, so to speak, since as $T$ increases, good mixing for $V$ requires $W/V$ to be smaller and smaller, but good mixing for $W$ requires $W/V$ to be larger and larger. 
 
-<<baseESplot, fig.cap=cap, echo=FALSE, fig.height=4.5, fig.width=6, out.width=".48\\textwidth">>=
-cap <- "Effective sample proportion in the posterior sampler for a time series of lengths $T=10$, $T=100$, and $T=1000$, for $V$ and $W$, and for the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that for plotting purposes, effective sample proportions larger than $1$ were rounded down to $1$"
+<<baseESplot, fig.cap=cap, echo=FALSE, fig.height=4, fig.width=6, out.width=".48\\textwidth">>=
+cap <- "Effective sample proportion in the posterior sampler for a time series of lengths $T=10$, $T=100$, and $T=1000$, for $V$ and $W$, and for the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than $1$ were rounded down to $1$"
 vars <- c("V.ES", "W.ES")
-p1 <- plotfun(meltedsam, vars, sams, 10)
-p2 <- plotfun(meltedsam, vars, sams, 100)
-p3 <- plotfun(meltedsam, vars, sams, 1000)
+title <- "ESP for V and W in the base algorithms, T="
+p1 <- plotfun(meltedsam, vars, base, 10, title)
+p2 <- plotfun(meltedsam, vars, base, 100, title)
+p3 <- plotfun(meltedsam, vars, base, 1000, title)
 p1
 p2
 p3
 @ 
 
-Since GIS algorithms work best when one algorithm works well in one region of the parameter space while the other works well in the other region of the parameter space, this suggests that the dist-error GIS algorithm will have the best performance of the bunch, though perhaps worse than the triple GIS algorithm. For large $T$, however, this suggests that none of the interweaving algorithms will perform well for $W/V$ not too far from one, i.e. the typically use-case. 
+Based on the intuition in Section \ref{sec:DLMest} above, the GIS algorithms should work best when at least one of the underlying base algorithms has a high ESP. --- the basic idea is that when least one of the underlying algorithms has low autocorrelation, we should have low autocorrleation in the GIS algrothim using multiple DAs. This suggests that the dist-error GIS algorithm will have the best performance of the two DA GIS algorithms for both $V$ and $W$, especially for $W/V$ far away from one, though when $W/V$ is near one it may offer no improvement, especially for large $T$. The state-dist GIS algorithm should have trouble with $V$ when $W/V$ is high since both the state sampler and the scaled disturbance sampler have trouble with $V$ when $W/V$ is high. Similarly, the state-error GIS algorithm should have trouble with $W$ when $W/V$ is low since both underlying samplers have trouble with $W$ when $W/V$ is low. Since the triple GIS algorithm adds the state sampler into the dist-error GIS algorithm, it seems plausible that it might improve mixing for one of $V$ or $W$ since for $V/W$ different from one, the state sampler has good mixing for at least one of $V$ of $W$. The full CIS algorithm, on the other hand, is unlikely to be better than the dist-error GIS algorithm since in a certain sense one algorithm is the same as the other, just with the steps reordered.
 
 It's also worth noting that both the scaled error and scaled disturbance samplers run into trouble with their adaptive rejection sampling step in precisely the same region of the parameter space where they have good mixing for both $V$ and $W$, though as $T$ increases, this only happens in the increasingly extreme ends of the parameter space. More precisely, when $W/V>1$, $p(W|V,\psi_{0:T},y_{1:T})$ will often fail to be log concave, and when $W/V<1$, $p(V|W,\gamma_{0:T},y_{1:T})$ will often fail to be log concave, but as $T$ increases the degree to which $W/V$ must differ from one (in the appropriate direction) in order for log concavity to often or even occasionally fail increases. Outside of these respective regions, log-concavity of the relevant density failing is an extremely unlikely occurence. As a result, the adapftive rejection sampling algorithm of \citet{gilks1992adaptive} won't work in general. Another option is to give up directly sampling from either conditonal density and use a metropolis step, perhaps for $(V,W)$ jointly, though we haven't tried that. In general, the sampling algorithm should be prepared to use something other than adaptive rejection sampling if necessary because it's possible that the chain enters a region of the parameter space where the relevant density is not log concave, no matter what the likely values of $V$ and $W$ are. {\it NOTE: ADD DETAILS ABOUT PRECISELY HOW LARGE OR SMALL $W/V$ HAS TO BE TO THIS PARAGRAPH}
 
 
-<<altintESplot, fig.cap=cap, echo=FALSE, fig.height=4, fig.width=5.5, out.width=".49\\textwidth">>=
-cap <- "Effective sample proportion in the posterior sampler for a time series of length $T=10$, $T=100$, and $T=1000$, for $V$ and $W$, and for the GIS and alternating samplers based on the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Also note that for plotting purposes, effective sample proportions larger than $1$ were rounded down to $1$"
-vars <- c("V.ES")
-T <- 10
-castedsam <- dcast(meltedsam, 
-                   formula=samplers + V.T + W.T + variable + type ~ ., 
-                   subset=.(variable %in% vars  & T.T==T & 
-                     sampler %in% c(alts, ints, kerns) ))
-colnames(castedsam)[6] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
-  geom_tile() +
-  scale_fill_gradient("ESP", low=muted("red"), high="white",
-                         guide=guide_colorbar(barheight=10),
-                         limits=c(0,1), na.value="white") +
-  facet_grid(type~samplers, scales="free", labeller=label_parsed_split) +
-  scale_x_log10("V = noise", breaks=breaks) + 
-  scale_y_log10("W = signal", breaks=breaks) +
-  ggtitle(paste("ESP for V in the hybrid samplers, T=",T,sep="")) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
-vars <- c("W.ES")
-castedsam <- dcast(meltedsam, 
-                   formula=samplers + V.T + W.T + variable + type ~ ., 
-                   subset=.(variable %in% vars  & T.T==T & 
-                     sampler %in% c(alts, ints, kerns) ))
-colnames(castedsam)[6] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + 
-  geom_tile() +
-  scale_fill_gradient("ESP", low=muted("red"), high="white",
-                         guide=guide_colorbar(barheight=10),
-                         limits=c(0,1), na.value="white") +
-  facet_grid(type~samplers, scales="free", labeller=label_parsed_split) +
-  scale_x_log10("V = noise", breaks=breaks) + 
-  scale_y_log10("W = signal", breaks=breaks) +
-  ggtitle(paste("ESP for W in the hybrid samplers, T=",T,sep="")) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
-T <- 100
-castedsam <- dcast(meltedsam, 
-                   formula=samplers + V.T + W.T + variable + type ~ ., 
-                   subset=.(variable %in% vars  & T.T==T & 
-                     sampler %in% c(alts, ints, kerns) ))
-colnames(castedsam)[6] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
-  geom_tile() +
-  scale_fill_gradient("ESP", low=muted("red"), high="white",
-                         guide=guide_colorbar(barheight=10),
-                         limits=c(0,1), na.value="white") +
-  facet_grid(type~samplers, scales="free", labeller=label_parsed_split) +
-  scale_x_log10("V = noise", breaks=breaks) + 
-  scale_y_log10("W = signal", breaks=breaks) +
-  ggtitle(paste("ESP for V in the hybrid samplers, T=",T,sep="")) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
-vars <- c("W.ES")
-castedsam <- dcast(meltedsam, 
-                   formula=samplers + V.T + W.T + variable + type ~ ., 
-                   subset=.(variable %in% vars  & T.T==T & 
-                     sampler %in% c(alts, ints, kerns) ))
-colnames(castedsam)[6] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + 
-  geom_tile() +
-  scale_fill_gradient("ESP", low=muted("red"), high="white",
-                         guide=guide_colorbar(barheight=10),
-                         limits=c(0,1), na.value="white") +
-  facet_grid(type~samplers, scales="free", labeller=label_parsed_split) +
-  scale_x_log10("V = noise", breaks=breaks) + 
-  scale_y_log10("W = signal", breaks=breaks) +
-  ggtitle(paste("ESP for W in the hybrid samplers, T=",T,sep="")) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
-T <- 1000
-castedsam <- dcast(meltedsam, 
-                   formula=samplers + V.T + W.T + variable + type ~ ., 
-                   subset=.(variable %in% vars  & T.T==T & 
-                     sampler %in% c(alts, ints, kerns) ))
-colnames(castedsam)[6] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
-  geom_tile() +
-  scale_fill_gradient("ESP", low=muted("red"), high="white",
-                         guide=guide_colorbar(barheight=10),
-                         limits=c(0,1), na.value="white") +
-  facet_grid(type~samplers, scales="free", labeller=label_parsed_split) +
-  scale_x_log10("V = noise", breaks=breaks) + 
-  scale_y_log10("W = signal", breaks=breaks) +
-  ggtitle(paste("ESP for V in the hybrid samplers, T=",T,sep="")) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
-vars <- c("W.ES")
-castedsam <- dcast(meltedsam, 
-                   formula=samplers + V.T + W.T + variable + type ~ ., 
-                   subset=.(variable %in% vars  & T.T==T & 
-                     sampler %in% c(alts, ints, kerns) ))
-colnames(castedsam)[6] <- "value"
-ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + 
-  geom_tile() +
-  scale_fill_gradient("ESP", low=muted("red"), high="white",
-                         guide=guide_colorbar(barheight=10),
-                         limits=c(0,1), na.value="white") +
-  facet_grid(type~samplers, scales="free", labeller=label_parsed_split) +
-  scale_x_log10("V = noise", breaks=breaks) + 
-  scale_y_log10("W = signal", breaks=breaks) +
-  ggtitle(paste("ESP for W in the hybrid samplers, T=",T,sep="")) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
-
+<<baseintESplot, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.5, outwidth=".8\\textwidth">>=
+cap <- "Effective sample proportion in the posterior sampler for $V$ and $W$ in for $T=10$, $T=100$, and $T=1000$, in the state, scaled disturbance and scaled error samplers and for all three GIS samplers based on any two of these. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than one were rounded down to one."
+vars <- c("V.ES", "W.ES")
+sams <- c("dist", "error", "deint", "state", "seint", "sdint", "triint", "fullcis")
+title <- "ESP for V and W in the base, GIS, and CIS algorithms, T="
+p1 <- plotfun(meltedsam, vars, sams, 10, title)
+p2 <- plotfun(meltedsam, vars, sams, 100, title)
+p3 <- plotfun(meltedsam, vars, sams, 1000, title)
+p1
+p2
+p3
 @ 
 
+Figure \ref{baseintESplot} contains plots of ESP for $V$ and $W$ in each of the base and GIS samplers and the full CIS sampler for $T=10$, $T=100$, and $T=1000$. We can see several of our predictions borne out. The state-dist GIS algorithm has a high ESP for $V$ when $W/V$ is high or near 1 and for $W$ when $W/V$ is near 1, but otherwise has a low ESP. Similarly, the state-error GIS algorithm has a high ESP for $W$ when $W/V$ is low or near 1 and for $V$ when $W/V$ is near 1, but otherwise has a low ESP. The dist-error GIS algorithm has a high ESP for $V$ and $W$ when $W/V$ is near 1, but otherwise has a low ESP. The full CIS algorithm also looks identical to this. Our only preidction that isn't borne out is the superiority of the triple GIS algorithm --- it also looks identical to the dist-error algorithm.
 
+<<hybridESplot, fig.cap=cap, echo=FALSE, fig.height=4, fig.width=5.5, out.width=".49\\textwidth">>=
+cap <- "Effective sample proportion in the posterior sampler for a time series of length $T=10$, $T=100$, and $T=1000$, for $V$ and $W$, and for the GIS and alternating samplers based on the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. The signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than $1$ were rounded down to $1$. Also note that the $ESP$ for the random kernel samplers has been multiplied by 2 or, in the case of the triple kern sampler, by 3, in order to make them comparable to the GIS and alternating samplers."
+sams <- c(alts, ints, kerns)
+p1 <- plotfun2("V.ES", sams, 10)
+p2 <- plotfun2("W.ES", sams, 10)
+p3 <- plotfun2("V.ES", sams, 100)
+p4 <- plotfun2("W.ES", sams, 100)
+p5 <- plotfun2("V.ES", sams, 1000)
+p6 <- plotfun2("W.ES", sams, 1000)
+p1
+p2
+p3
+p4
+p5
+p6
+@ 

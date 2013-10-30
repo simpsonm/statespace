@@ -25,7 +25,8 @@ opts_chunk$set(dev="pdf",
                fig.lp = "",
                fig.keep="high",
                fig.show="hold",
-               fig.align="center")
+               fig.align="center",
+               fig.pos="!ht")
 
 @
 
