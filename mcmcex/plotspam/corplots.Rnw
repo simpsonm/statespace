@@ -4,6 +4,7 @@ epsfig, multicol}
 \usepackage[maxfloats=48]{morefloats} %for >18 figures
 \usepackage{booktabs}
 \usepackage{caption}
+\usepackage{fullpage}
 \begin{document}
 
 % \SweaveOpts{fig.path='figure/', fig.align='center', fig.show='hold'}
@@ -20,11 +21,8 @@ opts_chunk$set(dev="pdf",
 @
 
 
-\title{MCMC Examples for DLMs} 
-\author{Matt Simpson}
-\maketitle
-
 <<loaddata, echo=FALSE>>=
+load("../cors/newpostcors.RData")
 load("../mixing/samout.RData")
 ##samout1 <- samout
 load("../mixing/postcors.RData")
@@ -93,6 +91,46 @@ corplotfun <- function(meltedcors, T, vars, title, limits){
 
 @ 
 
+
+<<newcors, echo=FALSE, fig.height=3, fig.width=8, out.width=".75\\textwidth", fig.cap=cap>>=
+cap <- "Posterior correlation between $V$ or $W$ and $b_V$ or $b_W$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vv2)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white") +
+    facet_grid(.~T, scales="free", labeller=label_both) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle("Posterior Correlation Between V and bv") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vw2)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white") +
+    facet_grid(.~T, scales="free", labeller=label_both) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle("Posterior Correlation Between V and bw") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Ww2)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white") +
+    facet_grid(.~T, scales="free", labeller=label_both) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle("Posterior Correlation Between W and bw") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Wv2)) + #$
+    geom_tile() +
+    scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
+                         limits=c(-1,1), mid="white") +
+    facet_grid(.~T, scales="free", labeller=label_both) +
+    scale_x_log10("V = noise", breaks=Vs) +
+    scale_y_log10("W = signal", breaks=Vs) +
+    ggtitle("Posterior Correlation Between W and bv") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+@ 
 
 <<postplotVW, echo=FALSE, fig.height=3, fig.cap=cap>>=
 cap <- "Posterior correlation between $V$ and $W$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
