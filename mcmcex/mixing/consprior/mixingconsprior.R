@@ -1,4 +1,4 @@
-source("../mcmcexfun.R")
+source("../../mcmcexfun.R")
 set.seed(152893627)
 T <- c(10, 100, 1000)
 V <- 10^c(-1, 0, 1)
@@ -16,7 +16,7 @@ n <- 3000
 burn <- 500
 parallel <- require(doMC, quietly=TRUE)
 if(parallel){
-  registerDoMC(4)
+  registerDoMC(2)
 }
 system.time(samout <- fullsim(samplers, simdata, n, burn, parallel))
 save(samout, file="samout.RData")
