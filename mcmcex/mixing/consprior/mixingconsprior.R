@@ -7,8 +7,8 @@ simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
 simdata$av <- 5
 simdata$aw <- 5
-simdata$bv <- (simdata$av-1) ## sets bv = 1 for all sims
-simdata$bw <- (simdata$aw-1) ## sets bw = 1 for all sims
+simdata$bv <- (simdata$av-1) ## sets bv = 4 for all sims, prior mean = 1
+simdata$bw <- (simdata$aw-1) ## sets bw = 4 for all sims, prior mean = 1
 sams <- c("state", "dist", "error")
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams

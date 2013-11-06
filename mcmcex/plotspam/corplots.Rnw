@@ -103,6 +103,7 @@ ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vv2)) + #$
     scale_y_log10("W = signal", breaks=Vs) +
     ggtitle("Posterior Correlation Between V and bv") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+
 ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vw2)) + #$
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -112,6 +113,7 @@ ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vw2)) + #$
     scale_y_log10("W = signal", breaks=Vs) +
     ggtitle("Posterior Correlation Between V and bw") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+
 ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Ww2)) + #$
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
@@ -121,6 +123,7 @@ ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Ww2)) + #$
     scale_y_log10("W = signal", breaks=Vs) +
     ggtitle("Posterior Correlation Between W and bw") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+
 ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Wv2)) + #$
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),

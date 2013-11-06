@@ -27,7 +27,7 @@ itsim <- function(dat, y){
   return(out)
 }
 
-samcor <- ddply(.data=samshort2, .variables=.(iter), .fun=itsim, y=simdata)
+samcor <- ddply(.data=samshort, .variables=.(iter), .fun=itsim, y=simdata)
 rm(samshort)
 
 newcors <- function(samcor){

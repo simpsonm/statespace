@@ -88,7 +88,7 @@ Define the scaled disturbances in the general DLM, $\gamma_{0:T}$, where $\gamma
   &\times  |V_t|^{-1/2}\exp\left[-\frac{1}{2}\left(y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_sL_{s-1}^{-1}\gamma_{s-1}\right)'V_t^{-1}\left(y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_sL_{s-1}^{-1}\gamma_{s-1}\right)\right]\nonumber\\
    & \times |W_t|^{-(\delta_t + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\gamma_t'\gamma_t\right]\label{dlmdistjoint}
  \end{align}
-where again $H^t_s=G_tG_{t-1}\cdots G_s$ for $s=0,1,\cdots,T$ and $H_{t+1}^t=I_p$.
+where again $H^t_s=G_tG_{t-1}\cdots G_s$ for $s=1,2,\cdots,T$ and $H_{t+1}^t=I_p$.
 
 So under the scaled disturbance parameterization we can write the model as
 \begin{align*}
