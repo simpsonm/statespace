@@ -144,8 +144,8 @@ VWpsiiter <- function(dat, psi, av, aw, bv, bw, Vold, Wold, eps, L){
   ys <- c(psi0, dat)
   Ly <- ys[-1] - ys[-(T+1)]
   a <- sum(Lpsi^2)/2
-  b <- sum(Lpsi*Ly)/2
-  c <- bv + sum( Ly^2 )/2
+  b <- -sum(Lpsi*Ly)/2
+  c <- bw + sum( Ly^2 )/2
   par <- c(a, b, c, av, aw, bv, T)
   lold <- log(Vold)
   Vout <- HMC(lpr, gradlpr, eps, L, lold, par)
@@ -207,3 +207,144 @@ errorjointsam <- function(n, start, dat, av, aw, bv, bw, eps, L){
   }
   return(out)
 }
+
+hamwrap <- function(par, n, samp){
+  dat <- par$y[order(par$t)]
+  T <- length(dat)
+  V.T <- par$V.T[1]
+  W.T <- par$W.T[1]
+  av <- par$av[1]
+  aw <- par$aw[1]
+  bv <- par$bv[1]
+  bw <- par$bw[1]
+  eps <- 0.01349 * min(V.T/W.T, W.T/V.T)
+  L <- 100 * max(V.T/W.T, W.T/V.T)
+  start <- c(V.T,W.T)
+
+  if(samp=="error")
+    out <- errorjointsam(n, start, dat, av, aw, bv, bw, eps, L)
+  if(samp=="dist")
+    out <- distjointsam(n, start, dat, av, aw, bv, bw, eps, L)
+  
+  return(data.frame(out[,c(T+4, T+2, T+3, T+5, 1:(T+1))]))
+}
+
+## simulates from a given sampler for each dataset and for multiple
+## chains, and returns summary info on the first chain.
+hamsim <- function(samplers, simdata, n, burn, parallel){
+  sampler <- samplers$sampler[1]
+  print(sampler)
+  sam <- ddply(simdata, .(V.T, W.T, T.T), hamwrap, .parallel=parallel,
+               n=n, samp=sampler)
+  samnam <- paste(sampler, "SAM.RData", sep="")
+  colnam <- grep("(V.T|W.T|T.T|V|W|time|acc)$",
+                 colnames(sam))
+  samshort <- sam[,colnam]
+  save(samshort, file=samnam)
+  rm(samshort)
+  out <- ddply(sam, .(V.T, W.T, T.T), hamsummary,
+               .parallel=parallel, dat=simdata, burn=burn,
+               sampler=sampler)
+  rm(sam)
+  save(out, file=paste(sampler, "OUT.RData", sep=""))
+  print(paste(sampler, "finished", sep=" "))
+  return(out)
+}
+
+hamfullsim <- function(samplers, simdata, n, burn, parallel){
+  out <- ddply(samplers, .(sampler), hamsim, simdata=simdata, n=n,
+               burn=burn, parallel=parallel)
+  return(out)
+}
+
+hamsummary <- function(sam, dat, burn, sampler){
+  V.T <- sam$V.T[1]
+  W.T <- sam$W.T[1]
+  T.T <- sam$T.T[1]
+  V <- sam$V[-c(1:burn)]
+  W <- sam$W[-c(1:burn)]
+  theta0s <- sam[-c(1:burn),grep("theta", colnames(sam))]
+  theta0s <- theta0s[,1:(T.T + 1)]
+  thetas <- theta0s[,-1]
+  theta0 <- theta0s[,1]
+  data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
+  time <- mean(sam$time)
+  acc <- mean(sam$acc)
+  init <- data.frame(time=time, accept=acc)
+  gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
+  colnames(gammas) <- paste("gamma", 1:T.T, sep="")
+  psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
+  colnames(psis) <- paste("psi", 1:T.T, sep="")
+  thetaAC <- apply(thetas, 2, corfun)
+  gammaAC <- apply(gammas, 2, corfun)
+  psiAC <- apply(psis, 2, corfun)
+  thetaES <- apply(thetas, 2, effectiveSize)
+  gammaES <- apply(gammas, 2, effectiveSize)
+  psiES <- apply(psis, 2, effectiveSize)
+  theta0.AC <- corfun(theta0)
+  theta1.AC <- thetaAC[1]
+  thetaT4.AC <- thetaAC[ceiling(T.T/4)]
+  thetaT2.AC <- thetaAC[T.T/2]
+  theta3T4.AC <- thetaAC[floor(3*T.T/4)]
+  thetaT.AC <- thetaAC[T.T]
+  gamma1.AC <- gammaAC[1]
+  gammaT4.AC <- gammaAC[ceiling(T.T/4)]
+  gammaT2.AC <- gammaAC[T.T/2]
+  gamma3T4.AC <- gammaAC[floor(3*T.T/4)]
+  gammaT.AC <- gammaAC[T.T]
+  psi1.AC <- psiAC[1]
+  psiT4.AC <- psiAC[ceiling(T.T/4)]
+  psiT2.AC <- psiAC[T.T/2]
+  psi3T4.AC <- psiAC[floor(3*T.T/4)]
+  psiT.AC <- psiAC[T.T]
+  theta.ACmax <- thetaAC[which.max(abs(thetaAC))]
+  gamma.ACmax <- gammaAC[which.max(abs(gammaAC))]
+  psi.ACmax <- psiAC[which.max(abs(psiAC))]
+  theta.ACavg <- mean(abs(thetaAC))
+  gamma.ACavg <- mean(abs(gammaAC))
+  psi.ACavg <- mean(abs(psiAC))
+  theta0.ES <- effectiveSize(theta0)
+  theta1.ES <- thetaES[1]
+  thetaT4.ES <- thetaES[ceiling(T.T/4)]
+  thetaT2.ES <- thetaES[T.T/2]
+  theta3T4.ES <- thetaES[floor(3*T.T/4)]
+  thetaT.ES <- thetaES[T.T]
+  gamma1.ES <- gammaES[1]
+  gammaT4.ES <- gammaES[ceiling(T.T/4)]
+  gammaT2.ES <- gammaES[T.T/2]
+  gamma3T4.ES <- gammaES[floor(3*T.T/4)]
+  gammaT.ES <- gammaES[T.T]
+  psi1.ES <- psiES[1]
+  psiT4.ES <- psiES[ceiling(T.T/4)]
+  psiT2.ES <- psiES[T.T/2]
+  psi3T4.ES <- psiES[floor(3*T.T/4)]
+  psiT.ES <- psiES[T.T]
+  theta.ESmin <- thetaES[which.min(thetaES)]
+  gamma.ESmin <- gammaES[which.min(gammaES)]
+  psi.ESmin <- psiES[which.min(psiES)]
+  theta.ESavg <- mean(thetaES)
+  gamma.ESavg <- mean(gammaES)
+  psi.ESavg <- mean(psiES)
+  V.AC <- corfun(V)
+  W.AC <- corfun(W)
+  V.ES <- effectiveSize(V)
+  W.ES <- effectiveSize(W)
+  
+  out <- cbind(init, V.AC, W.AC, theta0.AC,
+               theta1.AC, thetaT4.AC, thetaT2.AC, theta3T4.AC,
+               thetaT.AC, theta.ACmax,theta.ACavg,
+               gamma1.AC, gammaT4.AC, gammaT2.AC, gamma3T4.AC,
+               gammaT.AC, gamma.ACmax, gamma.ACavg,
+               psi1.AC, psiT4.AC, psiT2.AC, psi3T4.AC, psiT.AC,
+               psi.ACmax, psi.ACavg,
+               V.ES, W.ES, theta0.ES,
+               theta1.ES, thetaT4.ES, thetaT2.ES, theta3T4.ES,
+               thetaT.ES, theta.ESmin, theta.ESavg,
+               gamma1.ES, gammaT4.ES, gammaT2.ES, gamma3T4.ES,
+               gammaT.ES, gamma.ESmin, gamma.ESavg,
+               psi1.ES, psiT4.ES, psiT2.ES, psi3T4.ES,
+               psiT.ES, psi.ESmin, psi.ESavg)
+  rownames(out) <- ""
+  return(out)
+}
+
