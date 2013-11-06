@@ -6,10 +6,7 @@
 *SAM.RData
 .Rhistory
 
-# Outputs that you can compile yourself!!       #
-# (See README.md for how to compile .Rnw files) #
-#################################################
-mcmcex.pdf
+# Outputs that you can compile yourself!!       
 mcmcex.tex
 mcmcex.log
 mcmcex.aux
