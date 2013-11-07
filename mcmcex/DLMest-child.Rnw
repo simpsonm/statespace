@@ -68,31 +68,31 @@ Showing this is an exercise worth performing in order to illustrate one of the i
   p(&V_{1:T},W_{1:T},\theta_{0:T}|y_{1:T}) \propto \prod_{t=1}^T |V_t|^{-(\eta_{t} + k + 3)/2} \exp\left[-\frac{1}{2} tr\left((\Psi_{t} + v_tv_t')V_t^{-1}\right)\right]\nonumber\\
   & \times |W_t|^{-(\delta_{t} + p + 3)/2}\exp\left[-\frac{1}{2}tr\left((\Omega_{t} + w_tw_t')W_t^{-1}\right) \right] \times \exp\left[-\frac{1}{2}(\theta_0 - m_0)'C_0^{-1}(\theta_0 - m_0)\right]\label{statepost}
 \end{align}
-where again $v_t=y_t - F_t\theta_t$ and $w_t=\theta_t - G_t\theta_{t-1}$ for $t=1,2,\cdots,T$, $tr(.)$ is the matrix trace operator, $p=dim(\theta_t)$, and $k=dim(y_t)$.  The transformation form $\theta_{0:T}$ to $w_{0:T}$ implies that $\theta_t = \sum_{s=1}^{t+1} H^t_sw_{s-1}$  for $t=1,2,\cdots,T$, where we define $H^t_s=G_tG_{t-1}\cdots G_s$ for $s=1,2,\cdots,T$ and $t=1,2,\cdots,T$, and $H_{t+1}^t=I_p$, the $p\times p$ identity matrix. For $t=0$ we also have $\theta_0=\gamma_0$. The Jacobian of the transformation is then upper triangular with ones along the diagonal, so it's determinant is one. Now we can write the joint posterior of $(V_{1:T},W_{1:T},w_{0:T})$ as
+where again $v_t=y_t - F_t\theta_t$ and $w_t=\theta_t - G_t\theta_{t-1}$ for $t=1,2,\cdots,T$, $tr(.)$ is the matrix trace operator, $p=dim(\theta_t)$, and $k=dim(y_t)$.  The transformation from $\theta_{0:T}$ to $w_{0:T}$ implies that $\theta_t = \sum_{s=0}^{t} H^t_{s+1}w_{s}$  for $t=1,2,\cdots,T$, where we define $H^t_s=G_tG_{t-1}\cdots G_s$ for $s=1,2,\cdots,t$ and $t=1,2,\cdots,T$, and $H_{t+1}^t=I_p$, the $p\times p$ identity matrix. For $t=0$ we also have $\theta_0=\gamma_0$. The Jacobian of the transformation is then upper triangular with ones along the diagonal, so it's determinant is one. Now we can write the joint posterior of $(V_{1:T},W_{1:T},w_{0:T})$ as
 \begin{align*}
   p(&V_{1:T},W_{1:T},w_{0:T}|y_{1:T}) \propto \exp\left[-\frac{1}{2}(w_0 - m_0)'C_0^{-1}(w_0 - m_0)\right] \prod_{t=1}^T|W_t|^{-(\delta_{t} + p + 3)/2}\exp\left[-\frac{1}{2} tr\left((\Omega_{t} + w_tw_t')W_t^{-1}\right) \right]\\
-  & \times |V_t|^{-(\eta_{t} + k + 3)/2} \exp\left[-\frac{1}{2}tr\left(\left[\Psi_{t} + \left(y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_sw_{s-1}\right)\left(y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_sw_{s-1}\right)'\right]V_t^{-1}\right)\right].\nonumber\\
+  & \times |V_t|^{-(\eta_{t} + k + 3)/2} \exp\left[-\frac{1}{2}tr\left(\left[\Psi_{t} + \left(y_t - F_t\textstyle\sum_{s=0}^{t}H^t_{s+1}w_{s}\right)\left(y_t - F_t\textstyle\sum_{s=0}^{t}H^t_{s+1}w_{s}\right)'\right]V_t^{-1}\right)\right].\nonumber\\
 \end{align*}
 This gives independent inverse Wishart distributions for $(V_1,V_2,\cdots,V_T,W_1,W_2,\cdots,W_T)$ conditional on $w_{0:T}$ and $y_{1:T}$ with the same parameters as in algorithm \ref{statealg}. Thus we have $p(V_{1:T},W_{1:T}|w_{0:T},y_{1:T})=p(V_{1:T},W_{1:T}|\theta_{0:T},y_{1:T})$. But if we write the model in terms of the disturbances instead of the states, we get 
 \begin{align*}
-  y_t|w_{0:T}& \stackrel{ind}{\sim} N\left(F_t\textstyle\sum_{s=1}^{t+1}H_s^tw_{s-1},V_t\right)\\
+  y_t|w_{0:T}& \stackrel{ind}{\sim} N\left(F_t\textstyle\sum_{s=0}^{t}H_{s+1}^tw_{s},V_t\right)\\
   w_t &\stackrel{ind}{\sim} N(0,W_t)
 \end{align*}
 for $t=1,2,\cdots,T$. This gives us the first claim that $w_{0:T}$ is neither a SA nor an AA for $(V,W)$. The lesson here is that two different parameterizations, or in this case two different data augmentations, do not necessarily yield two different sampling algorithms. 
 
 \citeauthor{papaspiliopoulos2007general} suggest that in order to obtain an ancillary augmentation for a variance parameter, we must scale the sufficient agumentation by the square root of that parameter. Based on this intuition, note that if we hold $V_{1:T}$ constant then $\theta_{0:T}$ is a SA for $W_{1:T}$ from the observation and system equations, \eqref{dlmobseq} and \eqref{dlmsyseq}, i.e. we say $\theta_{0:T}$ is a SA for $W_{1:T}$ given $V_{1:T}$, or for $W_{1:T}|V_{1:T}$. Similarly $\theta_{0:T}$ is an AA for $V_{1:T}|W_{1:T}$. This suggests that if we scale $\theta_{t}$ by $W_{t}$ for all $t$ appropriately we'll have an ancillary augmentation for $V_{1:T}$ and $W_{1:T}$ jointly. The same intuition suggests scaling $w_{t}=\theta_{t}-G_t\theta_{t-1}$ by $W_{t}$ for all $t$ appropriately in order to find an ancillary augmentation for $(V_{1:T},W_{1:T})$. We'll work with this latter case first. 
 
-Define the scaled disturbances in the general DLM, $\gamma_{0:T}$, where $\gamma_0=\theta_0=w_0$ and for $t=1,2,\cdots,T$, $\gamma_t = L_t(\theta_t - G_t\theta_{t-1}) = L_tw_t$ where $L_t$ is the Cholesky decomposition of $W_t^{-1}$, i.e. $L_t' L_t =W_t^{-1}$. We can confirm our intuition that the scaled disturbances are an AA for $V_{1:T}$ and $W_{1:T}$ jointly. Let $L_0=I_p$, the $p\times p$ identity matrix. Then $\theta_t = L_t^{-1}\gamma_t + \sum_{s=1}^{t+1}H^t_sL_{s-1}^{-1}\gamma_{s-1}$ for $t=1,2,\cdots,T$ and $\theta_0=\gamma_0$. Then the Jacobian is block upper triangular with $L_t^{-1}$'s as the diagonal blocks, so $|J|=\prod_{t=1}^T|L_t^{-1}|=\prod_{t=1}^T|W_t|^{1/2}$. Then from \eqref{dlmjoint} we can write the full joint distribution of $(V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T})$ as
+Define the scaled disturbances in the general DLM, $\gamma_{0:T}$, where $\gamma_0=\theta_0=w_0$ and for $t=1,2,\cdots,T$, $\gamma_t = L_t(\theta_t - G_t\theta_{t-1}) = L_tw_t$ where $L_t$ is the Cholesky decomposition of $W_t^{-1}$, i.e. $L_t' L_t =W_t^{-1}$. We can confirm our intuition that the scaled disturbances are an AA for $V_{1:T}$ and $W_{1:T}$ jointly. Let $L_0=I_p$, the $p\times p$ identity matrix. Then $\theta_t = \sum_{s=0}^{t}H^t_{s+1}L_{s}^{-1}\gamma_{s}$ for $t=1,2,\cdots,T$ and $\theta_0=\gamma_0$. Then the Jacobian is block upper triangular with $L_t^{-1}$'s as the diagonal blocks, so $|J|=\prod_{t=1}^T|L_t^{-1}|=\prod_{t=1}^T|W_t|^{1/2}$. Then from \eqref{dlmjoint} we can write the full joint distribution of $(V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T})$ as
  \begin{align}
   p(&V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\gamma_0-m_0)'C_0^{-1}(\gamma_0-m_0)\right] \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Psi_tV_t^{-1}\right)\right] \nonumber\\
-  &\times  |V_t|^{-1/2}\exp\left[-\frac{1}{2}\left(y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_sL_{s-1}^{-1}\gamma_{s-1}\right)'V_t^{-1}\left(y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_sL_{s-1}^{-1}\gamma_{s-1}\right)\right]\nonumber\\
+  &\times  |V_t|^{-1/2}\exp\left[-\frac{1}{2}\left(y_t - F_t\textstyle\sum_{s=0}^{t}H^t_{s+1}L_{s}^{-1}\gamma_{s}\right)'V_t^{-1}\left(y_t - F_t\textstyle\sum_{s=0}^{t}H^t_{s+1}L_{s}^{-1}\gamma_{s}\right)\right]\nonumber\\
    & \times |W_t|^{-(\delta_t + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\gamma_t'\gamma_t\right]\label{dlmdistjoint}
  \end{align}
-where again $H^t_s=G_tG_{t-1}\cdots G_s$ for $s=1,2,\cdots,T$ and $H_{t+1}^t=I_p$.
+where again $H^t_s=G_tG_{t-1}\cdots G_s$ for $s=1,2,\cdots,t$ and $H_{t+1}^t=I_p$.
 
 So under the scaled disturbance parameterization we can write the model as
 \begin{align*}
-  y_t|\gamma_{0:T},V_{1:T},W_{1:T} & \stackrel{ind}{\sim} N\left(F_t\textstyle\sum_{s=1}^{t+1}H^t_sL_{s-1}^{-1}\gamma_{s-1}, V_t\right)\\
+  y_t|\gamma_{0:T},V_{1:T},W_{1:T} & \stackrel{ind}{\sim} N\left(F_t\textstyle\sum_{s=0}^{t}H^t_{s+1}L_{s}^{-1}\gamma_{s}, V_t\right)\\
   \gamma_t & \stackrel{iid}{\sim}N(0,I_p)
 \end{align*}
 for $t=1,2,\cdots,T$ where $I_p$ is the $p\times p$ identity matrix. Neither $V_{1:T}$ nor $W_{1:T}$ are in the system equation, so the scaled disturbances are an AA for $(V_{1:T},W_{1:T})$. In fact, \citet{fruhwirth2004efficient} use this parameterization in a dynamic regression model with stationary regression coefficient and also note that it is a noncentered parameterization (NCP), i.e. an AA for $(V_{1:T},W_{1:T})$ in our terminology. 
@@ -158,7 +158,7 @@ Step 4 actually draws $V_{1:T}$ from the same density as in step 2, but only the
 \begin{align*}
   p(&V_{1:T}|W_{1:T},\gamma_{0:T},y_{1:T}) \propto p(V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T}) \propto \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 3)/2}\exp\left[-\frac{1}{2}tr\left((\Psi_t +  \nu_t\nu_t')V_t^{-1}\right)\right]
 \end{align*}
-where $\nu_t = y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_s(L^{(k+0.5)}_{s-1})^{-1}\gamma_{s-1}$. In other words, independent inverse Wishart distributions with parameters $\Psi_t + \nu_t\nu_t'$ and $\eta_t + 1$. Now $\theta_t = \textstyle\sum_{s=1}^{t+1}H^t_s(L^{(k+0.5)}_{s-1})^{-1}\gamma_{s-1}$ because this is just the back transform of step 4 of Algorithm \ref{pcisalg} or step 3 of Algorithm \ref{sdintalg}, so $\nu_t=v_t$ and thus the distributions are the same. As a result, we can either only draw $W_{1:T}$ in step 2 or step 4 can be ommitted. 
+where $\nu_t = y_t - F_t\textstyle\sum_{s=0}^{t}H^t_{s+1}(L^{(k+0.5)}_{s})^{-1}\gamma_{s}$. In other words, independent inverse Wishart distributions with parameters $\Psi_t + \nu_t\nu_t'$ and $\eta_t + 1$. Now $\theta_t = \textstyle\sum_{s=0}^{t}H^t_{s+1}(L^{(k+0.5)}_{s})^{-1}\gamma_{s}$ because this is just the back transform of step 4 of Algorithm \ref{pcisalg} or step 3 of Algorithm \ref{sdintalg}, so $\nu_t=v_t$ and thus the distributions are the same. As a result, we can either only draw $W_{1:T}$ in step 2 or step 4 can be ommitted. 
 
 Note that none of these GIS algorithms are ASIS algorithms --- none of the DAs are a SA for $(V_{1:T},W_{1:T})$. The states, $\theta_{0:T}$, are a SA for $W_{1:T}|V_{1:T}$ though, so this motivates a CIS algorithm. A partial CIS algorithm is immediate:
 \begin{alg}\mbox{}\\[-\baselineskip]
@@ -177,12 +177,12 @@ With a little more work, we can also construct a full CIS algorithm that also tu
 First consider $\tilde{\gamma}_{0:T}$. If we define $L_0=K_0=I_k$ where $I_k$ is the $k\times k$ identity matrix, then $\tilde{\gamma}_t = K_tL_t^{-1}\gamma_t$ for $t=0,1,2,\cdots,T$. The reverse transformation is then $\gamma_t = L_tK_t^{-1}\tilde{\gamma}_t$. The Jacobian is then block diagonal with $L_tK_t^{-1}$'s along the diagonal. Thus $|J|=\prod_{t=0}^T|L_t||K_t|^{-1}=\prod_{t=1}^T|W_t|^{-1/2}|V_t|^{1/2}$. Then from \eqref{dlmdistjoint} we can write the joint distribution of $(V_{1:T},W_{1:T},\tilde{\gamma}_{0:T},y_{1:T})$ as
  \begin{align}
   p(&V_{1:T},W_{1:T},\tilde{\gamma}_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\tilde{\gamma}_0-m_0)'C_0^{-1}(\tilde{\gamma}_0-m_0)\right] \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Psi_tV_t^{-1}\right)\right] \nonumber\\
-  &\times  |W_t|^{-1/2}\exp\left[-\frac{1}{2}\left(y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_sK_{s-1}^{-1}\tilde{\gamma}_{s-1}\right)'V_t^{-1}\left(y_t - F_t\textstyle\sum_{s=1}^{t+1}H^t_sK_{s-1}^{-1}\tilde{\gamma}_{s-1}\right)\right]\nonumber\\
+  &\times  |W_t|^{-1/2}\exp\left[-\frac{1}{2}\left(y_t - F_t\textstyle\sum_{s=0}^{t}H^t_{s+1}K_{s}^{-1}\tilde{\gamma}_{s}\right)'V_t^{-1}\left(y_t - F_t\textstyle\sum_{s=0}^{t}H^t_{s+1}K_{s}^{-1}\tilde{\gamma}_{s}\right)\right]\nonumber\\
    & \times |W_t|^{-(\delta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\tilde{\gamma}_t'(K_tW_tK_t')^{-1}\tilde{\gamma}_t\right]\label{dlmdisttildejoint}
  \end{align}
-where again $H^t_s=G_tG_{t-1}\cdots G_s$ for $s=0,1,\cdots,T$ and $H_{t+1}^t=I_k$. Then under $\tilde{\gamma}_{0:T}$ we can write the model as
+where again $H^t_s=G_tG_{t-1}\cdots G_s$ for $s=1,2,\cdots,t$ and $H_{t+1}^t=I_k$. Then under $\tilde{\gamma}_{0:T}$ we can write the model as
 \begin{align*}
-  y_t|\tilde{\gamma}_{0:T},V_{1:T},W_{1:T} & \stackrel{ind}{\sim} N\left(F_t\textstyle\sum_{s=1}^{t+1}H^t_sK_{s-1}^{-1}\tilde{\gamma}_{s-1}, V_t\right)\\
+  y_t|\tilde{\gamma}_{0:T},V_{1:T},W_{1:T} & \stackrel{ind}{\sim} N\left(F_t\textstyle\sum_{s=0}^{t}H^t_{s+1}K_{s}^{-1}\tilde{\gamma}_{s}, V_t\right)\\
   \tilde{\gamma}_t & \stackrel{ind}{\sim}N(0,K_tW_tK_t')
 \end{align*}
 for $t=1,2,\cdots,T$. Since $K_t$ is the Cholesky decomposition of $V_t$, the observation equation doesn't contain $W_t$. So $\tilde{\gamma}_{0:T}$ is a SA for $W_{1:T}|V_{1:T}$ and thus $\gamma_{0:T}$ and $\tilde{\gamma}_{0:T}$ form an AA-SA pair for $W_{1:T}|V_{1:T}$. Note also that since $W_t$ and $K_t$ are both in the system equation, $\tilde{\gamma}_{0:T}$ is not an AA for $V_{1:T}$ nor for $W_{1:T}$. 
