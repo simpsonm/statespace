@@ -94,7 +94,7 @@ corplotfun <- function(meltedcors, T, vars, title, limits){
 
 <<newcors, echo=FALSE, fig.height=3, fig.width=8, out.width=".75\\textwidth", fig.cap=cap>>=
 cap <- "Posterior correlation between $V$ or $W$ and $b_V$ or $b_W$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
-ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vv2)) + #$
+ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vbv)) + #$
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
                          limits=c(-1,1), mid="white") +
@@ -104,7 +104,7 @@ ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vv2)) + #$
     ggtitle("Posterior Correlation Between V and bv") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 
-ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vw2)) + #$
+ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vbw)) + #$
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
                          limits=c(-1,1), mid="white") +
@@ -114,7 +114,7 @@ ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vw2)) + #$
     ggtitle("Posterior Correlation Between V and bw") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 
-ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Ww2)) + #$
+ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Wbw)) + #$
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
                          limits=c(-1,1), mid="white") +
@@ -124,7 +124,7 @@ ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Ww2)) + #$
     ggtitle("Posterior Correlation Between W and bw") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 
-ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Wv2)) + #$
+ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Wbv)) + #$
     geom_tile() +
     scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
                          limits=c(-1,1), mid="white") +
