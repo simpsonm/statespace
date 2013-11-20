@@ -4,11 +4,6 @@ set.seed(152893627)
 T <- c(10, 100, 1000)
 V <- 10^(c(0:10)/2-2)
 W <- V
-
-T <- 10
-V <- 10^c(0,1)
-W <- V
-
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
 simdata$av <- 5
