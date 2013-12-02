@@ -364,7 +364,8 @@ samwrap <- function(par, n, samp){
     out <- partialcissam(n, start, dat, av, aw, bv, bw)
   if(samp=="fullcis")
     out <- fullcissam(n, start, dat, av, aw, bv, bw)
-
+  if(samp=="stnstate")
+    out <- stnstatesam(n, start, dat, av, aw, bv, bw)
   return(data.frame(out[,c(T+4, T+2, T+3, (T+5):(T+8), 1:(T+1))]))
 }
 
