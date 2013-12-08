@@ -26,9 +26,9 @@ save(hamout, file="samout.RData")
 
 
 
-T.T <- 1000
-V.T <- 1000
-W.T <- .01
+T.T <- 10
+W.T <- 1
+V.T <- 1
 
 dat <- simdata$y[simdata$V.T==V.T & simdata$W.T==W.T & simdata$T.T==T.T]
 n <- 1000
@@ -36,13 +36,13 @@ av <- 5
 aw <- 5
 bv <- V.T*(av-1)
 bw <- W.T*(aw-1)
-eps <- 0.01349 * min(V.T/W.T, W.T/V.T)
-L <- 100 * max(V.T/W.T, W.T/V.T)
+eps <- 0.0001349 
+L <- 1000
 start <- c(V.T,W.T)
 
 
-dtest <- distjointsam(n, start, dat, av, aw, bv, bw, eps, L)
-etest <- errorjointsam(n, start, dat, av, aw, bv, bw, eps, L)
+system.time(dtest <- distjointsam(n, start, dat, av, aw, bv, bw, eps, L))
+system.time(etest <- errorjointsam(n, start, dat, av, aw, bv, bw, eps, L))
 
 Dtest <- data.frame(dtest)
 Etest <- data.frame(etest)
@@ -62,3 +62,38 @@ plot(ts(Dtest$V), ylab="VD")
 plot(ts(Dtest$W), ylab="WD")
 plot(ts(Etest$V), ylab="VE")
 plot(ts(Etest$W), ylab="WE")
+
+
+
+
+
+source("hamfun.R")
+a <- 8
+b <- -7
+c <- 12
+par <- c(8, -7, 12, 5,  5,  4, 10)
+par <- c(8, -7, 12, 5,  5,  4, 100)
+
+curve(exp(-lpr2(x, par)), xlim=c(-10,10))
+
+
+lpr(1, par)
+lpr2(1, par)
+lpr(10000, par)
+
+
+
+lvw <- 1000000
+
+  a <- par[1]
+  b <- par[2]
+  c <- par[3]
+  ame <- par[4]
+  ayou <- par[5]
+  bet <- par[6]
+  T <- par[7]
+
+(ayou + T/2)*( lvw +  log(a + 2*b*exp(-lvw/2) + c*exp(-lvw))) + ame*lvw + bet*exp(-lvw)
+  
+  return(out)
+}

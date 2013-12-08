@@ -95,6 +95,23 @@ lpr <- function(lvw, par){
   return(out)
 }
 
+lpr2 <- function(lvw, par){
+  a <- par[1]
+  b <- par[2]
+  c <- par[3]
+  ame <- par[4]
+  ayou <- par[5]
+  bet <- par[6]
+  T <- par[7]
+
+  out <- (ayou + T/2)*( lvw +  log(a + 2*b*exp(-lvw/2) + c*exp(-lvw))) + ame*lvw + bet*exp(-lvw)
+  
+  return(out)
+}
+
+
+
+
 gradlpr <- function(lvw, par){
   a <- par[1]
   b <- par[2]
@@ -120,7 +137,8 @@ VWgamiter <- function(dat, gam, av, aw, bv, bw, Vold, Wold, eps, L){
   c <- bv + sum( (dat - gam0)^2 )/2
   par <- c(a, b, c, aw, av, bw, T)
   lold <- log(Wold)
-  Wout <- HMC(lpr, gradlpr, eps, L, lold, par)
+  epsprime <- runif(1, 0.8*eps, 1.2*eps)
+  Wout <- HMC(lpr, gradlpr, epsprime, L, lold, par)
   W <- exp(Wout[1])
   acc <-  Wout[2]
   if(acc==0){
@@ -148,7 +166,8 @@ VWpsiiter <- function(dat, psi, av, aw, bv, bw, Vold, Wold, eps, L){
   c <- bw + sum( Ly^2 )/2
   par <- c(a, b, c, av, aw, bv, T)
   lold <- log(Vold)
-  Vout <- HMC(lpr, gradlpr, eps, L, lold, par)
+  epsprime <- runif(1, 0.8*eps, 1.2*eps)
+  Vout <- HMC(lpr, gradlpr, epsprime, L, lold, par)
   V <- exp(Vout[1])
   acc <- Vout[2]
   if(acc==0){
