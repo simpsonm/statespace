@@ -1,0 +1,7 @@
+figure*
+*.aux
+*.bbl
+*.blg
+*.log
+*.pdf
+*.tex
