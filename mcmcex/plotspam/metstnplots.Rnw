@@ -1,0 +1,202 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol, amsthm, bbm}
+\usepackage{multicol}
+\usepackage{textcomp}
+\usepackage{fullpage}
+\usepackage[maxfloats=48]{morefloats} %for >18 figures
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage[authoryear]{natbib} %numbers instead of authoryear for [1] instead of [1980]
+%Indicator function: use as \indicator{X=x}
+\newcommand{\indicator}[1]{\mathbbm{1}{\left\{ {#1} \right\} }}
+%Independent: use as X \ind Y | Z
+\newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newtheorem{alg}{Algorithm}
+\newtheorem{theorem}{Theorem}
+\DeclareMathOperator{\Tr}{Tr}
+\begin{document}
+
+<<setup, include=FALSE, cache=FALSE>>=
+options(replace.assign=TRUE,width=90)
+opts_knit$set(eval.after = "fig.cap")
+opts_chunk$set(dev="pdf",
+               fig.lp = "",
+               fig.keep="high",
+               fig.show="hold",
+               fig.align="center",
+               fig.pos="!ht")
+
+@
+
+
+\title{ESS plots for the Metropolis w/in Gibbs Algorithm}
+\author{Matt Simpson}
+\maketitle
+
+There are three new algorithms here. The first two, ``MetDist'' and ``MetError'', are the scaled disturbance and scaled error samplers modified to use a metropolis step with a normal proposal to draw $(V,W)$ jointly. The third, ``STNstate'', is a state sampler that reparameterizes the model in terms of $V$ and $R=W/V$, the signal to noise ratio.
+
+
+<<plotsetup, echo=FALSE, message=FALSE>>=
+library(ggplot2)
+library(scales)
+library(plyr)
+library(xtable)
+library(reshape2)
+library(gridExtra)
+load("../mixing/samout.RData")
+samouttemp <- samout
+load("../met/samout.RData")
+load("../stn/samout.RData")
+stnout <- samout[,colnames(samout) %in% colnames(metout)]
+samout <- samouttemp
+metout$sampler[metout$sampler=="dist"] <- "metdist"
+metout$sampler[metout$sampler=="error"] <- "meterror"
+samout <- rbind(samout,metout,stnout)
+base <- c("error", "state", "dist")
+alts <- c("sdalt", "sealt", "dealt", "trialt")
+ints <- c("sdint", "seint", "deint", "triint")
+kerns <- c("sdkern", "sekern", "dekern", "trikern")
+met <- c("metdist", "meterror")
+samout$type <- "Base" #$
+samout$type[samout$sampler %in% alts] <- "Alt" 
+samout$type[samout$sampler %in% ints] <- "GIS" 
+samout$type[samout$sampler %in% kerns] <- "RKern" 
+samout$type[samout$sampler %in% met] <- "Met" 
+samout$samplers <- "Base"
+samout$samplers[samout$sampler=="metdist"] <- "MetDist"
+samout$samplers[samout$sampler=="meterror"] <- "MetError"
+samout$samplers[samout$sampler=="error"] <- "Error"
+samout$samplers[samout$sampler=="dist"] <- "Dist"
+samout$samplers[samout$sampler=="state"] <- "State"
+samout$samplers[samout$sampler=="stnstate"] <- "STNstate"
+samlevels <- c("State", "Dist", "Error", "Base", "MetDist", "MetError", "STNstate")
+samout$samplers <- factor(samout$samplers, levels=samlevels)
+meltedsam <- melt(samout, id=c("type", "samplers", "sampler", "V.T", "W.T", 
+                            "T.T"))
+Vs <- unique(meltedsam$V.T)[1:9] #$
+Ws <- Vs
+breaks <- Vs[seq(1,9,2)]
+label_both_parsed <- function(variable, value){
+  llply(as.character(paste(variable, value, sep = ": ")), function(x) parse(text = x))
+}
+label_both_parsed_split <- function(variable, value){
+  llply(as.character(paste(variable, value, sep = ": ")), 
+        function(x) parse(text = strsplit(x, "\\.")[[1]][1]))
+}
+label_parsed_split <- function(variable, value){
+  llply(as.character(value), function(x) parse(text = strsplit(x, "\\.")[[1]][1]))
+}
+plotfun <- function(meltedsam, vars, sams, T, title){
+  castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable + samplers ~ ., 
+                     subset=.(variable %in% vars  & T.T==T & sampler %in% sams &
+                       V.T<=10^2 & W.T<=10^2))
+  colnames(castedsam)[6] <- "value"
+  out <- ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
+         geom_tile() +
+         scale_fill_gradient("ESP", low=muted("red"), high="white",
+           guide=guide_colorbar(barheight=10),
+           limits=c(0,1), na.value="white") +
+         facet_grid(variable~samplers, scales="free", labeller=label_parsed_split) +
+         scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+         ggtitle(paste(title, T, sep="")) +
+         theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+  return(out)
+}
+plotfun2 <- function(vars, sams, T){
+  var <- substr(vars[1], 1, 1)
+  castedsam <- dcast(meltedsam, 
+                     formula=samplers + V.T + W.T + variable + type ~ ., 
+                     subset=.(variable %in% vars  & T.T==T & 
+                       sampler %in% sams & V.T<=10^2 & W.T<=10^2))
+  colnames(castedsam)[6] <- "value"
+  out <- ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
+          geom_tile() +
+          scale_fill_gradient("ESP", low=muted("red"), high="white",
+                        guide=guide_colorbar(barheight=10),
+                        limits=c(0,1), na.value="white") +
+          facet_grid(type~samplers, scales="free", labeller=label_parsed_split) +
+          scale_x_log10("V = noise", breaks=breaks) + 
+          scale_y_log10("W = signal", breaks=breaks) +
+          ggtitle(paste("ESP for ", var, "; T=",T,sep="")) +
+          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+  return(out)
+}
+@ 
+
+<<ESplot1, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=8, out.width=".8\\textwidth">>=
+cap <- "Effective sample proportion in the posterior sampler for a time series of lengths $T=10$, $T=100$, and $T=1000$, for $V$ and $W$, and for the state, scaled disturbance, and scaled error samplers compared to the metropolis versions of the scaled disturbance and scaled error samplers and the signal to noise ratio state sampler. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than $1$ were rounded down to $1$"
+vars <- c("V.ES", "W.ES")
+title <- "ESP for V and W, T="
+sams <- c(base, met, "stnstate")
+p1 <- plotfun(meltedsam, vars, sams, 10, title)
+p2 <- plotfun(meltedsam, vars, sams, 100, title)
+p3 <- plotfun(meltedsam, vars, sams, 1000, title)
+p1
+@ 
+
+<<ESplot2, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=8, out.width=".8\\textwidth">>=
+p2
+@ 
+
+<<ESplot3, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=8, out.width=".8\\textwidth">>=
+p3
+@ 
+
+<<Rplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=8, out.width=".48\\textwidth">>=
+cap <- "Effective sample proportion in the posterior sampler for a time series of lengths $T=10$, $T=100$, and $T=1000$, for $R=W/V$ in the state and STN state samplers. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than $1$ were rounded down to $1$"
+load("../stn/stnstateSAM.RData")
+stnsam <- samshort[,c(1,2,3,5,6)]
+stnsam$R <- stnsam$W/stnsam$V
+
+load("../mixing/stateSAM.RData")
+statesam <- samshort[,c(1,2,3,5,6)]
+statesam$R <- statesam$W/statesam$V
+
+library(coda)
+library(plyr)
+
+essfun <- function(dat){
+ V.T <- dat$V.T[1]
+ W.T <- dat$W.T[1]
+ T.T <- dat$T.T[1]
+ R.ESP <- effectiveSize(dat$R)/2500
+ out <- data.frame(V.T, W.T, T.T, R.ESP)
+ return(out)
+}
+
+Resp <- ddply(stnsam, .(V.T, W.T, T.T), essfun)
+
+
+title <- "ESP for R=W/V in the STNstate sampler"
+out <- ggplot(data=Resp, aes(x=V.T, y=W.T, fill=R.ESP))+ #$
+         geom_tile() +
+         scale_fill_gradient("ESP", low=muted("red"), high="white",
+           guide=guide_colorbar(barheight=10),
+           limits=c(0,1), na.value="white") +
+         facet_grid(.~T.T, scales="free", labeller=label_parsed_split) +
+         scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+         ggtitle(title) +
+         theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+title <- "ESP for R=W/V in the state sampler"
+Resp2 <- ddply(statesam, .(V.T, W.T, T.T), essfun)
+out2 <- ggplot(data=Resp2, aes(x=V.T, y=W.T, fill=R.ESP))+ #$
+         geom_tile() +
+         scale_fill_gradient("ESP", low=muted("red"), high="white",
+           guide=guide_colorbar(barheight=10),
+           limits=c(0,1), na.value="white") +
+         facet_grid(.~T.T, scales="free", labeller=label_parsed_split) +
+         scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+         ggtitle(title) +
+         theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+out
+out2
+@ 
+
+
+\end{document}
+
+
+
+
