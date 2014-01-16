@@ -1,51 +1,28 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% a0poster Portrait Poster
-% LaTeX Template
-% Version 1.0 (22/06/13)
-%
-% The a0poster class was created by:
-% Gerlinde Kettl and Matthias Weiser (tex@kettl.de)
-% 
-% This template has been downloaded from:
-% http://www.LaTeXTemplates.com
-%
-% License:
-% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%----------------------------------------------------------------------------------------
-%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
-%----------------------------------------------------------------------------------------
-
-\documentclass[a0,portrait]{a0poster}
-
-\usepackage{multicol} % This is so we can have multiple columns of text side-by-side
-\columnsep=100pt % This is the amount of white space between the columns in the poster
-\columnseprule=0pt % This is the thickness of the black line between the columns in the poster
-
-\usepackage[svgnames]{xcolor} % Specify colors by their 'svgnames', for a full list of all colors available see here: http://www.latextemplates.com/svgnames-colors
-
-\usepackage{times} % Use the times font
-%\usepackage{palatino} % Uncomment to use the Palatino font
-
-\usepackage{graphicx} % Required for including images
-\graphicspath{{figures/}} % Location of the graphics files
-\usepackage{booktabs} % Top and bottom rules for table
-\usepackage[font=small,labelfont=bf]{caption} % Required for specifying captions to tables and figures
-\usepackage{amsfonts, amsmath, amsthm, amssymb} % For math fonts, symbols and environments
-\usepackage{wrapfig} % Allows wrapping text around tables and figures
+\documentclass[svgnames, final]{beamer} % beamer 3.10: do NOT use option hyperref={pdfpagelabels=false} !
+  %\documentclass[final,hyperref={pdfpagelabels=false}]{beamer} % beamer 3.07: get rid of beamer warnings
+\mode<presentation> {  %% check http://www-i6.informatik.rwth-aachen.de/~dreuw/latexbeamerposter.php for examples
+\usetheme{ISUred}    %% you should define your own theme e.g. for big headlines using your own logos 
+  }
+\usepackage[english]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath,amsthm, amssymb, latexsym}
 \usepackage[authoryear]{natbib} %numbers instead of authoryear for [1] instead of [1980]
-\usepackage{float}
+%\usepackage{times}\usefonttheme{professionalfonts}  % times is obsolete
+\usefonttheme[onlymath]{serif}
+\boldmath
+%\usepackage[orientation=portrait,size=a0,scale=1.4,debug]{beamerposter}  % e.g. for DIN-A0 poster
+%\usepackage[orientation=portrait,size=a1,scale=1.4,grid,debug]{beamerposter} % e.g. for DIN-A1 poster, with optional grid and debug output
+\usepackage[size=custom,width=89,height=105,scale=2,debug]{beamerposter} % e.g. for custom size poster
+%\usepackage[orientation=portrait,size=a0,scale=1.0,printer=rwth-glossy-uv.df]{beamerposter}   % e.g. for DIN-A0 poster with rwth-glossy-uv printer check
+  % ...
+  %
+\title{Ancillarity--Sufficiency or not}
+\subtitle{Interweaving to improve MCMC estimation of the local level model}
+\author{Matthew Simpson*, Jarad Niemi and Vivekananda Roy}
+\institute{*Iowa State University, Departments of Statistics and Economics}
+\date{December 16, 2013\\ \vskip0.8ex EFaB @ Bayes250\\ \vskip0.6ex Duke University}
 
-\newtheorem{alg}{Algorithm}
 
-\usepackage[framemethod=tikz]{mdframed}
-\newmdenv[innerlinewidth=6pt, roundcorner=12pt,linecolor=DarkSlateGrey,
-innerleftmargin=6pt,innerrightmargin=6pt,innertopmargin=6pt,
-innerbottommargin=6pt,backgroundcolor=White]{mybox}
-
-%\pagecolor{Gold!20}
 
 <<setup, include=FALSE, cache=FALSE>>=
 options(replace.assign=TRUE,width=90)
@@ -155,130 +132,136 @@ plotfun2 <- function(vars, sams, T){
 }
 @
 
+
 \begin{document}
+\begin{frame}{} 
+  \begin{columns}
+    \begin{column}{0.47\textwidth}
+      \vfill
 
-%----------------------------------------------------------------------------------------
-%	POSTER HEADER 
-%----------------------------------------------------------------------------------------
+      \begin{block}{\large Model}
+        {\footnotesize
+        For $t=1,2,\cdots,T$:
+        \begin{align*}
+          y_t |\theta_{0:T}& \stackrel{ind}{\sim} N(\theta_t,V)\\
+          \theta_t |\theta_{0:t-1}& \sim N(\theta_{t-1},W)
+        \end{align*}
+      }\end{block}
 
-% The header is divided into two boxes:
-% The first is 75% wide and houses the title, subtitle, names, university/organization and contact information
-% The second is 25% wide and houses a logo for your university/organization or a photo of you
-% The widths of these boxes can be easily edited to accommodate your content as you see fit
-
-\begin{minipage}[b]{0.75\linewidth}
-\veryHuge \color{DarkRed} \textbf{Ancillarity--Sufficiency or not} \color{Black}\\ % Title
-\Huge\textit{Interweaving to improve MCMC estimation of DLMs}\\[2cm] % Subtitle
-\huge \textbf{Matthew Simpson}\\[0.5cm] % Author(s)
-\huge Iowa State University, Departments of Statistics and Economics\\[0.4cm] % University/organization
-\Large \texttt{themattsimpson@gmail.com} \\
-\end{minipage}
-\begin{minipage}[b]{0.25\linewidth}
-\includegraphics[width=15cm]{logo.png}\\
-\end{minipage}
-
-\vspace{1cm} % A bit of extra whitespace between the header and poster content
-
-%----------------------------------------------------------------------------------------
-
-\begin{multicols}{2} % This is how many columns your poster will be broken into, a portrait poster is generally split into 2 columns
-
-%----------------------------------------------------------------------------------------
-%	ABSTRACT
-%----------------------------------------------------------------------------------------
-
-\color{Red} % color for the abstract
-
-\begin{abstract}
-In dynamic linear models (DLMs), MCMC sampling can often be very slow for estimating the posterior density --- especially for longer time series. In particular, in some regions of the parameter space the standard data augmentation algorithm can mix very slowly. Recently ancillarity-sufficiency interweaving has been introduced as a method to take advantage of alternate parameterizations in multilevel models in order to improve the mixing and convergence properties of the chain. Focusing on the local level DLM, we explore alternate parameterizations and various interweaving algorithms through simulation in order to improve mixing. 
-\end{abstract}
-
-\color{DarkSlateGrey}
-
-\section*{Model and priors}
-
-The local level model is a univariate DLM with data $y_t$ for $t=1,2,\cdots,T$ and univariate latent state $\theta_t$ for $t=0,2,\cdots,T$ that satisfies
-\begin{align*}
-  y_t |\theta_{0:T}& \stackrel{ind}{\sim} N(\theta_t,V) \\
-  \theta_t |\theta_{0:t-1}& \sim N(\theta_{t-1},W).
-\end{align*}
-The unknown parameter vector is $\phi=(V,W)$. For priors, we'll take $\theta_0\sim N(m_0,C_0)$, $V\sim IG(\alpha_V, \beta_V)$, and $W\sim IG(\alpha_W, \beta_W)$ where $(\theta_0,V,W)$ are mutually dependent, and $m_0$, $C_0>0$, $\alpha_V>0$, $\beta_V>0$, $\alpha_W>0$, and $\beta_W>0$ are some known constants.
-
-\section*{The standard MCMC approach and its limitations}
-The standard MCMC sampling algorithm for the local level model and DLMs generally is a data augmentation (DA) algorithm that uses $\theta_{0:T}$ as an augmented data vector and forward filtering backward sampling (FFBS) in order to draw from $p(\theta_{0:T}|V,W,y_{1:T})$, see \citet{fruhwirth1994data} and \citet{carter1994gibbs}. Call this algorithm the {\it \color{red} state sampler}. One problem with this algorithm is that in some regions of the parameter space the Markov chain mixes poorly for some of the parameters. A well known method of improving mixing and convergence in MCMC samplers is reparameterizing the model, e.g. \citet{papaspiliopoulos2007general}. A recent approach that builds on reparameterizing is the interweaving strategy of \citet{yu2011center}.
-
-\section*{Interweaving --- GIS, ASIS, and CIS}
-Interweaving samplers are a class of algorithms for MCMC by \citeauthor{yu2011center} that rely on using multiple DAs within one iteration. In the general case, let $y$ denote the data vector, $\phi$ the parameter vector, $\theta$ a DA, and $\gamma$ another DA. Global interweaving strategy (GIS) samplers obtain $\phi^{(k+1)}$ from $\phi^{(k)}$ by:
-\[
-[\theta|\phi^{(k)},y] \rightarrow [\phi^{(k+0.5)}|\theta,y] \rightarrow [\gamma|\theta,\phi^{(k+0.5)},y] \rightarrow [\phi^{(k+1)}|\gamma,y]
-\]
-When $\gamma$ is a one-to-one transformation of $\theta$, step 3 is an update using that transformation. The GIS algorithm is directly comparable to an alternating algorithm that draws $\gamma$ from $p(\gamma|\phi,y)$ in step 3 but is otherwise identical. If necessary, each of these steps can be broken down into separate Gibbs steps.
-
-An ancillary sufficient interweaving strategy (ASIS) uses, in \citeauthor{yu2011center}'s words, a sufficient augmentation (SA) and an ancillary augmentation (AA). The DA $\theta$ is a SA for $\phi$ if $p(y|\theta,\phi)=p(y|\theta)$, while $\theta$ is an AA for $\phi$ if $p(\theta|\phi)=p(\theta)$. The advantage of ASIS over a generic GIS is that the SA and the AA are typically a ``beauty and the beast'' pair -- in all regions of the parameter space, the DA algorithm based on either the SA or the AA will have good mixing and convergence properties, allowing the ASIS algorithm to take advantage and have good properties.
-
-Sometimes it's hard to find a SA or an AA or a given model. In that case, a componentwise inteweaving strategy (CIS) may be superior. Suppose $\phi=(\phi_1, \phi_2)$. A CIS algorithm uses a GIS algorithm in a Gibbs step for $\phi_1$, and another GIS algorithm in a Gibbs step for $\phi_2$, potentially using a different pair of DAs. In this setting, componentwise ASIS is possible --- we need a SA--AA pair of DAs for $\phi_1$, and another pair for $\phi_2$.
-
-\section*{New DAs and algorithms for the local level model}
-The states, $\theta_{0:T}$, are a SA for $V$ and an AA for $W$. We construct two more DAs for the local level model. Define the scaled disturbances as $\gamma_0=\theta_0$ and $\gamma_t=(\theta_t - \theta_{t-1})/\sqrt{W}$ for $t=1,2,\cdots,T$. The {\it \color{red} scaled disturbance sampler} is the DA algorithm based on the scaled disturbances, except it draws $V$ and $W$ in separate Gibbs steps instead of jointly like in the state sampler. It turns out that $\gamma_{0:T}$ is an AA for $(V,W)$. \citeauthor{fruhwirth2004efficient} uses the analogue of this augmentation in the context of a dynamic regression model.
-
-Similarly, define the scaled errors as $\psi_0 = \theta_0$ and $\psi_t = (y_t - \theta_t)/\sqrt{V}$ for $t=1,2,\cdots,T$. The {\it \color{red} scaled error sampler} is the DA algorithm based on the scaled errors. The scaled error sampler also draws $V$ and $W$ in separate Gibbs steps and, like the scaled disturbances, it turns out that the scaled errors are also an AA for $(V,W)$. We aren't able to find a SA for $(V,W)$ however, so as far as we can tell there is no ASIS algorithm available.
-
-This gives four separate GIS algorithms --- the {\it \color{red} state -- disturbance GIS algorithm} based on the states and the scaled disturbances, the {\it \color{red} state -- error GIS algorithm} based on the states and the scaled errors, the {\it \color{red} disturbance -- error GIS algorithm}, based on the scaled disturbances and the scaled errors, and the {\it \color{red} triple GIS algorithm} based on all three augmented data vectors. In all four algorithms, we use the various agumented data vectors in the order $\theta_{0:T}$, $\gamma_{0:T}$, then $\psi_{0:T}$. Other orders could change the properties of the algorithms, but \citeauthor{yu2011center} report that this choice doesn't seem to matter much in general.
-
-We also construct a full CIS algorithm that uses $\theta_{0:T}$ and $\gamma_{0:T}$ in the Gibbs step for $W$ while using $\theta_{0:T}$ and $\psi_{0:T}$ in the Gibbs step for $V$. This full CIS algorithm can be shown to be identical to a componentwise ASIS algorithm and is also the same as the disturbance -- error GIS algorithm except with the order of some of the steps changed.
-
-\section*{Simulation setup}
-In order to investigate these algorithms, we simulated time series with length $T=10, 100, 1000$ over a grid of $V$--$W$ space. Then for each dataset, we fit the local level model using each algorithms mentioned above. We used the same priors for each dataset: $\theta_0\sim N(0,10^7)$, $V\sim IG(5, 4\tilde{V})$, and $W\sim IG(5, 4\tilde{W})$, mutually independent where $(\tilde{V},\tilde{W})$ are the true values of $V$ and $W$ used to simulate the time series. 
-
-For each model and each sampler, we obtained $2500$ draws after a burn in of $500$ with each chain started at the true values used to simulate the time series. Define the effective sample proportion (ESP) for a scalar component of the chain as the effective sample size (ESS) of the component divided by the actual sample size, i.e. $ESP=ESS/n$. An $ESP=1$ indicates that the Markov chain is behaving as if it obtains iid draws from the posterior. 
-
-
-
-\begin{mybox}
-\color{DarkRed}
-\section*{Results}
-  
-<<baseintESplot, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.25, outwidth=".48\\textwidth">>=
-cap <- ""
-## Effective sample proportion in the posterior sampler for $V$ and $W$ in for $T=10$, $T=100$, and $T=1000$, in the state, scaled disturbance and scaled error samplers and for all three GIS samplers based on any two of these. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than one were rounded down to one.
-
+      \vfill
+      \begin{block}{\large Data Augmentations (DAs)}
+        \begin{itemize}
+          \footnotesize
+          \item States (standard): $\theta_{0:T}$
+            \begin{itemize}\footnotesize
+            \item Sufficient augmentation (SA) for $W$ given $V$ 
+            \item Ancillary augmentation (AA) for $V$ given $W$
+            \end{itemize}
+          \item Scaled disturbances: $\gamma_0=\theta_0$ and for $t=1,2,\cdots,T$ 
+            \begin{align*}
+            \gamma_t=(\theta_t-\theta_{t-1})/\sqrt{W}
+            \end{align*}
+            \vskip-.2ex
+            \begin{itemize}\footnotesize
+            \item Ancillary augmentation for $(V,W)$
+            \end{itemize}
+          \item Scaled errors: $\psi_0=\theta_0$ and for $t=1,2,\cdots,T$ 
+            \begin{align*}
+            \psi_t=(y_t-\theta_{t})/\sqrt{V}
+            \end{align*}
+            \vskip-.2ex
+            \begin{itemize}\footnotesize
+            \item Ancillary augmentation for $(V,W)$
+            \end{itemize}
+        \end{itemize}
+      \end{block}
+      \vfill
+      
+      \begin{block}{\large Interweaving vs Base}
+        \begin{itemize}
+          \footnotesize
+        \item GIS: let $\phi=(V,W)$ {\footnotesize
+            \[
+            [\theta|\phi^{(k)},y] \rightarrow [\phi^{(k+0.5)}|\theta,y] \rightarrow [\gamma|\theta,\phi^{(k+0.5)},y] \rightarrow [\phi^{(k+1)}|\gamma,y]
+            \]
+          }
+        \item ASIS: GIS, but require $\theta$ to be a SA and $\gamma$ an AA for $(V,W)$, or vice versa
+        \item CIS: GIS for $V^{(k+1)}|W^{(k)}$, then for $W^{(k+1)}|V^{(k+1)}$ (similar to Gibbs steps)
+        \item Let effective sample proportion $\equiv ESP \equiv ESS / n$
+        \end{itemize}
+        \vskip0.4ex
+<<baseintESplot, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.25, out.width='0.95\\textwidth'>>=
+cap <- NULL
 vars <- c("V.ES", "W.ES")
 sams <- c("dist", "error", "deint", "state", "seint", "sdint", "triint", "fullcis")
 title <- "ESP for V and W in the base, GIS, and CIS algorithms, T="
+p1 <- plotfun(meltedsam, vars, sams, 10, title)
 p2 <- plotfun(meltedsam, vars, sams, 100, title)
 p3 <- plotfun(meltedsam, vars, sams, 1000, title)
+p1
+@ 
+<<baseintESplot2, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.25, out.width='0.95\\textwidth'>>=
 p2
+@
+<<baseintESplot3, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.25, out.width='0.95\\textwidth'>>=
 p3
 @ 
+%\vskip2ex
+      \end{block}
+      \vfill
 
-Figure \ref{baseintESplot} contains plots of ESP for $V$ and $W$ in each chain of each of the samplers for $T=100$, and $T=1000$. We'll focus on $T=100$ first. The state sampler has a low ESP for $V$ and a high ESP for $W$ when the signal-to-noise ratio, $W/V$, is larger than one and a low ESP for $W$ and a high ESP for $V$ when $W/V$ is less than one. The particular values of $V$ and $W$ don't seem to matter at all --- just their relative values. Moving up any diagonal on the plots for $V$ and $W$ in the state sampler, $W/V$ is constant and the ESS appears roughly constant. The basic lesson here is that the state sampler has mixing issues for whichever of $V$ or $W$ is smaller. 
-
-The figure tells a different story for the scaled disturbance sampler. When $W/V$ is less than one, ESPs for both $V$ and $W$ are nearly one while when $W/V$ is greater than one ESPs for both $V$ and $W$ become small. The scaled error sampler has essentially the opposite properties. When $W/V$ is large, it has ESP near one for both $V$ and $W$. On the other hand, when $W/V$ is small is has a low ESP for both $V$ and $W$. None of these conclusions change as $T$ increases, though this exacerbates all mixing problems.
-
-This suggests that the disturbance--error GIS will be better than any of the other two DA GIS algorithms because it has the ``beauty and the beast'' property over a wide ranger of the parameter space. This is true and in fact, the triple GIS and full CIS algorithms don't seem to do any better in any region of the parameter space. For all three of these samplers, ESPs for both $V$ and $W$ are high when $W/V$ is farther away from one, but lower when $W/V$ is near one.
-
-
-<<hybridESplot, fig.cap=cap, echo=FALSE, fig.height=3, fig.width=5.5, out.width=".48\\textwidth">>=
-cap <- ""
-sams <- c(alts, ints)
+    \end{column}
+    
+    \begin{column}{0.47\textwidth}
+      
+      \vfill
+      \begin{block}{\large GIS vs Hybrid}
+        \begin{itemize}
+          \footnotesize
+        \item Alternating: let $\phi=(V,W)$ {\footnotesize
+            \[
+            [\theta|\phi^{(k)},y] \rightarrow [\phi^{(k+0.5)}|\theta,y] \rightarrow [\gamma|\phi^{(k+0.5)},y] \rightarrow [\phi^{(k+1)}|\gamma,y]
+            \]
+            }
+          \item Random Kernel: randomly select a DA at every iteration.
+          \end{itemize}
+          \vskip2ex
+<<hybridESplot, fig.cap=cap, echo=FALSE, fig.height=4.5, fig.width=6, out.width=".6\\textwidth">>=
+cap <- NULL
+sams <- c(alts, ints, kerns)
 plotfun2("V.ES", sams, 100)
+@ 
+<<hybridESplot2, fig.cap=cap, echo=FALSE, fig.height=4.5, fig.width=6, out.width=".6\\textwidth">>=
 plotfun2("W.ES", sams, 100)
 @ 
+\end{block}
+\vfill
 
-Figure \ref{hybridESplot} shows the same plots for the full set of GIS algorithms and for their corresponding alternating algorithms, but only for $T=100$ in order to illustrate that the interweaving algorithm doesn't improve mixing over the corresponding alternating algorithm. However, GIS is a bit less computationally costly since the third step is a transformation instead of a draw from the joint distribution of a full augmented data vector.
-\end{mybox}
+\begin{block}{\large Conclusions}
+  \begin{itemize}
+      \footnotesize
+  \item Hard to find a SA for $(V,W)$, so ASIS is elusive
+  \item GIS gives no better mixing than alternating algorithms
+  \item Full CIS gives no better mixing than non-ASIS GIS
+  \item GIS is computationally cheaper than full CIS and hybrid algorithms
+  \item GIS improves mixing over base DA algorithms, but trade-off with computation
+  \item New ``scaled'' DAs generalize easily to most DLMs
+  \end{itemize}
+\end{block}
 
-\color{DarkSlateGrey}
-
-\section*{Implications for general DLMs}
-The scaled disturbances always exist as a possible DA in any DLM as a one-to-one transformation of the states. The scaled errors, on the other hand, are only a one-to-one transformation of the states in some special models. In other models they can be defined, but determining the relevant conditional distributions may be more difficult. So the disturbance -- error GIS algorithm can be defined, but it is not entirely clear at this point what quantity will play the role of the signal-to-noise ratio when $V$ and $W$ are (possibly time dependent) covariance matricies.
-
-%\nocite{*} % Print all references regardless of whether they were cited in the poster or not
-\bibliographystyle{plainnat} % Plain referencing style
-\bibliography{mcmcex} % Use the example bibliography file sample.bib
-
-\section*{Acknowledgements}
-Jarad Niemi, Vivekananda Roy
-
-\end{multicols}
+\vfill
+\begin{block}{\large References}
+  {\footnotesize
+    \nocite{*} % Print all references regardless of whether they were cited in the poster or not
+    \bibliographystyle{apalike} % Plain referencing style
+    \bibliography{mcmcexpost} % Use the example bibliography file sample.bib
+  }
+  
+\end{block}
+\vfill
+\end{column}
+\end{columns}
+    
+\end{frame}
 \end{document}
+  

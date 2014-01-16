@@ -5,3 +5,7 @@ figure*
 *.log
 *.pdf
 *.tex
+*.nav
+*.out
+*.toc
+*.snm
