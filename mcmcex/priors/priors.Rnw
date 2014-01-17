@@ -1,0 +1,104 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol, amsthm, bbm}
+\usepackage{multicol}
+\usepackage{textcomp}
+\usepackage{fullpage}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage[authoryear]{natbib} %numbers instead of authoryear for [1] instead of [1980]
+\newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newtheorem{alg}{Algorithm}
+\newtheorem{theorem}{Theorem}
+\DeclareMathOperator{\Tr}{Tr}
+\begin{document}
+
+<<setup, include=FALSE, cache=FALSE>>=
+options(replace.assign=TRUE,width=90)
+opts_knit$set(eval.after = "fig.cap")
+opts_chunk$set(dev="pdf",
+               fig.lp = "",
+               fig.keep="high",
+               fig.show="hold",
+               fig.align="center",
+               fig.pos="!ht")
+
+@
+
+\title{A note on priors}
+\author{Matt Simpson}
+\maketitle
+
+\section{Introduction}
+This is a quick note on priors for DLMs generally and for the LLM in particular, thanks to some comments from Sylvia Fr{\"u}hwirth-Schnatter at EFaB 2013 @ Duke. 
+
+\section{Priors on $\pm \sqrt{\sigma^2}$ instead of $\sigma^2$}
+
+Start with the local level model for simplicity. For $t=1,2,\cdots,T$:
+\begin{align*}
+  y_t & = \theta_t + v_t \\
+  \theta_t & = \theta_{t-1} + w_t
+\end{align*}
+with
+\begin{align*}
+  \begin{bmatrix} v_{1:T} \\ w_{1:T} \end{bmatrix} &\sim N\left(\bm{0}_{2T\times 1}, \begin{bmatrix} V\bm{I}_{T} & \bm{0}_{T\times T} \\ \bm{0}_{T\times T} & W\bm{I}_{T} \end{bmatrix} \right)
+\end{align*}
+where $\bm{I}_T$ is the $T\times T$ identity matrix and $\bm{0}_{p\times q}$ is a $p\times q$ matrix of zeroes. 
+
+To complete the model we need a prior for $(\theta_0, V, W)$. Sylivia's suggestion is to use what ammounts to a $G\left(\frac{1}{2}, \frac{1}{2Q}\right)$ prior for each of $V$ and $W$ with $Q$ chosen appropriately, but to do this by specifying normal priors on $\pm \sqrt{V}$ and $\pm \sqrt{W}$.
+
+Let's ignore the dynamic setting for a moment and essentially impose that $W=0$ so that the model is just
+\begin{align*}
+  y_t \stackrel{iid}{\sim} & N(\theta, V).
+\end{align*}
+So now we need a prior for $(\theta, V)$.  We'll suppose $\theta$ is known to simplify even more, then suppose that $V$ has the $G(1/2, 1/(2Q))$ prior. This means that the prior density of $V$ is
+\begin{align*}
+  p(V) \propto & V^{-1/2}e^{-V/(2Q)}.\\
+\end{align*}
+Now let $\tau = \pm \sqrt{V}$ and suppose that a priori $\tau \sim N(0,Q)$. Then
+\begin{align*}
+  p(\tau) \propto & e^{-\tau^2/(2Q)}.\\
+\end{align*}
+If we transform from $\tau$ to $V$, $V=\tau^2$ and the jacobian is the same for both the positive and negative sides of $\tau$:
+\begin{align*}
+  |J| & = V^{-1/2}/2\\
+\end{align*}
+which gives 
+\begin{align*}
+  p(V) \propto & V^{-1/2} e^{-\tau^2/(2Q)}.\\
+\end{align*}
+So a $N(0,Q)$ prior on $\tau$ and a $G(1/2, 1/(2Q))$ prior on $V$ are equivalent. 
+
+Given this prior we can write the posterior distribution of $\tau$ as
+\begin{align*}
+  p(\tau|y_{1:T}) \propto & \tau^{-T}e^{\sum_{t=1}^T(y_t - \theta)^2/(2\tau^2)}e^{-\tau^2/(2Q)}\\
+  \propto & \tau^{-T}e^{-\frac{1}{2}\left(\sum_{t=1}^T(y_t-\theta)^2/\tau^2 + \frac{1}{Q}\tau^2\right)}
+\end{align*}
+or the posterior distribution of $V$ as
+\begin{align*}
+  p(V|y_{1:T}) \propto & V^{-(T+1)/2}e^{\sum_{t=1}^T(y_t - \theta)^2/(2V)}e^{-V/(2Q)}\\
+  \propto & V^{-(T+1)/2}e^{-\frac{1}{2}\left(\sum_{t=1}^T(y_t-\theta)^2/V + \frac{1}{Q}V\right)}.
+\end{align*}
+The distribution of $V$ is an instance of the generalized inverse gaussian distribution, or GIG. A random variable $x>0$ has a $GIG(a,b,p)$ distribution if the density of $x$ is given by
+\begin{align*}
+  p(x) \propto & x^{p-1}e^{-(ax + b/x)/2}
+\end{align*}
+for $a\ge 0$, $b \ge 0$, and $p$ real valued. The gamma and inverse gamma distributions (among others) are special cases.
+
+If we treat $y_t$ as a vector and thus $V$ as a matrix, let $CC'=V$ i.e. $C$ is the lower triangular cholesky decomposition of $V$. Then in a similar fashion you can put a normal prior on each of the components of $C$ (treating it as $\pm chol(V)$). Things get complicated here, but in a different setting this ends up being a pretty convenient prior for the variance of a hierachical distribution for regression parameters, and in the Gibbs sampler $C$ ends up being drawn from a normal distribution. We'll ignore that for now and go back to the LLM.
+
+Suppose now that $V=\tau^2$ and $W=\sigma^2$ with $(\tau,\sigma)\sim N(0,Q)N(0,R)$, i.e. indpendent mean zero normal distributions with potentially different variances. We'll assume that $\theta_0$ is independent of $(\tau,\sigma)$ in the prior with $\theta_0\sim N(m_0,C_0)$. Now we can write the conditional posteriors of $\tau$ and $\sigma$ as
+\begin{align*}
+  p(\tau|\theta_{0:T},\cdots)\propto & \tau^{-T} e^{-\left(\sum_{t=1}^T(y_t-\theta_t)^2/\tau^2 + \frac{1}{Q}\tau^2\right)/2}\\
+  p(\sigma|\theta_{0:T},\cdots)\propto & \sigma^{-T} e^{-\left(\sum_{t=1}^T(\theta_{t-1}-\theta_t)^2/\sigma^2 + \frac{1}{R}\sigma^2\right)/2}.
+\end{align*}
+
+Suppose now we reparameterize in terms of $\gamma_t=(\theta_t-\theta_{t-1})/\sqrt{W}=(\theta_t - \theta_{t-1})/\sigma$ for $t=1,\cdots,T$ and $\gamma_0=\theta_0$. The determinant of the jacobian of this transformation ends up being $W^{T/2}$. Then we have the conditional posteriors given $\gamma_{0:T}$ instead of $\theta_{0:T}$:
+\begin{align*}
+  p(\tau|\gamma_{0:T},\cdots)\propto & \tau^{-T} e^{-\left(\sum_{t=1}^T(y_t-\sigma\sum_{s=1}^t\gamma_s - \gamma_0)^2/\tau^2 + \frac{1}{Q}\tau^2\right)/2}\\
+  p(\sigma|\gamma_{0:T},\cdots)\propto & e^{-\left(\sum_{t=1}^T(y_t-\sigma\sum_{s=1}^t\gamma_s - \gamma_0)^2/\tau^2 + \frac{1}{R}\sigma^2\right)/2}.
+\end{align*}
+So $\tau$ still has a GIG distribution, but notice that $\sigma$ now has a normal distribution with variance $\hat{\Sigma}=\left(\frac{1}{\tau^2}\sum_{t=1}^T \left( \sum_{s=1}^t\gamma_s\right)^2 + \frac{1}{R}\right)^{-1}$ and mean $\hat{\mu}=\hat{\Sigma}\frac{1}{\tau^2}\sum_{t=1}^T(y_t-\gamma_0)\sum_{s=1}^t\gamma_s$. This means no awful rejection sampling in order to draw $W|\gamma_{0:T},\cdots$ or $V|\psi_{0:T},\cdots$.
+
+\end{document}
