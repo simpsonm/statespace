@@ -11,7 +11,8 @@ simdata$bv <- (simdata$av-1)*simdata$V.T
 simdata$bw <- (simdata$aw-1)*simdata$W.T
 sams <- c("state", "dist", "error", "sdint", "seint", "deint",
           "triint", "sdalt", "sealt", "dealt", "trialt",
-          "sdkern", "sekern", "dekern", "trikern")
+          "sdkern", "sekern", "dekern", "trikern",
+          "fullcis", "partialcis")
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
 n <- 3000
