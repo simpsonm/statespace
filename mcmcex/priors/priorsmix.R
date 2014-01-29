@@ -1,0 +1,22 @@
+source("priorsfun.R")
+set.seed(152893627)
+T <- c(10, 100, 1000)
+V <- 10^(c(0:10)/2-2)
+W <- V
+simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
+simdatatemp <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
+T <- 100
+V <- 10^(1:6-3)
+W <- V
+simdata <- simdatatemp[simdatatemp$T.T==T & simdatatemp$V.T %in% V & simdatatemp$W.T %in% W,]
+sams <- c("state", "dist", "error")
+samplers <- data.frame(sams=rep(1,length(sams)))
+samplers$sampler <- sams
+n <- 3000
+burn <- 500
+parallel <- require(doMC, quietly=TRUE)
+if(parallel){
+  registerDoMC(4)
+}
+system.time(samout <- fullsim(samplers, simdata, n, burn, parallel))
+save(samout, file="samout.RData")
