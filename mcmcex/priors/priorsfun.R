@@ -621,6 +621,20 @@ thetapsitrans <- function(dat, psi, sigv){
   return(theta)
 }
 
+rgig2 <- function(n, a, b, p, eps=.0001){
+  ## transform into a GIG RV that won't have numerical probs
+  ## if a or b are near zero
+  ## note: a is the coef of 1/x, b is the coef of x in dgig(x)
+  if(a < eps | b < eps){
+    g <- sqrt(b/a)
+    x <- rgig(n, a*g, b/g, p)/g
+  }
+  else{
+    x <- rgig(n, a, b, p)
+  }
+  return(x)
+}
+
 ## samples V,W conditional on theta
 VWthetaiter <- function(dat, theta, Qv, Qw){
   T <- length(dat)
@@ -629,8 +643,8 @@ VWthetaiter <- function(dat, theta, Qv, Qw){
   p <- -(T-1)/2
   aw <- sum((theta[-1]-theta[-(T+1)])^2)
   bw <- 1/Qw
-  V <- rgig(1, av, bv, p)
-  W <- rgig(1, aw, bw, p)
+  V <- rgig2(1, av, bv, p)
+  W <- rgig2(1, aw, bw, p)
   return(c(V,W))
 }
 ## samples W conditional on V,gamma
@@ -653,7 +667,17 @@ Vgamiter <- function(dat, gam, sigw, Qv){
   av <- sum((dat-theta[-1])^2)
   bv <- 1/Qv
   p <- -(T-1)/2
-  V <- rgig(1, av, bv, p)
+  V <- rgig2(1, av, bv, p)
+  return(V)
+}
+
+## samples V conditional on theta
+Vthetaiter <- function(dat, theta,  Qv){
+  T <- length(dat)
+  av <- sum((dat-theta[-1])^2)
+  bv <- 1/Qv
+  p <- -(T-1)/2
+  V <- rgig2(1, av, bv, p)
   return(V)
 }
 
@@ -679,12 +703,23 @@ Wpsiiter <- function(dat, psi, sigv, Qw){
   T <- length(dat)
   theta <- thetapsitrans(dat, psi, sigv)
   theta <- c(theta)
-  aw <-sum((theta[-1]-theta[-(T+1)])^2)
+  aw <- sum((theta[-1]-theta[-(T+1)])^2)
   bw <- 1/Qw
   p <- -(T-1)/2
-  W <- rgig(1, aw, bw, p) 
+  W <- rgig2(1, aw, bw, p) 
   return(W)
 }
+
+## samples W conditional on theta
+Wthetaiter <- function(dat, theta, Qw){
+  T <- length(dat)
+  aw <- sum((theta[-1]-theta[-(T+1)])^2)
+  bw <- 1/Qw
+  p <- -(T-1)/2
+  W <- rgig2(1, aw, bw, p) 
+  return(W)
+}
+
 
 randkerniter <- function(dat, V, W, sigv, sigw, theta, Qv, Qw, probs=c(1/3, 1/3, 1/3)){
   kernels <- c("state", "dist", "error")
@@ -778,7 +813,7 @@ fullcissam <- function(n, start, dat, Qv, Qw){
     theta <- thetaiter(dat, V, W)
     av <- sum((dat-theta[-1])^2)
     bv <- 1/Qv
-    V <- rgig(1, av, bv, p)
+    V <- rgig2(1, av, bv, p)
     sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
     psi <- psitrans(dat, theta, sigv)
     Vout <- Vpsiiter(dat, psi, W, Qv)
@@ -787,7 +822,7 @@ fullcissam <- function(n, start, dat, Qv, Qw){
     theta <- thetapsitrans(dat, psi, sigv)
     aw <- sum((theta[-1]-theta[-(T+1)])^2)
     bw <- 1/Qw
-    W <- rgig(1, aw, bw, p) 
+    W <- rgig2(1, aw, bw, p) 
     sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
     gam <- gamtrans(theta, sigw)
     Wout <- Wgamiter(dat, gam, V, Qw)
