@@ -64,77 +64,43 @@ The key difference between this algorithm and algorithm \ref{inter2} is in step 
 The next step is to apply the ideas of interweaving to sampling from the posterior of the dynamic linear model. \citeauthor{papaspiliopoulos2007general} note that typically the usual parameterization results in a SA for the parameter $\phi$. All that's necessary for an ASIS algorithm, then, is to construct an AA for $\phi$. We immediately run into a problem because the standard DA for a DLM is the latent states $\theta_{0:T}$. From equations \eqref{dlmobseq} and \eqref{dlmsyseq} we see that $V_{1:T}$ is in the observation equation so that $\theta_{0:T}$ isn't a SA for $(V_{1:T},W_{1:T})$ while $W_{1:T}$ is in the system equation so that $\theta_{0:T}$ isn't an AA for $(V_{1:T},W_{1:T})$ either. In order to find a SA we need to somehow move $V_{1:T}$ from the observation equation \eqref{dlmobseq} to the system equation \eqref{dlmsyseq} while leaving $W_{1:T}$ in the system equation. Alternatively, we could find an AA by somehow moving $W_{1:T}$ from the system equation to the observation equation while leaving $V_{1:T}$ in the observation equation. A naive thing to try is to condition on the disturbances instead of the states and see if the disturbances for a SA or an AA for $(V_{1:T},W_{1:T})$. The disturbances $w_{0:T}$ are defined by $w_t = \theta_t - G_t\theta_{t-1}$ for $t=0,1,...,T$ and we define $\theta_{-1}=0$ so that $w_0=\theta_0$. However the DA algorithm based on the $w_t$'s is identical to the algorithm based on the $\theta_t$'s. This is because $w_{0:T}$ is a one-to-one function of $\theta_{0:T}$ that doesn't depend on $V_{1:T}$ or $W_{1:T}$, the conditional distributions $p(V_{1:T},W_{1:T}|\theta_{0:T},y_{1:T})$ and $p(V_{1:T},W_{1:T}|w_{0:T},y_{1:T})$ are identical.
 
 \citeauthor{papaspiliopoulos2007general} suggest that in order to obtain an ancillary augmentation for a variance parameter, we must scale the sufficient agumentation by the square root of that parameter. Based on this intuition, note that if we hold $V_{1:T}$ constant then $\theta_{0:T}$ is a SA for $W_{1:T}$ from the observation and system equations, \eqref{dlmobseq} and \eqref{dlmsyseq}, i.e. we say $\theta_{0:T}$ is a SA for $W_{1:T}$ given $V_{1:T}$, or for $W_{1:T}|V_{1:T}$. Similarly $\theta_{0:T}$ is an AA for $V_{1:T}|W_{1:T}$. This suggests that if we scale $\theta_{t}$ by $W_{t}$ for all $t$ appropriately we'll have an ancillary augmentation for $V_{1:T}$ and $W_{1:T}$ jointly. The same intuition suggests scaling $w_{t}=\theta_{t}-G_t\theta_{t-1}$ by $W_{t}$ for all $t$ appropriately in order to find an ancillary augmentation for $(V_{1:T},W_{1:T})$. We'll work with the latter case though, again these two ideas are ultimately equivalent since the resulting DAs are one-to-one transformations of each other. 
-
-To start with, we'll rewrite \eqref{dlmjoint} in a less messy form. Define the following matrices:
-\begin{align*}
-  V=\begin{bmatrix} I_{k} & 0 & \cdots & 0 \\
-    0 & V_1 & \cdots & 0 \\
-    \vdots & \vdots & \ddots & \vdots \\
-    0 & 0 & \hdots & V_T\end{bmatrix}, && W=\begin{bmatrix} C_0 & 0 & \cdots & 0 \\
-    0 & W_1 & \cdots & 0 \\
-    \vdots & \vdots & \ddots & \vdots \\
-    0 & 0 & \hdots & W_T\end{bmatrix}, \\
-  G = \begin{bmatrix} 0 & 0 & \hdots & 0 & 0\\
-    G_1 & 0 & \hdots &0& 0\\
-    0 & G_2 & \hdots &0& 0\\
-    \vdots & \vdots & \ddots &\vdots& \vdots \\
-    0 & 0 & \hdots & G_T & 0 \end{bmatrix}, &&   F = \begin{bmatrix} 0 & 0 & 0 & \hdots & 0 \\
-    0 & F_1 & 0 &  \hdots &0\\
-    0 & 0 & F_2 & \hdots &0\\
-    \vdots & \vdots & \vdots &\ddots& \vdots \\
-    0 & 0 & 0 & \hdots & F_T \end{bmatrix},
-\end{align*}
-\begin{align*}
-  \theta = \begin{bmatrix} \theta_0 \\ \theta_1 \\ \vdots \\ \theta_T \end{bmatrix}, && y = \begin{bmatrix} 0 \\ y_1 \\ y_2 \\ \vdots \\ y_T \end{bmatrix},&&\mathrm{and}\  m = \begin{bmatrix} m_0 \\ 0 \\ \vdots \\ 0 \end{bmatrix}
-\end{align*}
-where $I_k$ is the $k\times k$ identity matrix. With the notation so defined, we can write the full joint distribution of data and parameters as
-\begin{align}
-  p(V_{1:T}&,W_{1:T},\theta_{0:T},y_{1:T}) \propto p(V_{1:T})p(W_{1:T}) \nonumber \\
-  &\times |V|^{-1/2}\exp\left[-\frac{1}{2}(y-F\theta)'V^{-1}(y-F\theta)\right]|W|^{-1/2}\exp\left[-\frac{1}{2}(\theta-G\theta)'W^{-1}(\theta-G\theta)\right]\label{dlmmatjoint}
-\end{align}
-
-Now we can define the scaled disturbances in the general DLM. Let $L_t$ denote the Cholesky decomposition of $W_t^{-1}$, i.e. $L_t' L_t =W_t^{-1}$, and define 
-\begin{align*}
-  L = & \begin{bmatrix} L_0 & 0 & \hdots & 0 \\
-    0 & L_1 & \hdots & 0 \\
-    \vdots & \vdots & \ddots & \vdots \\
-    0 & 0 & \hdots & L_T \end{bmatrix}.
-\end{align*}
-So we have $L'L = W^{-1}$. Then we'll define the scaled disturbances as $\gamma = L[(I_{(T+1)p}-G)\theta - m]$ where again $I_{n}$ is the $n\times n$ identity matrix. In other words $\gamma_0=\theta_0-m_0$ and for $t=1,2,\cdots,T$, $\gamma_t = L_t(\theta_t - G_t\theta_{t-1})$.  We can confirm our intuition that the scaled disturbances are an AA for $V_{1:T}$ and $W_{1:T}$ jointly. The reverse transformation is $\theta = (I_{(T+1)p}-G)^{-1}(L^{-1}\gamma + m)$. Then the Jacobian is $J = (I_{(T+1)p} - G)^{-1}L^{-1}$ so $|J| = |L|^{-1}|I_{(T+1)p} - G|^{-1} =|W|^{-1/2}$ since $I_{(T+1)p} - G$ is block lower triangual with identity matrices in the diagonal blocks. Then from \eqref{dlmmatjoint} we can write the full joint distribution of $(V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T})$ as
+To define the scaled disturbances in the general DLM, let $L_t$ denote the Cholesky decomposition of $W_t^{-1}$, i.e. $L_t' L_t =W_t^{-1}$, for $t=1,2,\cdots,T$. Then we'll define the scaled disturbances $\gamma_{0:T}$ by $\gamma_0=\theta_0$ and $\gamma_t = L_t(\theta_t-G_t\theta_{t-1})$ for $t=1,2,\cdots,T$. We can confirm our intuition that the scaled disturbances are an AA for $V_{1:T}$ and $W_{1:T}$ jointly. The reverse transformation is defined recursively by $\theta_0=\gamma_0$ and $\theta_t=L_t^{-1}\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. Then the Jacobian is block lower triangular with the identity matrix and the $L_t^{-1}$'s along the diagonal blocks, so $|J| = \prod_{t=1}^T|L_t|^{-1}=|W|^{1/2}$. Then from \eqref{dlmjoint} we can write the full joint distribution of $(V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T})$ as
  \begin{align}
-  p(&V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T}) \propto p(V_{1:T})p(W_{1:T})\exp\left[-\frac{1}{2}\gamma'\gamma\right] \nonumber\\
-  &\times \exp\left[-\frac{1}{2}\left[y-F(I_{(T+1)p}-G)^{-1}(L^{-1}\gamma + m)\right]'V^{-1}\left[y-F(I_{(T+1)p}-G)^{-1}(L^{-1}\gamma + m)\right]\right]. \label{dlmdistjoint}
+  p(&V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\gamma_0-m_0)'C_0^{-1}(\gamma_0-m_0)\right] \nonumber\\
+  &\times \prod_{t=1}^T |W_t|^{-(\delta_t + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\gamma_t'\gamma_t\right] |V_t|^{-(\eta_t + k + 3)/2} \nonumber\\
+  &\times \exp\left[-\frac{1}{2}\left(tr\left(\Psi_tV_t^{-1}\right) + \sum_{t=1}^T\left[y_t-F_t\theta_t(\gamma_{0:T},W_{1:T})\right]'V^{-1}\left[y_t-F_t\theta_t(\gamma_{0:T},W_{1:T})\right]\right)\right] \label{dlmdistjoint}
  \end{align}
+where $\theta_t(\gamma_{0:T},W_{1:T})$ denotes the recursive back transformation defined by the scaled disturbances.
 
 So ultimately under the scaled disturbance parameterization we can write the model as
 \begin{align*}
-  y_t|\gamma_{0:T},V_{1:T},W_{1:T} & \stackrel{ind}{\sim} N\left(F_t\textstyle\sum_{s=0}^{t}H^t_{s+1}L_{s}^{-1}\gamma_{s}, V_t\right)\\
+  y_t|\gamma_{0:T},V_{1:T},W_{1:T} & \stackrel{ind}{\sim} N\left(F_t\theta_t(\gamma_{0:T},W_{1:T}), V_t\right)\\
   \gamma_t & \stackrel{iid}{\sim}N(0,I_p)
 \end{align*}
-for $t=1,2,\cdots,T$ where $I_p$ is the $p\times p$ identity matrix. Neither $V_{1:T}$ nor $W_{1:T}$ are in the system equation, so the scaled disturbances are an AA for $(V_{1:T},W_{1:T})$. In fact, \citet{fruhwirth2004efficient} use this parameterization in a dynamic regression model with stationary regression coefficient and also note that it is a noncentered parameterization (NCP), i.e. an AA for $(V_{1:T},W_{1:T})$ in our terminology. 
+for $t=1,2,\cdots,T$ where $I_p$ is the $p\times p$ identity matrix. Neither $V_{1:T}$ nor $W_{1:T}$ are in the system equation, so the scaled disturbances are an AA for $(V_{1:T},W_{1:T})$. This parameterization is well known, e.g. \citet{fruhwirth2004efficient} use it in a dynamic regression model with stationary regression coefficient. 
 
 
-The DA algorithm base on $\gamma_{0:T}$ is as follows:
+The DA algorithm based on $\gamma_{0:T}$ is as follows:
 \begin{alg}\mbox{}\\[-\baselineskip]
 \begin{enumerate}\label{distalg}
   \item Draw $\gamma_{0:T}$ from $p(\gamma_{0:T}|V_{1:T}^{(k)},W_{1:T}^{(k)},y_{1:T})$
-  \item Draw $(V_{1:T}^{(k+1)},W_{1:T}^{(k+1)})$ from $p(V,W|\gamma_{0:T},y_{1:T})$.
+  \item Draw $(V_{1:T}^{(k+1)},W_{1:T}^{(k+1)})$ from $p(V_{1:T},W_{1:T}|\gamma_{0:T},y_{1:T})$.
 \end{enumerate}
 \end{alg}
 Step 1 can be accomplished directly with the disturbance smoother of \citet{koopman1993disturbance} or indirectly by using FFBS to draw the states and then transform them to the scaled disturbances. Step 2 ends up being complicated because the joint conditional posterior of $V$ and $W$ isn't a known density. We'll go through an example of this when both $y_t$ and $\theta_t$ are scalars later.
 
-We previously mentioned that the intuition behind the scaled disturbances also suggests trying the scaled states, i.e. $\theta^s_{0:T}$ where $\theta^s_0=\theta_0$ and for $t=1,2,\cdots,T$, $\theta^s_t=L_t\theta_t$. Note that $\theta^s_{0:T}$ and $\gamma_{0:T}$ are completely determined by each other. This suggests (but doesn't imply due to the Borel--Kolmogorov paradox) that the conditional posterior of $(V_{1:T},W_{1:T})$ is the same whether we condition on $\gamma_{0:T}$ or $\theta_{0:T}^s$. In fact, this is true and easy to verify as well is the fact that $\theta_{0:T}^s$ is also an AA for $(V_{1:T},W_{1:T})$. As such, we have a choice to make between two equivalent representations of what amounts to the same parameterization. We prefer the scaled disturbances ($\gamma_{0:T}$) to the scaled states ($\theta_{0:T}^s$) for two reasons. First, the scaled disturbances are already in the literature, e.g. in \citet{fruhwirth2004efficient} and are a natural extension of the concept of noncentering as it is typically used in hierarchical models to time series models (e.g. in \citet{van2001art} where the suggestion is to demean before scaling). Second, the scaled disturbances immediately suggest another potential AA that seems like it should be analogous --- the scaled observation errors, or more succinctly the scaled errors. That is, $v_t=y_t - F_t\theta_t$ appropriately scaled by $V_t$ in the general DLM. 
+We previously mentioned that the intuition behind the scaled disturbances also suggests trying the scaled states, i.e. $\theta^s_{0:T}$ where $\theta^s_0=\theta_0$ and for $t=1,2,\cdots,T$, $\theta^s_t=L_t\theta_t$. Note that $\theta^s_{0:T}$ and $\gamma_{0:T}$ are completely determined by each other independently of $V_{1:T}$ and $W_{1:T}$, which suggests the conditional distribution of $(V_{1:T},W_{1:T})$ is unchanged. This intuition is dangerously close to running right into the Borel-Kolmogorov paradox, but in this case there is no issue since the determinant of the Jacobian will be the same whether we use the sclaed disturbances or the scaled states.
 
 \subsection{The Scaled Errors}
-Define the scaled errors as $\psi_t = K_t(y_t - F_t\theta_t)$ for $t=1,2,\cdots,T$ and $\psi_0=\theta_0$ where $K_t$ is the cholesky decomposition of $V_t$, that is $K_t'K_t=V_t$. This is a bit strange since in general $dim(\psi_0)\neq dim(\psi_t)$ for $t=1,2,\cdots,T$. Ideally we might like an ``$F_0$'' so that we can set $\psi_0=F_0\theta_0$ in order for $\psi_0$ to have the same dimension as $\psi_1$. In general, though, there is no $F_0$. In some DLMs $F_t$ is constant with respect to $t$ so that we could set $F_0=F$, but in dynamic regression for example, $F_0$ will be a different value of all covariates and may be unkown or be an essentially arbitrary choice. The arbitrariness is fine since it is just a definition, but $\psi_0=\theta_0$ seems most natural in the general context. 
+The scaled disturbances immediately suggest another potential AA that seems like it should be analogous --- the scaled observation errors, or more succinctly the scaled errors. That is, $v_t=y_t - F_t\theta_t$ appropriately scaled by $V_t$ in the general DLM. Now let $K_t$ denote the cholesky decomposition of $V_t^{-1}$, that is $K_t'K_t=V_t^{-1}$. Then we can define the scaled errors as $\psi_0 = \theta_0$ and $\psi_t = K_t(y_t - F_t\theta_t)$ for $t=1,2,\cdots,T$. This is a bit strange since in general $dim(\psi_0)\neq dim(\psi_t)$ for $t=1,2,\cdots,T$. Ideally we might like an ``$F_0$'' so that we can set $\psi_0=F_0\theta_0$ in order for $\psi_0$ to have the same dimension as $\psi_1$. However, in general there is no $F_0$. In some DLMs $F_t$ is constant with respect to $t$ so that we could set $F_0=F$, but in dynamic regression for example, $F_0$ will be a different value of all covariates and may be unkown or be an essentially arbitrary choice. 
 
-With this definition of $\psi_{0:T}$, it isn't straightforward to determine $p(\psi_{1:T}|V_{1:T},W_{1:T})$, i.e. to write down the model in terms of $\psi_{0:T}$ instead of $\theta_{0:T}$. When $F_t$ is $k\times k$ (so that $dim(y_t)=k=p=dim(\theta_t)$) and is invertible for $t=1,2,\cdots,T$, the $\psi_{0:T}$ is a one-to-one transformation of $\theta_{0:T}$ and the problem is easier. Then $\theta_t = F_t^{-1}(y_t - K_t^{-1}\psi_t)$ for $t=1,2,\cdots,T$ while $\theta_0=\psi_0$. The Jacobian of this transformation is block diagonal with a single copy of the identity matrix and the $F_t^{-1}K_t^{-1}$'s along the diagonal, so $|J|=\prod_{t=1}^T|F_t|^{-1}|V_t|^{-1/2}$. So from \eqref{dlmjoint} we can write the joint distribution of $(V_{1:T}, W_{1:T}, \psi_{0:T}, y_{1:T})$ as
+This isn't where the difficulties end either. With this definition of $\psi_{0:T}$, it isn't straightforward to determine $p(\psi_{0:T}|V_{1:T},W_{1:T})$, i.e. to write down the model in terms of $\psi_{0:T}$ instead of $\theta_{0:T}$. When $F_t$ is $k\times k$ (so that $dim(y_t)=k=p=dim(\theta_t)$) and is invertible for $t=1,2,\cdots,T$, $\psi_{0:T}$ is a one-to-one transformation of $\theta_{0:T}$ and the problem is easier. Then $\theta_t = F_t^{-1}(y_t - K_t^{-1}\psi_t)$ for $t=1,2,\cdots,T$ while $\theta_0=\psi_0$. The Jacobian of this transformation is block diagonal with a single copy of the identity matrix and the $F_t^{-1}K_t^{-1}$'s along the diagonal, so $|J|=\prod_{t=1}^T|F_t|^{-1}|V_t|^{-1/2}$. So from \eqref{dlmjoint} we can write the joint distribution of $(V_{1:T}, W_{1:T}, \psi_{0:T}, y_{1:T})$ as
 \begin{align}
     p(&V_{1:T},W_{1:T},\psi_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\psi_0-m_0)'C_0^{-1}(\psi_0-m_0)\right] \nonumber\\
   &\times \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Psi_tV_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\psi_t'\psi_t\right] \nonumber\\
-   & \times |W_t|^{-(\delta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] |W_t|^{-1/2}\exp\left[-\frac{1}{2}(y_t - \mu_t)'(F_tW_tF_t')^{-1}(y_t-\mu_t)\right]\label{dlmerrorjoint}
+   & \times |W_t|^{-(\delta_t + k + 3)/2}\exp\left[-\frac{1}{2}\left(tr\left(\Omega_tW_t^{-1}\right) + (y_t - \mu_t)'(F_tW_tF_t')^{-1}(y_t-\mu_t)\right)\right]\label{dlmerrorjoint}
 \end{align}
-where we define $\mu_t =K_t^{-1}\psi_t + F_tG_tF_{t-1}(y_{t-1} - K_{t-1}^{-1}\psi_{t-1})$, $y_0=0$, $K_0=I_k$, and $F_0=I_k$ where $I_k$ is the $k\times k$ identity matrix. Now we can write the model in terms of the scaled error parameterization:
+where we define $\mu_t =K_t^{-1}\psi_t + F_tG_tF_{t-1}(y_{t-1} - K_{t-1}^{-1}\psi_{t-1})$, $y_0=0$, $K_0=I_k$, and $F_0=I_k$ where $I_k$ is the $k\times k$ identity matrix. The $|F_t|^{-1}$'s have been absorbed into the normalizing constant, but note that if the $F_t$'s depended on some unknown parameter then we couldn't do this. Now we can write the model in terms of the scaled error parameterization:
 \begin{align*}
   y_t|V_{1:T},W_{1:T},\psi_{0:T},y_{1:t-1} &\sim N(\mu_t, F_t'W_tF_t)\\
   \psi_t & \stackrel{iid}{\sim} N(0,I_k)
