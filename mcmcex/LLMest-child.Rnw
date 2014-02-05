@@ -5,9 +5,7 @@ set_parent('mcmcex.Rnw')
 
 \section{Application: The Local Level Model}
 
-{\it INSERT A PARAGRAPH MOTIVATING WHY WE LOOK AT THE LOCAL LEVEL MODEL}
-
-The local level model (LLM) is a DLM with univariate data $y_t$ for $t=1,2,\cdots,T$ and a univariate latent state $\theta_t$ for $t=0,2,\cdots,T$ that satisfies
+In order to illustrate how these algorithms work, we'll focus on the local level model primarily for simplicity. Drawing from $p(W_{1:T}|V_{1:T},\gamma_{0:T},y_{1:T})$ and $p(V_{1:T}|W_{1:T},\psi_{0:T},y_{1:T})$ in particular is diffult since these turn out not to be of a known distributional form, but the simplicity of the local level model helps to clarify what the issues are. Of course, it is possible to implement a metropolis step for the difficult conditional or for $(V_{1:T},W_{1:T})$ jointly, but first we would like to see what sort of gains are possible if we sample directly from the desired distributions. The local level model (LLM) is a DLM with univariate data $y_t$ for $t=1,2,\cdots,T$ and a univariate latent state $\theta_t$ for $t=0,2,\cdots,T$ that satisfies
 \begin{align}
   y_t |\theta_{0:T}& \stackrel{ind}{\sim} N(\theta_t,V) \label{llmobseq}\\
   \theta_t |\theta_{0:t-1}& \sim N(\theta_{t-1},W) \label{llmsyseq}
@@ -43,9 +41,9 @@ Now $V$ and $W$ are no longer conditionally independent given $\gamma_{0:T}$ and
 \item Draw $W^{(k+1)}$ from $p(W|V^{(k+1)},\gamma_{0:T},y_{1:T})$.
 \end{enumerate}
 \end{alg}
-In step 2, $V$ is drawn from the same inverse gamma distribution as in step 2 of Algorithm \ref{llmstatealg}. In step 3, the draw of $W$ is more complicated. The density can be written as
+In step 2, $V$ is drawn from the same inverse gamma distribution as in step 2 of algorithm \ref{llmstatealg}. In step 3, the draw of $W$ is more complicated. The density can be written as
 \begin{align*}
-  p(W|V,\gamma_{0:T},y_{1:T}) \propto & W^{-\alpha_w - 1}\exp\left[-\frac{1}{2V}\sum_{t=1}^T\left(y_t - \gamma_0 - \sqrt{W}\sum_{s=1}^t\gamma_s\right)^2\right].
+  p(W|V,\gamma_{0:T},y_{1:T}) \propto & W^{-\alpha_W - 1}\exp\left[-\frac{1}{2V}\sum_{t=1}^T\left(y_t - \gamma_0 - \sqrt{W}\sum_{s=1}^t\gamma_s\right)^2\right]\exp\left[-\frac{\beta_W}{W}\right].
 \end{align*}
 This density isn't any known form and is difficult to sample from. The log density can be written as
 \begin{align*}
@@ -65,7 +63,7 @@ The scaled error sampler is similar to the scaled disturbance sampler, and this 
     p(&V,W,\psi_{0:T},y_{1:T}) \propto W^{-(\alpha_W + 1 + T/2)}\exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\textstyle\sum_{t=1}^T(Ly_t - \sqrt{V}L\psi_t)^2\right)\right]\nonumber \\
  & V^{-(\alpha_V + 1)}\exp\left[-\frac{\beta_V}{V}\right]  \exp\left[-\frac{1}{2}\textstyle\sum_{t=1}^T\psi_t^2\right] \exp\left[-\frac{1}{2C_0}(\psi_0-m_0)^2 \right] 
 \end{align*}
-where we define $Ly_t=y_t-y_{t-1}$ for $t=2,3,...,T$ \& $Ly_1= y_1 - \psi_0$ and $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ \& $L\psi_1=\psi_1-0$. Once again, $V$ and $W$ are no longer conditionally independent given $\psi_{0:T}$ and $y_{1:T}$. In fact, the density seems analgous to \eqref{llmdistpost} with $V$ and $W$ ``switching places'' so to speak. The scaled error sampler obtained from drawing $V$ and $W$ separately is:
+where we define $Ly_t=y_t-y_{t-1}$ for $t=2,3,\cdots,T$ \& $Ly_1=y_1 - \psi_0$ and $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ \& $L\psi_1=\psi_1-0$. Once again, $V$ and $W$ are no longer conditionally independent given $\psi_{0:T}$ and $y_{1:T}$. In fact, the density is analgous to \eqref{llmdistpost} with $V$ and $W$ switching places. The scaled error sampler obtained from drawing $V$ and $W$ separately is:
 \begin{alg}[Scaled Error Sampler for LLM]\mbox{}\\[-\baselineskip]
 \begin{enumerate}\label{llmerroralg}
 \item Draw $\psi_{0:T}$ from $p(\psi_{0:T}|V^{(k)},W^{(k)},y_{1:T})$, possibly using FFBS to sample $\theta_{0:T}$ then transforming.
@@ -73,29 +71,29 @@ where we define $Ly_t=y_t-y_{t-1}$ for $t=2,3,...,T$ \& $Ly_1= y_1 - \psi_0$ and
 \item Draw $W^{(k+1)}$ from $p(W|V^{(k+1)},\psi_{0:T},y_{1:T})$.
 \end{enumerate}
 \end{alg}
-In step 3, $W$ is drawn from the same inverse gamma distribution as in step 2 of Algorithm \ref{llmstatealg}. Drawing $V$ in step 2 is more complicated, but exactly analogous to drawing $W$ in Algorithm \ref{llmdistalg}. The log density of $V|W,\psi_{0:T},y_{1:T}$ can be written as
+In step 3, $W$ is drawn from the same inverse gamma distribution as in step 2 of algorithm \ref{llmstatealg}. Drawing $V$ in step 2 is more complicated, but exactly analogous to drawing $W$ in algorithm \ref{llmdistalg}. The log density of $V|W,\psi_{0:T},y_{1:T}$ can be written as
 \begin{align*}
-\log p(V|W,\psi_{0:T},y_{1:T}) =& -aV + b\sqrt{V} - (\alpha_V + 1)\log W -\beta_V/V + C 
+\log p(V|W,\psi_{0:T},y_{1:T}) =& -aV + b\sqrt{V} - (\alpha_V + 1)\log V -\beta_V/V + C 
 \end{align*}
 where again $C$ is some constant, but now $a=\sum_{t=1}^T(L\psi_t)^2/2W$ and $b=\sum_{t=1}^T(L\psi_tLy_t)/W$. So we can use the same methods to sample from this density -- adaptive rejection sampling, as in \citet{gilks1992adaptive}, will work as long as $b^2 > \frac{32}{9\beta_V}(\alpha_V+1)^3(1 - 2sgn(b)/3)$, and otherwise a $t$ proposal in a rejection sampler will work but will be substantially slower.
 
 \subsection{Hybrid Samplers: Interweaving, Alternation and Random Kernel}
-Section \ref{sec:dlminter} contains the details for the interweaving algorithms in the general DLM. In the local level model, there is little to add. We'll consider all four GIS samplers based on any two or three of the base samplers and one CIS sampler. In the GIS samplers, the order of the parameterizations will always be the states $(\theta_{0:T})$, then the scaled disturbances $(\gamma_{0:T})$, then the scaled errors $(\psi_{0:T})$. All of the GIS algorithms and the CIS algorithm are below in Table \ref{GISalgorithms}. Note the distributional forms for each of these steps (in some cases a transformation) are in Section \ref{sec:llmbase}. In Section \ref{sec:dlminter} we saw that one version of the CIS algorithms is the same as the ``Error-Dist'' GIS algorithm (i.e. the Dist-Error algorithm but flipping the order in which the DAs are used). The CIS algorithm below is not the same as the CIS algorith which is equivalent to the Error-Dist GIS algorithm, but the difference is only the order in which the DAs are used within each Gibbs step. Thus we don't expect it to perform much differently from the Dist-Error GIS algorithm, but we include it for completeness.
+Section \ref{sec:dlminter} contains the details for the interweaving algorithms in the general DLM. In the local level model, there is little to add. We'll consider all four GIS samplers based on any two or three of the base samplers and one CIS sampler. In the GIS samplers, the order of the parameterizations will always be the states $(\theta_{0:T})$, then the scaled disturbances $(\gamma_{0:T})$, then the scaled errors $(\psi_{0:T})$. All of the GIS algorithms and the CIS algorithm are below in Table \ref{GISalgorithms}. Note the distributional forms for each of these steps (in some cases a transformation) are in Section \ref{sec:llmbase}. In Section \ref{sec:dlminter} we saw that one version of the CIS algorithm is the same as the ``error-dist'' GIS algorithm (i.e. the dist-error algorithm but flipping the order in which the DAs are used). The CIS algorithm below is not the same as the CIS algorith which is equivalent to the error-dist GIS algorithm, but the difference is only the order in which the DAs are used within each Gibbs step. Thus we don't expect it to perform much differently from the dist-error GIS algorithm, but we include it for completeness.
 \begin{table}[!h]
   \centering
 \begin{enumerate}
-  \item State-Dist GIS algorithm:\\
+  \item state-dist GIS algorithm:\\
     $[\theta_{0:T}|V,W]\to [V,W|\theta_{0:T}] \to [\gamma_{0:T}|V,W,\theta_{0:T}] \to [V|W,\gamma_{0:T}] \to [W|V,\gamma_{0:T}]$
-  \item State-Error GIS algorithm:\\
+  \item state-error GIS algorithm:\\
     $[\theta_{0:T}|V,W]\to [V,W|\theta_{0:T}] \to [\psi_{0:T}|V,W,\theta_{0:T}] \to [V|W,\psi_{0:T}] \to [W|V,\psi_{0:T}]$
-  \item Dist-Error GIS algorithm:\\
+  \item dist-error GIS algorithm:\\
     $[\gamma_{0:T}|V,W]\to [V|W, \gamma_{0:T}] \to [W|V, \gamma_{0:T}] \to [\psi_{0:T}|V,W,\gamma_{0:T}] \to [V|W,\psi_{0:T}] \to [W|V,\psi_{0:T}]$
-  \item Triple GIS algorithm:\\
+  \item triple GIS algorithm:\\
     $[\theta_{0:T}|V,W]\to [V,W|\theta_{0:T}] \to [\gamma_{0:T}|V,W,\theta_{0:T}] \to [V|W,\gamma_{0:T}] \to [W|V,\gamma_{0:T}] \to [\psi_{0:T}|V,W,\gamma_{0:T}] \to [V|W,\psi_{0:T}] \to [W|V,\psi_{0:T}]$
-  \item Full CIS algorithm:\\
+  \item full CIS algorithm:\\
         $[\theta_{0:T}|V,W]\to [V|W,\theta_{0:T}] \to [\psi_{0:T}|V,W,\theta_{0:T}] \to [V|W,\psi_{0:T}] \to [\theta_{0:T}|V,W] \to [W|V,\theta_{0:T}] \to [\gamma_{0:T}|V,W] \to [W|V,\gamma_{0:T}]$
 \end{enumerate}
-\caption{GIS Algorithms for the local level model}
+\caption{GIS and CIS algorithms for the local level model}
 \label{GISalgorithms}
 \end{table}
 
@@ -117,9 +115,9 @@ Interweaving algorithms are conceptually very similar to alternating algorithms.
 \label{altalgorithms}
 \end{table}
 
-Finally, we also consider random kernel algorithms. In this context, a random kernel algorithm randomly chooses from the state sampler, scaled disturbance sampler, and scaled error sampler in each iteration where the selection probabilities are constant with respect to the iteration. We consider four random kernel algorithms based on any two or three of the base samplers with an equal probability of selecting each base sampler included in the algorithm. For example, the State-Dist random kernel algorithm selects either the state sampler or the scaled disturbance sampler with equal probability at every iteration, while the triple random kernel algorithm selections from the state sampler, scaled disturbance sampler, or the scaled error sampler with equal probability at every iteration.
+Finally, we also consider random kernel algorithms. In this context, a random kernel algorithm randomly chooses from the state sampler, scaled disturbance sampler, and scaled error sampler in each iteration where the selection probabilities are constant with respect to the iteration. We consider four random kernel algorithms based on any two or three of the base samplers with an equal probability of selecting each base sampler included in the algorithm. For example, the State-Dist random kernel algorithm selects either the state sampler or the scaled disturbance sampler with equal probability at every iteration, while the triple random kernel algorithm selects from the state sampler, scaled disturbance sampler, or the scaled error sampler with equal probability at every iteration.
 
-Table \ref{LLMalgorithms} contains each algorithm we considered for the local level model. The basic idea here is that the alternating algorithms and the random kernel algorithms should serve as a sort of baseline to compare the corresponding interweaving algorithms against. The GIS algorithm should be slightly faster than the alternating algorithm since the only difference is one step becoming a transformation instead of a random draw, but the difference shouldn't be large. So we'd like the GIS algorithms to have at least as quick mixing as the corresponding alternating algorithms. The random kernel algorithms, however, have do do half as much computation to obtain a single draw (or a third as much computation in the case of the triple random kernel algorithm). Thus in some vague sense, we would like the GIS algorithms to have mixing which is twice as fast as the corresponding random kernel algorithm, or three times as fast in the case of the triple algorithms. We can make this notion precise by considering the effective sample size (ESS) of the Markov chain -- we'd like the GIS algorithms to have an ESS about twice as large as the corresponding random kernel algorithms, or three times as large for the triple algorithms.
+Table \ref{LLMalgorithms} contains each algorithm we considered for the local level model. The basic idea here is that the alternating algorithms and the random kernel algorithms should serve as a sort of baseline to compare the corresponding interweaving algorithms against. The GIS algorithm should be slightly faster than the alternating algorithm since the only difference is one step becoming a transformation instead of a random draw, but the difference shouldn't be large. So we'd like the GIS algorithms to have at least as quick mixing as the corresponding alternating algorithms. The random kernel algorithms, however, have do do half as much computation to obtain a single draw (or a third as much computation in the case of the triple random kernel algorithm). Thus in some sense, we would like the GIS algorithms to have mixing which is twice as fast as the corresponding random kernel algorithm, or three times as fast in the case of the triple algorithms. We can make this notion precise by considering the effective sample size (ESS) of the Markov chain -- we'd like the GIS algorithms to have an ESS about twice as large as the corresponding random kernel algorithms, or three times as large for the triple algorithms.
 
 \begin{table}[!h]
   \centering
@@ -138,9 +136,9 @@ Table \ref{LLMalgorithms} contains each algorithm we considered for the local le
 
 \subsection{Simulation Setup}
 
-In order to test these algorithms, we simulated a fake dataset from the local level model for various choices of $V$, $W$, and $T$. We created a grid over $V$--$W$ space with $(V,W)$ ranging from $(10^{-2},10^{-2})$ to $(10^2, 10^2)$ and we simulated a dataset for all possible combinations of $V$ and $W$ with each of $T=10, 100, 1000$. Then for each dataset, we fit the local level model using each algorithm in Table \ref{LLMalgorithms}. We used the same priors for each model: $\theta_0\sim N(0,10^7)$, $V\sim IG(5, 4\tilde{V})$, and $W\sim IG(5, 4\tilde{W})$, mutually independent where $(\tilde{V},\tilde{W})$ are the true values of $V$ and $W$ used to simulate the time series. This ensures all priors and thus the posterior are proper and results in independent inverse gamma priors on $V$ and $W$ with prior means equal to the respective true values and moderately large prior variances. We chose these priors for $(V,W)$ for each sampler to sidestep issues of posterior propriety or noninformativeness for variances since they are largely orthogonal to our goals.
+In order to test these algorithms, we simulated a fake dataset from the local level model for various choices of $V$, $W$, and $T$. We created a grid over $V$--$W$ space with $(V,W)$ ranging from $(10^{-2},10^{-2})$ to $(10^2, 10^2)$ and we simulated a dataset for all possible combinations of $V$ and $W$ with each of $T=10, 100, 1000$. Then for each dataset, we fit the local level model using each algorithm in Table \ref{LLMalgorithms}. We used the same rule for constructing priors for each model: $\theta_0\sim N(0,10^7)$, $V\sim IG(5, 4\tilde{V})$, and $W\sim IG(5, 4\tilde{W})$, mutually independent where $(\tilde{V},\tilde{W})$ are the true values of $V$ and $W$ used to simulate the time series. Thus both the prior and likelihood roughly agree about the likely values of $V$ and $W$.
 
-For each model and each sampler, we $n=3000$ draws and threw away the first $500$ as burn in. The chains were started at the true values used to simulated the time series, so we can examine the behavior of the chains to determine how well they mix but not how quickly they convergence. Define the effective sample proportion (ESP) for a scalar component of the chain as the effective sample size (ESS, REFERENCE HERE) of the component divided by the actual sample size, i.e. $ESP=ESS/n$. An $ESP=1$ indicates that the Markov chain is behaving as if it obtains iid draws from the posterior. It's possible to obtain $ESP>1$ if the draws are negatively correlated and this happens occasionally with some of our samplers, but we round this down to $ESP=1$ in order to simplify our plots.
+For each dataset and each sampler, we obtained $n=3000$ draws and threw away the first $500$ as burn in. The chains were started at the true values used to simulated the time series, so we can examine the behavior of the chains to determine how well they mix but not how quickly they converge. Define the effective sample proportion (ESP) for a scalar component of the chain as the effective sample size (ESS) of the component divided by the actual sample size, i.e. $ESP=ESS/n$. An $ESP=1$ indicates that the Markov chain is behaving as if it obtains iid draws from the posterior. It's possible to obtain $ESP>1$ if the draws are negatively correlated and this happens occasionally with some of our samplers, but we round this down to $ESP=1$ in order to simplify our plots.
 
 
 \subsection{Base Results}
