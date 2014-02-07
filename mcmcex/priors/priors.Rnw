@@ -31,20 +31,41 @@ opts_chunk$set(dev="pdf",
 \maketitle
 
 \section{Introduction}
-This is a quick note on priors for DLMs generally and for the LLM in particular, thanks to some comments from Sylvia Fr{\"u}hwirth-Schnatter at EFaB 2013 @ Duke. 
+This note shows that depending on how you parameterize a DLM, a different natural conjugate prior results for each of the covariance matrices. However, there is a unifying framework from which to view each of these priors.
 
-\section{Basic Idea and Motivation: Priors on $\pm \sqrt{\sigma^2}$ instead of $\sigma^2$}
-
-Start with the local level model for simplicity. For $t=1,2,\cdots,T$:
+\section{The Model}
+Consider the standard dynamic linear model with time varying variances. Let $y_t$ denote a $p\times 1$ vector of data for $t=1,2,\cdots,T$ and $\theta_t$ denote a $k\times 1$ vector of unobserved latent states for $t=0,1,\cdots,T$. Then the DLM can be written as:
+\begin{align}
+  y_t & = F_t\theta_t + v_t \label{dlmobseq}\\
+  \theta_t & = G_t\theta_{t-1} + w_t \label{dlmsyseq}
+\end{align}
+where $F_t$ is a $k\times p$ matrix and $G_t$ is a $k \times k$ matrix for $t=1,2,\cdots,T$ and for $t=1,2,\cdots,T$
 \begin{align*}
-  y_t & = \theta_t + v_t \\
-  \theta_t & = \theta_{t-1} + w_t
+  \begin{bmatrix} v_t \\ w_t \end{bmatrix} &\stackrel{ind}{\sim} N\left(\begin{bmatrix} \bm{0}_{p\times 1} \\ \bm{0}_{k\times 1} \end{bmatrix}, \begin{bmatrix} V_t & \bm{0}_{p\times p} \\ \bm{0}_{k\times k} & W_t \end{bmatrix} \right).
+\end{align}
+
+The covariance matrices, $V_{1:T}$ and $W_{1:T}$, are the unknown parameters in addition to any unkown parameters contained in $F_{1:T}$ or $G_{1:T}$. For simplicity, we'll assume that these are matrices of constants. Equation \eqref{dlmobseq} is called the observation equation and equation \eqref{dlmsyseq} is called the system equation. Simillarly $v_t$'s are called the observation errors and the $V_t$'s are called the observation covariances while the $w_t$'s are called the system disturbances and the $W_t$'s are called the system covariances. The latent states, $\theta_{0:T}$, are a data augmentation (DA) that are used in the MCMC sampling algorithm in order to draw from the posterior distribution of $(V_{1:T},W_{1:T})$ though, often, we're interested in the posterior distribution of $\theta_{0:T}$ as well.
+
+To complete the model, we need priors on $\theta_0$, $V_{1:T}$ and $W_{1:T}$. The standard priors are the conditionally conjugate priors, i.e. 
+\begin{align*}
+  p(\theta_0,V_{1:T},W_{1:T}) = p(\theta_0)\prod_{t=1}^Tp(V_t)p(W_t)
 \end{align*}
 with
 \begin{align*}
-  \begin{bmatrix} v_{1:T} \\ w_{1:T} \end{bmatrix} &\sim N\left(\bm{0}_{2T\times 1}, \begin{bmatrix} V\bm{I}_{T} & \bm{0}_{T\times T} \\ \bm{0}_{T\times T} & W\bm{I}_{T} \end{bmatrix} \right)
+  \theta_0 & \sim N(m_0,C_0) \\
+  V_t & \sim IW(\Psi_t, \eta_t)\ for\ t=1,2,\cdots,T\\
+  W_t & \sim IW(\Omega_t, \delta_t)\ for\ t=1,2,\cdots,T\\
 \end{align*}
-where $\bm{I}_T$ is the $T\times T$ identity matrix and $\bm{0}_{p\times q}$ is a $p\times q$ matrix of zeroes. 
+for some fixed hyperparameters $m_0$ \& $C_0$ and $\Psi_t$, $\eta_t$, $\Omega_t$, \& $\delta_t$ for $t=1,2,\cdots,T$. Using these priors, we can use FFBS in order to sample the latent states conditional on $V_{1:T}$ and $W_{1:T}$, and each $V_t$ and $W_t$ has indpendent inverse Wishart full conditional distributions. \citet{fruhwirth1994data}, \citet{carter1994gibbs}, and \citet{petris2009dynamic} contain the details of FFBS and the rest of this algorithm.
+
+But this isn't the only way we could have written the model. Instead of using the $\theta_t$'s as our latent states, we might choose to use the scaled disturbances. Define $\gamma_0=\theta_0$ and $\gamma_t = L_t(\theta_t - G_t\theta_{t-1}) = L_tw_t$ for $t=1,2,\cdots,T$ where $L_t$ is the Cholesky decomposition of $W_t^{-1}$, i.e. $L_t'L_t = W_t^{-1}$. Loosely speaking we are taking the system disturbances and scaling them by their standard deviation. This parameterization of the DLM is well known and data augmentation algorithm based on it has different properties than the data augmentation algorithm based on the $\theta_t$'s, see e.g. \cite{fruhwirth2004efficient}. In particular if we consider the local level model, i.e. univariate $y_t$ and $\theta_t$ with $F_t=G_t=1$, $V_t=V$ and $W_t=W$, when $W$ is small relative to $V$, then the standard DA algorithm based on $\theta_{0:T}$ will have poor mixing for 
+\end{document}
+
+
+Drawing an analogy between non-dynamic hierarchical models and dynamic linear models, \cite{gelman2006prior} would suggest that this prior is a poor choice if the goal is ``noninformativeness''. This may be true, though the DLM isn't the same as a typical hierarchical model. Following \citeauthor{gelman2006prior}'s advice, we might try a half-$t$ distribution each standard deviation parameter and a uniform distribution for each correlation parameter in the covariance matrices. It turns that that this prior can be written as a mixutre of inverse Wishart priors on the covariance matrix, with $k$ independent inverse gamma mixing distributions (\cite{huang2013simple}). The upshot for our purposes is that with the suggested noninformative prior of \citeauthor{huang2013simple}, the MCMC algorithms we discuss below only need to be changed to add two more steps to draw the inverse gamma mixing distributions for both covariance matrices $V$ and $W$. We focus on the inverse Wishart prior primarily for simplicity of exposition.
+
+
+
 
 To complete the model we need a prior for $(\theta_0, V, W)$. Sylivia's suggestion is to use what ammounts to a $G\left(\frac{1}{2}, \frac{1}{2Q}\right)$ prior for each of $V$ and $W$ with $Q$ chosen appropriately, but to do this by specifying normal priors on $\pm \sqrt{V}$ and $\pm \sqrt{W}$.
 

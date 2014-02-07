@@ -25,7 +25,7 @@ The first block samples the states conditional on the data and model parameters 
     where $v_t = y_t - F_t\theta_t$ and $w_t = \theta_t - G_t\theta_{t-1}$.
 \end{enumerate}
 \end{alg}
-The main problem with this algorithm is that computation time increases quickly with the length of the time series because the Kalman filter essentially requires drawing from $\theta_t|V_{1:T},W_{1:T},\theta_{0:t},y_{0:T}$ for $t=0,1,\cdots,T$, so the FFBS step represents $2T$ multivariate draws. A second problem is that in some regions of the parameter space, the Markov chain mixes poorly for some of the parameters. For example, in the univariate local level model and similar models it's known that if the time constant variance of the latent states, $W$, is too small, mixing will be poor \cite{fruhwirth2004efficient}.
+We can immediately see why the ``standard priors'' are standard -- they are conditionally conjugate for each parameter in question so that the full conditional distributions are all easy to sample from. The main problem with this algorithm is that computation time increases quickly with the length of the time series because the Kalman filter essentially requires drawing from $\theta_t|V_{1:T},W_{1:T},\theta_{0:t},y_{0:T}$ for $t=0,1,\cdots,T$, so the FFBS step represents $2T$ multivariate draws. A second problem is that in some regions of the parameter space, the Markov chain mixes poorly for some of the parameters. For example, in the univariate local level model and similar models it's known that if the time constant variance of the latent states, $W$, is too small, mixing will be poor for $W$ \cite{fruhwirth2004efficient}.
 
 One well known method of improving mixing and convergence in MCMC samplers is reparameterizing the model. \citet{papaspiliopoulos2007general} is a good summary. Most of the work in some way focuses on what are called centered and noncentered parameterizations. In our general notation where $\phi$ is the parameter, $\theta$ is the DA and $y$ is the data, the parameterization $(\phi,\theta)$ is a {\it centered parameterization} (CP) if $p(y|\theta,\phi)=p(y|\theta)$. The parameterization is a {\it noncentered parameterization} (NCP) if $p(\theta|\phi)=p(\theta)$. When $(\phi,\theta)$ is a CP, $\theta$ is called a {\it centered augmentation} (CA) for $\phi$ and when $(\phi,\theta)$ is a NCP, $\theta$ is called a {\it noncentered augmentation} (NCA) for $\phi$. A centered augmentation is sometimes called a {\it sufficient augmentation} (SA) and a noncentered augmentation is sometimes called an {\it ancillary augmentation} (AA), e.g. in \citet{yu2011center}. Like \citeauthor{yu2011center}, we prefer the latter terminology because it immediately suggests the intuiton that a sufficient augmentation is like a sufficient statistic while an ancillary augmentation is like an ancillary statistic. 
 
@@ -65,7 +65,7 @@ The next step is to apply the ideas of interweaving to sampling from the posteri
 
 \citeauthor{papaspiliopoulos2007general} suggest that in order to obtain an ancillary augmentation for a variance parameter, we must scale the sufficient agumentation by the square root of that parameter. Based on this intuition, note that if we hold $V_{1:T}$ constant then $\theta_{0:T}$ is a SA for $W_{1:T}$ from the observation and system equations, \eqref{dlmobseq} and \eqref{dlmsyseq}, i.e. we say $\theta_{0:T}$ is a SA for $W_{1:T}$ given $V_{1:T}$, or for $W_{1:T}|V_{1:T}$. Similarly $\theta_{0:T}$ is an AA for $V_{1:T}|W_{1:T}$. This suggests that if we scale $\theta_{t}$ by $W_{t}$ for all $t$ appropriately we'll have an ancillary augmentation for $V_{1:T}$ and $W_{1:T}$ jointly. The same intuition suggests scaling $w_{t}=\theta_{t}-G_t\theta_{t-1}$ by $W_{t}$ for all $t$ appropriately in order to find an ancillary augmentation for $(V_{1:T},W_{1:T})$. We'll work with the latter case though, again these two ideas are ultimately equivalent since the resulting DAs are one-to-one transformations of each other. 
 
-To define the scaled disturbances in the general DLM, let $L_t$ denote the Cholesky decomposition of $W_t^{-1}$, i.e. $L_t' L_t =W_t^{-1}$, for $t=1,2,\cdots,T$. Then we'll define the scaled disturbances $\gamma_{0:T}$ by $\gamma_0=\theta_0$ and $\gamma_t = L_t(\theta_t-G_t\theta_{t-1})$ for $t=1,2,\cdots,T$. We can confirm our intuition that the scaled disturbances are an AA for $V_{1:T}$ and $W_{1:T}$ jointly. The reverse transformation is defined recursively by $\theta_0=\gamma_0$ and $\theta_t=L_t^{-1}\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. Then the Jacobian is block lower triangular with the identity matrix and the $L_t^{-1}$'s along the diagonal blocks, so $|J| = \prod_{t=1}^T|L_t|^{-1}=|W|^{1/2}$. Then from \eqref{dlmjoint} we can write the full joint distribution of $(V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T})$ as
+To define the scaled disturbances in the general DLM, let $L_t$ denote the Cholesky decomposition of $W_t$, i.e. $L_t'L_t =W_t$, for $t=1,2,\cdots,T$. Then we'll define the scaled disturbances $\gamma_{0:T}$ by $\gamma_0=\theta_0$ and $\gamma_t = L_t^{-1}(\theta_t-G_t\theta_{t-1})$ for $t=1,2,\cdots,T$. We can confirm our intuition that the scaled disturbances are an AA for $V_{1:T}$ and $W_{1:T}$ jointly. The reverse transformation is defined recursively by $\theta_0=\gamma_0$ and $\theta_t=L_t\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. Then the Jacobian is block lower triangular with the identity matrix and the $L_t$'s along the diagonal blocks, so $|J| = \prod_{t=1}^T|L_t|=\prod_{t=1}^T|W_t|^{1/2}$. Then from \eqref{dlmjoint} we can write the full joint distribution of $(V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T})$ as
  \begin{align}
   p(&V_{1:T},W_{1:T},\gamma_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\gamma_0-m_0)'C_0^{-1}(\gamma_0-m_0)\right] \nonumber\\
   &\times \prod_{t=1}^T |W_t|^{-(\delta_t + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\gamma_t'\gamma_t\right] |V_t|^{-(\eta_t + k + 3)/2} \nonumber\\
@@ -74,12 +74,11 @@ To define the scaled disturbances in the general DLM, let $L_t$ denote the Chole
 where $\theta_t(\gamma_{0:T},W_{1:T})$ denotes the recursive back transformation defined by the scaled disturbances.
 
 So ultimately under the scaled disturbance parameterization we can write the model as
-\begin{align*}
-  y_t|\gamma_{0:T},V_{1:T},W_{1:T} & \stackrel{ind}{\sim} N\left(F_t\theta_t(\gamma_{0:T},W_{1:T}), V_t\right)\\
-  \gamma_t & \stackrel{iid}{\sim}N(0,I_p)
-\end{align*}
+\begin{align}
+  y_t|\gamma_{0:T},V_{1:T},W_{1:T} & \stackrel{ind}{\sim} N\left(F_t\theta_t(\gamma_{0:T},W_{1:T}), V_t\right)\nonumber\\
+  \gamma_t & \stackrel{iid}{\sim}N(0,I_p) \label{dlmdistmodel}
+\end{align}
 for $t=1,2,\cdots,T$ where $I_p$ is the $p\times p$ identity matrix. Neither $V_{1:T}$ nor $W_{1:T}$ are in the system equation, so the scaled disturbances are an AA for $(V_{1:T},W_{1:T})$. This parameterization is well known, e.g. \citet{fruhwirth2004efficient} use it in a dynamic regression model with stationary regression coefficient. 
-
 
 The DA algorithm based on $\gamma_{0:T}$ is as follows:
 \begin{alg}\mbox{}\\[-\baselineskip]
@@ -90,18 +89,18 @@ The DA algorithm based on $\gamma_{0:T}$ is as follows:
 \end{alg}
 Step 1 can be accomplished directly with the disturbance smoother of \citet{koopman1993disturbance} or indirectly by using FFBS to draw the states and then transform them to the scaled disturbances. Step 2 ends up being complicated because the joint conditional posterior of $V$ and $W$ isn't a known density. We'll go through an example of this when both $y_t$ and $\theta_t$ are scalars later.
 
-We previously mentioned that the intuition behind the scaled disturbances also suggests trying the scaled states, i.e. $\theta^s_{0:T}$ where $\theta^s_0=\theta_0$ and for $t=1,2,\cdots,T$, $\theta^s_t=L_t\theta_t$. Note that $\theta^s_{0:T}$ and $\gamma_{0:T}$ are completely determined by each other independently of $V_{1:T}$ and $W_{1:T}$, which suggests the conditional distribution of $(V_{1:T},W_{1:T})$ is unchanged. This intuition is dangerously close to running right into the Borel-Kolmogorov paradox, but in this case there is no issue since the determinant of the Jacobian will be the same whether we use the sclaed disturbances or the scaled states.
+We previously mentioned that the intuition behind the scaled disturbances also suggests trying the scaled states, i.e. $\theta^s_{0:T}$ where $\theta^s_0=\theta_0$ and for $t=1,2,\cdots,T$, $\theta^s_t=L_t^{-1}\theta_t$u. Note that $\theta^s_{0:T}$ and $\gamma_{0:T}$ are completely determined by each other independently of $V_{1:T}$ and $W_{1:T}$, which suggests the conditional distribution of $(V_{1:T},W_{1:T})$ is unchanged. This intuition is dangerously close to running right into the Borel-Kolmogorov paradox, but in this case there is no issue since the determinant of the Jacobian will be the same whether we are transforming to the sclaed disturbances or the scaled states.
 
 \subsection{The Scaled Errors}
-The scaled disturbances immediately suggest another potential AA that seems like it should be analogous --- the scaled observation errors, or more succinctly the scaled errors. What we are referring to is $v_t=y_t - F_t\theta_t$ appropriately scaled by $V_t$ in the general DLM. Now let $K_t$ denote the cholesky decomposition of $V_t^{-1}$, that is $K_t'K_t=V_t^{-1}$. Then we can define the scaled errors as $\psi_0 = \theta_0$ and $\psi_t = K_t(y_t - F_t\theta_t)$ for $t=1,2,\cdots,T$. This is a bit strange since in general $dim(\psi_0)\neq dim(\psi_t)$ for $t=1,2,\cdots,T$. Ideally we might like an ``$F_0$'' so that we can set $\psi_0=F_0\theta_0$ in order for $\psi_0$ to have the same dimension as $\psi_1$. However, in general there is no $F_0$. In some DLMs $F_t$ is constant with respect to $t$ so that we could set $F_0=F$, but in dynamic regression for example, there is no natural ``$F_0$''.
+The scaled disturbances immediately suggest another potential AA that seems like it should be analogous --- the scaled observation errors, or more succinctly the scaled errors. What we are referring to is $v_t=y_t - F_t\theta_t$ appropriately scaled by $V_t$ in the general DLM. Now let $K_t$ denote the Cholesky decomposition of $V_t$, that is $K_t'K_t=V_t$. Then we can define the scaled errors as $\psi_0 = \theta_0$ and $\psi_t = K_t^{-1}(y_t - F_t\theta_t)$ for $t=1,2,\cdots,T$. This is a bit strange since in general $dim(\psi_0)\neq dim(\psi_t)$ for $t=1,2,\cdots,T$. Ideally we might like an ``$F_0$'' so that we can set $\psi_0=F_0\theta_0$ in order for $\psi_0$ to have the same dimension as $\psi_1$. However, in general there is no $F_0$. In some DLMs $F_t$ is constant with respect to $t$ so that we could set $F_0=F$, but in dynamic regression for example, there is no natural ``$F_0$''.
 
-This isn't where the difficulties end either. With this definition of $\psi_{0:T}$, it isn't straightforward to determine $p(\psi_{0:T}|V_{1:T},W_{1:T})$, i.e. to write down the model in terms of $\psi_{0:T}$ instead of $\theta_{0:T}$. When $F_t$ is $k\times k$ (so that $dim(y_t)=k=p=dim(\theta_t)$) and is invertible for $t=1,2,\cdots,T$, $\psi_{0:T}$ is a one-to-one transformation of $\theta_{0:T}$ and the problem is easier. Then $\theta_t = F_t^{-1}(y_t - K_t^{-1}\psi_t)$ for $t=1,2,\cdots,T$ while $\theta_0=\psi_0$. The Jacobian of this transformation is block diagonal with a single copy of the identity matrix and the $F_t^{-1}K_t^{-1}$'s along the diagonal, so $|J|=\prod_{t=1}^T|F_t|^{-1}|V_t|^{-1/2}$. Then from \eqref{dlmjoint} we can write the joint distribution of $(V_{1:T}, W_{1:T}, \psi_{0:T}, y_{1:T})$ as
+This isn't where the difficulties end either. With this definition of $\psi_{0:T}$, it isn't straightforward to determine $p(\psi_{0:T}|V_{1:T},W_{1:T})$, i.e. to write down the model in terms of $\psi_{0:T}$ instead of $\theta_{0:T}$. When $F_t$ is $k\times k$ (so that $dim(y_t)=k=p=dim(\theta_t)$) and is invertible for $t=1,2,\cdots,T$, $\psi_{0:T}$ is a one-to-one transformation of $\theta_{0:T}$ and the problem is easier. Then $\theta_t = F_t^{-1}(y_t - K_t\psi_t)$ for $t=1,2,\cdots,T$ while $\theta_0=\psi_0$. The Jacobian of this transformation is block diagonal with a single copy of the identity matrix and the $F_t^{-1}K_t$'s along the diagonal, so $|J|=\prod_{t=1}^T|F_t|^{-1}|V_t|^{-1/2}$. Then from \eqref{dlmjoint} we can write the joint distribution of $(V_{1:T}, W_{1:T}, \psi_{0:T}, y_{1:T})$ as
 \begin{align}
     p(&V_{1:T},W_{1:T},\psi_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\psi_0-m_0)'C_0^{-1}(\psi_0-m_0)\right] \nonumber\\
   &\times \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Psi_tV_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\psi_t'\psi_t\right] \nonumber\\
    & \times |W_t|^{-(\delta_t + k + 3)/2}\exp\left[-\frac{1}{2}\left(tr\left(\Omega_tW_t^{-1}\right) + (y_t - \mu_t)'(F_tW_tF_t')^{-1}(y_t-\mu_t)\right)\right]\label{dlmerrorjoint}
 \end{align}
-where we define $\mu_t =K_t^{-1}\psi_t + F_tG_tF_{t-1}(y_{t-1} - K_{t-1}^{-1}\psi_{t-1})$, $y_0=0$, $K_0=I_k$, and $F_0=I_k$ where $I_k$ is the $k\times k$ identity matrix. The $|F_t|^{-1}$'s have been absorbed into the normalizing constant, but note that if the $F_t$'s depended on some unknown parameter then we couldn't do this. Now we can write the model in terms of the scaled error parameterization:
+where we define $\mu_t =K_t\psi_t + F_tG_tF_{t-1}(y_{t-1} - K_{t-1}\psi_{t-1})$, $y_0=0$, $K_0=I_k$, and $F_0=I_k$ where $I_k$ is the $k\times k$ identity matrix. The $|F_t|^{-1}$'s have been absorbed into the normalizing constant, but note that if the $F_t$'s depended on some unknown parameter then we couldn't do this. Now we can write the model in terms of the scaled error parameterization:
 \begin{align*}
   y_t|V_{1:T},W_{1:T},\psi_{0:T},y_{1:t-1} &\sim N(\mu_t, F_t'W_tF_t)\\
   \psi_t & \stackrel{iid}{\sim} N(0,I_k)
@@ -116,6 +115,34 @@ The DA algorithm based on $\psi_{0:T}$ is:
 \end{enumerate}
 \end{alg}
 Once again step 1 can be accomplished directly with \citeauthor{koopman1993disturbance}'s disturbance smoother or indirectly using FFBS. Step 2 is also once again complicated since the joint conditional posterior of $V_{1:T}$ and $W_{1:T}$ isn't a known density. 
+
+\subsection{Conditionally conjugate priors and the choice of DA}
+After choosing the priors for $\theta_0$, $V_{1:T}$ and $W_{1:T}$ we motivated the choice by appealing to conditional conjugacy and thus computation. If this is our main concern for choosing a prior,  it's worth asking what the conditional conjugate priors are under the scaled disturbances and the scaled errors. We'll look closely at the scaled disturbances, but the scaled errors are analogous. Based on \eqref{dlmdistmodel} we can write the augmented data likelihood as
+\begin{align*}
+  p(y_{1:T}|\gamma_{0:T}, V_{1:T}, W_{1:T}) \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\gamma_t'\gamma_t\right]\prod_{t=1}^T|V_t|^{-1/2}\exp\left[-\frac{1}{2}\left(y_t - F_t\theta_t(\gamma_{0:T},W_{1:T})\right)'V_t^{-1}\left(y_t - F_t\theta_t(\gamma_{0:T},W_{1:T})\right)\right].
+\end{align*}
+Immediately we see that the conjugate prior for $V_t$ is inverse Wishart, so no change on that front. For $W_t$ on the other hand, it's unclear until we unpack $\theta_t(\gamma_{0:T},W_{1:T})$. Recall that in our definition of the scaled disturbances for $t=1,2,\cdots,T$, $\gamma_t = L_t^{-1}w_t = L_t^{-1}(\theta_t - G_t\theta_{t-1})$ where $L_t'L_t = W_t$ while $\gamma_0=\theta_0$. The reverse transformation is thus the recursion $\theta_t = L_t\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. This implies that for $t=0,1,\cdots,T$
+\begin{align*}
+  \theta_t = \sum_{s=0}^t\left(\prod_{r=s+1}^tG_r\right)L_s\gamma_s
+\end{align*}
+where we define $L_0=I_k$, the $k\times k$ identity matrix, and for $s+1>t$, $\prod_{r=s+1}^tG_r = I_k$. Now recall that $K_t'K_t = V_t$ and let $H_s^t = \prod_{r=s+1}^tG_r$. This allows us to write the full conditional distribution of $W_{1:T}$ as
+\begin{align*}
+  p(W_{1:T}&|\gamma_{0:T},\cdots)  \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(y_t - F_t\sum_{s=0}^tH_s^tL_s\gamma_s\right)'(K_t^{-1})'K_t^{-1}\left(y_t - F_t\sum_{s=0}^tH_s^tL_s\gamma_s\right)\right]p(W_{1:T})
+\end{align*}
+If the $W_t$'s are independent in the prior, then they are independent in their conditional posterior with density
+\begin{align*}
+  p(W_t & | \gamma_{0:T},\cdots) \propto \exp\left[-\frac{1}{2}\left(A_tL_t\gamma_t - 2B_tL_t\gamma_t\right)\right]p(W_t)
+\end{align*}
+where $A_t$ and $B_t$ are matrices of constants that are implicitly defined from the previous equation. 
+
+This doesn't look like it has any conjugate form for $W_t$, but it looks a lot like a normal kernel for $L_t$, the Cholesky decomposition of $W_t$. Indeed, if we follow the approach of \cite{fruhwirth2008bayesian} and vectorize $L_t$ by stacking the nonzero elements of each column on top of each other, we can get a multivariate normal distribution. Specifically, let $L_t^*=Vec(L_t)$. Then the full conditional posterior distribution of $L_t^*$ is
+\begin{align*}
+  p(L_t^* & | \gamma_{0:T},\cdots) \propto \exp\left[-\frac{1}{2}\left(A^*_tL^*_t - 2B^*_tL^*_t\right)\right]p(L_t^*)\\
+  & \propto \exp\left[-\frac{1}{2}(L_t^* - \mu_t^*)'(\Sigma_t^*)^{-1}(L_t^* - \mu_t^*)\right]p(L_t^*)
+\end{align*}
+where $A_t^*$ and $B_t^*$ are matrices of constants with respect to $L_t^*$, $\Sigma_t^* = ((A_t^*)'A_t^*)^{-1}$ and $\mu_t^* = (\Sigma_t^*)^{-1}B_t^*$. So the conjugate prior on $L_t^*$ is a multivariate normal distribution. This seems a bit strange since we expect the diagonal elements of $L_t$ to be positive since they are standard deviations, but this is no problem as long as we view this prior as a clever trick for defining a prior on $W_t=L_t'L_t = (-L_t)'(-L_t)$ so the sign doesn't matter. Strictly speaking here, we're subtly changed the definition of $L_t$ to $\pm Chol(W_t)$, the {\it signed} Cholesky decomposition of $W_t$, and thus subtly changed the defintion of the $\gamma_t$'s to take into account the sign of $L_t$. \cite{fruhwirth2008bayesian}, \cite{fruhwirth2011bayesian} and {\it CITE THE DYNAMIC PAPER SYLVIA IS WORKING ON WITH ANGELA} use this approach to choosing priors for the system (or hierarchical) variance when working with the scaled disturbances in dynamic and non-dynamic models.
+
+This is a bit strange though. We have two sets of covariance matrices, $W_{1:T}$ and $V_{1:T}$, and we want to put a different class of priors on each set. We can put the same sort of normal prior on $K_t^*$, the vectorized Cholesky decomposition of $V_t$. In the univariate case the conditional posterior of $V_t$ will come out to be a generalized inverse gaussian distribution which is a bit complicated, not awful to draw from. There's another strange tension here though --  depending on how we write down the model we end up with a different class of prior distributions for at least $W_{1:T}$. Now the reason for this difference is ultimately computation --- it is known that sometimes using the scaled disturbances improves mixing in the Markov chain --- but ideally computational concerns should not have an effect on inference.
 
 \subsection{Interweaving in the DLM: Global and Componentwise}\label{sec:dlminter}
 We now have three DAs for the generic DLM with known $F_t$'s and $G_t$'s. For simplicity we'll assume that $dim(y_t)=dim(\theta_t)$ and $F_t$ invertible for $t=1,2,\cdots,T$ so that the scaled errors are easy to work with. The three DAs are the states, $\theta_{0:T}$, the scaled disturbances $\gamma_{0:T}$, and the scaled errors $\psi_{0:T}$. This allows us to construct four separate GIS algorithms based on algorithm \ref{inter2}: three algorithms that interweave between any two of $\theta_{0:T}$, $\gamma_{0:T}$, and $\psi_{0:T}$, the state-dist, state-error, and dist-error interweaving algorithms, and one algorithm that interweaves between all three, the triple interweaving algorithm. Strictly speaking, the order in which we sample the DAs in the algorithm does matter, but \citeauthor{yu2011center} note that this tends not to make much difference. So while we actually have twelve separate GIS samplers (two of each GIS sampler depending on two DAs, and six GIS samplers depending on all three), effectively we only have four. For example, algorithm \ref{sdintalg} is the state-dist GIS algorithm:
@@ -132,7 +159,7 @@ where again $L^{(k+0.5)}_t$ is the Cholesky decomposition of $(W^{(k+0.5)}_t)^{-
 \begin{enumerate}\label{sdintalg2}
 \item Draw $\theta_{0:T}$ from $p(\theta_{0:T}|V_{1:T}^{(k)},W_{1:T}^{(k)},y_{1:T})$
 \item Draw $(V_{1:T},W_{1:T})$ from $p(V_{1:T},W_{1:T}|\theta_{0:T},y_{1:T})$
-\item Update $\gamma_{0:T}^{(k+1)}$ from $\gamma_0=\theta_0$ and $\gamma_t = L_t(\theta_t - G_t\theta_{t-1})$ for $t=1,2,\cdots,T$
+\item Update $\gamma_{0:T}^{(k+1)}$ from $\gamma_0=\theta_0$ and $\gamma_t = L_t^{-1}(\theta_t - G_t\theta_{t-1})$ for $t=1,2,\cdots,T$
 \item Draw $V_{1:T}^{(k+1)}$ from $p(V_{1:T}|W_{1:T},\gamma_{0:T},y_{1:T})$
 \item Draw $W_{1:T}^{(k+1)}$ from $p(W_{1:T}|V^{(k+1)}_{1:T},\gamma_{0:T},y_{1:T})$
 \end{enumerate}
@@ -151,60 +178,60 @@ None of these GIS algorithms are ASIS algorithms --- none of the DAs are a SA fo
 \end{alg}
 This algorithm is actually the same as a version of the state-dist interweaving algorithm, specifically algorithm \ref{sdintalg2}. So we can construct a partial CIS algorithm, but it's actually the exact same algorithm as a GIS algorithm.
 
-With a little more work, we can also construct a full CIS algorithm that also turns out to be the same as another GIS algorithm. Recall that $\gamma_t = L_t(\theta_t - \theta_{t-1})$  and $\psi_t = K_t(y_t - \theta_t)$ for $t=1,2,\cdots,T$ where $L_t'L_t = W_t^{-1}$ and $K_t'K_t = V_t^{-1}$. Now define $\tilde{\gamma}_t=K_t(\theta_t - \theta_{t-1})$ and $\tilde{\psi}_t=L_t(y_t - \theta_t)$ for $t=1,2,\cdots,T$ and $\tilde{\psi}_0=\tilde{\gamma}_0=\theta_0$. In other words, the ``tilde'' versions of the scaled disturbances and the scaled errors are scaled by the ``wrong'' cholesky decomposition. Now we'll show that $\gamma_{0:T}$ and $\tilde{\gamma}_{0:T}$ are an AA-SA pair for $W_{1:T}|V_{1:T}$ while $\psi_{0:T}$ and $\tilde{psi}_{0:T}$ are an AA-SA pair for $V_{1:T}|W_{1:T}$. We've already shown that both $\psi_{0:T}$ and $\gamma_{0:T}$ are AAs for $(V_{1:T},W_{1:T})$, so we just need to show that $\tilde{gamma}_{0:T}$ is a SA for $W_{1:T}|V_{1:T}$ and that $\tilde{\psi}_{0:T}$ is a SA for $V_{1:T}|W_{1:T}$. 
+With a little more work, we can also construct a full CIS algorithm that also turns out to be the same as another GIS algorithm. Recall that $\gamma_t = L_t^{-1}(\theta_t - G_t\theta_{t-1})$  and $\psi_t = K_t^{-1}(y_t - \theta_t)$ for $t=1,2,\cdots,T$ where $L_t'L_t = W_t$ and $K_t'K_t = V_t$. Now define $\tilde{\gamma}_t=K_t^{-1}(\theta_t - G_t\theta_{t-1})$ and $\tilde{\psi}_t=L_t^{-1}(y_t - \theta_t)$ for $t=1,2,\cdots,T$ and $\tilde{\psi}_0=\tilde{\gamma}_0=\theta_0$. In other words, the ``tilde'' versions of the scaled disturbances and the scaled errors are scaled by the ``wrong'' Cholesky decomposition. Now we'll show that $\gamma_{0:T}$ and $\tilde{\gamma}_{0:T}$ are an AA-SA pair for $W_{1:T}|V_{1:T}$ while $\psi_{0:T}$ and $\tilde{psi}_{0:T}$ are an AA-SA pair for $V_{1:T}|W_{1:T}$. We've already shown that both $\psi_{0:T}$ and $\gamma_{0:T}$ are AAs for $(V_{1:T},W_{1:T})$, so we just need to show that $\tilde{gamma}_{0:T}$ is a SA for $W_{1:T}|V_{1:T}$ and that $\tilde{\psi}_{0:T}$ is a SA for $V_{1:T}|W_{1:T}$. 
 
-First consider $\tilde{\gamma}_{0:T}$. If we define $L_0=K_0=I_k$ where $I_k$ is the $k\times k$ identity matrix, then $\tilde{\gamma}_t = K_tL_t^{-1}\gamma_t$ for $t=0,1,2,\cdots,T$. The reverse transformation is then $\gamma_t = L_tK_t^{-1}\tilde{\gamma}_t$. The Jacobian is then block diagonal with $L_tK_t^{-1}$'s along the diagonal. Thus $|J|=\prod_{t=0}^T|L_t||K_t|^{-1}=\prod_{t=1}^T|W_t|^{-1/2}|V_t|^{1/2}$. Then from \eqref{dlmdistjoint} we can write the joint distribution of $(V_{1:T},W_{1:T},\tilde{\gamma}_{0:T},y_{1:T})$ as
+First consider $\tilde{\gamma}_{0:T}$. If we define $L_0=K_0=I_k$ where $I_k$ is the $k\times k$ identity matrix, then $\tilde{\gamma}_t = K_t^{-1}L_t\gamma_t$ for $t=0,1,2,\cdots,T$. The reverse transformation is then $\gamma_t = L_t^{-1}K_t\tilde{\gamma}_t$. The Jacobian is then block diagonal with $L_t^{-1}K_t$'s along the diagonal. Thus $|J|=\prod_{t=0}^T|L_t|^{-1}|K_t|=\prod_{t=1}^T|W_t|^{-1/2}|V_t|^{1/2}$. Then from \eqref{dlmdistjoint} we can write the joint distribution of $(V_{1:T},W_{1:T},\tilde{\gamma}_{0:T},y_{1:T})$ as
  \begin{align}
   p(&V_{1:T},W_{1:T},\tilde{\gamma}_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\tilde{\gamma}_0-m_0)'C_0^{-1}(\tilde{\gamma}_0-m_0)\right] \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Psi_tV_t^{-1}\right)\right] \nonumber\\
   &\times  |W_t|^{-1/2}\exp\left[-\frac{1}{2}\left(y_t - F_t\theta_t(\tilde{\gamma}_{0:T})\right)'V_t^{-1}\left(y_t - F_t\theta_t(\tilde{\gamma}_{0:T})\right)\right]\nonumber\\
-   & \times |W_t|^{-(\delta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\tilde{\gamma}_t'(K_tW_tK_t')^{-1}\tilde{\gamma}_t\right]\label{dlmdisttildejoint}
+   & \times |W_t|^{-(\delta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\tilde{\gamma}_t'(K_t^{-1}W_t(K_t^{-1})')^{-1}\tilde{\gamma}_t\right]\label{dlmdisttildejoint}
  \end{align}
 Then under $\tilde{\gamma}_{0:T}$ we can write the model as
 \begin{align*}
   y_t|\tilde{\gamma}_{0:T},V_{1:T},W_{1:T} & \stackrel{ind}{\sim} N\left(F_t\theta_t(\tilde{\gamma}_{0:T}), V_t\right)\\
-  \tilde{\gamma}_t & \stackrel{ind}{\sim}N(0,K_tW_tK_t')
+  \tilde{\gamma}_t & \stackrel{ind}{\sim}N(0,K^{-1}_tW_t(K^{-1}_t)')
 \end{align*}
 for $t=1,2,\cdots,T$. Since $K_t$ is the Cholesky decomposition of $V_t$, the observation equation doesn't contain $W_t$. So $\tilde{\gamma}_{0:T}$ is a SA for $W_{1:T}|V_{1:T}$ and thus $\gamma_{0:T}$ and $\tilde{\gamma}_{0:T}$ form an AA-SA pair for $W_{1:T}|V_{1:T}$. Note also that since $W_t$ and $K_t$ are both in the system equation, $\tilde{\gamma}_{0:T}$ is not an AA for $V_{1:T}$ nor for $W_{1:T}$. 
 
-Now consider $\tilde{\psi}_t=L_tK_t^{-1}\psi_t$ for $t=0,1,2,\cdots,T$ where, again, $L_0=K_0=I_k$, the $k\times k$ identity matrix. Then $\psi_t = K_tL_t^{-1}\tilde{\psi}_t$ and the Jacobian is block diagonal with $K_tL_t^{-1}$'s along the diagonal. So $|J|=\prod_{t=1}^T|V_t|^{-1/2}|W_t|^{1/2}$ and from \eqref{dlmerrorjoint} we can write the joint distribution of $(V_{1:T}, W_{1:T}, \tilde{\psi}_{0:T}, y_{1:T})$ as
+Now consider $\tilde{\psi}_t=L_t^{-1}K_t\psi_t$ for $t=0,1,2,\cdots,T$ where, again, $L_0=K_0=I_k$, the $k\times k$ identity matrix. Then $\psi_t = K_t^{-1}L_t\tilde{\psi}_t$ and the Jacobian is block diagonal with $K_t^{-1}L_t$'s along the diagonal. So $|J|=\prod_{t=1}^T|V_t|^{-1/2}|W_t|^{1/2}$ and from \eqref{dlmerrorjoint} we can write the joint distribution of $(V_{1:T}, W_{1:T}, \tilde{\psi}_{0:T}, y_{1:T})$ as
 \begin{align}
     p(&V_{1:T},W_{1:T},\tilde{\psi}_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\tilde{\psi}_0-m_0)'C_0^{-1}(\tilde{\psi}_0-m_0)\right] \nonumber\\
-  &\times \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Psi_tV_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\tilde{\psi_t}'(L_tV_tL_t')^{-1}\tilde{\psi}_t\right] \nonumber\\
+  &\times \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Psi_tV_t^{-1}\right)\right] \exp\left[-\frac{1}{2}\tilde{\psi_t}'(L_t^{-1}V_t(L_t^{-1})')^{-1}\tilde{\psi}_t\right] \nonumber\\
    & \times |W_t|^{-(\delta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] |V_t|^{-1/2}\exp\left[-\frac{1}{2}(y_t - \tilde{\mu}_t)'(F_tW_tF_t')^{-1}(y_t-\tilde{\mu}_t)\right]\label{dlmerrortildejoint}
 \end{align}
-where we define $\tilde{\mu}_t =L_t^{-1}\psi_t + F_tG_tF_{t-1}(y_{t-1} - L_{t-1}^{-1}\tilde{\psi}_{t-1})$ with, again, $y_0=0$ and $L_0=K_0=I_k$. In terms of $\tilde{\psi}_{0:T}$, the model is then:
+where we define $\tilde{\mu}_t =L_t\psi_t + F_tG_tF_{t-1}(y_{t-1} - L_{t-1}\tilde{\psi}_{t-1})$ with, again, $y_0=0$ and $L_0=K_0=I_k$. In terms of $\tilde{\psi}_{0:T}$, the model is then:
 \begin{align*}
   y_t|V_{1:T},W_{1:T},\tilde{\psi}_{0:T},y_{1:t-1} &\sim N(\tilde{\mu}_t, F_t'W_tF_t)\\
-  \tilde{\psi}_t & \stackrel{ind}{\sim} N(0,L_tV_tL_t')
+  \tilde{\psi}_t & \stackrel{ind}{\sim} N(0,L_t^{-1}V_t(L_t^{-1})')
 \end{align*}
 for $t=1,2,\cdots,T$. Since $\tilde{\mu}_t$ only depends on $W_t$ (through $L_t$) and not on $V_t$, $V_{1:T}$ is absent from the observation equation. Thus $\tilde{\psi}_{0:T}$ is a SA for $V_{1:T}|W_{1:T}$ and as a result $\psi_{0:T}$ and $\tilde{\psi}_{0:T}$ form an AA-SA pair for $V_{1:T}|W_{1:T}$. Again that both $W_t$ and $V_t$ are in the system equation so $\tilde{\psi}_{0:T}$ is not an AA for either $V_{1:T}$ or $W_{1:T}$. Now we can construct a full CIS algorithm:
 \begin{alg}\mbox{}\\[-\baselineskip]
 \begin{enumerate}\label{fullcis}
 \item Draw $\tilde{\psi}_{0:T}$ from $p(\tilde{\psi}_{0:T}|V_{1:T}^{(k)},W_{1:T}^{(k)},y_{1:T})$.
   \item Draw $V^{(k+0.5)}_{1:T}$ from $p(V_{1:T}|W_{1:T}^{(k)},\tilde{\psi}_{0:T},y_{1:T})$
-\item Update $\psi_{0:T}$ from $\psi_0=\tilde{\psi}_0$ and $\psi_t = K^{(k+0.5)}_t(L^{(k)}_t)^{-1}\tilde{\psi}_t$ for $t=1,2,\cdots,T$.
+\item Update $\psi_{0:T}$ from $\psi_0=\tilde{\psi}_0$ and $\psi_t = (K^{-1}_t)^{(k+0.5)}(L_t)^{(k)}\tilde{\psi}_t$ for $t=1,2,\cdots,T$.
 \item Draw $V^{(k+1)}_{1:T}$ from $p(V_{1:T}|W_{1:T}^{(k)},\psi_{0:T},y_{1:T})$.
 \item Update $\tilde{\gamma}_{0:T}$ from $\psi_{0:T}$, $W_{1:T}^{(k)}$, and $V_{1:T}^{(k+1)}$.
 \item Draw $W^{(k+0.5)}_{1:T}$ from $p(W_{1:T}|V_{1:T}^{(k+1)},\tilde{\gamma}_{0:T},y_{1:T})$
-\item Update $\gamma_{0:T}$ from $\gamma_0=\tilde{\gamma}_0$ and $\gamma_t = L^{(k+0.5)}_t(K^{(k+1)})^{-1}_t\tilde{\gamma}_t$ for $t=1,2,\cdots,T$.
+\item Update $\gamma_{0:T}$ from $\gamma_0=\tilde{\gamma}_0$ and $\gamma_t = (L^{-1}_t)^{(k+0.5)}(K^{(k+1)})_t\tilde{\gamma}_t$ for $t=1,2,\cdots,T$.
 \item Draw $W^{(k+1)}_{1:T}$ from $p(W_{1:T}|V_{1:T}^{(k+1)},\gamma_{0:T},y_{1:T})$
 
 \end{enumerate}
 \end{alg}
 
-Steps 1-4 constitute a Gibbs step for $V_{1:T}$ and steps 5-8 constitute a Gibbs step for $W_{1:T}$. Step 1 can be accomplished by using FFBS to draw the states and transforming appropriately, or by using the disturbance smoother of \citet{koopman1993disturbance} and again transforming appropriately. Note that $L_t^{(k)}$ is the Cholesky decomposition of $(W_t^{(k)})^{-1}$ and $K_t^{(k)}$ is the Cholesky decomposition of $(V_t^{(k)})^{-1}$. 
+Steps 1-4 constitute a Gibbs step for $V_{1:T}$ and steps 5-8 constitute a Gibbs step for $W_{1:T}$. Step 1 can be accomplished by using FFBS to draw the states and transforming appropriately, or by using the disturbance smoother of \citet{koopman1993disturbance} and again transforming appropriately. Note that $L_t^{(k)}$ is the Cholesky decomposition of $W_t^{(k)}$ and $K_t^{(k)}$ is the Cholesky decomposition of $V_t^{(k)}$. 
 
-It turns out that $p(W_{1:T}|V_{1:T},\tilde{\gamma}_{0:T},y_{1:T})$ and $p(W_{1:T}|V_{1:T},\theta_{0:T},y_{1:T})$ are the same density, and $p(V_{1:T}|W_{1:T},\tilde{\psi}_{0:T},y_{1:T})$ and $p(V_{1:T}|W_{1:T}^{(k+1)},\theta_{0:T},y_{1:T})$ are also the same density. Since $\tilde{\gamma}_t=K_t(\theta_t-\theta_{t-1})$ is a one-to-one function of $\theta_{0:T}$ given $V_{1:T}$ with a diagonal Jacobian, the conditional distribution of $W_{1:T}$ does not depend on whether we condition on $\theta_{0:T}$ or $\tilde{\gamma}_{0:T}$. Similar reasoning applies to $W_{1:T}$ given either $\theta_{0:T}$ or $\tilde{\psi}_{0:T}$. The upshot is that step 1 of algorithm \ref{fullcis} can be replaced with a draw from $p(\theta_{0:T}|V_{1:T},W_{1:T},y_{1:T})$, and any time we condition on one of the ``tilde'' variables, we can condition on $\theta_{0:T}$ instead. 
+It turns out that $p(W_{1:T}|V_{1:T},\tilde{\gamma}_{0:T},y_{1:T})$ and $p(W_{1:T}|V_{1:T},\theta_{0:T},y_{1:T})$ are the same density, and $p(V_{1:T}|W_{1:T},\tilde{\psi}_{0:T},y_{1:T})$ and $p(V_{1:T}|W_{1:T}^{(k+1)},\theta_{0:T},y_{1:T})$ are also the same density. Since $\tilde{\gamma}_t=K^{-1}_t(\theta_t-G_t\theta_{t-1})$ is a one-to-one function of $\theta_{0:T}$ given $V_{1:T}$ with a diagonal Jacobian, the conditional distribution of $W_{1:T}$ does not depend on whether we condition on $\theta_{0:T}$ or $\tilde{\gamma}_{0:T}$. Similar reasoning applies to $W_{1:T}$ given either $\theta_{0:T}$ or $\tilde{\psi}_{0:T}$. The upshot is that step 1 of algorithm \ref{fullcis} can be replaced with a draw from $p(\theta_{0:T}|V_{1:T},W_{1:T},y_{1:T})$, and any time we condition on one of the ``tilde'' variables, we can condition on $\theta_{0:T}$ instead. 
 
 Now we can rewrite the full CIS algorithm in terms of $\theta_{0:T}$ instead of the tilde variables. We'll also rearrange the order in which $\theta_{0:T}$ and $\psi_{0:T}$ are used in the Gibbs step for $V_{1:T}$. This rearranging does change the algorithm, but it's still a full CIS algorithm.
 \begin{alg}\mbox{}\\[-\baselineskip]
 \begin{enumerate}\label{fullcis2}
 \item Draw $\psi_{0:T}$ from $p(\psi_{0:T}|V_{1:T}^{(k)},W_{1:T}^{(k)},y_{1:T})$.
 \item Draw $V^{(k+0.5)}_{1:T}$ from $p(V_{1:T}|W_{1:T}^{(k)},\psi_{0:T},y_{1:T})$.
-\item Update $\theta_{0:T}$ from $\theta_0=\psi_0$ and $\theta_t = y_t - (K^{(k+0.5)}_t)^{-1}\psi_t$ for $t=1,2,\cdots,T$.
+\item Update $\theta_{0:T}$ from $\theta_0=\psi_0$ and $\theta_t = y_t - (K^{(k+0.5)}_t)\psi_t$ for $t=1,2,\cdots,T$.
 \item Draw $V^{(k+1)}_{1:T}$ from $p(V_{1:T}|W_{1:T}^{(k)},\theta_{0:T},y_{1:T})$.
 \item Draw $W^{(k+0.5)}_{1:T}$ from $p(W_{1:T}|V_{1:T}^{(k+1)},\theta_{0:T},y_{1:T})$.
-\item Update $\gamma_{0:T}$ from $\gamma_0=\theta_0$ and $\gamma_t = L_t^{(k+0.5)}(\theta_t - \theta_{t-1})$ for $t=1,2,\cdots,T$.
+\item Update $\gamma_{0:T}$ from $\gamma_0=\theta_0$ and $\gamma_t = (L_t^{-1})^{(k+0.5)}(\theta_t - G_t\theta_{t-1})$ for $t=1,2,\cdots,T$.
 \item Draw $W^{(k+1)}_{1:T}$ from $p(W_{1:T}|V_{1:T}^{(k+1)},\gamma_{0:T},y_{1:T})$.
 \end{enumerate}
 \end{alg}
@@ -213,7 +240,7 @@ There is no update step between the two Gibbs steps for $V_{1:T}$ and $W_{1:T}$,
 \begin{enumerate}\label{errordist}
 \item Draw $\psi_{0:T}$ from $p(\psi_{0:T}|V_{1:T}^{(k)},W_{1:T}^{(k)},y_{1:T})$.
 \item Draw $(V^{(k+0.5)}_{1:T},W^{(k+0.5)}_{1:T})$ from $p(V_{1:T},W_{1:T}|\psi_{0:T},y_{1:T})$.
-\item Update $\gamma_{0:T}$ from $\gamma_0=\psi_0$ and $\gamma_t = L^{(k+0.5)}_t(\theta_t - \theta_{t-1})$ for $t=1,2\cdots,T$ for $\theta_0=\psi_0$ and $\theta_t = y_t - (K^{(k+0.5)}_t)^{-1}\psi_t$ for $t=1,2,\cdots,T$.
+\item Update $\gamma_{0:T}$ from $\gamma_0=\psi_0$ and $\gamma_t = (L^{-1}_t)^{(k+0.5)}(\theta_t - G_t\theta_{t-1})$ for $t=1,2\cdots,T$ for $\theta_0=\psi_0$ and $\theta_t = y_t - (K^{(k+0.5)}_t)\psi_t$ for $t=1,2,\cdots,T$.
 \item Draw $(V^{(k+1)}_{1:T},W^{(k+1)}_{1:T})$ from $p(V_{1:T},W_{1:T}|\gamma_{0:T},y_{1:T})$.
 \end{enumerate}
 \end{alg}
@@ -223,7 +250,7 @@ This algorithm samples $V_{1:T}$ and $W_{1:T}$ jointly in steps 2 and 4. If we i
 \item Draw $\psi_{0:T}$ from $p(\psi_{0:T}|V_{1:T}^{(k)},W_{1:T}^{(k)},y_{1:T})$.
 \item Draw $V^{(k+0.5)}_{1:T}$ from $p(V_{1:T}|W^{(k)}_{1:T},\psi_{0:T},y_{1:T})$.
 \item Draw $W^{(k+0.5)}_{1:T}$ from $p(W_{1:T}|V^{(k + 0.5)}_{1:T},\psi_{0:T},y_{1:T})$.  
-\item Update $\gamma_{0:T}$ from $\gamma_0=\psi_0$ and $\gamma_t = L^{(k+0.5)}_t(\theta_t - \theta_{t-1})$ for $t=1,2\cdots,T$ with $\theta_0=\psi_0$ and $\theta_t = y_t - (K^{(k+0.5)}_t)^{-1}\psi_t$ for $t=1,2,\cdots,T$.
+\item Update $\gamma_{0:T}$ from $\gamma_0=\psi_0$ and $\gamma_t = (L_t^{-1})^{(k+0.5)}(\theta_t - G_t\theta_{t-1})$ for $t=1,2\cdots,T$ with $\theta_0=\psi_0$ and $\theta_t = y_t - (K^{(k+0.5)}_t)\psi_t$ for $t=1,2,\cdots,T$.
 \item Draw $V^{(k+1)}_{1:T}$ from $p(V_{1:T}|W^{(k+0.5)}_{1:T},\gamma_{0:T},y_{1:T})$.
 \item Draw $W^{(k+1)}_{1:T}$ from $p(W_{1:T}|V^{(k+1)}_{1:T},\gamma_{0:T},y_{1:T})$.
 \end{enumerate}
@@ -234,8 +261,8 @@ Step 4 can be broken up into two steps: a transformation from $\psi_{0:T}$ to $\
 \item Draw $\psi_{0:T}$ from $p(\psi_{0:T}|V_{1:T}^{(k)},W_{1:T}^{(k)},y_{1:T})$.
 \item Draw $V^{(k+0.5)}_{1:T}$ from $p(V_{1:T}|W^{(k)}_{1:T},\psi_{0:T},y_{1:T})$.
 \item Draw $W^{(k+0.5)}_{1:T}$ from $p(W_{1:T}|V^{(k + 0.5)}_{1:T},\psi_{0:T},y_{1:T})$.  
-\item Update $\theta_{0:T}$ from $\theta_0=\psi_0$ and $\theta_t = y_t - (K^{(k+0.5)}_t)^{-1}\psi_t$ for $t=1,2,\cdots,T$.
-\item Update $\gamma_{0:T}$ from $\gamma_0=\theta_0$ and $\gamma_t = L^{(k+0.5)}_t(\theta_t - \theta_{t-1})$ for $t=1,2\cdots,T$.
+\item Update $\theta_{0:T}$ from $\theta_0=\psi_0$ and $\theta_t = y_t - (K^{(k+0.5)}_t)\psi_t$ for $t=1,2,\cdots,T$.
+\item Update $\gamma_{0:T}$ from $\gamma_0=\theta_0$ and $\gamma_t = (L^{-1}_t)^{(k+0.5)}(\theta_t - G_t\theta_{t-1})$ for $t=1,2\cdots,T$.
 \item Draw $V^{(k+1)}_{1:T}$ from $p(V_{1:T}|W^{(k+0.5)}_{1:T},\gamma_{0:T},y_{1:T})$.
 \item Draw $W^{(k+1)}_{1:T}$ from $p(W_{1:T}|V^{(k+1)}_{1:T},\gamma_{0:T},y_{1:T})$.
 \end{enumerate}
@@ -245,10 +272,10 @@ Now the draw of $W_{1:T}^{(k+0.5)}$ in step 3 could actually be drawn conditiona
 \begin{enumerate}\label{errordist4}
 \item Draw $\psi_{0:T}$ from $p(\psi_{0:T}|V_{1:T}^{(k)},W_{1:T}^{(k)},y_{1:T})$.
 \item Draw $V^{(k+0.5)}_{1:T}$ from $p(V_{1:T}|W^{(k)}_{1:T},\psi_{0:T},y_{1:T})$.
-\item Update $\theta_{0:T}$ from $\theta_0=\psi_0$ and $\theta_t = y_t - (K^{(k+0.5)}_t)^{-1}\psi_t$ for $t=1,2,\cdots,T$.
+\item Update $\theta_{0:T}$ from $\theta_0=\psi_0$ and $\theta_t = y_t - (K^{(k+0.5)}_t)\psi_t$ for $t=1,2,\cdots,T$.
 \item Draw $V^{(k+1)}_{1:T}$ from $p(V_{1:T}|\theta_{0:T},y_{1:T})$.
 \item Draw $W^{(k+0.5)}_{1:T}$ from $p(W_{1:T}|\theta_{0:T},y_{1:T})$.  
-\item Update $\gamma_{0:T}$ from $\gamma_0=\theta_0$ and $\gamma_t = L^{(k+0.5)}_t(\theta_t - \theta_{t-1})$ for $t=1,2\cdots,T$.
+\item Update $\gamma_{0:T}$ from $\gamma_0=\theta_0$ and $\gamma_t = (L^{-1}_t)^{(k+0.5)}(\theta_t - G_t\theta_{t-1})$ for $t=1,2\cdots,T$.
 \item Draw $W^{(k+1)}_{1:T}$ from $p(W_{1:T}|V^{(k+1)}_{1:T},\gamma_{0:T},y_{1:T})$.
 \end{enumerate}
 \end{alg}
