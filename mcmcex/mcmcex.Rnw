@@ -14,8 +14,11 @@ epsfig, multicol, amsthm, bbm}
 \newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
 \def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
 \newtheorem{alg}{Algorithm}
-\newtheorem{theorem}{Theorem}
-\DeclareMathOperator{\Tr}{Tr}
+\newtheorem{thm}{Theorem}[subsection]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}[thm]{Corollary}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\B}{B}
 \begin{document}
 
 <<setup, include=FALSE, cache=FALSE>>=
