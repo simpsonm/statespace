@@ -135,92 +135,15 @@ If the $W_t$'s are independent in the prior, then they are independent in their 
 \end{align*}
 where $A_t$ and $B_t$ are matrices of constants that are implicitly defined from the previous equation. 
 
-This doesn't look like it has any conjugate form for $W_t$, but it looks a lot like a normal kernel for $L_t$, the Cholesky decomposition of $W_t$. Indeed, if we follow the approach of \cite{fruhwirth2008bayesian} and vectorize $L_t$ by stacking the nonzero elements of each column on top of each other, we can get a multivariate normal distribution. Specifically, let $L_t^*=Vec(L_t)$. Then the full conditional posterior distribution of $L_t^*$ is
+This doesn't look like it has any conjugate form for $W_t$, but it looks a lot like a normal kernel for $L_t$, the Cholesky decomposition of $W_t$. Indeed, if we follow the approach of \cite{fruhwirth2008bayesian} and vectorize $L_t$ by stacking the nonzero elements of each column on top of each other, we can get a multivariate normal distribution. Specifically, let $L_t^*=Vech(L_t)$. Then the full conditional posterior distribution of $L_t^*$ is
 \begin{align*}
   p(L_t^* & | \gamma_{0:T},\cdots) \propto \exp\left[-\frac{1}{2}\left((A^*_tL^*_t)'(A^*_tL^*_t) - 2B^*_tL^*_t\right)\right]p(L_t^*)\\
   & \propto \exp\left[-\frac{1}{2}(L_t^* - \mu_t^*)'(\Sigma_t^*)^{-1}(L_t^* - \mu_t^*)\right]p(L_t^*)
 \end{align*}
-where $A_t^*$ and $B_t^*$ are matrices of constants with respect to $L_t^*$, $\Sigma_t^* = ((A_t^*)'A_t^*)^{-1}$ and $\mu_t^* = (\Sigma_t^*)^{-1}B_t^*$. So the conjugate prior on $L_t^*$ is a multivariate normal distribution. This seems a strange since we expect the diagonal elements of $L_t$ to be positive since they are standard deviations, but this is no problem as long as we view this prior as a clever trick for defining a prior on $W_t=L_t'L_t = (-L_t)'(-L_t)$ so the sign doesn't matter. Strictly speaking here, we're subtly changed the definition of $L_t$ to $\pm Chol(W_t)$, the {\it signed} Cholesky decomposition of $W_t$, and thus subtly changed the defintion of the $\gamma_t$'s to take into account the sign of $L_t$. \cite{fruhwirth2008bayesian}, \cite{fruhwirth2011bayesian} and {\it CITE THE DYNAMIC PAPER SYLVIA IS WORKING ON WITH ANGELA} use this approach to choosing priors for the system (or hierarchical) variance when working with the scaled disturbances in dynamic and non-dynamic models. Typically they choose mean zero normal priors.
+where $A_t^*$ and $B_t^*$ are matrices of constants with respect to $L_t^*$, $\Sigma_t^* = ((A_t^*)'A_t^*)^{-1}$ and $\mu_t^* = (\Sigma_t^*)^{-1}B_t^*$. So the conjugate prior on $L_t^*$ is a multivariate normal distribution. This seems a strange since we expect the diagonal elements of $L_t$ to be positive since they are standard deviations, but this is no problem as long as we view this prior as a clever trick for defining a prior on $W_t=L_t'L_t = (-L_t)'(-L_t)$ so the sign doesn't matter. Strictly speaking here, we're subtly changed the definition of $L_t$ to $\pm Chol(W_t)$, the {\it signed} Cholesky decomposition of $W_t$, and thus subtly changed the defintion of the $\gamma_t$'s to take into account the sign of $L_t$. \cite{fruhwirth2008bayesian}, \cite{fruhwirth2011bayesian} and {\it CITE THE DYNAMIC PAPER SYLVIA IS WORKING ON WITH ANGELA} use this approach to choosing priors for the system (or hierarchical) variance when working with the scaled disturbances in dynamic and non-dynamic models.
 
 This is a bit strange though. We have two sets of covariance matrices, $W_{1:T}$ and $V_{1:T}$, and we want to put a different class of priors on each set. We can put the same sort of normal prior on $K_t^*$, the vectorized Cholesky decomposition of $V_t$. In the univariate case the conditional posterior of $V_t$ will come out to be a generalized inverse gaussian distribution which is a bit complicated but not awful to draw from. There's mild tension here as well --  depending on how we choose to write down the model we end up with a different class of prior distributions for at least $W_{1:T}$. Now the reason for this difference is ultimately computation --- it is known that sometimes using the scaled disturbances improves mixing in the Markov chain --- but ideally computational concerns should not have an effect on inference. It would be nice to unite these priors two priors under a common class without sacrificing their respective computaitonal advantages under the relevant data augmentations. 
 
-{\it INSERT SOME EXPLANATION FOR WHY A NORMAL PRIOR ON THE NONZERO ELEMENTS OF THE CHOLESKY FACTORIZATION OF A COVARIANCE MATRIX YIELDS A WISHART PRIOR ON THE MATRIX ITSELF}
-
-\section{Mixing Wisharts and inverse Wisharts}
-
-The main goal of this section is to make precise and prove the statement ``an inverse Wishart mixture of Wisharts is the same as a Wishart mixture of inverse Wisharts'' as well as describe some of the properties of the resulting class of distributions. We will work with a slightly more general class of distribution in order to somewhat simplify the mathematics -- the (inverse) matrix gamma distribution. Let $X$ be a $p\times p$ nonnegative definite random matrix win a matrix gamma distribution given shape and scale parameters $\alpha > (p - 1)/2$ and $\beta >0$, and scale matrix parameter $\Sigma$, a $p\times p$ positive definite matrix, i.e. $X\sim MG_p(\alpha,\beta,\Sigma)$. Then the density of $X$ is
-\begin{align*}
-  p(X) = & \frac{|\Sigma|^{-\alpha}}{\beta^{p\alpha}\Gamma_p(\alpha)}|X|^{\alpha - (p+1)/2}\exp\left[\tr\left(-\frac{1}{\beta}\Sigma^{-1}X\right)\right]
-\end{align*}
-Where $|.|$ denotes the determinant operator, $\tr(.)$ the trace operator, and $\Gamma_p(.)$ is the multivariate gamma function.  $Y=X^{-1}$ has an inverse matrix gamma distribution, $Y\sim IMG_p(\alpha,\beta,\Psi)$ with $\Psi=\Sigma^{-1}$, and the density of Y is
-\begin{align*}
-  p(Y) = & \frac{|\Psi|^{\alpha}}{\beta^{p\alpha}\Gamma_p(\alpha)}|Y|^{-\alpha - (p+1)/2}\exp\left[\tr\left(-\frac{1}{\beta}\Psi Y^{-1}\right)\right].
-\end{align*}
-The (inverse) Wishart distribution is a special case with $\alpha = n/2$ and $\beta=0$, where $n$ is the degrees of freedom parameter of the (inverse) Wishart distribution. Now we can state the two main theorems of this section.
-
-\begin{thm}\label{thm:MGIMG}
-  Suppose $X|Y \sim MG_p(\alpha_1,\beta_1,Y)$ and $Y\sim IMG_p(\alpha_2,\alpha_2,\Sigma)$ Then the marginal distribution of $X$ is
-  \begin{align*}
-    p(X) =  \frac{\left|\frac{\beta_1}{\beta_2}\Sigma\right|^{\alpha_2}}{\B_p(\alpha_1,\alpha_2)} |X|^{\alpha_1 - (p+1)/2}  \left|X + \frac{\beta_1}{\beta_2}\Sigma\right|^{-(\alpha_1 + \alpha_2)}
-  \end{align*}
-\end{thm}
-
-\begin{thm}\label{thm:IMGMG}
-  Suppose $X|Y \sim IMG_p(\alpha_2,\beta_2,Y)$ and $Y\sim MG_p(\alpha_1,\beta_1,\Sigma)$ Then the marginal distribution of $X$ is
-  \begin{align*}
-    p(X) =  \frac{\left|\frac{\beta_1}{\beta_2}\Sigma\right|^{\alpha_2}}{\B_p(\alpha_1,\alpha_2)} |X|^{\alpha_1 - (p+1)/2}  \left|X + \frac{\beta_1}{\beta_2}\Sigma\right|^{-(\alpha_1 + \alpha_2)}
-  \end{align*}
-\end{thm}
-where $\B_p(\alpha_1, \alpha_2)$ is the multivariate beta function with the property $\B_p(\alpha_1, \alpha_2) = \Gamma_p(\alpha_1)\Gamma_p(\alpha_2)/\Gamma_p(\alpha_1 + \alpha_2)$.
-
-The proofs of these theorems are actually quite simple. We'll start with Theorem \ref{thm:MGIMG}. The joint distribution of $(X,Y)$ can be written as
-\begin{align*}
-  p(X,Y) = &  \frac{|\Sigma|^{\alpha_2}\Gamma_p(\alpha_1 + \alpha_2)}{\left(\beta_1^{\alpha_1} \beta_2^{\alpha_2}\right)^p\Gamma_p(\alpha_1)\Gamma_p(\alpha_2)}\left|\frac{1}{\beta_1}X + \frac{1}{\beta_2}\Sigma\right|^{-(\alpha_1 + \alpha_2)}|X|^{\alpha_1 - (p+1)/2} \\
-  &\times \frac{\left|\frac{1}{\beta_1}X + \frac{1}{\beta_2}\Sigma\right|^{\alpha_1 + \alpha_2}}{\Gamma_p(\alpha_1 + \alpha_2)}|Y|^{-(\alpha_1 + \alpha_2) - (p+1)/2}\exp\left[\tr\left(-\left(\frac{1}{\beta_1}X + \frac{1}{\beta_2}\Sigma \right) Y^{-1}\right)\right].
-\end{align*}
-The second line is the density of an inverse matrix gamma distribution, so marginalizing out $Y$ and rearranging a bit we get
-\begin{align*}
-p(X) =  \frac{\left|\frac{\beta_1}{\beta_2}\Sigma\right|^{\alpha_1}}{\B_p(\alpha_1,\alpha_2)} |X|^{\alpha_1 - (p+1)/2}  \left|X + \frac{\beta_1}{\beta_2}\Sigma\right|^{-(\alpha_1 + \alpha_2)}
-\end{align*}
-which completes the proof.
-
-To prove Theorem \ref{thm:IMGMG} we'll do something similar but ignore the normalizing constant. In this case the joint distribution of $X$ and $Y$ can be written as
-\begin{align*}
-  P(X,Y) \propto & |X|^{-\alpha_2 -(p+1)/2}|Y|^{\alpha_1 - (p+1)/2}\exp\left[\tr\left(-\left(\frac{1}{\beta_2}X^{-1} + \frac{1}{\beta_1}\Sigma^{-1}\right)Y\right)\right].
-\end{align*}
-Now we marginalize out $Y$ to get the desired result:
-\begin{align*}
-  p(X) \propto & |X|^{-\alpha_2 - (p+1)/2}\left|\frac{1}{\beta_2}X^{-1} + \frac{1}{\beta_1}\Sigma^{-1}\right|^{-(\alpha_1 + \alpha_2)} \\
-  \propto & |X|^{\alpha_1 - (p+1)/2}\left|\frac{\beta_1}{\beta_2}\Sigma + X\right|^{-(\alpha_1 + \alpha_2)} \\
-\end{align*}
-where the last line comes from $|X\beta_1\Sigma|^{\alpha_1 + \alpha_2}|X\beta_1\Sigma|^{-(\alpha_1 + \alpha_2)}=1$.
-
-When $\alpha_1 = 2n_1$, $\alpha_2=2n_2$ and $\beta_1=\beta_2$ (or both $beta$'s are absorbed into $\Sigma$), $X$ has the multivariate (or matrix-variate) F distribution $(X\sim F_p(n_1, n_2, \Sigma)$ with density
-\begin{align*}
-  p(X) \propto |X|^{\frac{n_1 - (p+1)}{2}}  \left|I_p + \Sigma^{-1}X\right|^{-(n_1 + n_2)/2}
-\end{align*}
-where $I_p$ is the $p\times p$ identity matrix. We'll focus on the multivariate F distribution.
-
-\subsection{Properties of the multivariate F distribution}
-It is commonly observed that the multivariate F distribution can be seen as a sort of generalization of the Wishart distribution. The following corollary illustrates this.
- 
-\begin{cor}\label{prop:multt}
-Suppose for $i=1,2,\cdots,n_1$, $x_i$ is a $p-$dimensional random vector with 
-\[
-x_i \stackrel{iid}{\sim} T_p(n_2 - p + 1, 0, \Sigma/(n_2 - p + 1))
-\]
-where $T_p(\nu,\mu,\Omega)$ is the multivariate $T$ distribution with degrees of freedom $\nu$, $p\times 1$ location parameter $\mu$ and $p\times p$ scale matrix $\Omega$. Suppose $n_1,n_2>p-1$ and let $S=\sum_{i=1}^{n_1}x_ix_i'$. Then $S\sim F_p(n_1, n_2, \Sigma)$
-\end{cor}
-
-To see this, recall that if $x|Y \sim N_p(0,Y)$ and $Y\sim IW_p\left(\nu, \Sigma\right)$ then marginally $x \sim T_p(\nu - p + 1), 0, \Sigma/(\nu - p + 1)$. So we can write the distribution of the $x_i$'s as independent inverse Wishart mixtures of independent normals, i.e. $x_i|Y_1,Y_2,\cdots,Y_{n_1} \stackrel{ind}{\sim} N_p(0,Y_i)$ and $Y_i\stackrel{iid}{\sim} IW_p(n_2, \Sigma)$. But conditional on $Y$, we know $S\sim W_p(n_1, Y)$. So by Theorem \ref{thm:MGIMG} $S\sim F_p(n_1, n_2, \Sigma)$.
-
-{\it IS THE CHOLESKY DECOMPOSITION HALF-T UNDER SOME CONDITIONS? LOOK INTO MATRIX DERIVATIVES TO FIND OUT}
-
-{\it LOOK INTO THE MARGINAL DISTRIBUTIONS OF THE STANDARD DEVIATIONS AND THE CORRELATIONS}
-
-{\it RELATE TO THE HUANG ET. AL. PAPER}
-
-{\it LOOK AT WHAT HAPPENS WHEN EITHER $n_1$ OR $n_2$ GO TO $\infty$. WHEN $n_2\to\infty$ WE GET THE WISHART. SUSPECT WHEN $n_2\to\infty$ WE GET THE INVERSE WISHART}
 
 \section{Interweaving in the DLM: Global and Componentwise}\label{sec:dlminter}
 We now have three DAs for the generic DLM with known $F_t$'s and $G_t$'s. For simplicity we'll assume that $dim(y_t)=dim(\theta_t)$ and $F_t$ invertible for $t=1,2,\cdots,T$ so that the scaled errors are easy to work with. The three DAs are the states, $\theta_{0:T}$, the scaled disturbances $\gamma_{0:T}$, and the scaled errors $\psi_{0:T}$. This allows us to construct four separate GIS algorithms based on algorithm \ref{inter2}: three algorithms that interweave between any two of $\theta_{0:T}$, $\gamma_{0:T}$, and $\psi_{0:T}$, the state-dist, state-error, and dist-error interweaving algorithms, and one algorithm that interweaves between all three, the triple interweaving algorithm. Strictly speaking, the order in which we sample the DAs in the algorithm does matter, but \citeauthor{yu2011center} note that this tends not to make much difference. So while we actually have twelve separate GIS samplers (two of each GIS sampler depending on two DAs, and six GIS samplers depending on all three), effectively we only have four. For example, algorithm \ref{sdintalg} is the state-dist GIS algorithm:
