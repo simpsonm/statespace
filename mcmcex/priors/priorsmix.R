@@ -4,9 +4,11 @@ T <- c(10, 100, 1000)
 V <- 10^(c(0:10)/2-2)
 W <- V
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
-simdatatemp <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
-simdata <- simdatatemp[simdatatemp$T.T==T & simdatatemp$V.T %in% V & simdatatemp$W.T %in% W,]
-sams <- c("state", "dist", "error")
+simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
+sams <- c("state", "dist", "error", "sdint", "seint", "deint",
+          "triint", "sdalt", "sealt", "dealt", "trialt",
+          "sdkern", "sekern", "dekern", "trikern",
+          "fullcis", "partialcis")
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
 n <- 3000

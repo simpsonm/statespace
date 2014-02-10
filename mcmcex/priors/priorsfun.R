@@ -29,12 +29,12 @@ samsim <- function(samplers, simdata, n, burn, parallel){
   out <- ddply(sam, .(V.T, W.T, T.T), samsummary,
                .parallel=parallel, dat=simdata, burn=burn,
                sampler=sampler)
-  if(sampler=="trialt"){
-    postcors <- ddply(sam, .(V.T, W.T, T.T), postcor, .parallel=parallel,
-                           dat=simdata, burn=burn)
-    save(postcors, file="postcors.RData")
-    rm(postcors)
-  }
+  #if(sampler=="trialt"){
+  #  postcors <- ddply(sam, .(V.T, W.T, T.T), postcor, .parallel=parallel,
+  #                         dat=simdata, burn=burn)
+  #  save(postcors, file="postcors.RData")
+  #  rm(postcors)
+  #}
   rm(sam)
   save(out, file=paste(sampler, "OUT.RData", sep=""))
   print(paste(sampler, "finished", sep=" "))
@@ -134,7 +134,7 @@ samsummary <- function(sam, dat, burn, sampler){
   time <- sam$time[1]/length(sam$time)*1000 #time per 1000 iterations
   statkern <- mean(sam$kernel=="state", na.rm=TRUE)
   distkern <- mean(sam$kernel=="dist", na.rm=TRUE)
-  errorkern <- 1 - (statkern + distkern)
+  errorkern <- mean(sam$kernel=="error", na.rm=TRUE)
   init <- data.frame(time=time, statkern=statkern,
                      distkern=distkern, errorkern=errorkern)
   gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
@@ -762,7 +762,7 @@ randkernsam <- function(n, start, dat, Qv, Qw, probs=c(1/3, 1/3, 1/3)){
   W <- start[2]
   sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
   sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
-  out <- data.frame(matrix(0, nrow=n, ncol=T+8))
+  out <- data.frame(matrix(0, nrow=n, ncol=T+6))
   colnames(out) <- c(paste("theta",0:T,sep=""), "V", "W", "sigv", "sigw", "kernel")
   for(i in 1:n){
     iter <- randkerniter(dat, V, W, sigv, sigw, theta, Qv, Qw, probs)
