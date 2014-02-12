@@ -42,7 +42,7 @@ Where $|.|$ denotes the determinant operator, $\tr(.)$ the trace operator, and $
 \begin{align*}
   p(Y) = & \frac{|\Psi|^{\alpha}}{\beta^{p\alpha}\Gamma_p(\alpha)}|Y|^{-\alpha - (p+1)/2}\exp\left[\tr\left(-\frac{1}{\beta}\Psi Y^{-1}\right)\right].
 \end{align*}
-The (inverse) Wishart distribution is a special case with $\alpha = n/2$ and $\beta=0$, where $n$ is the degrees of freedom parameter of the (inverse) Wishart distribution. Now we can state the two main theorems of this section.
+The (inverse) Wishart distribution is a special case with $\alpha = n/2$ and $\beta=0$, where $n$ is the degrees of freedom parameter of the (inverse) Wishart distribution, denoted $X\sim W_p(n,\Sigma)$ and $Y\sim IW_p(n,\Psi)$. Now we can state the two main theorems of this section.
 
 \begin{thm}\label{thm:MGIMG}
   Suppose $X|Y \sim MG_p(\alpha_1,\beta_1,Y)$ and $Y\sim IMG_p(\alpha_2,\alpha_2,\Sigma)$ Then the marginal distribution of $X$ is
@@ -59,7 +59,7 @@ The (inverse) Wishart distribution is a special case with $\alpha = n/2$ and $\b
 \end{thm}
 where $\B_p(\alpha_1, \alpha_2)$ is the multivariate beta function with the property $\B_p(\alpha_1, \alpha_2) = \Gamma_p(\alpha_1)\Gamma_p(\alpha_2)/\Gamma_p(\alpha_1 + \alpha_2)$.
 
-The proofs of these theorems are actually quite simple. We'll start with Theorem \ref{thm:MGIMG}. The joint distribution of $(X,Y)$ can be written as
+The proofs of these theorems are actually quite simple. We'll start with Theorem \eqref{thm:MGIMG}. The joint distribution of $(X,Y)$ can be written as
 \begin{align*}
   p(X,Y) = &  \frac{|\Sigma|^{\alpha_2}\Gamma_p(\alpha_1 + \alpha_2)}{\left(\beta_1^{\alpha_1} \beta_2^{\alpha_2}\right)^p\Gamma_p(\alpha_1)\Gamma_p(\alpha_2)}\left|\frac{1}{\beta_1}X + \frac{1}{\beta_2}\Sigma\right|^{-(\alpha_1 + \alpha_2)}|X|^{\alpha_1 - (p+1)/2} \\
   &\times \frac{\left|\frac{1}{\beta_1}X + \frac{1}{\beta_2}\Sigma\right|^{\alpha_1 + \alpha_2}}{\Gamma_p(\alpha_1 + \alpha_2)}|Y|^{-(\alpha_1 + \alpha_2) - (p+1)/2}\exp\left[\tr\left(-\left(\frac{1}{\beta_1}X + \frac{1}{\beta_2}\Sigma \right) Y^{-1}\right)\right].
@@ -70,7 +70,7 @@ p(X) =  \frac{\left|\frac{\beta_1}{\beta_2}\Sigma\right|^{\alpha_1}}{\B_p(\alpha
 \end{align*}
 which completes the proof.
 
-To prove Theorem \ref{thm:IMGMG} we'll do something similar but ignore the normalizing constant. In this case the joint distribution of $X$ and $Y$ can be written as
+To prove Theorem \eqref{thm:IMGMG} we'll do something similar but ignore the normalizing constant. In this case the joint distribution of $X$ and $Y$ can be written as
 \begin{align*}
   P(X,Y) \propto & |X|^{-\alpha_2 -(p+1)/2}|Y|^{\alpha_1 - (p+1)/2}\exp\left[\tr\left(-\left(\frac{1}{\beta_2}X^{-1} + \frac{1}{\beta_1}\Sigma^{-1}\right)Y\right)\right].
 \end{align*}
@@ -81,14 +81,14 @@ Now we marginalize out $Y$ to get the desired result:
 \end{align*}
 where the last line comes from $|X\beta_1\Sigma|^{\alpha_1 + \alpha_2}|X\beta_1\Sigma|^{-(\alpha_1 + \alpha_2)}=1$.
 
-When $\alpha_1 = 2n_1$, $\alpha_2=2n_2$ and $\beta_1=\beta_2$ (or both $beta$'s are absorbed into $\Sigma$), $X$ has the multivariate (or matrix-variate) F distribution $(X\sim F_p(n_1, n_2, \Sigma)$ with density
+When $\alpha_1 = 2n_1$, $\alpha_2=2n_2$ and $\beta_1=\beta_2$ (or both $\beta$'s are absorbed into $\Sigma$), $X$ has the multivariate (or matrix-variate) F distribution $(X\sim F_p(n_1, n_2, \Sigma))$ with density
 \begin{align*}
   p(X) \propto |X|^{\frac{n_1 - (p+1)}{2}}  \left|I_p + \Sigma^{-1}X\right|^{-(n_1 + n_2)/2}
-p\end{align*}
-where $I_p$ is the $p\times p$ identity matrix. We'll focus on the multivariate F distribution.
+\end{align*}
+where $I_p$ is the $p\times p$ identity matrix. We'll focus on the multivariate F distribution as a prior for covariance matrices, specifically $X \sim F_p(n_1, n_2 + p - 1, \Sigma)$.
 
-\section{Properties of the multivariate F distribution}
-It is commonly observed that the multivariate F distribution can be seen as a sort of generalization of the Wishart distribution. The following corollary illustrates this.
+\section{Properties of the multivariate F prior on covariance matrices}
+The multivariate F distribution is well known in the multivariate analysis literature. \cite{dawid1981some} defines it as an inverse Wishart mixture of Wisharts, as in Theorem \eqref{thm:MGIMG}, and notes that it can be seen as a generalization of the Wishart distribution. The following corollary illustrates this.
  
 \begin{cor}\label{prop:multt}
 Suppose for $i=1,2,\cdots,n_1$, $x_i$ is a $p-$dimensional random vector with 
@@ -98,115 +98,94 @@ x_i \stackrel{iid}{\sim} T_p(n_2 - p + 1, 0, \Sigma/(n_2 - p + 1))
 where $T_p(\nu,\mu,\Omega)$ is the multivariate $T$ distribution with degrees of freedom $\nu$, $p\times 1$ location parameter $\mu$ and $p\times p$ scale matrix $\Omega$. Suppose $n_1,n_2>p-1$ and let $S=\sum_{i=1}^{n_1}x_ix_i'$. Then $S\sim F_p(n_1, n_2, \Sigma)$
 \end{cor}
 
-To see this, recall that if $x|Y \sim N_p(0,Y)$ and $Y\sim IW_p\left(\nu, \Sigma\right)$ then marginally $x \sim T_p(\nu - p + 1), 0, \Sigma/(\nu - p + 1)$. So we can write the distribution of the $x_i$'s as independent inverse Wishart mixtures of independent normals, i.e. $x_i|Y_1,Y_2,\cdots,Y_{n_1} \stackrel{ind}{\sim} N_p(0,Y_i)$ and $Y_i\stackrel{iid}{\sim} IW_p(n_2, \Sigma)$. But conditional on $Y$, we know $S\sim W_p(n_1, Y)$. So by Theorem \ref{thm:MGIMG} $S\sim F_p(n_1, n_2, \Sigma)$.
+To see this, recall that if $x|Y \sim N_p(0,Y)$ and $Y\sim IW_p\left(\nu, \Sigma\right)$ then marginally $x \sim T_p(\nu - p + 1), 0, \Sigma/(\nu - p + 1)$. So we can write the distribution of the $x_i$'s as independent inverse Wishart mixtures of independent normals, i.e. $x_i|Y_1,Y_2,\cdots,Y_{n_1} \stackrel{ind}{\sim} N_p(0,Y_i)$ and $Y_i\stackrel{iid}{\sim} IW_p(n_2, \Sigma)$. But conditional on $Y$, we know $S\sim W_p(n_1, Y)$. So by Theorem \eqref{thm:MGIMG} $X\sim F_p(n_1, n_2, \Sigma)$.
 
-\begin{prop}\label{prop:half-tsd}
-  If $X\sim F_p(n_1, n_2, \Sigma)$ then the marginal distribution of $s_{ii}=\sqrt{x_{ii}}$ is the ``scale mixed Nakagami'' distribution with density
-  \[
-  p(s) \propto s^{n_2}\left(1+\frac{1}{\nu}\frac{s}{\sigma/\nu}\right)^{-(\nu + 1)/2}
-  \]
-  where $\nu = n_1 + n_2 - p$
+This family of covariance matrix priors has the same self-consistent property that \cite{huang2013simple} discuss.
+\begin{prop}\label{prop:selfcons}
+If $X\sim F_p(n_1, n_2 + p - 1, \Sigma)$ with
+\begin{align*}
+  X = \begin{bmatrix} X_{11} & X_{12} \\ X_{12} & X_{22} \end{bmatrix} &&   \Sigma = \begin{bmatrix} \Sigma_{11} & \Sigma_{12} \\ \Sigma_{12} & \Sigma_{22} \end{bmatrix}
+\end{align*}
+where $X_{11}$ is a $q\times q$ submatrix of $X$ and $\Sigma_{11}$ is a $q\times q$ submatrix of $\Sigma$. Then $X_{11} \sim F_q(n_1, n_2 + q - 1, \Sigma_{11})$ 
 \end{prop}
+Using Theorem \eqref{thm:MGIMG} we have $X|Y \sim W_p(n_1, Y)$ and $Y\sim IW_p(n_2 + p - 1, \Sigma)$. Recall that for Wishart random matrices that if $C$ is a $q\times p$ rank $q$ matrix then $CX C'\sim W_q(n_1,CYC')$. Set $C=(c_1',c_2',\cdots,c_q)'$ with $c_q$ a row vector of zeroes except for a one in the $q$'th place. Then we have $X_{11}|Y_{11}\sim W_q(n_1,Y_{11})$. Now from the properties of the inverse Wishart distribution $Y_{11}\sim IW_q(n_2 + p - 1 - (p-q), \Sigma_{11})$. Then using Theorem \eqref{thm:MGIMG} this gives $X_{11}\sim F_q(n_1, n_2 + p - 1, \Sigma_{11})$.
 
-First, write the distribution of $X$ as $X|Y\sim IW_p(n_1, Y)$ and $Y\sim W_p(1, \Sigma)$. Recall that conditional on $Y$, the marginal distribution of $x_{ii}$ is $IG((n_1 - p + 1)/2, y_{ii}/2)$ and that the marginal distribution of $y_{ii}$ is $G(n_2/2, 1/(2\sigma_{ii})$. Put together (and omitting the subscripts of $x_{ii}$, $y_{ii}$ and $\sigma_{ii}$) we have
+This self consistency property is desireable because it allows us to expand a covariance matrix without changing the marginal distribution of the original matrix. As \citet{huang2013simple} note, this property is nontrivial and does not hold for some other proposed covariance matrix priors, e.g. \cite{barnard2000modeling}. This property does hold for the inverse Wishart prior, as well as another nice property --- if we prefer to work with the precision matrix instead of the covariance matrix, it's easy to do so. The next proposition establishes this fact for the proposed family of priors.
+
+The previous set of properties of the matrix-variate F distribution can be found in \citet{dawid1981some}. The next result may be novel though.
+\begin{prop}\label{prop:invF}
+Suppose $X\sim F_p(n_1 + p - 1, n_2 + p - 1, \Sigma)$. Then $X^{-1}\sim F_p(n_2 + p - 1, n_1 + p - 1, \Sigma^{-1})$
+\end{prop}
+Using Theorem \eqref{thm:MGIMG} we have $X|Y\sim W_p(n_1 + p - 1, Y)$ and $Y\sim IW_p(n_2 + p - 1, \Sigma)$. Then $X^{-1}|Y\sim IW_p(n_1 + p - 1, Y^{-1})$ and $Y^{-1}\sim W_p(n_2 + p - 1, \Sigma^{-1})$. So using Theorem \eqref{thm:IMGMG} $X^{-1} \sim F_p(n_2 + p - 1, n_1 + p - 1, \Sigma)$. Thus we have a choice --- we can make this family of priors self consistent on the covariances or self consistent on the precisions, but not both. We are interested in priors for covariance matrices so we enforce the self consistency property on that scale. 
+
+We'll consisder the marginal distribution of the standard deviation parameters with the next proposition.
+\begin{prop}\label{prop:sd}
+ If $X\sim F_p(n_1, n_2 + p - 1, \Sigma)$ then the marginal distribution of $s_{ii}=\sqrt{x_{ii}}$ is the ``scale mixed Nakagami'' distribution with density
+  \[
+    p(s_{ii})\propto s_{ii}^{n_1 - 1}\left(1 + \frac{s_{ii}^2}{\sigma_{ii}}\right)^{-(n_1 + n_2)/2}.
+  \]
+\end{prop}
+Using the self consistency property we immediately have
 \begin{align*}
-  p(x,y) \propto x^{-(n_1 - p + 1)/2 - 1}y^{(n_1 + n_2 - p + 1)/2 - 1}\exp\left[-y\frac{1}{2}\left(\frac{1}{x} + \frac{1}{\sigma}\right)\right]
+  p(x_{ii})\propto x_{ii}^{n_1/2 - 1}\left(1 + \frac{x_{ii}}{\sigma_{ii}}\right)^{-(n_1 + n_2)/2}.
 \end{align*}
-so that
+Now let $x_{ii}=s_{ii}^2$ with Jacobian $2s_{ii}$ we get
 \begin{align*}
-  p(x) &\propto x^{-(n_1 - p + 1)/2 - 1}\left(\frac{1}{\sigma} + \frac{1}{x}\right)^{-(n_1 + n_2 - p - 1)/2 - 1}\\
-  &\propto x^{n_2/2 - 1}(1 + x/\sigma)^{-(n_1 + n_2 - p -1)/2 - 1}\\
+  p(s_{ii})\propto s_{ii}^{n_1 - 1}\left(1 + \frac{s_{ii}^2}{\sigma_{ii}}\right)^{-(n_1 + n_2)/2}.
 \end{align*}
-Now let $s=\sqrt{x}$. Then the Jacobian is $2s$ and the density of $s$ can be written as
+Note that since $n_1 > p - 1$, we cannot in general have the marginal distribution of the standard deviations be half-$t$. We are calling this a ``scale mixed Nakagmi'' because the Nakagami distribution, under one parameterization, is
 \begin{align*}
-  p(s) & \propto s^{n_2}\left(1 + \frac{s^2}{\sigma}\right)^{(n_1 + n_2 - p + 1)/2}\\
-       & \propto s^{n_2}\left(1+\frac{1}{\nu}\frac{s}{\sigma/\nu}\right)^{-(\nu + 1)/2}
+  p(x) = \frac{1}{2^{\alpha - 1}\theta^\alpha \Gamma(\alpha)}x^{2\alpha -1}\exp\left[-\frac{x^2}{2\theta}\right].
 \end{align*}
-where $\nu = n_1 + n_2 - p$. I'm calling this the scale mixed Nakagami distribution because it is what results when you put an inverse gamma mixing distribution on the scale parameter of a Nakagami distribution. Similarly, the Nakagami distribution is a Gaussian kernel of the variable $s$ multiplied by $s^\alpha$ where $\alpha > 0$. Here we use a $T$ kernel multiplied by $s^\alpha$.
+By choosing $\alpha=n_1/2$ and setting $\theta \sim IG(n_2/2, \sigma_{ii}/2)$ with pdf $p(\theta) \propto \theta^{-n_2/2 - 1}\exp(2\sigma_{ii}/\theta)$, then marginalizing out $\theta$, we obtain the marginal distribution of the standard deviations of the $F_p$ distribution.
 
-Because the inverse Wishart distribution is restricted to $n_1 > (p-1)$, in general we can't enforce half-$t$ disrtibutions on the standard deviations by setting $n_1 = 1$. However, this distribution should probably satisfy \citeauthor{gelman2006prior}'s main complaint about sensitivity to hyperparameter choice.
+Characterizing the marginal distribution of the correlation parameters has proven to be more difficult. However, it's not difficult to simulate from this distribution and use the results to choose $n_1$ and $n_2$ so that the correlations are marginally uniform, supposing that $\Sigma$ is diagonal. 
 
-
-
-{\it LOOK AT WHAT HAPPENS WHEN EITHER $n_1$ OR $n_2$ GO TO $\infty$. WHEN $n_2\to\infty$ WE GET THE WISHART. SUSPECT WHEN $n_2\to\infty$ WE GET THE INVERSE WISHART}
-
-\section{Examining the correlations}
-
-<<corrsims, echo=FALSE, message=TRUE, cache=TRUE>>=
+<<corrsims, echo=FALSE, message=FALSE, cache=TRUE>>=
 library(MCMCpack)
 library(ggplot2)
 
-N <- 5000
-n1s <- c(4,5,6)
-n2s <- n1s
+N <- 10000
+n1s <- 4
+n2s <- 4
 r <- 0
-S <- diag(1,2)
-data <- data.frame(n1=0, n2=0, cor=0)
-data2 <- data.frame(n1=0, n2=0, cor=0)
-data3 <- data.frame(n1=0, n2=0, cor=0)
+S <- diag(c(1,1))
+data <- data.frame(n1=0, n2=0, cor=0, sig1=0, sig2=0)
 set.seed(234210)
 
 j <- 1
 for(n1 in n1s){
   for(n2 in n2s){
     for(i in 1:N){
-      Y <- rwish(n2, S)
-      X <- riwish(n1, Y)
+      Y <- rwish(n1, S)
+      X <- riwish(n2 + 1, Y)
       R <- cov2cor(X)
-      data[j,] <- c(n1, n2, R[1,2])
+      data[j,] <- c(n1, n2, R[1,2], X[1,1], X[2,2])
       j <- j + 1
     }
   }
 }
 
-qplot(cor, facets=n1~n2, geom="histogram", data=data)
-
-S <- diag(1,5)
-n1s <- c(6,7,8)
-n2s <- n1s
-j <- 1
-for(n1 in n1s){
-  for(n2 in n2s){
-    for(i in 1:N){
-      Y <- rwish(n2, S)
-      X <- riwish(n1, Y)
-      R <- cov2cor(X)
-      data2[j,] <- c(n1, n2, R[1,2])
-      j <- j + 1
-    }
-  }
-}
-
-qplot(cor, facets=n1~n2, geom="histogram", data=data2)
-
-
-S <- diag(1,20)
-n1s <- c(21,22,23)
-n2s <- n1s
-j <- 1
-for(n1 in n1s){
-  for(n2 in n2s){
-    for(i in 1:N){
-      Y <- rwish(n2, S)
-      X <- riwish(n1, Y)
-      R <- cov2cor(X)
-      data3[j,] <- c(n1, n2, R[1,2])
-      j <- j + 1
-    }
-  }
-}
-
-qplot(cor, facets=n1~n2, geom="histogram", data=data3)
-
-
+#qplot(cor, sig1, data=data)
+#cor(data$cor^2, data$sig1)
+#qplot(cor, facets=n2~n1, geom="histogram", data=data)
 @ 
+
+
+{\it LOOK AT WHAT HAPPENS WHEN EITHER $n_1$ OR $n_2$ GO TO $\infty$. WHEN $n_2\to\infty$ WE GET THE WISHART. SUSPECT WHEN $n_2\to\infty$ WE GET THE INVERSE WISHART}\\~\\
+
+{\it EXPECTED VALUE AND VARIANCE OF 
+  SD, VARIANCE, AND/OR CORRELATION PARAMETERS}\\~\\
+
+
+{\it DEPENDENCE BETWEEN SD/VARIANCE AND CORRELATION - EARLY SIMULATIONS SHOW LITTLE DEPENDENCE BUT STILL A BIT - A BIT OF POSITIVE CORRELATION BETWEEN $\rho^2$ and $\sigma^2$}
 
 \section{Discussion}
 
-The significance of this distribution and its mixture representations is hopefully clear --- the matrixvariate F distribution provides a much more general class of prior distributions for both covariance and precision matrices than typically used while still allowing computation to be cheap and easily implemented. The main cost here is an additional Gibbs step where we draw from an (inverse) Wishart distribution for the scale matrix in the prior for the covariance (precision) matrix. A similar idea has been put forth by \cite{huang2013simple}. Their suggestion is to use an inverse Wishart prior for the covariance matrix, but force scale matrix parameter to be diagonal. Then put independent gamma hyperpriors on the diagonal elements of the scale matrix. They note that this allows for a more flexible covariance matrix prior, including marginal half-t distributions for standard deviations and, if desired, marginal uniform distributions for the correlations. 
+The significance of this distribution and its mixture representations is hopefully clear --- the matrixvariate F distribution provides a much more general class of prior distributions for both covariance and precision matrices than typically used while still allowing computation to be cheap and easily implemented. The main cost here is an additional Gibbs step where we draw from an (inverse) Wishart distribution for the scale matrix in the prior for the covariance (precision) matrix. A similar idea has been put forth by \cite{huang2013simple} with a similar cost. Their suggestion is to use an inverse Wishart prior for the covariance matrix, but force scale matrix parameter to be diagonal. Then put independent gamma hyperpriors on the diagonal elements of the scale matrix. They note that this allows for a more flexible covariance matrix prior, including marginal half-$t$ distributions for standard deviations and, if desired, marginal uniform distributions for the correlations. One advantage of our prior, like \citeauthor{huang2013simple}'s,  is that it is easy to construct an MCMC sampler using the precision matrix instead the covariance matrix due to Theorem \eqref{thm:MGIMG}.
 
 \bibliographystyle{plainnat}
-\bibliography{mcmcex}
+\bibliography{../mcmcex}
 
 
 \end{document}
