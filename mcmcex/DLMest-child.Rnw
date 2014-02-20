@@ -89,7 +89,7 @@ The DA algorithm based on $\gamma_{0:T}$ is as follows:
 \end{alg}
 Step 1 can be accomplished directly with the disturbance smoother of \citet{koopman1993disturbance} or indirectly by using FFBS to draw the states and then transform them to the scaled disturbances. Step 2 ends up being complicated because the joint conditional posterior of $V$ and $W$ isn't a known density. We'll go through an example of this when both $y_t$ and $\theta_t$ are scalars later.
 
-We previously mentioned that the intuition behind the scaled disturbances also suggests trying the scaled states, i.e. $\theta^s_{0:T}$ where $\theta^s_0=\theta_0$ and for $t=1,2,\cdots,T$, $\theta^s_t=L_t^{-1}\theta_t$u. Note that $\theta^s_{0:T}$ and $\gamma_{0:T}$ are completely determined by each other independently of $V_{1:T}$ and $W_{1:T}$, which suggests the conditional distribution of $(V_{1:T},W_{1:T})$ is unchanged. This intuition is dangerously close to running right into the Borel-Kolmogorov paradox, but in this case there is no issue since the determinant of the Jacobian will be the same whether we are transforming to the sclaed disturbances or the scaled states.
+We previously mentioned that the intuition behind the scaled disturbances also suggests trying the scaled states, i.e. $\theta^s_{0:T}$ where $\theta^s_0=\theta_0$ and for $t=1,2,\cdots,T$, $\theta^s_t=L_t^{-1}\theta_t$u. Note that $\theta^s_{0:T}$ and $\gamma_{0:T}$ are completely determined by each other independently of $V_{1:T}$ and $W_{1:T}$, which suggests the conditional distribution of $(V_{1:T},W_{1:T})$ is unchanged. This intuition is dangerously close to running right into the Borel-Kolmogorov paradox, but in this case there is no issue since the determinant of the Jacobian will be the same whether we are transforming to the scaled disturbances or the scaled states.
 
 \subsection{The Scaled Errors}
 The scaled disturbances immediately suggest another potential AA that seems like it should be analogous --- the scaled observation errors, or more succinctly the scaled errors. What we are referring to is $v_t=y_t - F_t\theta_t$ appropriately scaled by $V_t$ in the general DLM. Now let $K_t$ denote the Cholesky decomposition of $V_t$, that is $K_t'K_t=V_t$. Then we can define the scaled errors as $\psi_0 = \theta_0$ and $\psi_t = K_t^{-1}(y_t - F_t\theta_t)$ for $t=1,2,\cdots,T$. This is a bit strange since in general $dim(\psi_0)\neq dim(\psi_t)$ for $t=1,2,\cdots,T$. Ideally we might like an ``$F_0$'' so that we can set $\psi_0=F_0\theta_0$ in order for $\psi_0$ to have the same dimension as $\psi_1$. However, in general there is no $F_0$. In some DLMs $F_t$ is constant with respect to $t$ so that we could set $F_0=F$, but in dynamic regression for example, there is no natural ``$F_0$''.
@@ -123,24 +123,71 @@ After choosing the priors for $\theta_0$, $V_{1:T}$ and $W_{1:T}$ we motivated t
 \end{align*}
 Immediately we see that the conjugate prior for $V_t$ is inverse Wishart, so no change on that front. For $W_t$ on the other hand, it's unclear until we unpack $\theta_t(\gamma_{0:T},W_{1:T})$. Recall that in our definition of the scaled disturbances for $t=1,2,\cdots,T$, $\gamma_t = L_t^{-1}w_t = L_t^{-1}(\theta_t - G_t\theta_{t-1})$ where $L_t'L_t = W_t$ while $\gamma_0=\theta_0$. The reverse transformation is thus the recursion $\theta_t = L_t\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. This implies that for $t=0,1,\cdots,T$
 \begin{align*}
-  \theta_t = \sum_{s=0}^t\left(\prod_{r=s+1}^tG_r\right)L_s\gamma_s
+  \theta_t = \sum_{s=1}^t\left(\prod_{r=s+1}^tG_r\right)L_s\gamma_s + \prod_{r=1}^tG_r\gamma_0
 \end{align*}
-where we define $L_0=I_k$, the $k\times k$ identity matrix, and for $s+1>t$, $\prod_{r=s+1}^tG_r = I_k$. Now recall that $K_t'K_t = V_t$ and let $H_s^t = \prod_{r=s+1}^tG_r$. This allows us to write the full conditional distribution of $W_{1:T}$ as
+where for $s+1>t$, $\prod_{r=s+1}^tG_r = I_k$ the $k\times k$ identity matrix. Now recall that $K_t'K_t = V_t$ and let $H_{st} = \prod_{r=s+1}^tG_r$. This allows us to write the full conditional distribution of $W_{1:T}$, ignoring the prior, as
 \begin{align*}
-  p(W_{1:T}&|\gamma_{0:T},\cdots)  \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(y_t - F_t\sum_{s=0}^tH_s^tL_s\gamma_s\right)'(K_t^{-1})'K_t^{-1}\left(y_t - F_t\sum_{s=0}^tH_s^tL_s\gamma_s\right)\right]p(W_{1:T})
+  p(W_{1:T}&|\gamma_{0:T},\cdots)  \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(y_t - F_tH_{0t}\gamma_0 - F_t\sum_{s=1}^tH_{st}L_s\gamma_s\right)'(K_t^{-1})'K_t^{-1}\left(y_t - F_tH_{0t}\gamma_0 - F_t\sum_{s=0}^tH_{st}L_s\gamma_s\right)\right]\\
+  &\propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(\left(\sum_{s=1}^t\gamma_s'L_s'H_{st}'\right)F_t'(K_t^{-1})'K_t^{-1}F_t\sum_{s=1}^tH_{st}L_s\gamma_s - 2(y_t - F_tH_{0t}\gamma_0)'(K_t^{-1})'K_t^{-1}F_t\sum_{s=1}^tH_{st}L_s\gamma_s\right)\right]\\
+  &\propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(\left(\sum_{s=1}^t\gamma_s'L_s'H_{st}'\right)A_t'A_t\sum_{s=1}^tH_{st}L_s\gamma_s - 2b_t'A_t\sum_{s=1}^tH_{st}L_s\gamma_s\right)\right]
 \end{align*}
-If the $W_t$'s are independent in the prior, then they are independent in their conditional posterior with density
-\begin{align*}
-  p(W_t & | \gamma_{0:T},\cdots) \propto \exp\left[-\frac{1}{2}\left((A_tL_t\gamma_t)'(A_tL_t\gamma_t) - 2B_tL_t\gamma_t\right)\right]p(W_t)
-\end{align*}
-where $A_t$ and $B_t$ are matrices of constants that are implicitly defined from the previous equation. 
+where we define $b_t = K_t^{-1}(y_t - F_tH_{0t}\gamma_0)$ and $A_t = K_t^{-1}F_t$. 
 
-This doesn't look like it has any conjugate form for $W_t$, but it looks a lot like a normal kernel for $L_t$, the Cholesky decomposition of $W_t$. Indeed, if we follow the approach of \cite{fruhwirth2008bayesian} and vectorize $L_t$ by stacking the nonzero elements of each column on top of each other, we can get a multivariate normal distribution. Specifically, let $L_t^*=Vech(L_t)$. Then the full conditional posterior distribution of $L_t^*$ is
+This doesn't look like it has any conjugate form for $W_t$, but with some finesse it looks like it might be a normal kernel for $L_t$, the Cholesky decomposition of $W_t$. Then since we can assume the Jacobian from $W_t\to L_t$ will be absorbed into the prior, which we are ignoring, we have
 \begin{align*}
-  p(L_t^* & | \gamma_{0:T},\cdots) \propto \exp\left[-\frac{1}{2}\left((A^*_tL^*_t)'(A^*_tL^*_t) - 2B^*_tL^*_t\right)\right]p(L_t^*)\\
-  & \propto \exp\left[-\frac{1}{2}(L_t^* - \mu_t^*)'(\Sigma_t^*)^{-1}(L_t^* - \mu_t^*)\right]p(L_t^*)
+    p(L_{1:T}|\gamma_{0:T},\cdots) &\propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(\sum_{s=1}^t\gamma_s'L_s'H_{st}'A_t'A_tH_{st}L_s\gamma_s + 2\sum_{r<s}^t \gamma_r'L_r'H_{rt}'A_t'A_tH_{st}L_s\gamma_s- 2b_t'A_t\sum_{s=1}^tH_{st}L_s\gamma_s\right)\right]\\
+    &\propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\sum_{s=1}^t\left(\gamma_s'L_s'B_{st}'B_{st}L_s\gamma_s - 2\left(b_t' - \sum_{r=1}^{s-1} \gamma_r'L_r'B_{rt}'\right)B_{st}L_s\gamma_s\right)\right]\\
+    &\propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\sum_{s=t}^T\left(\gamma_t'L_t'B_{ts}'B_{ts}L_t\gamma_t - 2\left(b_s' - \sum_{r=1}^{t-1} \gamma_r'L_r'B_{rs}'\right)B_{ts}L_t\gamma_t\right)\right]\\
 \end{align*}
-where $A_t^*$ and $B_t^*$ are matrices of constants with respect to $L_t^*$, $\Sigma_t^* = ((A_t^*)'A_t^*)^{-1}$ and $\mu_t^* = (\Sigma_t^*)^{-1}B_t^*$. So the conjugate prior on $L_t^*$ is a multivariate normal distribution. This seems a strange since we expect the diagonal elements of $L_t$ to be positive since they are standard deviations, but this is no problem as long as we view this prior as a clever trick for defining a prior on $W_t=L_t'L_t = (-L_t)'(-L_t)$ so the sign doesn't matter. Strictly speaking here, we're subtly changed the definition of $L_t$ to $\pm Chol(W_t)$, the {\it signed} Cholesky decomposition of $W_t$, and thus subtly changed the defintion of the $\gamma_t$'s to take into account the sign of $L_t$. \cite{fruhwirth2008bayesian}, \cite{fruhwirth2011bayesian} and {\it CITE THE DYNAMIC PAPER SYLVIA IS WORKING ON WITH ANGELA} use this approach to choosing priors for the system (or hierarchical) variance when working with the scaled disturbances in dynamic and non-dynamic models.
+where we define $B_{st}=A_tH_{st}$. Now let's define
+\begin{align*}
+  C_t =& \sum_{s=t}^TB_{ts}'B_{ts} = \sum_{s=t}^TH_{st}'A_t'A_tH_{st} = \sum_{s=t}^T \left(K_t^{-1}F_t\prod_{r=s+1}^tG_r\right)'\left(K_t^{-1}F_t\prod_{r=s+1}^tG_r\right)\\
+  \intertext{and}
+    c_t =&\sum_{s=t}^TB_{ts}'\left(b_s - \sum_{r=1}^{t-1}B_{rs}L_r\gamma_r\right) = \sum_{s=t}^T\left(K_t^{-1}F_t\prod_{r=s+1}^tG_r\right)'\left[K_s^{-1}\left(y_s - F_t\prod_{r=1}^s(G_r)\gamma_0\right) - \sum_{r=1}^{s-1}K_r^{-1}F_r\prod_{i=r+1}^s(G_i)L_r\gamma_r\right].
+\end{align*}
+This allows us to write
+\begin{align*}
+  p(L_{1:T}|\gamma_{0:T},\cdots) &\propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(\gamma_t'L_t'C_tL_t\gamma_t - 2c_t'L_t\gamma_t\right)\right].
+\end{align*}
+This looks like a normal kernel for $L_t\gamma_t$, but note that $c_t$ is a function of $L_{1:(t-1)}$. So the $L_t$'s are not conditionally independent, however it is immediately clear that 
+\begin{align*}
+  p(L_t|L_{1:(t-1)},\gamma_{0:T},\cdots) &\propto \exp\left[-\frac{1}{2}\left(\gamma_t'L_t'C_tL_t\gamma_t - 2c_t'L_t\gamma_t\right)\right]\\
+  & \propto \exp\left[-\frac{1}{2}\left((L_t\gamma_t - C_t^{-1}c_t)'C_t(L_t\gamma_t - C_t^{-1}c_t) \right)\right]
+\end{align*}
+so that we can easily sample from $p(L_{1:T}|\gamma_{0:T},\cdots)$ as long as $p(L_t|L_{1:(t-1)},\gamma_{0:T},\cdots)$ is easy to sample from. While we have a normal kernel for $L_t\gamma_t$, it is not immediately clear whether $L_t$ will have a normal distribution. If we follow the approach of \cite{fruhwirth2008bayesian} and vectorize $L_t$ by stacking the nonzero elements of each column on top of each other, we will see that the nonzero elements of $L_t$ conditional on $L_{1:(t-1)},\gamma_{0:T},\cdots$ are normally distributed, again ignoring the prior. 
+
+In order to show this, we first have to introduce a bit of notation. Let $A=(a_{ij})$ be a $p\times q$ matrix. First we define the vectorization of $A$, $\vect(A)$, as the $pq\times 1$ column vector obtained by stacking the columns of $A$ on top of each other. If $p=q$ then we define the half vectorization of $A$, $\vech(A)$, as the $p(p+1)/2\times 1$ column vector obtained by first deleting the elements of $A$ above the main diagonal, then stacking the remaining elements on top of each other column by column. Formally,
+\begin{align*}
+  \vect(A) & = (a_{11}, a_{21}, \cdots, a_{p1}, a_{12}, a_{22}, \cdots a_{p2}, \cdots, a_{pq})'\\
+  \vech(A) & = (a_{11}, a_{21}, \cdots, a_{p1}, a_{22}, a_{32}, \cdots a_{p2}, \cdots, a_{pp})'.
+\end{align*}
+In particular not that if $a$ is a column vector, $\vect(a)=a$ and $\vect(a')=\vect(a)'$. Suppose $p=q$ so that $A$ is square. Then there exists a unique $p(p+1)/2\times p^2$ matrix $S_p$ such that $\vech(A) = S_p\vect(A)$, called the elimination matrix. We list a few of the properties of $S_p$ here, but see \cite{magnus1980elimination} or \cite{magnus1988linear} for more details.
+\begin{enumerate}
+  \item $S_pS_p'=I_{p(p+1)/2}$
+  \item If $A$ is lower triangular $\vect(A) = S_p'\vech(A) = S_p'S_p\vect(A)$.
+  \item $S_p = \sum_{i\geq j}^pu_{ij}\vect(E_{ij})'$ where $E_{ij}$ is a $p\times p$ matrix of zeroes except for a one in the $ij$'th spot and $u_{ij}$ is a $p(p+1)/2\times 1$ column vector of zeroes except for a one in the $[(j-1)p + i - j(j-1)/2]$'th spot.
+  \item If $A$ and $B$ are $p\times p$ matrices then $|S_p(A\otimes B)S_p'| = \prod_{i=1}^p|A^{(i)}||B_{(i)}|$ where $\otimes$ is the Kronecker product, i.e. $A\otimes B = (a_{ij}B)$, $A^{(i)}$ is the submatrix of $A$ obtained by deleting everything but the upper left $i\times i$ block, and $B_{(i)}$ is the submatrix of $B$ obtained by deleting everything but the lower right $(n-i+1)\times(n-i+1)$ block.
+\end{enumerate}
+
+Now we can apply this to our conditional distribution for $L_t|L_{1:(t-1)},\gamma_{0:T},\cdots $. Let $L_t^* = L_t - C_t^{-1}c_t$. Then
+\begin{align*}
+  p(L^*_t|L_{1:(t-1)},\gamma_{0:T},\cdots) & \propto \exp\left[-\frac{1}{2}\left((L^*_t\gamma_t)'C_t(L^*_t\gamma_t) \right)\right]\\
+  &\propto \exp\left[-\frac{1}{2}\left(\vect(L^*_t\gamma_t)'C_t\vect(L^*_t\gamma_t) \right)\right]\\
+  &\propto \exp\left[-\frac{1}{2}\left(\vect(L^*_t)'(\gamma_t' \otimes I_p)'C_t(\gamma_t' \otimes I_p)\vect(L^*_t) \right)\right]\\
+  &\propto \exp\left[-\frac{1}{2}\left(\vect(L^*_t)'(\gamma_t\gamma_t' \otimes C_t)\vect(L^*_t) \right)\right]\\
+  &\propto \exp\left[-\frac{1}{2}\left(\vech(L_t^*)'S_p(\gamma_t\gamma_t' \otimes C_t)S_p'\vech(L_t^* \right)\right].
+\end{align*}
+Here we use two properties of the Kronecker product $\otimes$. First for any matrices $A:p\times q$ and $B:q\times r$, $\vect(AB) = (B'\otimes I_p)\vect(A)$. Second, for any $p\times 1$ vector $\gamma$ and any $p\times p$ matrix $A$, $(\gamma'\otimes I_p)'A(\gamma' \otimes I_p) = \gamma\gamma'\otimes A$. Now converting back to $L_t$ we have
+\begin{align*}
+p(L_t|L_{1:(t-1)},\gamma_{0:T},\cdots) &\propto \exp\left[-\frac{1}{2}\left([\vech(L_t) - \vech(C_t^{-1}c_t)]'S_p(\gamma_t\gamma_t' \otimes C_t)S_p'[\vech(L_t)- \vech(C_t^{-1}c_t)] \right)\right].
+\end{align*}
+In other words
+\begin{align*}
+  \vech(L_t)|L_{1:(t-1)},\gamma_{0:T},\cdots \sim N\left(\vech(C_t^{-1}c_t), [S_p(\gamma_t\gamma_t'\otimes C_t)S_p']^{-1}\right).
+\end{align*}
+The fourth property of $S_p$ above ensures that this distribution is not singular.
+
+So the conjugate prior on $L_t$ is a multivariate normal distribution. This seems a strange since we expect the diagonal elements of $L_t$ to be positive since they are standard deviations, but this is no problem as long as we view this prior as a clever trick for defining a prior on $W_t=L_t'L_t$ so that the sign doesn't matter. Strictly speaking here, we're subtly changed the definition of $L_t$ to the {\it signed} Cholesky decomposition of $W_t$, and thus subtly changed the defintion of the $\gamma_t$'s to take into account the signs of the diagonal elements of $L_t$. \cite{fruhwirth2008bayesian}, \cite{fruhwirth2011bayesian} and {\it CITE THE DYNAMIC PAPER SYLVIA IS WORKING ON WITH ANGELA} use this approach to choosing priors for the system (or hierarchical) variance when working with the scaled disturbances in dynamic and non-dynamic models, but only the first considers the covariance matrix case, rather than the scalar variance case, and that paper does not give the exlicit construction of the covariance matrix of $\vech(L_t)$ using the elimination matrix..
 
 This is a bit strange though. We have two sets of covariance matrices, $W_{1:T}$ and $V_{1:T}$, and we want to put a different class of priors on each set. We can put the same sort of normal prior on $K_t^*$, the vectorized Cholesky decomposition of $V_t$. In the univariate case the conditional posterior of $V_t$ will come out to be a generalized inverse gaussian distribution which is a bit complicated but not awful to draw from. There's mild tension here as well --  depending on how we choose to write down the model we end up with a different class of prior distributions for at least $W_{1:T}$. Now the reason for this difference is ultimately computation --- it is known that sometimes using the scaled disturbances improves mixing in the Markov chain --- but ideally computational concerns should not have an effect on inference. It would be nice to unite these priors two priors under a common class without sacrificing their respective computaitonal advantages under the relevant data augmentations. 
 

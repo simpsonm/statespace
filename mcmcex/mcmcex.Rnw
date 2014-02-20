@@ -19,6 +19,8 @@ epsfig, multicol, amsthm, bbm}
 \newtheorem{cor}[thm]{Corollary}
 \DeclareMathOperator{\tr}{tr}
 \DeclareMathOperator{\B}{B}
+\DeclareMathOperator{\vech}{vech}
+\DeclareMathOperator{\vect}{vec}
 \begin{document}
 
 <<setup, include=FALSE, cache=FALSE>>=
