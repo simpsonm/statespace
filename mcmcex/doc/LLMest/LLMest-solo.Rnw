@@ -1,0 +1,53 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol, amsthm, bbm}
+\usepackage{multicol}
+\usepackage{textcomp}
+\usepackage{fullpage}
+\usepackage[maxfloats=48]{morefloats} %for >18 figures
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage[authoryear]{natbib} %numbers instead of authoryear for [1] instead of [1980]
+%Indicator function: use as \indicator{X=x}
+\newcommand{\indicator}[1]{\mathbbm{1}{\left\{ {#1} \right\} }}
+%Independent: use as X \ind Y | Z
+\newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newtheorem{alg}{Algorithm}
+\newtheorem{thm}{Theorem}[subsection]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}[thm]{Corollary}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\B}{B}
+\DeclareMathOperator{\vech}{vech}
+\DeclareMathOperator{\vect}{vec}
+
+<<setup, include=FALSE, cache=FALSE>>=
+options(replace.assign=TRUE,width=90)
+opts_knit$set(eval.after = "fig.cap")
+opts_chunk$set(dev="pdf",
+               fig.lp = "",
+               fig.keep="high",
+               fig.show="hold",
+               fig.align="center",
+               fig.pos="!ht")
+
+@
+
+
+\begin{document}
+
+WARNING: REFERENCES TO OTHER PARTS OF THE DOCUMENT WON'T WORK HERE
+
+<<LLMest-child, child='LLMest.Rnw', eval=TRUE>>=
+@ 
+
+\clearpage
+
+\bibliographystyle{plainnat}
+\bibliography{../mcmcex}
+\end{document}
+
+
+
+

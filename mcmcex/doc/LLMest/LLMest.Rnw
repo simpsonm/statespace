@@ -1,5 +1,5 @@
 <<set-parent-LLMest, echo=FALSE, cache=FALSE>>=
-set_parent('mcmcex.Rnw')
+set_parent('../mcmcex.Rnw')
 @
 
 
@@ -150,12 +150,8 @@ library(plyr)
 library(xtable)
 library(reshape2)
 library(gridExtra)
-load("mixing/samout.RData")
-load("mixing/postcors.RData")
-samouttemp <- samout
-load("cis/cissamout.RData")
-samout1 <- samout
-samout <- rbind(samout1,samouttemp)
+load("../../mixing/samout.RData")
+load("../../mixing/postcors.RData")
 base <- c("error", "state", "dist")
 alts <- c("sdalt", "sealt", "dealt", "trialt")
 ints <- c("sdint", "seint", "deint", "triint")

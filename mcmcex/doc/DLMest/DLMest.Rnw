@@ -1,5 +1,5 @@
 <<set-parent-DLMest, echo=FALSE, cache=FALSE>>=
-set_parent('mcmcex.Rnw')
+set_parent('../mcmcex.Rnw')
 @
 
 

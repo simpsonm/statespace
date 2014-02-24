@@ -9,8 +9,6 @@
 # Outputs that you can compile yourself!!       #
 # (See README.md for how to compile .Rnw files) #
 #################################################
-mcmcex.pdf
-mcmcex.tex
 
 # These output folders come from knitr #
 /auto
@@ -21,4 +19,4 @@ mcmcex.tex
 /sandbox2
 
 # This folder contains old simulations -  large files #
-/OldSims
+/OldSims*

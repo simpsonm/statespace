@@ -1,5 +1,5 @@
 <<set-parent-mod, echo=FALSE, cache=FALSE>>=
-set_parent('mcmcex.Rnw')
+set_parent('../mcmcex.Rnw')
 @ 
 
 \section{Model}\label{modelsec}
@@ -21,10 +21,10 @@ for $t=1,2,\cdots,T$ where $F_t$ and $G_t$ are matrices, and $V_t$ and $W_t$ are
 To complete the model specification in a Bayesian context, we need priors on $\theta_0$, $V_{1:T}$, and $W_{1:T}$. We'll use the standard approach for now and assume that they're mutually independent a priori and that $\theta_0 \sim N(m_0, C_0)$, $V_t \sim IW(\Psi_{t}, \eta_{t})$ for $t=1,2,\cdots,T$, and $W_t \sim IW(\Omega_{t}, \delta_{t})$ for $t=1,2,\cdots,T$ where $m_0$, $C_0$ and $\Psi_{t}$, $\eta_{t}$, $\Omega_{t}$, and $\delta_{t}$ for $t=1,2,\cdots,T$ are known hyperparameters  and $IW(\Psi, \eta)$ denotes the inverse Wishart distribution with degrees of freedom $\eta$ and positive definite scale matrix $\Psi$. This allows us to write the full joint distribution of $(V_{1:T},W_{1:T},\theta_{0:T},y_{1:T})$ as
 \begin{align}
   p(&V_{1:T},W_{1:T},\theta_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\theta_0-m_0)'C_0^{-1}(\theta_0-m_0)\right] \nonumber\\
-  &\times \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Psi_tV_t^{-1}\right)\right] |V_t|^{-1/2}\exp\left[-\frac{1}{2}(y_t - F_t\theta_t)'V_t^{-1}(y_t - F_t\theta_t)\right] \nonumber\\
-   & \times |W_t|^{-(\delta_t + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Omega_tW_t^{-1}\right)\right] |W_t|^{-1/2}\exp\left[-\frac{1}{2}(\theta_t-G_t\theta_{t-1})'W_t^{-1}(\theta_t-G_t\theta_{t-1})\right]\label{dlmjoint}
+  &\times \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Psi_tV_t^{-1}\right)\right] |V_t|^{-1/2}\exp\left[-\frac{1}{2}(y_t - F_t\theta_t)'V_t^{-1}(y_t - F_t\theta_t)\right] \nonumber\\
+   & \times |W_t|^{-(\delta_t + p + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Omega_tW_t^{-1}\right)\right] |W_t|^{-1/2}\exp\left[-\frac{1}{2}(\theta_t-G_t\theta_{t-1})'W_t^{-1}(\theta_t-G_t\theta_{t-1})\right]\label{dlmjoint}
  \end{align}
-where $p=dim(\theta_t)$, $k=dim(y_t)$, and $tr(.)$ is the matrix trace operator.
+where $p=dim(\theta_t)$, $k=dim(y_t)$, and $\tr(.)$ is the matrix trace operator.
 
 
 

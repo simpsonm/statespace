@@ -17,12 +17,12 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 'help.start()' for an HTML browser interface to help.
 Type 'q()' to quit R.
 
-> source("../mcmcexfun.r")
+> source("../mcmcexfun.R")
 Loading required package: lattice
 Loading required package: MASS
 ##
 ## Markov Chain Monte Carlo Package (MCMCpack)
-## Copyright (C) 2003-2013 Andrew D. Martin, Kevin M. Quinn, and Jong Hee Park
+## Copyright (C) 2003-2014 Andrew D. Martin, Kevin M. Quinn, and Jong Hee Park
 ##
 ## Support provided by the U.S. National Science Foundation
 ## (Grants SES-0350646 and SES-0350613)
@@ -33,6 +33,10 @@ Loading required package: MASS
 > W <- V
 > simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 > simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
+> simdata$av <- 5
+> simdata$aw <- 5
+> simdata$bv <- (simdata$av-1)*simdata$V.T
+> simdata$bw <- (simdata$aw-1)*simdata$W.T
 > sams <- c("state", "dist", "error", "sdint", "seint", "deint",
 +           "triint", "sdalt", "sealt", "dealt", "trialt",
 +           "sdkern", "sekern", "dekern", "trikern")
@@ -40,14 +44,15 @@ Loading required package: MASS
 > samplers$sampler <- sams
 > n <- 3000
 > burn <- 500
-> a1 <- 5
-> a2 <- a1
 > parallel <- require(doMC, quietly=TRUE)
 > if(parallel){
 +   registerDoMC(4)
 + }
-> system.time(samout <- fullsim(samplers, simdata, n, burn, a1, a2, parallel))
+> system.time(samout <- fullsim(samplers, simdata, n, burn, parallel))
 [1] "dealt"
+
+Error in sobroutine sample_...
+ifault= 5 
 [1] "dealt finished"
 [1] "deint"
 [1] "deint finished"
@@ -72,19 +77,22 @@ Loading required package: MASS
 [1] "state"
 [1] "state finished"
 [1] "trialt"
-[1] "trialt finished"
-[1] "triint"
 
 Error in sobroutine sample_...
 ifault= 7 
+
+Error in sobroutine sample_...
+ifault= 5 
+[1] "trialt finished"
+[1] "triint"
 [1] "triint finished"
 [1] "trikern"
 [1] "trikern finished"
-      user     system    elapsed 
-8752506.08    4316.91 2261231.24 
+       user      system     elapsed 
+8522588.819    1783.111 2193846.628 
 > save(samout, file="samout.RData")
 > 
 > 
 > proc.time()
        user      system     elapsed 
-8752510.213    4317.042 2261236.413 
+8522592.359    1783.212 2193852.857 
