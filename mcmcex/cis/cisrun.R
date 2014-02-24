@@ -1,23 +1,24 @@
 source("../mcmcexfun.R")
-set.seed(723487298)
 T <- c(10, 100, 1000)
 V <- 10^(c(0:10)/2-2)
 W <- V
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
+simdata$av <- 5
+simdata$aw <- 5
+simdata$bv <- (simdata$av-1)*simdata$V.T
+simdata$bw <- (simdata$aw-1)*simdata$W.T
 sams <- c("partialcis", "fullcis")
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
 n <- 3000
 burn <- 500
-a1 <- 5
-a2 <- a1
 parallel <- require(doMC, quietly=TRUE)
 if(parallel){
   registerDoMC(4)
 }
-system.time(samout <- fullsim(samplers, simdata, n, burn, a1, a2, parallel))
-save(samout, file="cissamout.RData")
+system.time(cissamout <- fullsim(samplers, simdata, n, burn, parallel))
+save(cissamout, file="cissamout.RData")
 
 print("Mixing Simulations Complete")
 
