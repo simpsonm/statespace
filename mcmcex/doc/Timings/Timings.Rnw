@@ -2,7 +2,6 @@
 set_parent('../mcmcex.Rnw')
 @
 
-
 <<plotsetup, echo=FALSE, message=FALSE>>=
 library(ggplot2)
 library(scales)
@@ -59,16 +58,34 @@ plotfun <- function(meltedsam, vars, sams, T, title, top){
          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
   return(out)
 }
-
+plotfun2 <- function(meltedsam, vars, sams, T, title, top){
+  var <- substr(vars[1], 1, 1)
+  castedsam <- dcast(meltedsam, 
+                     formula=samplers + V.T + W.T + variable + type ~ ., 
+                     subset=.(variable %in% vars  & T.T==T & 
+                       sampler %in% sams & V.T<=10^2 & W.T<=10^2))
+  colnames(castedsam)[6] <- "value"
+  out <- ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value)) + #$
+          geom_tile() +
+          scale_fill_gradient("Time/ES", high=muted("red"), low="white",
+                        guide=guide_colorbar(barheight=10),
+                        na.value="red", limits=c(0,top)) +
+          facet_grid(type~samplers, scales="free", labeller=label_parsed_split) +
+          scale_x_log10("V = noise", breaks=breaks) + 
+          scale_y_log10("W = signal", breaks=breaks) +
+          ggtitle(paste(title, T, sep="")) +
+          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+  return(out)
+}
 @ 
 
 <<baseESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=6, out.width=".48\\textwidth">>=
 cap <- "Time per effective draw in the posterior sampler for a time series of lengths $T=10$, $T=100$, and $T=1000$, for $V$ and $W$, and for the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, times larger than the top of the scale are displayed in bright red."
 vars <- c("V.time", "W.time")
 title <- "Time per effective draw in seconds, T="
-p1 <- plotfun(meltedsam, vars, base, 10, title, .1)
-p2 <- plotfun(meltedsam, vars, base, 100, title, 1)
-p3 <- plotfun(meltedsam, vars, base, 1000, title, 100)
+p1 <- plotfun(meltedsam, vars, base, 10, title, .03)
+p2 <- plotfun(meltedsam, vars, base, 100, title, .3)
+p3 <- plotfun(meltedsam, vars, base, 1000, title, 30)
 p1
 p2
 p3
@@ -79,23 +96,24 @@ cap <- "Time per effective draw in the posterior sampler for $V$ and $W$ in for 
 vars <- c("V.time", "W.time")
 sams <- c("dist", "error", "deint", "state", "seint", "sdint", "triint", "fullcis", "partialcis")
 title <- "Time per effective draw in seconds, T="
-p1 <- plotfun(meltedsam, vars, sams, 10, title, .1)
-p2 <- plotfun(meltedsam, vars, sams, 100, title, 1)
-p3 <- plotfun(meltedsam, vars, sams, 1000, title, 75)
+p1 <- plotfun(meltedsam, vars, sams, 10, title, .03)
+p2 <- plotfun(meltedsam, vars, sams, 100, title, .3)
+p3 <- plotfun(meltedsam, vars, sams, 1000, title, 30)
 p1
 p2
 p3
 @ 
 
 <<hybridESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=5.5, out.width=".49\\textwidth">>=
-cap <- "Effective sample proportion in the posterior sampler for a time series of length $T=10$, $T=100$, and $T=1000$, for $V$ and $W$, and for the GIS and alternating samplers based on the state, scaled disturbance, and scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. The signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than $1$ were rounded down to $1$. Also note that the $ESP$ for the random kernel samplers has been multiplied by 2 or, in the case of the triple kern sampler, by 3, in order to make them comparable to the GIS and alternating samplers."
+cap <- "Time per effective draw in the posterior sampler for $V$ and $W$ in for $T=10$, $T=100$, and $T=1000$, in the alternating, GIS, and random kernel samplers. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, times larger than the top of the scale are displayed in bright red."
 sams <- c(alts, ints, kerns)
-p1 <- plotfun2("V.ES", sams, 10)
-p2 <- plotfun2("W.ES", sams, 10)
-p3 <- plotfun2("V.ES", sams, 100)
-p4 <- plotfun2("W.ES", sams, 100)
-p5 <- plotfun2("V.ES", sams, 1000)
-p6 <- plotfun2("W.ES", sams, 1000)
+title <- "Time per effective draw in seconds, T="
+p1 <- plotfun2(meltedsam,"V.time", sams, 10, title, .03)
+p2 <- plotfun2(meltedsam,"W.time", sams, 10, title, .03)
+p3 <- plotfun2(meltedsam,"V.time", sams, 100, title, .3)
+p4 <- plotfun2(meltedsam,"W.time", sams, 100, title, .3)
+p5 <- plotfun2(meltedsam,"V.time", sams, 1000, title, 30)
+p6 <- plotfun2(meltedsam,"W.time", sams, 1000, title, 30)
 p1
 p2
 p3
