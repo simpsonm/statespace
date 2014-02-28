@@ -1,5 +1,3 @@
-source("mcmcexfun.R")
-
 ## compute M in logtarget - logprop <= M
 propMda <- function(df, a, b, c, avw, mn, propvar){
   M <- optimize(logpirejda, c(0,10^10), maximum=TRUE, a, b, c, avw, mn, propvar, df)

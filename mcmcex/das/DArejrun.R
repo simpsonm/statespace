@@ -1,3 +1,4 @@
+source("../mcmcexfun.R")
 source("../DArej.R")
 
 set.seed(152893627)
