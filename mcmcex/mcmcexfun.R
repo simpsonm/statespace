@@ -1,4 +1,4 @@
-## A set of functions for simulated from and fitting local level models
+## A set of functions for simulating from and fitting local level models
 library(dlm)
 library(coda)
 library(MCMCpack)
@@ -368,6 +368,10 @@ samwrap <- function(par, n, samp){
     time <- system.time(out <- fullcissam(n, start, dat, av, aw, bv, bw))
   if(samp=="stnstate")
     time <- system.time(out <- stnstatesam(n, start, dat, av, aw, bv, bw))
+  if(samp=="distda")
+    time <- system.time(out <- distsamda(n, start, dat, av, aw, bv, bw))
+  if(samp=="errorda")
+    time <- system.time(out <- errorsamda(n, start, dat, av, aw, bv, bw))
   outdat <- data.frame(out)
   outdat$time <- time[1]
   return(outdat[,c(T+9, (T+2):(T+8), 1:(T+1))])
@@ -475,6 +479,29 @@ distsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
   }
   return(out)
 }
+
+## "wongly scaled" disturbance sampler: samples V and W conditional on the scaled
+## system disturbances (plus the initial state, theta_0)
+distwrongsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
+  T <- length(dat)
+  V <- start[1]
+  W <- start[2]
+  out <- mcmc(matrix(0, nrow=n, ncol=T+8))
+  colnames(out) <- c(paste("theta",0:T,sep=""),"V","W",
+                     "logconV", "adrejV", "logconW", "adrejW", "kernel")
+  for(i in 1:n){
+    theta <- thetaiter(dat, V, W)
+    gam <- gamtrans(theta, V)
+    V <- Vgamiter(dat, gam, W, av, bv)
+    Wout <- Wgamiter(dat, gam, V, aw, bw)
+    W <- Wout[1]
+    rejsW <- Wout[2:3]
+    theta <- thetagamtrans(gam, W)
+    out[i,] <- c(theta,V,W,c(NA,NA),rejsW, NA)
+  }
+  return(out)
+}
+
 
 ## state + dist interveaving or alternating sampler
 statedistinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, inter=TRUE){
@@ -720,6 +747,7 @@ VWthetaiter <- function(dat, theta, av, aw, bv, bw){
   W <- rinvgamma(1, aw + T/2, bw + sum((theta[-1]-theta[-(T+1)])^2)/2)
   return(c(V,W))
 }
+
 ## samples W conditional on V,gamma
 Wgamiter <- function(dat, gam, V, aw, bw){
   T <- length(dat)
