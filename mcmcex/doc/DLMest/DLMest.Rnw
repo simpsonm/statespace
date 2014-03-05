@@ -188,6 +188,56 @@ where we define
 \end{align*}
 So again the condiitonally conjugate prior for the nonzero elements of $L$ is a multivariate normal distribution. 
 
+For completeness, we show that the conditionally conjugate prior for $K_{1:T}$ and, in the case of time-constant variances $K$, is also a multivariate normal distribution. From \eqref{dlmerrorjoint} we have
+\begin{align*}
+  p(K_{1:T}|\psi_{0:T},\cdots)\propto & \exp\left[-\frac{1}{2}g(K_{1:T})\right]
+\end{align*}
+where 
+\begin{align*}
+  g(K_{1:T}) & = A + \sum_{t=1}^T\left[y_t - K_t\psi_t - F_tG_tG_{t-1}\left(y_{t-1} - K_{t-1}\psi_{t-1}\right)\right]'(F_t'W_tF_t)^{-1}\left[y_t - K_t\psi_t - F_tG_tG_{t-1}\left(y_{t-1} - K_{t-1}\psi_{t-1}\right)\right]\\
+  & = A + \sum_{t=1}^T\left[y_t - K_t\psi_t - H_t\left(y_{t-1} - K_{t-1}\psi_{t-1}\right)\right]'D_t\left[y_t - K_t\psi_t - H_t\left(y_{t-1} - K_{t-1}\psi_{t-1}\right)\right]\\
+\end{align*}
+where $A$ is some constant with respect to $K_{1:T}$, $D_t=(F_t'W_tF_t)^{-1}$, $H_t=F_tG_tF_{t-1}$, $K_0=I_k$, $F_0=I_k$, and $y_0=0$. From this point forward we will ignore the constant $A$ since it will be absorbed into the proportionality constant for $p(K_{1:T}|\psi_{0:T},\cdots)$. Now up to an additive constant we have
+\begin{align*}
+  g(K_{1:T}) = & \sum_{t=1}^T\left(y_t - (\psi_t' \otimes I_k)S_p'\vech(K_t)\right)'D_t\left(y_t - (\psi_t' \otimes I_k)S_p'\vech(K_t)\right) \\
+  & + \sum_{t=2}^T\left(y_{t-1} - (\psi_{t-1}' \otimes I_k )S_p'\vech(K_{t-1})\right)'H_t'D_tH_t\left(y_{t-1} - (\psi_{t-1}' \otimes I_k )S_p'\vech(K_{t-1})\right)\\
+  & + \sum_{t=2}^T\left(y_t - (\psi_t'\otimes I_k)S_p'\vech(K_t)\right)'D_tH_t\left(y_{t-1} - (\psi_{t-1}'\otimes I_k)S_p'\vech(K_{t-1})\right) \\
+  & + \sum_{t=2}^T\left(y_{t-1} - (\psi_{t-1}'\otimes I_k)S_p'\vech(K_{t-1})\right)'H_t'D_t\left(y_t - (\psi_t'\otimes I_k)S_p'\vech(K_t)\right)\\
+  & + 2\vech(K_1)'S_p(\psi_1'\otimes I_k)'D_1H_1\psi_0.
+\end{align*}
+But if we write
+\begin{align*}
+  g(K_{1:T}) = (K^*)'\Omega K^* - 2\omega'K^*
+\end{align*}
+where $K^*=(\vech(K_1)',\cdots,\vech(K_T)')'$ then we can identify blocks of $\Omega$ with the cross product terms in $g$ and blocks of $\omega$ with the single product terms in $g$. Specifically, $\Omega$ and $\omega$ are defined by blocks
+\begin{align*}
+  \Omega_{TT} & = S_p(\psi_T\psi_T'\otimes D_T)S_p' &&\\
+  \Omega_{tt} & = S_p\left[\psi_t\psi_t'\otimes (D_t + H_{t+1}'D_{t+1}H_{t+1})\right]S_p'&&\ \ \mathrm{for}\ \ t=1,2,\cdots,T-1\\
+  \Omega_{t,t-1} & = S_p(\psi_t\psi_{t-1}'\otimes D_tH_t)S_p'&& \ \ \mathrm{for} \ \ t=1,2,\cdots,T-1\\
+  \Omega_{t-1,t} & = S_p(\psi_{t-1}\psi_{t}'\otimes H_t'D_t)S_p' = \Omega_{t,t-1}'&& \ \ \mathrm{for} \ \ t=1,2,\cdots,T-1\\
+  \omega_{1} & = S_p(\psi_1\otimes I_k)(D_1y_1 + H_2'D_2H_2y_1 + H_2'D_2y_2 - H_1'D_1\psi_0)&&\\
+  \omega_{T} & = S_p(\psi_T\otimes I_k)(D_TY_T + D_TH_Ty_{T-1})&&\\
+  \omega_t & = S_p(\psi_t\otimes I_k)(D_ty_t + H_{t+1}'D_{t+1}H_{t+1}y_t + D_tH_ty_{t-1} + H_{t+1}'D_{t+1}y_{t+1})&&\ \ \mathrm{for}\ \ t=2,3,\cdots,T-1
+\end{align*}
+where $\Omega_{t,t-i}$ is a matrix of zeroes for $i > 1$. Then given a prior proportional to $1$, $K^*|\psi_{0:T},\cdots \sim N(\Omega^{-1}\omega, \Omega^{-1})$. 
+
+For the time constant $K$ case, redefine $D_t=(F_t'WF_t)^{-1}$. Then up to an additive constant we have
+\begin{align*}
+  g(K) = & \sum_{t=1}^T\left(y_t - (\psi_t' \otimes I_k)S_p'\vech(K)\right)'D_t\left(y_t - (\psi_t' \otimes I_k)S_p'\vech(K)\right) \\
+  & + \sum_{t=2}^T\left(y_{t-1} - (\psi_{t-1}' \otimes I_k )S_p'\vech(K)\right)'H_t'D_tH_t\left(y_{t-1} - (\psi_{t-1}' \otimes I_k )S_p'\vech(K)\right)\\
+  & + \sum_{t=2}^T\left(y_t - (\psi_t'\otimes I_k)S_p'\vech(K)\right)'D_tH_t\left(y_{t-1} - (\psi_{t-1}'\otimes I_k)S_p'\vech(K)\right) \\
+  & + \sum_{t=2}^T\left(y_{t-1} - (\psi_{t-1}'\otimes I_k)S_p'\vech(K)\right)'H_t'D_t\left(y_t - (\psi_t'\otimes I_k)S_p'\vech(K)\right)\\
+  & + 2\vech(K)'S_p(\psi_1'\otimes I_k)'D_1H_1\psi_0.
+\end{align*}
+This gives
+\begin{align*}
+  \Omega = & \sum_{t=1}^TS_p(\psi_t\psi_t'\otimes D_t)S_p' + \sum_{t=1}^{T-1}S_p'(\psi_t\psi_t'\otimes H_{t+1}'D_{t+1}H_{t+1})S_p' + 2\sum_{t=1}^{T-1}S_p(\psi_t\psi_{t+1}'\otimes H_{t+1}'D_{t+1})S_p'\\
+  \intertext{and}
+  \omega = & \sum_{t=1}^{T-1}S_p(\psi_t\otimes I_k)(D_t + H_{t+1}'D_{t+1}H_{t+1})y_t + \sum_{t=1}^{T-1}S_p(\psi_{t+1}\otimes I_k)D_{t+1}H_{t+1}y_t\\
+  & +\sum_{t=1}^{T-1}S_p(\psi_t\otimes I_k)H_{t+1}'D_{t+1}y_{t+1}  + S_p\left[(\psi_T\otimes I_k)D_Ty_T - (\psi_1\otimes I_k)D_1H_1\psi_0\right]
+\end{align*}
+so that if $K$ has a prior proportional to $1$, then $\vech(K)|\psi_{0:T},\cdots \sim N(\Omega^{-1}\omega, \Omega^{-1})$. There are efficient routines for drawing from a $N(\Omega^{-1}\omega, \Omega^{-1})$ distribution when $\Omega$ is block tribanded as for $K$ and $K_{1:T}$ above. For example, \cite{mccausland2011simulation} describes these routines in the context of drawing the latent states ($\theta_{0:T}$) in a DLM.
+
 \section{Interweaving in the DLM: Global and Componentwise}\label{sec:dlminter}
 We now have three DAs for the generic DLM with known $F_t$'s and $G_t$'s. For simplicity we'll assume that $dim(y_t)=dim(\theta_t)$ and $F_t$ invertible for $t=1,2,\cdots,T$ so that the scaled errors are easy to work with. The three DAs are the states, $\theta_{0:T}$, the scaled disturbances $\gamma_{0:T}$, and the scaled errors $\psi_{0:T}$. This allows us to construct four separate GIS algorithms based on algorithm \ref{inter2}: three algorithms that interweave between any two of $\theta_{0:T}$, $\gamma_{0:T}$, and $\psi_{0:T}$, the state-dist, state-error, and dist-error interweaving algorithms, and one algorithm that interweaves between all three, the triple interweaving algorithm. Strictly speaking, the order in which we sample the DAs in the algorithm does matter, but \citeauthor{yu2011center} note that this tends not to make much difference. So while we actually have twelve separate GIS samplers (two of each GIS sampler depending on two DAs, and six GIS samplers depending on all three), effectively we only have four. For example, algorithm \ref{sdintalg} is the state-dist GIS algorithm:
 \begin{alg}\mbox{}\\[-\baselineskip]
