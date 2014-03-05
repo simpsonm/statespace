@@ -90,12 +90,11 @@ VWrejda <- function(a, b, cc, avw){
   rej <- TRUE
   rejit <- 1
   while(rej){
-    prop <- rtpropda(1, mn, propvar, df)
-    if(prop>0){
-      R <- logpirejda(prop, a, b, cc, avw, mn, propvar, df) - M
+    VW <- rtpropda(1, mn, propvar, df)
+    if(VW>0){
+      R <- logpirejda(VW, a, b, cc, avw, mn, propvar, df) - M
       u <- runif(1,0,1)
       if(log(u)<R){
-        VW <- prop
         rej <- FALSE
       }
     }
