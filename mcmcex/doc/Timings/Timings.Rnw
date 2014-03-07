@@ -10,6 +10,8 @@ library(xtable)
 library(reshape2)
 library(gridExtra)
 load("../../mixing/samout.RData")
+load("../../cis/cissamout.RData")
+samout <- rbind(samout, cissamout)
 samout$V.time <- samout$time/samout$V.ES
 samout$W.time <- samout$time/samout$W.ES
 base <- c("error", "state", "dist")
@@ -151,10 +153,78 @@ A quick comparison in Figure \ref{basealtESDplot} shows that the triple alternat
 <<basealtESDplot, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.25, outwidth=".8\\textwidth">>=
 cap <- "Time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=10$, $T=100$, and $T=1000$, in the state, scaled disturbance and scaled error samplers and for all four GIS samplers based on any two or three of these. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. The signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. For plotting purposes, times larger than the top of the scale are displayed in bright red."
 vars <- c("V.time", "W.time")
-sams <- c("state", "sealt", "dealt", "trialt", "seint", "deint", "triint") 
+sams <- c("state", "sealt", "dealt", "trialt", "seint", "deint", "triint", "fullcis") 
 title <- "Time (minutes) per 1000 effective draws, T="
+p1 <- plotfun3(meltedsam, vars, sams, 10, title, .03*1000/60)
 p2 <- plotfun3(meltedsam, vars, sams, 100, title, .3*1000/60)
 p3 <- plotfun3(meltedsam, vars, sams, 1000, title, 30*1000/60)
+p1
 p2
 p3
+@ 
+
+<<priorplotsetup, echo=FALSE, message=FALSE>>=
+load("../../priors/priorouts/dealtOUT.RData")
+out$sampler <- "dealt"
+samout <- out
+load("../../priors/priorouts/deintOUT.RData")
+out$sampler <- "deint"
+samout <- rbind(samout, out)
+load("../../priors/priorouts/dekernOUT.RData")
+out$sampler <- "dekern"
+samout <- rbind(samout, out)
+load("../../priors/priorouts/distOUT.RData")
+out$sampler <- "dist"
+samout <- rbind(samout, out)
+load("../../priors/priorouts/errorOUT.RData")
+out$sampler <- "error"
+samout <- rbind(samout, out)
+load("../../priors/priorouts/fullcisOUT.RData")
+out$sampler <- "fullcis"
+samout <- rbind(samout, out)
+samout$V.time <- samout$time/samout$V.ES
+samout$W.time <- samout$time/samout$W.ES
+base <- c("error", "state", "dist")
+alts <- c("sdalt", "sealt", "dealt", "trialt")
+ints <- c("sdint", "seint", "deint", "triint")
+kerns <- c("sdkern", "sekern", "dekern", "trikern")
+cis <- c("fullcis", "partialcis")
+samout$type <- "Base" #$
+samout$type[samout$sampler %in% alts] <- "Alt" 
+samout$type[samout$sampler %in% ints] <- "GIS" 
+samout$type[samout$sampler %in% kerns] <- "RKern" 
+samout$type[samout$sampler %in% cis] <- "CIS" 
+samout$samplers <- "Base"
+samout$samplers[substr(samout$sampler, 1, 2)=="sd"] <- "State-Dist" 
+samout$samplers[substr(samout$sampler, 1, 2)=="se"] <- "State-Error" 
+samout$samplers[substr(samout$sampler, 1, 2)=="de"] <- "Dist-Error" 
+samout$samplers[substr(samout$sampler, 1, 3)=="tri"] <- "Triple" 
+samout$samplers[samout$sampler=="fullcis"] <- "FullCIS"
+samout$samplers[samout$sampler=="partialcis"] <- "PartialCIS"
+samout$samplers[samout$sampler=="error"] <- "Error"
+samout$samplers[samout$sampler=="dist"] <- "Dist"
+samout$samplers[samout$sampler=="state"] <- "State"
+samlevels <- c("State", "Dist", "Error", "State-Dist", "State-Error", "Dist-Error", 
+               "Triple", "FullCIS", "PartialCIS")
+samout$samplers <- factor(samout$samplers, levels=samlevels)
+meltedsam <- melt(samout, id=c("type", "samplers", "sampler", "V.T", "W.T", 
+                            "T.T"))
+Vs <- unique(meltedsam$V.T)[1:9] #$
+Ws <- Vs
+breaks <- Vs[seq(1,9,2)]
+
+@ 
+
+<<baseintESDpriorplot, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.25, outwidth=".8\\textwidth">>=
+cap <- "Time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=10$, $T=100$, and $T=1000$, in the state, scaled disturbance and scaled error samplers and for all four GIS samplers based on any two or three of these. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. The signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. For plotting purposes, times larger than the top of the scale are displayed in bright red."
+vars <- c("V.time", "W.time")
+sams <- c("dist", "error", "deint", "dealt", "dekern", "fullcis")
+title <- "Time (minutes) per 1000 effective draws, T="
+p1 <- plotfun3(meltedsam, vars, sams, 10, title, .03*1000/60)
+p2 <- plotfun3(meltedsam, vars, sams, 100, title, .3*1000/60)
+p3 <- plotfun3(meltedsam, vars, sams, 1000, title, 30*1000/60)
+p1
+p2
+p3
+
 @ 
