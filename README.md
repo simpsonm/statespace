@@ -1,3 +1,6 @@
+Note: this readme is very old.
+==========
+
 statespace
 ==========
 
