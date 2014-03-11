@@ -32,10 +32,10 @@ logpiVWprimeda <- function(VW, a, b, cc, avw){
   return(out)
 }
 
-logconda <- function(a, b, cc){
-  out <- (b <= 4*cc)
+logconda <- function(a, b, cc, eps=.01){
+  out <- (b <= 0)
   if(!out)
-      out <- (-a -b/16 + (b/4 - cc)*(b/cc/16)^(1/3) < 0 )
+      out <- (a > (3*b/16)*(b/(16*cc))^(1/3) + eps)
   return(out)
 }
 
@@ -74,8 +74,8 @@ Vgamiterda <- function(dat, gam, W, av, bv){
 
 Wpsiiterda <- function(dat, psi, V, aw, bw){
   T <- length(dat)
-  ys <- c(dat,psi[1])
-  psis <- c(psi[-1],0)
+  ys <- c(psi[1], dat)
+  psis <- c(0,psi[-1])
   Ly <- ys[-1]-ys[-(T+1)]
   Lpsi <- psis[-1]-psis[-(T+1)]
   a <- bw + sum(Ly^2)/2
