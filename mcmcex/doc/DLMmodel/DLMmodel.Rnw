@@ -12,19 +12,25 @@ The general dynamic linear model (DLM) is a linear, gaussian, state space model.
 where $v_{1:T}$ and $w_{1:T}$ are independent and are each iid draws from some distribution. Equation \eqref{statespobseq} is known as the observation equation since it describes how the observations depend on the current latent state and \eqref{statespsyseq} is known the system equation since it describes how the latent states, or the underlying system, evolve over time. The random vector $v_t$ is called the observation error and $w_t$ is called the system error or the system disturbance. The functions $f_t$ and $g_t$ and the distributions of $v_{1:T}$ and $w_{1:T}$ may depend on some unknown parameter vector $\phi$ that we wish to estimate. 
 
 The dynamic linear model adds a couple of constraints to the state space model. First, it requires that both $f_t$ and $g_t$ be linear functions. Second, it requires that $(v_{1:T}, w_{1:T})$ is normally distributed, usually with a mean of zero. We can then rewrite the DLM as
-\begin{align}
-  y_t|\theta_{0:T} \stackrel{ind}{\sim} & N(F_t\theta_t,V_t) \label{dlmobseq}\\
-  \theta_t|\theta_{0:t-1}  \sim & N(G_t\theta_{t-1},W_t) \label{dlmsyseq}
-\end{align}
-for $t=1,2,\cdots,T$ where $F_t$ and $G_t$ are matrices, and $V_t$ and $W_t$ are symmetric and positive definite covariance matrices. If $\theta_t$ is $p\times 1$ and $y_t$ is $k\times 1$, then $F_t$ is $k\times p$ and $G$ is $p\times p$ while $V_t$ is $k\times k$ and $W_t$ is $p\times p$. The observation errors (``errors''), $v_t=y_t-F_t\theta_t$ for $t=1,2,\cdots,T$, and the system disturbances (``disturbances''), $w_t=\theta_t - G_t\theta_{t-1}$ for $t=1,2,\cdots,T$ are independent. Let $\phi$ denote the unknown parameter vector. Then possibly $F_{1:T}$, $G_{1:T}$, $V_{1:T}$, and $W_{1:T}$ are all functions of $\phi$. We'll focus our attention on a simpler version of the DLM. Specifically, suppose that $F_t$ and $G_t$ are known matrices for $t=1,2,\cdots,T$ and that both $V_t$ and $W_t$ are fully unknown for $t=1,2,\cdots,T$. Thus $\phi=(V_{1:T},W_{1:T})$ is our unkown parameter vector.
+\begin{align*}
+  y_t|\theta_{0:T} \stackrel{ind}{\sim} & N(F_t\theta_t,V_t)\\
+  \theta_t|\theta_{0:t-1}  \sim & N(G_t\theta_{t-1},W_t) 
+\end{align*}
+for $t=1,2,\cdots,T$ where $F_t$ and $G_t$ are matrices, and $V_t$ and $W_t$ are symmetric and positive definite covariance matrices. If $\theta_t$ is $p\times 1$ and $y_t$ is $k\times 1$, then $F_t$ is $k\times p$ and $G$ is $p\times p$ while $V_t$ is $k\times k$ and $W_t$ is $p\times p$. The observation errors (``errors''), $v_t=y_t-F_t\theta_t$ for $t=1,2,\cdots,T$, and the system disturbances (``disturbances''), $w_t=\theta_t - G_t\theta_{t-1}$ for $t=1,2,\cdots,T$ are independent. Let $\phi$ denote the unknown parameter vector. Then possibly $F_{1:T}$, $G_{1:T}$, $V_{1:T}$, and $W_{1:T}$ are all functions of $\phi$. We'll focus our attention on a simpler version of the DLM. Typically additional model structure is used to learn about $V_{1:T}$ and $W_{1:T}$ if time dependence is enforced -- e.g. a stochastic volatility prior which would require a statespace model describing the $V_{1:T}$'s and $W_{1:T}$'s as data. Because of this additional complexity, we focus on the time-constant variances model, though many of our results may be useful in more complicated time-varying variance models. Thus we enforce $V_t=V$ and $W_t=W$ for $t=1,2,\cdots,T$. We will also suppose that $F_t$ and $G_t$ are known matrices for $t=1,2,\cdots,T$, though this constraint is immaterial since relaxing it will simply add one or more Gibbs steps to the algorithms we explore so long as no parameter that enters any $F_t$ or $G_t$ also enters $V$ or $W$. There is a bit more housekeeping in the scaled error data augmentation that must be done with $F_t$ however (REFERENCE TO SCALED ERRORS SECTION HERE).
 
-To complete the model specification in a Bayesian context, we need priors on $\theta_0$, $V_{1:T}$, and $W_{1:T}$. We'll use the standard approach for now and assume that they're mutually independent a priori and that $\theta_0 \sim N(m_0, C_0)$, $V_t \sim IW(\Psi_{t}, \eta_{t})$ for $t=1,2,\cdots,T$, and $W_t \sim IW(\Omega_{t}, \delta_{t})$ for $t=1,2,\cdots,T$ where $m_0$, $C_0$ and $\Psi_{t}$, $\eta_{t}$, $\Omega_{t}$, and $\delta_{t}$ for $t=1,2,\cdots,T$ are known hyperparameters  and $IW(\Psi, \eta)$ denotes the inverse Wishart distribution with degrees of freedom $\eta$ and positive definite scale matrix $\Psi$. This allows us to write the full joint distribution of $(V_{1:T},W_{1:T},\theta_{0:T},y_{1:T})$ as
+Thus $\phi=(V,W)$ is our unkown parameter vector and we can write the model as:
 \begin{align}
-  p(&V_{1:T},W_{1:T},\theta_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\theta_0-m_0)'C_0^{-1}(\theta_0-m_0)\right] \nonumber\\
-  &\times \prod_{t=1}^T   |V_t|^{-(\eta_t + k + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Psi_tV_t^{-1}\right)\right] |V_t|^{-1/2}\exp\left[-\frac{1}{2}(y_t - F_t\theta_t)'V_t^{-1}(y_t - F_t\theta_t)\right] \nonumber\\
-   & \times |W_t|^{-(\delta_t + p + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Omega_tW_t^{-1}\right)\right] |W_t|^{-1/2}\exp\left[-\frac{1}{2}(\theta_t-G_t\theta_{t-1})'W_t^{-1}(\theta_t-G_t\theta_{t-1})\right]\label{dlmjoint}
+  y_t|\theta_{0:T} \stackrel{ind}{\sim} & N(F_t\theta_t,V) \label{dlmobseq}\\
+  \theta_t|\theta_{0:t-1}  \sim & N(G_t\theta_{t-1},W) \label{dlmsyseq}
+\end{align}
+ To complete the model specification in a Bayesian context, we need priors on $\theta_0$, $V_{1:T}$, and $W_{1:T}$. We'll use the standard approach for now and assume that they're mutually independent a priori and that $\theta_0 \sim N(m_0, C_0)$, $V \sim IW(\Lambda_V, \lambda_V)$ and $W \sim IW(\Lambda_W, \lambda_W)$ where $m_0$, $C_0$, $\Lambda_V$, $\lambda_V$, $\Lambda_W$, and $\lambda_W$ are known hyperparameters and $IW(\Lambda, \lambda)$ denotes the inverse Wishart distribution with degrees of freedom $\lambda$ and positive definite scale matrix $\Lambda$. This allows us to write the full joint distribution of $(V,W,\theta_{0:T},y_{1:T})$ as
+\begin{align}
+  p(&V,W,\theta_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\theta_0-m_0)'C_0^{-1}(\theta_0-m_0)\right] \nonumber\\
+  &\times   |V|^{-(\lambda_V + k + T + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_VV^{-1}\right)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T(y_t - F_t\theta_t)'V^{-1}(y_t - F_t\theta_t)\right] \nonumber\\
+   & \times |W|^{-(\lambda_W + p + T + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_WW^{-1}\right)\right]\exp\left[-\frac{1}{2}\sum_{t=1}^T(\theta_t-G_t\theta_{t-1})'W^{-1}(\theta_t-G_t\theta_{t-1})\right]\label{dlmjoint}
  \end{align}
 where $p=dim(\theta_t)$, $k=dim(y_t)$, and $\tr(.)$ is the matrix trace operator.
+
 
 
 
