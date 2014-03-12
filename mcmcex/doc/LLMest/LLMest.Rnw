@@ -5,7 +5,7 @@ set_parent('../mcmcex.Rnw')
 
 \section{Application: The Local Level Model}
 
-In order to illustrate how these algorithms work, we'll focus on the local level model primarily for simplicity. Drawing from $p(W_{1:T}|V_{1:T},\gamma_{0:T},y_{1:T})$ and $p(V_{1:T}|W_{1:T},\psi_{0:T},y_{1:T})$ in particular is diffult since these turn out not to be of a known distributional form, but the simplicity of the local level model helps to clarify what the issues are. Of course, it is possible to implement a metropolis step for the difficult conditional or for $(V_{1:T},W_{1:T})$ jointly, but first we would like to see what sort of gains are possible if we sample directly from the desired distributions. The local level model (LLM) is a DLM with univariate data $y_t$ for $t=1,2,\cdots,T$ and a univariate latent state $\theta_t$ for $t=0,2,\cdots,T$ that satisfies
+In order to illustrate how these algorithms work, we'll focus on the local level model primarily for simplicity. Drawing from $p(W|V,\gamma_{0:T},y_{1:T})$ and $p(V|W,\psi_{0:T},y_{1:T})$ in particular is diffult since these turn out not to be of a known distributional form, but the simplicity of the local level model helps to clarify what the issues are. Of course it is possible to implement a metropolis step for the difficult conditional or for $(V,W)$ jointly, but first we would like to see what sort of gains are possible if we sample directly from the desired distributions. The local level model (LLM) is a DLM with univariate data $y_t$ for $t=1,2,\cdots,T$ and a univariate latent state $\theta_t$ for $t=0,2,\cdots,T$ that satisfies
 \begin{align}
   y_t |\theta_{0:T}& \stackrel{ind}{\sim} N(\theta_t,V) \label{llmobseq}\\
   \theta_t |\theta_{0:t-1}& \sim N(\theta_{t-1},W) \label{llmsyseq}
@@ -16,7 +16,7 @@ with $\theta_0\sim N(m_0,C_0)$. Here $\theta_t=E[y_t|\theta_{0:T}]$, i.e. the av
 
 The joint density of $(V,W,\theta_{0:T},y_{1:T})$ is:
 \begin{align*}
-  p(&V_,W,\theta_{0:T},y_{1:T}) \propto V^{-(\alpha_V + 1 + T/2)} \exp\left[-\frac{1}{V}\left(\beta_V + \frac{1}{2}\textstyle\sum_{t=1}^T(y_t - \theta_{t})^2\right)\right]\nonumber\\
+  p(&V,W,\theta_{0:T},y_{1:T}) \propto V^{-(\alpha_V + 1 + T/2)} \exp\left[-\frac{1}{V}\left(\beta_V + \frac{1}{2}\textstyle\sum_{t=1}^T(y_t - \theta_{t})^2\right)\right]\nonumber\\
   &W^{-(\alpha_W + 1 + T/2)}\exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\textstyle\sum_{t=1}^T(\theta_t - \theta_{t-1})^2\right) \right] \exp\left[-\frac{1}{2C_0}(\theta_0 - m_0)^2\right]%\label{llmstatejoint}
 \end{align*}
 This immediately gives the state sampler:
