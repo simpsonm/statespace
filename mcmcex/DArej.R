@@ -90,6 +90,7 @@ VWrejda <- function(a, b, cc, avw){
   mn <- uniroot(logpiVWprimeda, c(-10^2, 10^2), a=a, b=b, cc=cc, avw=avw)$root
   adrej <- logconda(a, b, cc)
   adrej1 <- adrej
+  adrej <- FALSE
   if(adrej){
     try(VW <- ars(n=1, logpiVWda, logpiVWprimeda, x=c(mn-5*mn*2, mn, 5*mn*2),
                   a=a, b=b, cc=cc, avw=avw))
@@ -99,10 +100,12 @@ VWrejda <- function(a, b, cc, avw){
   }
   if(!adrej){ 
     propvar <- - 1 /( -a*exp(-mn) +(b/4)*exp(-mn/2) - cc*exp(mn) )
-    d <- optimize(propMda, c(1,10^3), maximum=FALSE,  a=a, b=b, cc=cc, avw=avw, 
-                  mn=mn, propvar=propvar)
-    M <- d$objective
-    df <- d$minimum
+    ##d <- optimize(propMda, c(1,10^3), maximum=FALSE,  a=a, b=b, cc=cc, avw=avw, 
+    ##              mn=mn, propvar=propvar)
+    ##M <- d$objective
+    ##df <- d$minimum
+    df <- 10
+    M <- propMda(df, a, b, cc, avw, mn, propvar)
     rej <- TRUE
     rejit <- 1
     while(rej){
@@ -134,7 +137,6 @@ errorsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  print(start)
   out <- mcmc(matrix(0, nrow=n, ncol=T+8))
   colnames(out) <- c(paste("theta",0:T,sep=""),"V","W","logcon",
                      "adrejV", "logconW", "adrejW", "kernel")
@@ -159,7 +161,6 @@ distsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  print(start)
   out <- mcmc(matrix(0, nrow=n, ncol=T+8))
   colnames(out) <- c(paste("theta",0:T,sep=""),"V","W",
                      "logconV", "adrejV", "logconW", "adrejW", "kernel")
