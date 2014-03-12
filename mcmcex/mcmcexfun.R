@@ -332,7 +332,7 @@ samwrap <- function(par, n, samp){
   aw <- par$aw[1]
   bv <- par$bv[1]
   bw <- par$bw[1]
-  print(paste(c("sampler: ", samp, "   T=", T, "V=", round(V, 4), "W=", round(W, 4)), collapse=""))
+  print(paste(c("sampler: ", samp, "   T=", T, "V=", start[1], "W=", start[2]), collapse=""))
   if(samp=="state")
     time <- system.time(out <- statesam(n, start, dat, av, aw, bv, bw))
   if(samp=="dist")
@@ -375,7 +375,7 @@ samwrap <- function(par, n, samp){
     time <- system.time(out <- errorsamda(n, start, dat, av, aw, bv, bw))
   outdat <- data.frame(out)
   outdat$time <- time[1]
-  print(paste(c("sampler: ", samp, "  T=", T, "  V=", round(V, 4), "  W=", round(W, 4), " FINISHED"), collapse=""))
+  print(paste(c("sampler: ", samp, "  T=", T, "  V=", start[1], "  W=", start[2], " FINISHED"), collapse=""))
   return(outdat[,c(T+9, (T+2):(T+8), 1:(T+1))])
 }
 
