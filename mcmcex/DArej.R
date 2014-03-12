@@ -134,6 +134,7 @@ errorsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
+  print(start)
   out <- mcmc(matrix(0, nrow=n, ncol=T+8))
   colnames(out) <- c(paste("theta",0:T,sep=""),"V","W","logcon",
                      "adrejV", "logconW", "adrejW", "kernel")
@@ -158,6 +159,7 @@ distsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
+  print(start)
   out <- mcmc(matrix(0, nrow=n, ncol=T+8))
   colnames(out) <- c(paste("theta",0:T,sep=""),"V","W",
                      "logconV", "adrejV", "logconW", "adrejW", "kernel")
