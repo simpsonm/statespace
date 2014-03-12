@@ -285,7 +285,7 @@ samwrap <- function(par, n, samp){
   Qv <- par$V.T[1]
   Qw <- par$W.T[1]
   start <- c(Qv, Qw)
-  print(paste(c("sampler: ", samp, "   T=", T, "QV=", Qv, "QW=", Qw), collapse=""))
+  print(paste(c("sampler: ", samp, "  T=", T, "  QV=", Qv, "  QW=", Qw), collapse=""))
   if(samp=="state")
     time <- system.time(out <- statesam(n, start, dat, Qv, Qw))
   if(samp=="dist")
@@ -322,6 +322,7 @@ samwrap <- function(par, n, samp){
     time <- system.time(out <- fullcissam(n, start, dat, Qv, Qw))
   outdat <- data.frame(out)
   outdat$time <- time[1]
+  print(paste(c("sampler: ", samp, "  T=", T, "  QV=", Qv, "  QW=", Qw, " FINISHED"), collapse=""))
   return(outdat[,c(T+7, (T+2):(T+6), 1:(T+1))])
 }
 

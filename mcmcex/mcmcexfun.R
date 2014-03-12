@@ -375,6 +375,7 @@ samwrap <- function(par, n, samp){
     time <- system.time(out <- errorsamda(n, start, dat, av, aw, bv, bw))
   outdat <- data.frame(out)
   outdat$time <- time[1]
+  print(paste(c("sampler: ", samp, "  T=", T, "  V=", V, "  W=", W, " FINISHED"), collapse=""))
   return(outdat[,c(T+9, (T+2):(T+8), 1:(T+1))])
 }
 
