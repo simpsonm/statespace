@@ -233,7 +233,7 @@ dfun <- function(M, simgrid){
 ## Wrapper for quickly simulating from all samplers w/ multiple
 ## chains at diff starting values
 samwrapstart <- function(par, n, samp){
-  dat <- par$y[order(par$t)]
+  dat <n- par$y[order(par$t)]
   T <- length(dat)
   Qv <- par$V.T[1]
   Qw <- par$W.T[1]
@@ -285,6 +285,7 @@ samwrap <- function(par, n, samp){
   Qv <- par$V.T[1]
   Qw <- par$W.T[1]
   start <- c(Qv, Qw)
+  print(paste(c("sampler: ", samp, "   T=", T, "QV=", Qv, "QW=", Qw), collapse=""))
   if(samp=="state")
     time <- system.time(out <- statesam(n, start, dat, Qv, Qw))
   if(samp=="dist")
