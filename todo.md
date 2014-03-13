@@ -9,10 +9,11 @@ This is just for the interweaving paper. I'm putting off the "which covariance p
 
 3. Get some intuition about WHY certain DAs work better in some situations instead of others. Will require reading a bunch of papers about DAs, parameterizations, and EM algorithm stuff.
 
-4. Implement AWOL smoothing? Not needed for relative comparisons, though AWOL does work directly with the error sampler, so maybe I should. In which case, rerun all sims. 
+4. Implement AWOL smoothing? Not needed for relative comparisons, though AWOL does work directly with the error sampler, so maybe I should. In which case, rerun all sims. And improve speed of everything else too.
 
 5. Wrongly scaled DAs? Check their properties at least. So get a better sampler.
    Better sampler gotten. ARS for log(VW), and pick a proposal when that fails, again for log(VW)
+   Just a worse version of state sampler
 
 6. Vivek's idea: scaled by BOTH standard deviations, no? (Probably in a later paper)
 
