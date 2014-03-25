@@ -322,7 +322,7 @@ samwrap <- function(par, n, samp){
     time <- system.time(out <- fullcissam(n, start, dat, Qv, Qw))
   outdat <- data.frame(out)
   outdat$time <- time[1]
-  print(paste(c("sampler: ", samp, "  T=", T, "  QV=", Qv, "  QW=", Qw, " FINISHED"), collapse=""))
+  print(paste(c("sampler: ", samp, "  T=", T, "  V=", Qv, "  W=", Qw, " FINISHED"), collapse=""))
   return(outdat[,c(T+7, (T+2):(T+6), 1:(T+1))])
 }
 
