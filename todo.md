@@ -25,3 +25,6 @@ This is just for the interweaving paper. I'm putting off the "which covariance p
 
 9. Scale theta instead of disturbances/errors ? Do a quick check.
    This is the same in the local level model, but not the same whenever G_t is a matrix
+
+
+adding some text here for a github commit test
