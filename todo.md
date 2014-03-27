@@ -13,7 +13,7 @@ This is just for the interweaving paper. I'm putting off the "which covariance p
 
 5. Wrongly scaled DAs? Check their properties at least. So get a better sampler.
    Better sampler gotten. ARS for log(VW), and pick a proposal when that fails, again for log(VW)
-   Just a worse version of state sampler
+   Just a worse version of state sampler, it turns out
 
 6. Vivek's idea: scaled by BOTH standard deviations, no? (Probably in a later paper)
 
