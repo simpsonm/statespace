@@ -1,0 +1,102 @@
+source("../code/mcmcexfun.R")
+set.seed(152893627)
+T <- c(10)
+V <- c(1)
+W <- V
+simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
+simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
+simdata$av <- 5
+simdata$aw <- 5
+simdata$bv <- (simdata$av-1)*simdata$V.T
+simdata$bw <- (simdata$aw-1)*simdata$W.T
+simdata$m0 <- 0
+simdata$C0 <- 10^7
+sams <- c("state", "dist", "error", "sdint", "seint", "deint",
+          "triint", "sdalt", "sealt", "dealt", "trialt",
+          "sdkern", "sekern", "dekern", "trikern",
+          "fullcis", "partialcis")
+samplers <- data.frame(sams=rep(1,length(sams)))
+samplers$sampler <- sams
+n <- 500
+burn <- 100
+
+system.time(samout <- fullsim(samplers, simdata, n, burn, FALSE))
+
+
+source("../code/mcmcexfun.R")
+T <- 10
+V <- 1
+W <- 1
+simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
+simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=10^7)
+simdata$av <- 5
+simdata$aw <- 5
+simdata$bv <- (simdata$av-1)*simdata$V.T
+simdata$bw <- (simdata$aw-1)*simdata$W.T
+simdata$m0 <- 0
+simdata$C0 <- 10^7
+par <- simdata
+n <- 2000
+
+state <- samwrap(par, n, "state")
+dist <- samwrap(par, n, "dist")
+error <- samwrap(par, n, "error")
+sdalt <- samwrap(par, n, "sdalt")
+sdint <- samwrap(par, n, "sdint")
+sealt <- samwrap(par, n, "sealt")
+seint <- samwrap(par, n, "seint")
+dealt <- samwrap(par, n, "dealt")
+deint <- samwrap(par, n, "deint")
+trialt <- samwrap(par, n, "trialt")
+triint <- samwrap(par, n, "triint")
+fullcis <- samwrap(par, n, "fullcis")
+partialcis <- samwrap(par, n, "partialcis")
+sdkern <- samwrap(par, n, "sdkern")
+sekern <- samwrap(par, n, "sekern")
+dekern <- samwrap(par, n, "dekern")
+trikern <- samwrap(par, n, "trikern")
+
+par(mfrow=c(2,1))
+plot(1:n, cumsum(state$V)/1:n, ylab="V", type="l", ylim=c(.5*V, 1.5*V))
+lines(1:n, cumsum(dist$V)/1:n, col="red")
+lines(1:n, cumsum(error$V)/1:n, col="blue")
+lines(1:n, cumsum(sdalt$V)/1:n, col="green")
+lines(1:n, cumsum(sdint$V)/1:n, col="orange")
+lines(1:n, cumsum(sealt$V)/1:n, col="purple")
+lines(1:n, cumsum(seint$V)/1:n, col="pink")
+lines(1:n, cumsum(dealt$V)/1:n, col="yellow")
+lines(1:n, cumsum(deint$V)/1:n, col="turquoise")
+lines(1:n, cumsum(triint$V)/1:n, col="maroon")
+lines(1:n, cumsum(trialt$V)/1:n, col="brown")
+lines(1:n, cumsum(fullcis$V)/1:n, col="magenta")
+lines(1:n, cumsum(partialcis$V)/1:n, col="darkblue")
+lines(1:n, cumsum(sdkern$V)/1:n, col="darkorange")
+lines(1:n, cumsum(sekern$V)/1:n, col="cyan")
+lines(1:n, cumsum(dekern$V)/1:n, col="black")
+lines(1:n, cumsum(trikern$V)/1:n, col="black")
+plot(1:n, cumsum(state$W)/1:n, ylab="W", type="l", ylim=c(.5*W, 1.5*W))
+lines(1:n, cumsum(dist$W)/1:n, col="red")
+lines(1:n, cumsum(error$W)/1:n, col="blue")
+lines(1:n, cumsum(sdalt$W)/1:n, col="green")
+lines(1:n, cumsum(sdint$W)/1:n, col="orange")
+lines(1:n, cumsum(sealt$W)/1:n, col="purple")
+lines(1:n, cumsum(seint$W)/1:n, col="pink")
+lines(1:n, cumsum(dealt$W)/1:n, col="yellow")
+lines(1:n, cumsum(deint$W)/1:n, col="turquoise")
+lines(1:n, cumsum(triint$W)/1:n, col="maroon")
+lines(1:n, cumsum(trialt$W)/1:n, col="brown")
+lines(1:n, cumsum(fullcis$W)/1:n, col="magenta")
+lines(1:n, cumsum(partialcis$W)/1:n, col="darkblue")
+lines(1:n, cumsum(sdkern$W)/1:n, col="darkorange")
+lines(1:n, cumsum(sekern$W)/1:n, col="cyan")
+lines(1:n, cumsum(dekern$W)/1:n, col="black")
+lines(1:n, cumsum(trikern$W)/1:n, col="black")
+
+
+
+
+V <- 1
+W <- 1
+T <- 1000
+dat <- rnorm(T,0,sqrt(V)) + cumsum(rnorm(T,0,sqrt(W)))
+timetest <- fullcissam(n, c(V,W), dat, av=5, aw=5, bv=4*V, bw=4*W, m0=0, C0=10^7)

@@ -1,4 +1,4 @@
-source("../mcmcexfun.R")
+source("../code/mcmcexfun.R")
 set.seed(152893627)
 T <- c(10, 100, 1000)
 V <- 10^(c(0:10)/2-2)
@@ -9,6 +9,8 @@ simdata$av <- 5
 simdata$aw <- 5
 simdata$bv <- (simdata$av-1)*simdata$V.T
 simdata$bw <- (simdata$aw-1)*simdata$W.T
+simdata$m0 <- 0
+simdata$C0 <- 10^7
 sams <- c("state", "dist", "error", "sdint", "seint", "deint",
           "triint", "sdalt", "sealt", "dealt", "trialt",
           "sdkern", "sekern", "dekern", "trikern",
@@ -19,7 +21,7 @@ n <- 3000
 burn <- 500
 parallel <- require(doMC, quietly=TRUE)
 if(parallel){
-  registerDoMC(4)
+  registerDoMC(8)
 }
 system.time(samout <- fullsim(samplers, simdata, n, burn, parallel))
 save(samout, file="samout.RData")

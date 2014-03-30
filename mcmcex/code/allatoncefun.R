@@ -1,5 +1,3 @@
-source("../../mcmcexfun.R")
-
 awolthsmooth <- function(y, V, W, m0, C0){
   n <- length(y)
   O0 <- 1/C0 + 1/W

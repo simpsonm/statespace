@@ -88,10 +88,10 @@ Wpsiiterda <- function(dat, psi, V, aw, bw){
 
 VWrejda <- function(a, b, cc, avw){
   mn <- uniroot(logpiVWprimeda, c(-10^2, 10^2), a=a, b=b, cc=cc, avw=avw)$root
-  adrej <- logconda(a, b, cc)
-  adrej1 <- adrej
-  adrej <- FALSE
-  if(adrej){
+  lcon <- logconda(a, b, cc)
+  lcon <- FALSE
+  adrej <- lcon
+  if(lcon){
     try(VW <- ars(n=1, logpiVWda, logpiVWprimeda, x=c(mn-5*mn*2, mn, 5*mn*2),
                   a=a, b=b, cc=cc, avw=avw))
     if(VW==0){
@@ -128,28 +128,30 @@ VWrejda <- function(a, b, cc, avw){
       }
     }
   }
-  return(c(adrej1, adrej, exp(VW)))
+  return(c(exp(VW), lcon, adrej))
 }
 
 ## scaled error sampler: samples V and W conditional on the scaled observation
 ## errors (plus the initial state, theta_0)
-errorsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
+errorsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- mcmc(matrix(0, nrow=n, ncol=T+8))
-  colnames(out) <- c(paste("theta",0:T,sep=""),"V","W","logcon",
-                     "adrejV", "logconW", "adrejW", "kernel")
+  out <- data.frame(matrix(0, nrow=n, ncol=T+9))
+  colnames(out) <- c("logconV", "adrejV", "logconW",
+                     "adrejW", "kernel", "stime",
+                     "V", "W", paste("theta",0:T,sep=""))
   for(i in 1:n){
-    theta <- thetaiter(dat, V, W)
-    psit <- (dat - theta[-1])/sqrt(W)
-    psi <- c(theta[1], psit)
+    ptma <- proc.time()
+    psi <- awolpssmooth(dat, V, W, m0, C0)
+    ptmb <- proc.time()
+    smoothtime <- ptmb[3]-ptma[3]
     V <- Vpsiiterda(dat, psi, W, av, bv)
     Wout <- Wpsiiterda(dat, psi, V,  aw, bw)
-    W <- Wout[3]
+    W <- Wout[1]
     thetat <- dat - sqrt(W)*psi[-1]
     theta <- c(psi[1], thetat)
-    out[i,] <- c(theta,V,W,c(NA,NA),Wout[1:2], NA)
+    out[i,] <- c(NA,NA,Wout[2:3], NA, smoothtime, V, W, theta)
   }
   return(out)
 }
@@ -157,23 +159,27 @@ errorsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
 
 ## scaled disturbance sampler: samples V and W conditional on the scaled
 ## system disturbances (plus the initial state, theta_0)
-distsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0){
+distsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- mcmc(matrix(0, nrow=n, ncol=T+8))
-  colnames(out) <- c(paste("theta",0:T,sep=""),"V","W",
-                     "logconV", "adrejV", "logconW", "adrejW", "kernel")
+  out <- data.frame(matrix(0, nrow=n, ncol=T+9))
+  colnames(out) <- c("logconV", "adrejV", "logconW",
+                     "adrejW", "kernel", "stime",
+                     "V", "W", paste("theta",0:T,sep=""))
   for(i in 1:n){
-    theta <- thetaiter(dat, V, W)
+    ptma <- proc.time()
+    theta <- awolthsmooth(dat, V, W, m0, C0)
     gamt <- (theta[-1] - theta[-(T+1)])/sqrt(V)
     gam <- c(theta[1], gamt)
+    ptmb <- proc.time()
+    smoothtime <- ptmb[3]-ptma[3]
     Vout <- Vgamiterda(dat, gam, W, av, bv)
-    V <- Vout[3]
+    V <- Vout[1]
     W <- Wgamiterda(dat, gam, V, aw, bw)
     thetat <- gam[1] + cumsum(gam[-1])*sqrt(V)
     theta <- c(gam[1], thetat)
-    out[i,] <- c(theta,V,W,Vout[1:2],c(NA,NA), NA)
+    out[i,] <- c(Vout[2:3],NA,NA,NA,smoothtime,V,W,theta)
   }
   return(out)
 }
