@@ -42,7 +42,13 @@ itsim <- function(dat, y){
   return(out)
 }
 
-samcor <- ddply(.data=samshort, .variables=.(iter), .fun=itsim, y=simdata)
+parallel <- require(doMC, quietly=TRUE)
+if(parallel){
+  registerDoMC(8)
+}
+
+
+samcor <- ddply(.data=samshort, .variables=.(iter), .fun=itsim, y=simdata, parallel=parallel)
 rm(samshort)
 
 newcors <- function(samcor){
@@ -65,11 +71,6 @@ newcors <- function(samcor){
   out$Vapsi <- Vagam
   out$Vbpsi <- Vbgam
   return(out)
-}
-
-parallel <- require(doMC, quietly=TRUE)
-if(parallel){
-  registerDoMC(8)
 }
 
 newpostcors <- ddply(.data=samcor, .variables=.(V.T, W.T, T.T), .fun=newcors, .parallel=parallel)
