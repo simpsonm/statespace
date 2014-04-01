@@ -48,7 +48,7 @@ if(parallel){
 }
 
 
-samcor <- ddply(.data=samshort, .variables=.(iter), .fun=itsim, y=simdata, parallel=parallel)
+samcor <- ddply(.data=samshort, .variables=.(iter), .fun=itsim, y=simdata, .parallel=parallel)
 rm(samshort)
 
 newcors <- function(samcor){
