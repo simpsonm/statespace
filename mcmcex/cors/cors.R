@@ -1,6 +1,6 @@
 source("../code/mcmcexfun.R")
 source("../code/allatoncefun.R")
-load("../mixing/OldSims32814/trialtSAM.RData")
+load("trialtSAM.RData")
 set.seed(152893627)
 T <- c(10, 100, 1000)
 V <- 10^(c(0:10)/2-2)
