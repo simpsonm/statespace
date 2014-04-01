@@ -1,0 +1,150 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol, amsthm, bbm}
+\usepackage{multicol}
+\usepackage{textcomp}
+\usepackage{fullpage}
+\usepackage[maxfloats=48]{morefloats} %for >18 figures
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage[authoryear]{natbib} %numbers instead of authoryear for [1] instead of [1980]
+%Indicator function: use as \indicator{X=x}
+\newcommand{\indicator}[1]{\mathbbm{1}{\left\{ {#1} \right\} }}
+%Independent: use as X \ind Y | Z
+\newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newtheorem{alg}{Algorithm}
+\newtheorem{thm}{Theorem}[subsection]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}[thm]{Corollary}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\B}{B}
+\DeclareMathOperator{\vech}{vech}
+\DeclareMathOperator{\vect}{vec}
+
+<<setup, include=FALSE, cache=FALSE>>=
+options(replace.assign=TRUE,width=90)
+opts_knit$set(eval.after = "fig.cap")
+opts_chunk$set(dev="pdf",
+               fig.lp = "",
+               fig.keep="high",
+               fig.show="hold",
+               fig.align="center",
+               fig.pos="!ht")
+
+@
+
+
+\begin{document}
+
+\section{Introduction}
+This document is compilation of notes on various papers and books from the relevant literature.
+
+\section{Efficient Bayesian Parameter Estimation \citet{fruhwirth2004efficient}}
+Consider a common statespace model:
+\begin{align*}
+  \beta_t = \phi\beta_{t-1} + (1-\phi)\mu + w_t && w_t\sim N(0,\sigma_w^2)\\
+  y_t = Z_t\beta_t + \epsilon_t && \epsilon_t\sim N(0,\sigma_\epsilon^2)
+\end{align*}
+Usual MCMC algorithm: let $\theta=(\mu,\phi,\sigma_w^2,\sigma_\epsilon^2)$. Then DA algorithm with two steps: $p(\theta|\beta,y)$ and $p(\beta|\theta,y)$.
+
+Suppose $\phi=0$, i.e. a random effects model. Centered parameterization: $\tilde{\beta}_t = \beta_t - \mu$.  Let $D= 1 - V(y_t|\beta_t)/V(y_t)$ (depends on STN ratio, obv). $D>1/2$ means centered is better, $D<1/2$ means noncentered is better. (D is roughly the STN ratio)
+
+Now suppose $\phi\neq0$. Same $\tilde{\beta}_t$. Implied model:
+\begin{align*}
+  \tilde{\beta}_t = \phi\tilde{\beta}_{t-1} + w_t && w_t\sim N(0,\sigma_w^2)\\
+  y_t = Z_t\mu + Z_t\tilde{\beta}_t + \epsilon_t && \epsilon_t\sim N(0,\sigma_\epsilon^2)
+\end{align*}
+\citet{Pitt1999analytic} prove that for $Z_t=1$ with known variances: $\phi\to 1 \implies$ the convergence rate of the centered parameterisation goes to 0, whereas the convergence rate of the noncentered paramerization goes to 1. So for the limiting random walk model, the noncentered parameterization does not converge geometrically regardless of the STN. But when $\phi < 1$ the variances matter, CP better than NCP when $\sigma_w^2/(1-\phi)^2 > \sigma_\epsilon^2$. (NOTE: only centered in location, NOT scale)
+
+Also a section on partial noncentering (not as relevant): 
+\begin{align*}
+  \beta_t^w = W_t\tilde{\beta}_t + (1-W_t)\beta_t.
+\end{align*}
+With $W_t=1-D_t$, \citet{bernardo2003non} show that iid samples can be obtained. Unclear how to select $W_t$ for a time series model.
+
+When the variances are unknown, \citet{meng1998fast} showed that for a random effects model NC in location, when D is small (i.e. low STN) we have a poor sampler. Solution: rescale the state vector (noncentered in scale):
+\begin{align*}
+  \beta_t^* = \frac{\tilde{\beta}_t}{\sigma_w}
+\end{align*}
+Can also do partial noncentering:
+\begin{align*}
+  \beta_t^a = \frac{\tilde{\beta}_t}{\sigma_w^A}
+\end{align*}
+For random effects model, \citet{meng1998fast} suggest $A=2(1-D)/(2-D)$.
+
+No one knows what happens when you NC a {\it time series} in the scale parameter. Simulations: known $\phi=0.1,0.95$, unknown variances. Data has drawn from $\sigma_w^2=1,0.05,0.001$ and $\sigma_\epsilon^2=.1$, also $Z_t$ is randomly $-1,0,1$. For $\phi=0.1$ NC in location and scale improves the ``preferred'' sampler (based on D e.g.) in all cases except for $\mu$ when $\sigma_w^2=1$. For $\phi=0.95$, on the other hand, when $\sigma_w^2$ is smaller the NCP is worse for $\sigma^2_w$ and $\mu$. However when $\sigma^2_w$ is larger the NCP is better for $\sigma^2_w$ and just as good for the other parameters.
+
+What if $\phi$ is unknown... $(>0)$. Basically nothing changes if $\sigma^2_w$ is not too small, but whe it's close to 0, the model is ``nearly oversized'' - main problem is that $\phi$ is still in the system equation while everything else (in the NCP) is in the observation equation. So new parameterization:
+\begin{align*}
+  w_t\sim N(0,1) && \\
+  y_t = Z_t \mu + Z_t\sigma_w\beta_t^* + \epsilon_t && \epsilon_t \sim N(0,\sigma^2_\epsilon)
+\end{align*}
+where $\beta_t^* = \phi\beta_{t-1}^* + w_t$. Missing data are defined as $\tilde{X}=(\beta_0^*,w_{1:T})$. Removes all model paramters from system equation. Full Gibbs no longer possible - use a random walk metropolis hastings algorithm. The result is that if $\sigma_w^2$ is very small, results improve (specifically for $\phi$ which typically has the worst problems), but mostly when $\phi$ is small. {\it\bf They try some other parameterizations, but ultimately find that nothing seems to do better than one of 1) standard CP 2) NCP for disturbances (my scaled disturbances).}
+
+\section{Efficient Parameterisations for Normal Linear Mixed Models \citet{gelfand1995efficient}}
+Start with a basic model:
+\begin{align*}
+  Y_{ijk} = \mu + \alpha_i + \beta_{ij} + \epsilon_{ijk}
+\end{align*}
+with $\epsilon_{ijk}\sim N(0,\sigma^2_e)$, $\beta_{ij}\sim N(0,\sigma^2_\beta)$, $\alpha_i\sim N(0,\sigma^2_\alpha)$ and $\mu\sim N(\mu_0, \sigma^2_\mu)$. Assume that all variance components are known for now. An alternative ``centered parameterization'' (CP) is $\eta_i=\mu +\alpha_i$ and $\rho_{ij}=\mu + \alpha_i + \beta_{ij}$ which gives $Y_{ijk}=\rho_{ij} + \epsilon_{ijk}$ where $\rho_{ij}\sim N(\eta_i, \sigma_\beta^2)$ and $\eta_i\sim N(\mu,\sigma^2_\alpha)$. Usually reparameterizations require the square root of an approximation to the joint covariance matrix, which is hard to compute in large models (requires a big martrix inverse).
+
+Consider a different model: $Y_i:n_i\times 1$, 
+\begin{align*}
+  Y_i|\eta_i &\sim N(X_i\eta_i, \sigma_i^2I_{n_i})\\
+  \eta_i|\mu &\sim N(\mu, D)
+\end{align*}
+where $\sigma_i^2$ and $D$ are known (for now). Take a flat prior on $\mu$. $(\mu,\eta)$ is the CP while $(\mu,\alpha)$ where $\alpha=\eta - \mu$ is the NCP. Posterior is multivariate normal in either case.
+
+Conditional on $\mu$, the $Y_i$ are independent with $Y_i|\mu \sim N(X_i\mu, \Sigma_i)$ where $\Sigma_i = \sigma_i^2I_{n_i} + X_iDX_i'$. Thus $\mu|Y\sim N[\hat{\mu},(X'\Sigma^{-1}X)^{-1}]$ where
+\begin{align*}
+  X' & = (X_1',...,X_m')\\
+  \Sigma & = diag(\Sigma_1,...,\Sigma_m)\\
+  Y' & = (Y_1',...,Y_m')\\
+  \hat{\mu} & = (X'\Sigma^{-1}X^{-1}X'\Sigma^{-1}Y
+\end{align*}
+Let $A_i=X_i'\Sigma_i^{-1}$ and $A=\sum_iA_i=X'\Sigma^{-1}X$. Then we have $\eta_i|\mu,Y\sim N(B_ib_i,B_i)$ where 
+\begin{align*}
+  B_i &= (\sigma_i^{-2}X_i'X_i + D^{-1})^{-1}\\
+  b_i &= \sigma_i^{-2}X_i'Y_i +D^{-1}\mu
+\end{align*}
+which implies that $\eta|Y$ is normal with
+\begin{align*}
+  E[\eta_i|Y] &= B_i\hat{b}_i\\
+  \hat{b}_i & = \sigma_i^{-2}X_i'Y_i + D^{-1}\hat{\mu}\\
+  V(\eta_i|Y) & = B_i + B_iD^{-1}A^{-1}D^{-1}B_i\\
+  cov(\eta_i,\mu|Y)&=B_iD^{-1}A^{-1}\\
+  cov(\eta_i,\eta_j|Y)&=B_iD^{-1}A^{-1}D^{-1}B_j
+\end{align*}
+whereas in $\alpha-\mu$ space we have $\alpha|Y$ normal with
+\begin{align*}
+  E[\alpha_i|Y] &= B_i\hat{b}_i - \hat{\mu}\\
+  V(\alpha_i|Y) &= B_i + B_iD^{-1}A^{-1}D^{-1}B_i + A^{-1} -2B_iD^{-1}A^{-1}\\
+  cov(\alpha_i,\mu|Y) &= B_iD^{-1}A^{-1} - A^{-1}\\
+  cov(\alpha_i,\alpha_j|Y) &= B_iD^{-1}A^{-1}D^{-1}B_j - (B_i + B_j)D^{-1}A^{-1} + A^{-1}.
+\end{align*}
+A matrix identity gives $B_iD^{-1} + DA_i = I_{n_i}$ Now $B_iD^{-1}$ is PD and $DA_i$ is PSD so $B_iD^{-1}$ measures the relative contribution of the error variance and $DA_i$ measures the relative contribution of the random effect variance.
+
+When $|B_iD^{-1}|$ is near zero the CP is efficient while when it's near one the NCP is efficient. (Pf shows correlations between $\eta$'s and $\mu$'s go to zero in one case, and $\alpha$'s and $\mu$'s in the other.
+
+They do something similar for a more complicated model and run some simulations in order to confirm their findings.
+
+{\it\bf Note: this doesn't help us at all - we're drawing the theta's jointly conditional on the other stuff. the problem is the variances!!}
+
+\section{Other Papers can't find a copy}
+These are in the back of the state space book:
+\begin{enumerate}
+\item Papaspilipoulos, Robers and Skold 2003: whole continuum of location parameterizations
+\item Shepard 1996: reparameterization in stochastic volatility models
+\item Fruhwirth-Schnatter and Sogner: reparameterization in stochastic volatility models
+\end{enumerate}
+
+\clearpage
+
+\bibliographystyle{plainnat}
+\bibliography{../doc/mcmcex}
+\end{document}
+
+
+
+
