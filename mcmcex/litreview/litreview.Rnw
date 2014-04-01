@@ -131,12 +131,57 @@ They do something similar for a more complicated model and run some simulations 
 
 {\it\bf Note: this doesn't help us at all - we're drawing the theta's jointly conditional on the other stuff. the problem is the variances!!}
 
+\section{Updating Schemes, Correlation Structure, Blocking and Parameterization for the Gibbs Sampler, \citet{roberts1997updating}}
+
+Let $\theta^t$ be a markov chain with stationary density $h(\theta)$. Let $f$ be a square $h$-integrable function of $\theta$ and $h(f)$ denote the expectation of $f$ under density $h$. Then we look at the rate at which $P^tf(\theta^0) \equiv E_h[f(\theta^t)|\theta^0]$ approaches $h(f)$ in $L^2$. Define $\rho$ to be the minimum number such that for all square $h$-integrable function $f$ and for all $r>\rho$
+\[
+\lim_{t\to \infty}\left(E_h[(P^tf(\theta^0)-h(f))^2]r^{-t}\right)=0
+\]
+Sometimes it's impossible to compute $\rho$, but we can compute $\rho_L$ which restricts the functions $f$ to be linear. Often $\rho_L=\rho$ but generally $\rho_L\leq \rho$.
+
+The survey the literature which says that usually random updating schemes are better, but they'll show that in two cases a deterministic scheme is better: hierarchical models in a certain class and density with non-negative partial correlations. It's also know that blocking often improves convergence, but they emphasize that it can make an algorithm converge more slowly. They also mention that ``It is well known that high correlations between the coordiantes dimish the speed of convergence of the Gibbs sampler; see, for example, Hills and Smith 1992.'' They ultimately compare the CP to alternative parameterizations (note, only centered in the mean, not variance).
+
+Didn't read sections 2 and 3 closely - only seems to talk about blocking and such.
+
+\subsection{Optimatl parameterizations for Gaussian linear models}
+Theoretical result on when the CP and NCP are better for basic model: $y_i = \mu + \alpha_i + \epsilon_i$ where $y_i$ and $\epsilon_i$ ahve been reduced by sufficiency - basically CP is better when variance of $\epsilon$ is lower than that of $\alpha$ and otherwise NCP better (CP better when STN ratio high).
+If we add another level to the model, $\beta_{ij}$, it's more complicated and it's no longer obvious that the deterministic updating scheme is better either (depends on the parameterization!).
+
+Lots of proofs in appendicies.
+
+\section{The EM Algorithm -- An Old Fok-Song Sung to a Fast New Tune, \citet{meng1997algorithm}}
+starts with a history less on the EM algorithm
+\subsection{Augmentating data efficiently to speed up EM algorithm}
+It's known that the rate of convergence is determined by the fraction of missing information.
+
+Some details on working with a multivariate t model - treat it as a chi-square mixture of normals, and treat the chi-square rv is the missing data. (One chi-sq for each data point)
+
+From Demptster et al 1977 we know that the matrix rate of the EM algorithm is (assuming limit is an interior point)
+\[
+DM = I - I_{obs}I^{-1}_{aug}
+\]
+where $I$ is the identity matrix,
+\begin{align*}
+  I_{aug} & = \left.E\left[-\frac{\partial^2\log f(Y_{aug}|\theta)}{\partial\theta\partial\theta'}\middle|Y_{obs},\theta\right]\right|_{\theta=\theta^*}\\
+    I_{obs} & = -\left.\frac{\partial^2L(\theta|Y_{obs})}{\partial\theta\partial\theta'}\right\vert_{\theta=\theta^*}
+\end{align*}
+i.e. the expected and observed information matrices, where $\theta^*$ is a (local) MLE. The largest eigenvalue of DM, denoted r, is known as the (global) rate of convergence of the EM algorithm. $s = 1 - r$ is known as the global speed of the algorithm. $s$ is the smallest eigenvalue of the speed matrix $S=I_{obs}I_{aug}^{-1}$.
+
+They allow the $aug$ quantities to depend on some parameter $a$ and look for the $a$ which maximizes $s$. This looks like the genesis of ``parameter expanded data augmention'' and they talk about the similarities to stochastic algorithms and other issues. Didn't read the rest of the details too closely, but they mention a paper by Orchard which talks about the ``missing information principle.''
+
+
+
 \section{Other Papers can't find a copy}
 These are in the back of the state space book:
 \begin{enumerate}
 \item Papaspilipoulos, Robers and Skold 2003: whole continuum of location parameterizations
 \item Shepard 1996: reparameterization in stochastic volatility models
 \item Fruhwirth-Schnatter and Sogner: reparameterization in stochastic volatility models
+\end{enumerate}
+Papers to get:
+\begin{enumerate}
+\item Orchard and Woodbury 1972: A missing information principle
+\item Dempster, Laird and Rubin 1977:Maximum Likelihood from incomplete data via the EM algorithm
 \end{enumerate}
 
 \clearpage
