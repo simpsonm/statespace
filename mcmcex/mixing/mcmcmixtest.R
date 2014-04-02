@@ -26,7 +26,7 @@ system.time(samout <- fullsim(samplers, simdata, n, burn, FALSE))
 source("../code/mcmcexfun.R")
 T <- 10
 V <- 1
-W <- 1
+W <- 10
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=10^7)
 simdata$av <- 5
@@ -36,7 +36,11 @@ simdata$bw <- (simdata$aw-1)*simdata$W.T
 simdata$m0 <- 0
 simdata$C0 <- 10^7
 par <- simdata
-n <- 2000
+n <- 500
+
+
+deint <- samwrap(par, n, "deint")
+
 
 state <- samwrap(par, n, "state")
 dist <- samwrap(par, n, "dist")
@@ -91,6 +95,29 @@ lines(1:n, cumsum(sdkern$W)/1:n, col="darkorange")
 lines(1:n, cumsum(sekern$W)/1:n, col="cyan")
 lines(1:n, cumsum(dekern$W)/1:n, col="black")
 lines(1:n, cumsum(trikern$W)/1:n, col="black")
+
+par(mfrow=c(2,1))
+plot(1:n, cumsum(state$V)/1:n, ylab="V", type="l", ylim=c(.5*V, 1.5*V))
+lines(1:n, cumsum(dist$V)/1:n, col="red")
+lines(1:n, cumsum(error$V)/1:n, col="blue")
+lines(1:n, cumsum(dealt$V)/1:n, col="yellow", lty=2)
+lines(1:n, cumsum(deint$V)/1:n, col="turquoise", lty=2)
+plot(1:n, cumsum(state$W)/1:n, ylab="W", type="l", ylim=c(.5*W, 1.5*W))
+lines(1:n, cumsum(dist$W)/1:n, col="red")
+lines(1:n, cumsum(error$W)/1:n, col="blue")
+lines(1:n, cumsum(dealt$W)/1:n, col="yellow", lty=2)
+lines(1:n, cumsum(deint$W)/1:n, col="turquoise", lty=2)
+
+
+Vmns <- c(mean(state$V), mean(dist$V), mean(error$V), mean(dealt$V), mean(deint$V), mean(sdalt$V), mean(sdint$V), mean(sealt$V), mean(seint$V), mean(triint$V), mean(trialt$V), mean(fullcis$V), mean(partialcis$V), mean(sdkern$V), mean(sekern$V), mean(dekern$V), mean(trikern$V))
+Wmns <- c(mean(state$W), mean(dist$W), mean(error$W), mean(dealt$W), mean(deint$W), mean(sdalt$W), mean(sdint$W), mean(sealt$W), mean(seint$W), mean(triint$W), mean(trialt$W), mean(fullcis$W), mean(partialcis$W), mean(sdkern$W), mean(sekern$W), mean(dekern$W), mean(trikern$W))
+
+
+mns <- cbind(Vmns, Wmns)
+rownames(mns) <- c("state", "dist", "error", "dealt", "deint", "sdalt", "sdint", "sealt", "seint", "triint", "trialt", "fullcis", "partialcis", "sdkern", "sekern", "dekern", "trikern")
+
+mns
+
 
 
 

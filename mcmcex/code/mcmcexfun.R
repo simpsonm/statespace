@@ -507,7 +507,7 @@ disterrorinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7,
       smoothtime <- ptmb[3]-ptma[3] + smoothtime
     }
     else{
-      psi <- psigamtrans(dat, theta, V, W)
+      psi <- psigamtrans(dat, gam, V, W)
     }
     Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
@@ -584,7 +584,7 @@ logcon <- function(b, avw, bvw, eps=.1){
 }
 ## compute M in logtarget - logprop <= M
 propM <- function(df, a, b, avw, bvw, mn, propvar){
-  M <- optimize(logpirej, c(0,10^10), maximum=TRUE, a, b, avw, bvw, mn, propvar, df)
+  M <- optimize(logpirej, c(-10^2,10^2), maximum=TRUE, a, b, avw, bvw, mn, propvar, df)
   return(M$objective)
 }
 
@@ -604,6 +604,18 @@ rtprop <- function(n, mn, var, df){
   return(out)
 }
 
+## log of the conditional posterior density of logW (logV) given V (W), gamma (psi), data
+logpilVW <- function(x, a, b, avw, bvw){
+  out <- -a*exp(x) + b*exp(x/2) - avw*x - bvw*exp(-x)
+  return(out)
+}
+
+## first derivative of log of the conditional posterior of logW (logV)
+logpilVWprime <- function(x, a, b, avw, bvw){
+  out <- -a*exp(x) + b*exp(x/2)/2 - avw + bvw*exp(-x)
+  return(out)
+}
+
 ## log of the conditional posterior density of W (V) given V (W), gamma (psi), data
 logpiVW <- function(VW, a, b, avw, bvw){
   out <- -a*VW + b*sqrt(VW) - (avw + 1)*log(VW) - bvw/VW
@@ -616,9 +628,9 @@ logpiVWprime <- function(VW, a, b, avw, bvw){
   return(out)
 }
 
-## difference between log conditional posterior of W (V) and the proposal density
+## difference between log conditional posterior of logW (logV) and the proposal density
 logpirej <- function(VW, a, b, avw, bvw, mn, propvar, df){
-  out <- logpiVW(VW, a, b, avw, bvw) - dtprop(VW, mn, propvar, df)
+  out <- logpilVW(VW, a, b, avw, bvw) - dtprop(VW, mn, propvar, df)
   return(out)
 }
 
@@ -679,6 +691,28 @@ VWthetaiter <- function(dat, theta, av, aw, bv, bw){
   return(c(V,W))
 }
 
+VWrejiter <- function(a, b, avw, bvw){
+  mn <- optimize(logpilVW, c(-10^2,10^2), maximum=TRUE, a=a, b=b, avw=avw, bvw=bvw)$maximum
+  propvar <- - 1 /( -a*exp(mn) + b*exp(mn/2)/4 - bw*exp(-mn) )
+  d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, avw=avw, bvw=bvw,
+                mn=mn, propvar=propvar)
+  M <- d$objective
+  df <- d$minimum
+  rej <- TRUE
+  rejit <- 1
+  while(rej){
+    prop <- rtprop(1, mn, propvar, df)
+    R <- logpirej(prop, a, b, avw, bvw, mn, propvar, df) - M
+    u <- runif(1,0,1)
+    if(log(u)<R){
+      W <- exp(prop)
+      rej <- FALSE
+    }
+    rejit <- rejit + 1
+  }
+  return(W)
+}
+
 ## samples W conditional on V,gamma
 Wgamiter <- function(dat, gam, V, aw, bw){
   T <- length(dat)
@@ -686,10 +720,10 @@ Wgamiter <- function(dat, gam, V, aw, bw){
   gam0 <- gam[1]
   a <- sum( cgam^2 )/2/V
   b <- sum( (dat - gam0) * cgam )/V
-  mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, avw=aw, bvw=bw)$maximum
   lcon <- logcon(b, aw, bw)
   adrej <- lcon
   if(lcon){
+    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, avw=aw, bvw=bw)$maximum
     try(W <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2),
                       lb=TRUE, xlb=0, a=a, b=b, avw=aw, bvw=bw))
     if(W==0){
@@ -697,35 +731,7 @@ Wgamiter <- function(dat, gam, V, aw, bw){
     }
   }
   if(!adrej){
-    propvar <- - 1 /( (aw + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*bw*mn^(-3) )
-    d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, avw=aw, bvw=bw,
-                  mn=mn, propvar=propvar)
-    M <- d$objective
-    df <- d$minimum
-    rej <- TRUE
-    rejit <- 1
-    while(rej){
-      prop <- rtprop(1, mn, propvar, df)
-      if(prop>0){
-        R <- logpirej(prop, a, b, aw, bw, mn, propvar, df) - M
-        u <- runif(1,0,1)
-        if(log(u)<R){
-          W <- prop
-          rej <- FALSE
-        }
-      }
-      rejit <- rejit + 1
-      if(rejit%%1000000==0){
-        print(paste("Rejection sampler appears to be stuck for W|V, ",
-                    rejit, " iterations", sep=""))
-        print(paste("Last value of V in the chain: ", V, sep=""))
-        print(paste("Values of a and b:", a, b, sep="  "))
-        print(paste("T = ", T, sep=""))
-        print(paste("Prior values of alphaV and betaV:", aw, bw, sep="  "))
-        print(paste("Attempted df: ", df, sep=""))
-        print(paste("Attempted mean and variance:", mn, propvar, sep="  "))
-      }
-    }
+    W <- VWrejiter(a, b, aw, bw)
   }
   return(c(W, lcon, adrej))
 }
@@ -751,10 +757,10 @@ Vpsiiter <- function(dat, psi, W, av, bv){
   Ly <- ys[-1] - ys[-(T+1)]
   a <- sum(Lpsi^2)/2/W
   b <- sum(Lpsi*Ly)/W
-  mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, avw=av, bvw=bv)$maximum
   lcon <- logcon(b, av, bv, eps=0)
   adrej <- lcon
   if(lcon){
+    mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, avw=av, bvw=bv)$maximum
     try(V <- ars(n=1, logpiVW, logpiVWprime, x=c(mn/2, mn, mn*2),
                  lb=TRUE, xlb=0, a=a, b=b, avw=av, bvw=bv))
     if(V==0){
@@ -762,35 +768,7 @@ Vpsiiter <- function(dat, psi, W, av, bv){
     }
   }
   if(!adrej){
-    propvar <- - 1 /( (av + 1)*mn^(-2) - b*mn^(-3/2)/4 - 2*bv*mn^(-3) )
-    d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, avw=av, bvw=bv,
-                  mn=mn, propvar=propvar)
-    M <- d$objective
-    df <- d$minimum
-    rej <- TRUE
-    rejit <- 1
-    while(rej){
-      prop <- rtprop(1, mn, propvar, df)
-      if(prop>0){
-        R <- logpirej(prop, a, b, av, bv, mn, propvar, df) - M
-        u <- runif(1,0,1)
-        if(log(u)<R){
-          V <- prop
-          rej <- FALSE
-        }
-      }
-      rejit <- rejit + 1
-      if(rejit%%1000000==0){
-        print(paste("Rejection sampler appears to be stuck for V|W, ",
-              rejit, " iterations.", sep=""))
-        print(paste("T = ", T, sep=""))
-        print(paste("Last value of W in the chain: ", W, sep=""))
-        print(paste("Values of a and b:", a, b, sep="  "))
-        print(paste("Prior values of alphaV and betaV:", av, bv, sep="  "))
-        print(paste("Attempted df: ", df, sep=""))
-        print(paste("Attempted mean and variance:", mn, propvar, sep="  "))
-      }
-    }
+    V <- VWrejiter(a, b, av, bv)
   }
   return(c(V, lcon, adrej))
 }
