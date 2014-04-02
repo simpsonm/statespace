@@ -24,9 +24,52 @@ system.time(samout <- fullsim(samplers, simdata, n, burn, FALSE))
 
 
 source("../code/mcmcexfun.R")
+T <- 100
+V <- 1000
+W <- 1
+simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
+simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=10^7)
+simdata$av <- 5
+simdata$aw <- 5
+simdata$bv <- (simdata$av-1)*simdata$V.T
+simdata$bw <- (simdata$aw-1)*simdata$W.T
+simdata$m0 <- 0
+simdata$C0 <- 10^7
+par <- simdata
+n <- 500
+dtime <- system.time(dist <- samwrap(par, n, "dist"))
+etime <- system.time(error <- samwrap(par, n, "error"))
+dcon <- apply(dist[,c(6:9)], 2, mean)
+econ <- apply(error[,c(2:5)], 2, mean)
+V <- 1
+W <- 1000
+simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
+simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=10^7)
+simdata$av <- 5
+simdata$aw <- 5
+simdata$bv <- (simdata$av-1)*simdata$V.T
+simdata$bw <- (simdata$aw-1)*simdata$W.T
+simdata$m0 <- 0
+simdata$C0 <- 10^7
+par <- simdata
+n <- 500
+dtime2 <- system.time(dist <- samwrap(par, n, "dist"))
+etime2 <- system.time(error <- samwrap(par, n, "error"))
+dcon2 <- apply(dist[,c(6:9)], 2, mean)
+econ2 <- apply(error[,c(2:5)], 2, mean)
+
+
+etime
+dtime
+etime2
+dtime2
+
+
+
+source("../code/mcmcexfun.R")
 T <- 10
 V <- 1
-W <- 10
+W <- 1
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=10^7)
 simdata$av <- 5
@@ -38,8 +81,6 @@ simdata$C0 <- 10^7
 par <- simdata
 n <- 500
 
-
-deint <- samwrap(par, n, "deint")
 
 
 state <- samwrap(par, n, "state")
@@ -59,6 +100,24 @@ sdkern <- samwrap(par, n, "sdkern")
 sekern <- samwrap(par, n, "sekern")
 dekern <- samwrap(par, n, "dekern")
 trikern <- samwrap(par, n, "trikern")
+
+apply(state, 2, mean, na.rm=TRUE)[1:9]
+apply(dist, 2, mean, na.rm=TRUE)[1:9]
+apply(error, 2, mean, na.rm=TRUE)[1:9]
+apply(sdalt, 2, mean, na.rm=TRUE)[1:9]
+apply(sdint, 2, mean, na.rm=TRUE)[1:9]
+apply(sealt, 2, mean, na.rm=TRUE)[1:9]
+apply(seint, 2, mean, na.rm=TRUE)[1:9]
+apply(dealt, 2, mean, na.rm=TRUE)[1:9]
+apply(deint, 2, mean, na.rm=TRUE)[1:9]
+apply(trialt, 2, mean, na.rm=TRUE)[1:9]
+apply(triint, 2, mean, na.rm=TRUE)[1:9]
+apply(fullcis, 2, mean, na.rm=TRUE)[1:9]
+apply(partialcis, 2, mean, na.rm=TRUE)[1:9]
+apply(sdkern, 2, mean, na.rm=TRUE)[1:9]
+apply(sekern, 2, mean, na.rm=TRUE)[1:9]
+apply(dekern, 2, mean, na.rm=TRUE)[1:9]
+apply(trikern, 2, mean, na.rm=TRUE)[1:9]
 
 par(mfrow=c(2,1))
 plot(1:n, cumsum(state$V)/1:n, ylab="V", type="l", ylim=c(.5*V, 1.5*V))
@@ -119,11 +178,3 @@ rownames(mns) <- c("state", "dist", "error", "dealt", "deint", "sdalt", "sdint",
 mns
 
 
-
-
-
-V <- 1
-W <- 1
-T <- 1000
-dat <- rnorm(T,0,sqrt(V)) + cumsum(rnorm(T,0,sqrt(W)))
-timetest <- fullcissam(n, c(V,W), dat, av=5, aw=5, bv=4*V, bw=4*W, m0=0, C0=10^7)
