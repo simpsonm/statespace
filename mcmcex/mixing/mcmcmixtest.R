@@ -76,6 +76,7 @@ dtime2
 
 
 source("../code/mcmcexfun.R")
+set.seed(152893627)
 T <- 10
 V <- 1
 W <- 1
@@ -90,7 +91,7 @@ simdata$C0 <- 10^7
 par <- simdata
 n <- 10000
 
-
+fullcis <- samwrap(par, n, "fullcis")
 
 state <- samwrap(par, n, "state")
 dist <- samwrap(par, n, "dist")

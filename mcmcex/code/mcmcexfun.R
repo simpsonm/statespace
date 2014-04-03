@@ -736,18 +736,19 @@ Wgamiter <- function(dat, gam, V, aw, bw){
       adrej <- FALSE
     }
   }
+  ## if(!adrej){
+  ##   mn <- optimize(logpilVW, c(-100,100), maximum=TRUE, a=a, b=b, avw=aw, bvw=bw)$maximum
+  ##   try(lW <- ars(n=1, logpilVW, logpilVWprime, ns=200, x=c(-2*abs(mn), 0, abs(mn)*2),
+  ##                a=a, b=b, avw=aw, bvw=bw))
+  ##   if(lW==0){
+  ##     adrejls <- FALSE
+  ##   }
+  ##   else{
+  ##     W <- exp(lW)
+  ##   }
+  ## }
+  ## if(!adrejls){
   if(!adrej){
-    mn <- optimize(logpilVW, c(-100,100), maximum=TRUE, a=a, b=b, avw=aw, bvw=bw)$maximum
-    try(lW <- ars(n=1, logpilVW, logpilVWprime, ns=200, x=c(-2*abs(mn), 0, abs(mn)*2),
-                 a=a, b=b, avw=aw, bvw=bw))
-    if(lW==0){
-      adrejls <- FALSE
-    }
-    else{
-      W <- exp(lW)
-    }
-  }
-  if(!adrejls){
     W <- VWrejiter(a, b, aw, bw)
   }
   return(c(W, lcon, adrej, lconls, adrejls))
@@ -786,19 +787,19 @@ Vpsiiter <- function(dat, psi, W, av, bv){
       adrej <- FALSE
     }
   }
+  ## if(!adrej){
+  ##   mn <- optimize(logpilVW, c(-100,100), maximum=TRUE, a=a, b=b, avw=av, bvw=bv)$maximum
+  ##   try(lV <- ars(n=1, logpilVW, logpilVWprime, ns=200, x=c(-2*abs(mn), 0, abs(mn)*2),
+  ##                a=a, b=b, avw=av, bvw=bv))
+  ##   if(lV==0){
+  ##     adrejls <- FALSE
+  ##   }
+  ##   else{
+  ##     V <- exp(lV)
+  ##   }
+  ## }
+  ## if(!adrejls){
   if(!adrej){
-    mn <- optimize(logpilVW, c(-100,100), maximum=TRUE, a=a, b=b, avw=av, bvw=bv)$maximum
-    try(lV <- ars(n=1, logpilVW, logpilVWprime, ns=200, x=c(-2*abs(mn), 0, abs(mn)*2),
-                 a=a, b=b, avw=av, bvw=bv))
-    if(lV==0){
-      adrejls <- FALSE
-    }
-    else{
-      V <- exp(lV)
-    }
-  }
-
-  if(!adrejls){
     V <- VWrejiter(a, b, av, bv)
   }
   return(c(V, lcon, adrej, lconls, adrejls))
