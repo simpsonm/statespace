@@ -133,18 +133,12 @@ samsummary <- function(sam, dat, burn, sampler){
   adrejV <- mean(sam$adrejV, na.rm=TRUE)
   logconW <- mean(sam$logconW, na.rm=TRUE)
   adrejW <- mean(sam$adrejW, na.rm=TRUE)
-  logconVls <- mean(sam$logconVls, na.rm=TRUE)
-  adrejVls <- mean(sam$adrejVls, na.rm=TRUE)
-  logconWls <- mean(sam$logconWls, na.rm=TRUE)
-  adrejWls <- mean(sam$adrejWls, na.rm=TRUE)
   statkern <- mean(sam$kernel=="state", na.rm=TRUE)
   distkern <- mean(sam$kernel=="dist", na.rm=TRUE)
   errorkern <- 1 - (statkern + distkern)
   init <- data.frame(time=time, stime=stime,
                      logconV=logconV,     adrejV=adrejV,
-                     logconVls=logconVls, adrejVls=adrejVls,
                      logconW=logconW,     adrejW=adrejW,
-                     logconWls=logconWls, adrejWls=adrejWls,
                      statkern=statkern, distkern=distkern,
                      errorkern=errorkern)
   gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
@@ -338,9 +332,9 @@ llsim <- function(T, V, W, m0, C0){
 }
 
 samoutsetup <- function(n, T){
-  out <- data.frame(matrix(0, nrow=n, ncol=T+13))
-  colnames(out) <- c("logconV", "adrejV", "logconVls", "adrejVls",
-                     "logconW", "adrejW", "logconWls", "adrejWls",
+  out <- data.frame(matrix(0, nrow=n, ncol=T+9))
+  colnames(out) <- c("logconV", "adrejV", 
+                     "logconW", "adrejW", 
                      "kernel", "stime", "V", "W",
                      paste("theta",0:T,sep=""))
   return(out)
@@ -360,7 +354,7 @@ statesam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
     VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
     V <- VWiter[1]
     W <- VWiter[2]
-    out[i,] <- c(NA,NA,NA,NA,NA,NA,NA,NA,NA,smoothtime,V,W,theta)
+    out[i,] <- c(NA,NA,NA,NA,NA,smoothtime,V,W,theta)
   }
   return(out)
 }
@@ -379,10 +373,10 @@ errorsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
     smoothtime <- ptmb[3]-ptma[3]
     Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
-    rejsV <- Vout[2:5]
+    rejsV <- Vout[2:3]
     W <- Wpsiiter(dat, psi, V,  aw, bw)
     theta <- thetapsitrans(dat, psi, V)
-    out[i,] <- c(rejsV,NA,NA,NA,NA,NA, smoothtime, V, W, theta)
+    out[i,] <- c(rejsV,NA,NA,NA, smoothtime, V, W, theta)
   }
   return(out)
 }
@@ -404,9 +398,9 @@ distsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
     V <- Vgamiter(dat, gam, W, av, bv)
     Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
-    rejsW <- Wout[2:5]
+    rejsW <- Wout[2:3]
     theta <- thetagamtrans(gam, W)
-    out[i,] <- c(NA,NA,NA,NA,rejsW, NA, smoothtime, V, W, theta)
+    out[i,] <- c(NA,NA,rejsW, NA, smoothtime, V, W, theta)
   }
   return(out)
 }
@@ -440,9 +434,9 @@ statedistinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7,
     V <- Vgamiter(dat, gam, W, av, bv)
     Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
-    rejsW <- Wout[2:5]
+    rejsW <- Wout[2:3]
     theta <- thetagamtrans(gam, W)
-    out[i,] <- c(NA,NA,NA,NA,rejsW, NA, smoothtime, V, W, theta)
+    out[i,] <- c(NA,NA,rejsW, NA, smoothtime, V, W, theta)
   }
   return(out)
 }
@@ -454,7 +448,7 @@ stateerrorinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7
   W <- start[2]
   out <- samoutsetup(n, T)
   for(i in 1:n){
-    ## state sampler
+    ## state sampnler
     ptma <- proc.time()
     theta <- awolthsmooth(dat, V, W, m0, C0)
     ptmb <- proc.time()
@@ -474,10 +468,10 @@ stateerrorinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7
     }
     Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
-    rejsV <- Vout[2:5]
+    rejsV <- Vout[2:3]
     W <- Wpsiiter(dat, psi, V,  aw, bw)
     theta <- thetapsitrans(dat, psi, V)
-    out[i,] <- c(rejsV,NA,NA,NA,NA,NA, smoothtime, V, W, theta)
+    out[i,] <- c(rejsV,NA,NA,NA, smoothtime, V, W, theta)
   }
   return(out)
 }
@@ -498,7 +492,7 @@ disterrorinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7,
     V <- Vgamiter(dat, gam, W, av, bv)
     Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
-    rejsW <- Wout[2:5]
+    rejsW <- Wout[2:3]
     ## scaled error sampler
     if(!inter){
       ptma <- proc.time()
@@ -511,7 +505,7 @@ disterrorinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7,
     }
     Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
-    rejsV <- Vout[2:5]
+    rejsV <- Vout[2:3]
     W <- Wpsiiter(dat, psi, V,  aw, bw)
     theta <- thetapsitrans(dat, psi, V)
     out[i,] <- c(rejsV,rejsW, NA, smoothtime, V, W, theta)
@@ -548,7 +542,7 @@ tripleinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7, in
     V <- Vgamiter(dat, gam, W, av, bv)
     Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
-    rejsW <- Wout[2:5]
+    rejsW <- Wout[2:3]
     ## scaled error sampler
     if(!inter[2]){
       ptma <- proc.time()
@@ -561,7 +555,7 @@ tripleinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7, in
     }
     Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
-    rejsV <- Vout[2:5]
+    rejsV <- Vout[2:3]
     W <- Wpsiiter(dat, psi, V,  aw, bw)
     theta <- thetapsitrans(dat, psi, V)
     out[i,] <- c(rejsV,rejsW, NA, smoothtime, V, W, theta)
@@ -571,12 +565,10 @@ tripleinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7, in
 
 ## returns TRUE if target density of log-concave, FALSE otherwise
 logcon <- function(b, avw, bvw, eps=.1){
-  sb <- 1*(b>0) - 1*(b<0)  ##sign(b)
-  RHS <- (avw + 1)^3*(1 - 2/3*sb)*32/9/bvw + eps
+  RHS <- sqrt((avw + 1)^3/bvw)*4/3*sqrt(2/3) + eps
   ## + eps to make sure ARS algorithm doesn't fail on
   ## near non-log-concave cases
-  LHS <- b^2
-  out <- (LHS > RHS)
+  out <- (b > RHS)
   return(out)
 }
 
@@ -611,6 +603,8 @@ rtprop <- function(n, mn, var, df){
 ## log of the conditional posterior density of logW (logV) given V (W), gamma (psi), data
 logpilVW <- function(x, a, b, avw, bvw){
   out <- -a*exp(x) + b*exp(x/2) - avw*x - bvw*exp(-x)
+  if(exp(x) == Inf)
+      out <- -Inf
   return(out)
 }
 
@@ -637,7 +631,6 @@ logpirej <- function(VW, a, b, avw, bvw, mn, propvar, df){
   out <- logpilVW(VW, a, b, avw, bvw) - dtprop(VW, mn, propvar, df)
   return(out)
 }
-
 
 ## transforms theta to gamma
 gamtrans <- function(theta, W){
@@ -698,15 +691,12 @@ VWthetaiter <- function(dat, theta, av, aw, bv, bw){
 VWrejiter <- function(a, b, avw, bvw){
   mn <- optimize(logpilVW, c(-10^2,10^2), maximum=TRUE, a=a, b=b, avw=avw, bvw=bvw)$maximum
   propvar <- - 1 /( -a*exp(mn) + b*exp(mn/2)/4 - bvw*exp(-mn) )
-  d <- optimize(propM, c(1,10^10), maximum=FALSE,  a=a, b=b, avw=avw, bvw=bvw,
-                mn=mn, propvar=propvar)
-  M <- d$objective
-  df <- d$minimum
+  df <- 1
   rej <- TRUE
   rejit <- 1
   while(rej){
     prop <- rtprop(1, mn, propvar, df)
-    R <- logpirej(prop, a, b, avw, bvw, mn, propvar, df) - M
+    R <- logpirej(prop, a, b, avw, bvw, mn, propvar, df)
     u <- runif(1,0,1)
     if(log(u)<R){
       W <- exp(prop)
@@ -725,9 +715,7 @@ Wgamiter <- function(dat, gam, V, aw, bw){
   a <- sum( cgam^2 )/2/V
   b <- sum( (dat - gam0) * cgam )/V
   lcon <- logcon(b, aw, bw)
-  lconls <- logconls(a, b, aw, bw)
   adrej <- lcon
-  adrejls <- lconls
   if(lcon){
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, avw=aw, bvw=bw)$maximum
     try(W <- ars(n=1, logpiVW, logpiVWprime, ns=200, x=c(mn/2, mn, mn*2),
@@ -736,22 +724,10 @@ Wgamiter <- function(dat, gam, V, aw, bw){
       adrej <- FALSE
     }
   }
-  ## if(!adrej){
-  ##   mn <- optimize(logpilVW, c(-100,100), maximum=TRUE, a=a, b=b, avw=aw, bvw=bw)$maximum
-  ##   try(lW <- ars(n=1, logpilVW, logpilVWprime, ns=200, x=c(-2*abs(mn), 0, abs(mn)*2),
-  ##                a=a, b=b, avw=aw, bvw=bw))
-  ##   if(lW==0){
-  ##     adrejls <- FALSE
-  ##   }
-  ##   else{
-  ##     W <- exp(lW)
-  ##   }
-  ## }
-  ## if(!adrejls){
   if(!adrej){
     W <- VWrejiter(a, b, aw, bw)
   }
-  return(c(W, lcon, adrej, lconls, adrejls))
+  return(c(W, lcon, adrej))
   }
 
 ## samples V conditional on W,gamma
@@ -776,9 +752,7 @@ Vpsiiter <- function(dat, psi, W, av, bv){
   a <- sum(Lpsi^2)/2/W
   b <- sum(Lpsi*Ly)/W
   lcon <- logcon(b, av, bv)
-  lconls <- logconls(a, b, av, bv)
   adrej <- lcon
-  adrejls <- lconls
   if(lcon){
     mn <- optimize(logpiVW, c(0,10^10), maximum=TRUE, a=a, b=b, avw=av, bvw=bv)$maximum
     try(V <- ars(n=1, logpiVW, logpiVWprime, ns=200, x=c(mn/2, mn, mn*2),
@@ -787,22 +761,10 @@ Vpsiiter <- function(dat, psi, W, av, bv){
       adrej <- FALSE
     }
   }
-  ## if(!adrej){
-  ##   mn <- optimize(logpilVW, c(-100,100), maximum=TRUE, a=a, b=b, avw=av, bvw=bv)$maximum
-  ##   try(lV <- ars(n=1, logpilVW, logpilVWprime, ns=200, x=c(-2*abs(mn), 0, abs(mn)*2),
-  ##                a=a, b=b, avw=av, bvw=bv))
-  ##   if(lV==0){
-  ##     adrejls <- FALSE
-  ##   }
-  ##   else{
-  ##     V <- exp(lV)
-  ##   }
-  ## }
-  ## if(!adrejls){
   if(!adrej){
     V <- VWrejiter(a, b, av, bv)
   }
-  return(c(V, lcon, adrej, lconls, adrejls))
+  return(c(V, lcon, adrej))
 }
 
 
@@ -828,8 +790,8 @@ randkerniter <- function(dat, V, W, theta, av, aw, bv, bw, m0=0, C0=10^7, probs=
     VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
     V <- VWiter[1]
     W <- VWiter[2]
-    rejsW <- c(NA,NA,NA,NA)
-    rejsV <- c(NA,NA,NA,NA)
+    rejsW <- c(NA,NA)
+    rejsV <- c(NA,NA)
   }
   if(kernel=="error"){
     ptma <- proc.time()
@@ -838,9 +800,9 @@ randkerniter <- function(dat, V, W, theta, av, aw, bv, bw, m0=0, C0=10^7, probs=
     smoothtime <- ptmb[3]-ptma[3]
     Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
-    rejsV <- Vout[2:5]
+    rejsV <- Vout[2:3]
     W <- Wpsiiter(dat, psi, V,  aw, bw)
-    rejsW <- c(NA,NA,NA,NA)
+    rejsW <- c(NA,NA)
     theta <- thetapsitrans(dat, psi, V)
   }
   if(kernel=="dist"){
@@ -852,8 +814,8 @@ randkerniter <- function(dat, V, W, theta, av, aw, bv, bw, m0=0, C0=10^7, probs=
     V <- Vgamiter(dat, gam, W, av, bv)
     Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
-    rejsW <- Wout[2:5]
-    rejsV <- c(NA,NA,NA,NA)
+    rejsW <- Wout[2:3]
+    rejsV <- c(NA,NA)
     theta <- thetagamtrans(gam, W)
   }
   out <- list(theta=theta, V=V, W=W, rejsV=rejsV, rejsW=rejsW, kernel=kernel, smoothtime=smoothtime)
@@ -874,8 +836,8 @@ randkernsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7, pr
     rejsV <- iter$rejsV
     rejsW <- iter$rejsW
     smoothtime <- iter$smoothtime
-    out[i,-9] <- c(rejsV, rejsW, smoothtime, V, W, theta)
-    out[i,9] <- kernel
+    out[i,-5] <- c(rejsV, rejsW, smoothtime, V, W, theta)
+    out[i,5] <- kernel
   }
   return(out)
 }
@@ -897,7 +859,7 @@ partialcissam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
     Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
     theta <- thetagamtrans(gam, W)
-    out[i,] <- c(rep(NA,4), Wout[2:5], NA, smoothtime, V, W, theta)
+    out[i,] <- c(rep(NA,2), Wout[2:3], NA, smoothtime, V, W, theta)
   }
   return(out)
 }
@@ -923,7 +885,7 @@ fullcissam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
     Wout <- Wgamiter(dat, gam, V, aw, bw)
     W <- Wout[1]
     theta <- thetagamtrans(gam, W)
-    out[i,] <- c(Vout[2:5], Wout[2:5], NA, smoothtime, V, W, theta)
+    out[i,] <- c(Vout[2:3], Wout[2:3], NA, smoothtime, V, W, theta)
   }
   return(out)
 }

@@ -1,8 +1,8 @@
 source("../code/mcmcexfun.R")
 set.seed(152893627)
 T <- c(10)
-V <- c(1)
-W <- V
+V <- c(1/10)
+W <- 1/V
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
 simdata$av <- 5
@@ -74,12 +74,33 @@ etime2
 dtime2
 
 
+disttime <- system.time(dist <- samwrap(par, n, "dist"))
+errortime <- system.time(error <- samwrap(par, n, "error"))
+deinttime <- system.time(deint <- samwrap(par, n, "deint"))
+fullcistime <- system.time(fullcis <- samwrap(par, n, "fullcis"))
+
+disttime2 <- system.time(dist <- samwrap(par, n, "dist"))
+errortime2 <- system.time(error <- samwrap(par, n, "error"))
+deinttime2 <- system.time(deint <- samwrap(par, n, "deint"))
+fullcistime2 <- system.time(fullcis <- samwrap(par, n, "fullcis"))
+
+disttime3 <- system.time(dist <- samwrap(par, n, "dist"))
+errortime3 <- system.time(error <- samwrap(par, n, "error"))
+deinttime3 <- system.time(deint <- samwrap(par, n, "deint"))
+fullcistime3 <- system.time(fullcis <- samwrap(par, n, "fullcis"))
+
+times1 <- c(disttime[3], errortime[3], deinttime[3], fullcistime[3])
+times2 <- c(disttime2[3], errortime2[3], deinttime2[3], fullcistime2[3])
+times3 <- c(disttime3[3], errortime3[3], deinttime3[3], fullcistime3[3])
+
+normaltimes <- cbind(times1, times2, times3)
+newtimes <- cbind(times1, times2, times3)
 
 source("../code/mcmcexfun.R")
 set.seed(152893627)
-T <- 10
+T <- 1000
 V <- 1
-W <- 1
+W <- 1000
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=10^7)
 simdata$av <- 5
@@ -89,7 +110,7 @@ simdata$bw <- (simdata$aw-1)*simdata$W.T
 simdata$m0 <- 0
 simdata$C0 <- 10^7
 par <- simdata
-n <- 10000
+n <- 100
 
 fullcis <- samwrap(par, n, "fullcis")
 
