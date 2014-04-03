@@ -17,10 +17,19 @@ sams <- c("state", "dist", "error", "sdint", "seint", "deint",
           "fullcis", "partialcis")
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
-n <- 500
+n <- 2000
 burn <- 100
 
 system.time(samout <- fullsim(samplers, simdata, n, burn, FALSE))
+
+
+[1] "fullcis T=10 V=1 W=1"
+
+Process R aborted (core dumped) at Wed Apr  2 18:08:42 2014
+Trap in ARS: infinite while in update_ of ars.cpp near l. 810
+
+terminate called after throwing an instance of 'returnR'
+
 
 
 source("../code/mcmcexfun.R")
@@ -79,7 +88,7 @@ simdata$bw <- (simdata$aw-1)*simdata$W.T
 simdata$m0 <- 0
 simdata$C0 <- 10^7
 par <- simdata
-n <- 500
+n <- 10000
 
 
 
