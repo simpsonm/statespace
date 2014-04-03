@@ -1,0 +1,74 @@
+<<set-parent-LLMest, echo=FALSE, cache=FALSE>>=
+set_parent('../mcmcex.Rnw')
+@
+
+
+\section{Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$}
+Both of these two densities are of the form
+\begin{align*}
+\log p(x) = lp(x) & -ax + b\sqrt{x} - (\alpha + 1)\log x -\beta/x + C 
+\end{align*}
+for $x>0$ where $C$ is some constant, $\alpha$ and $\beta$ are the hyperparameters for $x$, and $a>0$ \& $b\in \Re$ are parameters that depend on the data, $y$, the relevant data augmentation ($\psi$ or $\gamma$), and the other variable ($W$ or $V$). This density is not a known form and is difficult to sample from. We provide three different rejection sampling strategies below that work well under different circumstances, and combine them into a single strategy.
+
+\subsection{Adaptive rejection sampling}
+One nice strategy is to use adaptive rejection sampling, e.g. \citet{gilks1992adaptive}. This requires $lp(x)$ to be concave, which is easy enough to check. The second derivative of $lp(x)$ is:
+\begin{align*}
+\frac{\partial^2 lp(x)}{\partial x^2} &= -\frac{1}{4}bx^{-3/2} +(\alpha + 1)x^{-2} -2 \beta x^{-3}.
+\end{align*}
+Then we have
+\begin{align*}
+  &\frac{\partial^2 lp(x)}{\partial x^2} < 0 \iff \\
+  &-\frac{b}{4}x^{3/2} + (\alpha + 1)x - 2\beta < 0
+\end{align*}
+which would imply that $lp(x)$ is concave. We can maximize the left hand side of the last equation very easily. When $b\leq 0$ the max occurs at $x=\infty$ such that $LHS > 0$, but when $b > 0$:
+\begin{align*}
+  \frac{\partial LHS}{\partial x} &= -\frac{3}{8}bx^{1/2} + \alpha + 1 = 0\\
+  \implies & x^{max} = \frac{(\alpha + 1)^2}{b^2}\frac{64}{9}.
+\end{align*}
+Then we have
+\begin{align*}
+  LHS \leq LHS|_{x=x^{max}} = \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} - 2\beta
+\end{align*}
+so that
+\begin{align*}
+  LHS|_{x=x^{max}} < 0 &\iff  \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} < 2\beta\\
+    &\iff b > \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}.
+\end{align*}
+This last condition is necessary and sufficient for $lp(x)$ to be globally (for $x>0$) concave since $b < 0$ forces $LHS > 0$ for some $x$. When the condtion is satisfied, we can use adaptive rejection sampling --- which is already implemented in the \verb0R0 package \verb0ars0. We input the initial evalutions of $lp(x)$ at the mode $x^{mode}$ and at $2x^{mode}$ and $0.5x^{mode}$ in order to get the algorithm going.
+
+\subsection{Rejection sampling on the log scale}
+When $b \leq \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}$, which happens often --- especially for small $T$ --- we need to rely on a different method to sample from $p(x)$. A naive approach would be to construct a normal or $t$ approximation to $p(x)$ and use that as a proposal in a rejection sampler. It turns out that this is often very inefficient, but for $y=log(x)$ the approach works well. Note that
+\begin{align*}
+  p_y(y) = p_x(e^y)e^y
+\end{align*}
+so that we can write the log density of $y$ as (dropping the subscripts):
+\begin{align*}
+  lp(y) = -ae^y + be^{y/2} - \alpha y - \beta e^{-y}.
+\end{align*}
+The mode of this density $y^{mode}$ can be easily found numerically, and the second derivative is:
+\begin{align*}
+  \frac{\partial^2 lp(y)}{\partial y^2} = -ae^y + \frac{b}{4}e^{y/2} - \beta e^{-y}.
+\end{align*}
+The $t$ approximation then uses the proposal distribution $t_{df}\left(y^{mode}, \left[\left.\frac{\partial^2 lp(y)}{\partial y^2}\right|_{y=y^{mode}}\right]^{-1}\right)$. In practice choosing $df=1$ works very well over the region of the parameter space where adaptive rejection sampling cannot be used. We can easily use this method when adaptive rejection sampling does not work, then transform $y$ back to $x$.
+
+\subsection{{\it Adaptive} rejection sampling on the log scale}
+We can also try adaptive rejection sampling on for $y=log(x)$. First we need to check the concavity of $lp(y)$. Using the second derivative of $lp(y)$ from above
+\begin{align*}
+  \frac{\partial^2 lp(y)}{\partial y^2} < 0 \iff & -ae^{2y} + \frac{b}{4}e^{3y/2} - \beta  < 0.
+\end{align*}
+So for $b \leq 0$ we have concavity of $lp(y)$ and can us adaptive rejection sampling. When $b > 0$, we can maximize the left hand size as before:
+\begin{align*}
+  \frac{\partial LHS}{\partial y} =& -2a e^{2y} + \frac{3}{8}b e^{3y/2} = 0\\
+  \implies & y^{max} = 2\log\left(\frac{3b}{16a}\right)
+\end{align*}
+so that
+\begin{align*}
+  LHS < LHS|_{y=y^{max}} &= -a\left(\frac{3b}{16a}\right)^{4} + \frac{b}{4}\left(\frac{3b}{16a}\right)^{3} - \beta < 0\\
+  \iff & \frac{1}{16}b\left(\frac{3b}{16a}\right)^{3} < \beta\\
+  \iff & b \leq 16\left(\frac{\beta a^3}{3^3}\right)^{1/4}.
+\end{align*}
+This last condition is necessary and sufficient for $lp(y)$ to be concave so that we can use adaptive rejection sampling for $y$ then transform back to $x$. This is convenient because $lp_x(x)$ and $lp_y(y)$ are concave in roughly opposite situations --- for $b$ large and $b$ small respectively.
+
+\subsection{Intelligently choosing a rejection sampler}
+In practice, adaptive rejection sampling is relatively efficient for $p_x(x)$ but inefficient for $p_y(y)$ --- so much so that rejection sampling with the $t$ approximation for $p_y(y)$ is more efficient. To minimize computation time, it is best to use adaptive rejection sampling for $p_x(x)$ when the concavity condition is satisfied. When it is not, the $t$ approximation works well.
+
