@@ -68,8 +68,8 @@ newcors <- function(samcor){
   out$Wbw <- Wbw
   out$Wagam <- Wagam
   out$Wbgam <- Wbgam
-  out$Vapsi <- Vagam
-  out$Vbpsi <- Vbgam
+  out$Vapsi <- Vapsi
+  out$Vbpsi <- Vbpsi
   return(out)
 }
 
