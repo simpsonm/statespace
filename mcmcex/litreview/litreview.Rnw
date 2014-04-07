@@ -143,7 +143,7 @@ The survey the literature which says that usually random updating schemes are be
 
 Didn't read sections 2 and 3 closely - only seems to talk about blocking and such.
 
-\subsection{Optimatl parameterizations for Gaussian linear models}
+\subsection{Optimal parameterizations for Gaussian linear models}
 Theoretical result on when the CP and NCP are better for basic model: $y_i = \mu + \alpha_i + \epsilon_i$ where $y_i$ and $\epsilon_i$ ahve been reduced by sufficiency - basically CP is better when variance of $\epsilon$ is lower than that of $\alpha$ and otherwise NCP better (CP better when STN ratio high).
 If we add another level to the model, $\beta_{ij}$, it's more complicated and it's no longer obvious that the deterministic updating scheme is better either (depends on the parameterization!).
 
@@ -169,7 +169,39 @@ i.e. the expected and observed information matrices, where $\theta^*$ is a (loca
 
 They allow the $aug$ quantities to depend on some parameter $a$ and look for the $a$ which maximizes $s$. This looks like the genesis of ``parameter expanded data augmention'' and they talk about the similarities to stochastic algorithms and other issues. Didn't read the rest of the details too closely, but they mention a paper by Orchard which talks about the ``missing information principle.''
 
+\section{Fast EM-type implementations for mixed effects models, \citet{meng1998fast}}
+Consider a mixed effects model. The EM algorithm, treating random effects as missing data, is a popular method to fit these models (to obtain MLEs).  However, it has slow convergence especially when the variances of the random effects are relatively small. There are lots of alternatives to the EM algorithm (e.g. Newton-Raphson) but they require lots of human effort.
 
+To set up, the EM algorithm requires defining a data augmentation $Y_{aug}$ such that $Y_{obs}=M(Y_{aug})$. for $M$ some many-to-one mapping. The theoretical speed of convergence of the algorithm is then determined by the smallest eigenvalue of the ``fraction of observed information'' (\citet{demptster1977maximum}) $I_{obs}I_{aug}^{-1}$ where $I_{aug}$ is the expected Fisher information and $I_{obs}$ is the observed Fisher information matrix (see \citet{meng1997algorithm}).
+
+This paper's schtick is to consider parameter expanded data augmentation, again. Define $Y_{aug}(a)$ and minimize $I_{aug}(a)$ in $a$. 
+
+\subsection{Standard and alternative implementations}
+Consider the mixed effects model
+\begin{align*}
+  y_i = X_i'\beta + Z_i'b_i + e_i
+\end{align*}
+with $b_i\stackrel{iid}{\sim} N_q(0,T)$ independent of $e_i\stackrel{iid}{\sim} N(0,\sigma^2 R_i)$ where $R_i$'s are known, the $Z_i$'s are known and are such that $T$ is identifiable, and the $X_i$'s are known. The standard EM implementation is to treat the $b_i$ as missing data.
+
+An alternative implementation scales the $b_i$'s by $T^{-a/2}$ where $a$ is the working parameter. $a=1$ is natural for some versions of this model, but for others the form of $T$ may make it too complicated to be easy and efficient. Of course the solution is a cholesky decomposition - helps make it numerically stable. Specifically, let $T=\Delta U \Delta'$, then $c_i=\Delta^{-1}b_i$ so that $c_i\sim N(0,U)$. Now we can rescale each $c_i$ by a power of it's own standard deviation, $u_i^{a_i}$. {\it \bf Note that the ordering of the random effects changes the definition of $c_i$, so there are $q!$ possible data augmentations}. (This applies for us as well!!! - at least when $F$ or $G$ are matrices). There are plenty of variations of this that depend on whatever structure is on $T$.
+
+\subsection{Simulation Studies}
+Define
+\[
+D^* = \frac{\sum_{i=1}^m\tr(Z_i'T^*Z_i)/m}{\sigma^{2*} + \sum_{i=1}^m\tr(Z_i'T^*Z_i)/m}
+\]
+When $D^*$ is close to 0, the standard algorithm is very slow. When $D^*$ isn't very small or very large, the alternative algorithm does well. When $D^*$ is very large, the standard algorithm is way better than the alternative. The cutoff is $D^*=2/3$ - smaller than that, alternative is better. Larger than that, the standard is better. Very close to 0, the alternative is way better. This is true over a couple of different models. For some models value of $D^*$ cutoff changes, and the difference may be small. They also set up an adaptive algorithm that picks what seems to be the best.
+
+\subsection{Theory}
+The best $a$ is
+\[
+a_0 = \frac{2(1-\tilde{D}^*)}{2 - \tilde{D}^*}
+\]
+where
+\[
+\tilde{D}^* = \frac{\sum_{i=1}^m\tr(Z_i'T_i^*Z_i)/m}{\sigma^{2*} + \sum_{i=1}^m\tr(Z_i'T_i^*Z_i)/m}
+\]
+Note: the tilde $D^*$ depends on $T_i$ and not $T$. When $Z_i$ doesn't depend on $i$, then $\tilde{D}^*=D^*$. (Note $T_i^* = E[b_i^2|Y_{obs}, \theta^*]$, $\theta = (\beta, \sigma^2, T)$, i.e. it depends on what we observed: $Z_i$, it's the posterior squared expectation). THis makes the M step really complicated though, s limiting the $a$'s to be either 0 or 1. In that case, $a=0$ is the minimizer if $\tilde{D}^* \geq 2/3$, while otherwise $a=1$ is. Ultimately they suggest using $a=(1,1,...,1)$ in at least a burn in period. They also note that ist suggests Gibbs methods.
 
 \section{Other Papers can't find a copy}
 These are in the back of the state space book:
