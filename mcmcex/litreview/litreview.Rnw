@@ -55,7 +55,7 @@ Now suppose $\phi\neq0$. Same $\tilde{\beta}_t$. Implied model:
   \tilde{\beta}_t = \phi\tilde{\beta}_{t-1} + w_t && w_t\sim N(0,\sigma_w^2)\\
   y_t = Z_t\mu + Z_t\tilde{\beta}_t + \epsilon_t && \epsilon_t\sim N(0,\sigma_\epsilon^2)
 \end{align*}
-\citet{Pitt1999analytic} prove that for $Z_t=1$ with known variances: $\phi\to 1 \implies$ the convergence rate of the centered parameterisation goes to 0, whereas the convergence rate of the noncentered paramerization goes to 1. So for the limiting random walk model, the noncentered parameterization does not converge geometrically regardless of the STN. But when $\phi < 1$ the variances matter, CP better than NCP when $\sigma_w^2/(1-\phi)^2 > \sigma_\epsilon^2$. (NOTE: only centered in location, NOT scale)
+\citet{pitt1999analytic} prove that for $Z_t=1$ with known variances: $\phi\to 1 \implies$ the convergence rate of the centered parameterisation goes to 0, whereas the convergence rate of the noncentered paramerization goes to 1. So for the limiting random walk model, the noncentered parameterization does not converge geometrically regardless of the STN. But when $\phi < 1$ the variances matter, CP better than NCP when $\sigma_w^2/(1-\phi)^2 > \sigma_\epsilon^2$. (NOTE: only centered in location, NOT scale)
 
 Also a section on partial noncentering (not as relevant): 
 \begin{align*}
@@ -156,7 +156,7 @@ It's known that the rate of convergence is determined by the fraction of missing
 
 Some details on working with a multivariate t model - treat it as a chi-square mixture of normals, and treat the chi-square rv is the missing data. (One chi-sq for each data point)
 
-From Demptster et al 1977 we know that the matrix rate of the EM algorithm is (assuming limit is an interior point)
+From Dempster et al 1977 we know that the matrix rate of the EM algorithm is (assuming limit is an interior point)
 \[
 DM = I - I_{obs}I^{-1}_{aug}
 \]
@@ -172,7 +172,7 @@ They allow the $aug$ quantities to depend on some parameter $a$ and look for the
 \section{Fast EM-type implementations for mixed effects models, \citet{meng1998fast}}
 Consider a mixed effects model. The EM algorithm, treating random effects as missing data, is a popular method to fit these models (to obtain MLEs).  However, it has slow convergence especially when the variances of the random effects are relatively small. There are lots of alternatives to the EM algorithm (e.g. Newton-Raphson) but they require lots of human effort.
 
-To set up, the EM algorithm requires defining a data augmentation $Y_{aug}$ such that $Y_{obs}=M(Y_{aug})$. for $M$ some many-to-one mapping. The theoretical speed of convergence of the algorithm is then determined by the smallest eigenvalue of the ``fraction of observed information'' (\citet{demptster1977maximum}) $I_{obs}I_{aug}^{-1}$ where $I_{aug}$ is the expected Fisher information and $I_{obs}$ is the observed Fisher information matrix (see \citet{meng1997algorithm}).
+To set up, the EM algorithm requires defining a data augmentation $Y_{aug}$ such that $Y_{obs}=M(Y_{aug})$. for $M$ some many-to-one mapping. The theoretical speed of convergence of the algorithm is then determined by the smallest eigenvalue of the ``fraction of observed information'' (\citet{dempster1977maximum}) $I_{obs}I_{aug}^{-1}$ where $I_{aug}$ is the expected Fisher information and $I_{obs}$ is the observed Fisher information matrix (see \citet{meng1997algorithm}).
 
 This paper's schtick is to consider parameter expanded data augmentation, again. Define $Y_{aug}(a)$ and minimize $I_{aug}(a)$ in $a$. 
 
@@ -267,11 +267,11 @@ Minimize one of these two in $\alpha$ is the basic strategy here, where $\mathca
 \end{align*}
 and $\rho(A)$ is the spectral radius of $A$. (i.e. maximum absolute value of eigenvalues of $A$). Note that this is often hard, but the EM criterion is easier to minimize in $\alpha$:
 \begin{align*}
-  \mathcal{F}_{EM}(\alpha} = I - I_{obs}I_{aug}^{-1}(\alpha)
+  \mathcal{F}_{EM}(\alpha) = I - I_{obs}I_{aug}^{-1}(\alpha)
 \end{align*}
 where 
 \begin{align*}
-  I_{aug}(\alpha) =& \left.\E \left[-\left.\frac{\partial^2 \log p(\theta|Y_{aug},\alpha)}{\partial \theta \dot \partial \theta}\right| Y_{obs},\theta,\alpha\right]\right|_{\theta=\theta^*}\\
+  I_{aug}(\alpha) =& \left.\mathrm{E} \left[-\left.\frac{\partial^2 \log p(\theta|Y_{aug},\alpha)}{\partial \theta \dot \partial \theta}\right| Y_{obs},\theta,\alpha\right]\right|_{\theta=\theta^*}\\
   I_{obs} =& -\left.\frac{\partial^2\log p(\theta|Y_{obs})}{\partial\theta \dot \partial\theta}\right|_{\theta=\theta^*}
 \end{align*}
 where $\theta^*$ is the posterior mode. Authors suggest using the EM criterion because it's easier (it's the same if the augmented data posterior is normal), and thus only worrying about minimizing $I_{aug}^{-1}(\alpha)$ in alpha. The essence of the idea: when it's too difficult to compare two stochastic algorithms (DA), instead compare their deterministic counterparts (EM) to decide which stochastic algorithm to use - often leads to good-if-not-best stochastic algorithms. Often we don't even need to know $\theta^*$.
@@ -286,6 +286,92 @@ They have a bunch of examples and theoretical results related to these ideas, in
 
 They have a fantastic note on page 40 near the top about the ``art'' of this process because yes, we can find the ``optimal'' sort of DA algorithm, but it might require us to sample from the posterior with iid draws, which is what we're trying to do in the first place!
 
+\section{Bayesian inference for non-Gaussian Ornstein-Uhlenbeck stochastic volatility processes, \citet{roberts2004bayesian}}
+consider the follow model for log stock prices
+\begin{align*}
+  dx(t) = v(t)^{1/2}dB(t) && t\in [0,T]
+\end{align*}
+with $x(0)=0$. The the variance $v(t)$ is modeled as a stationary non-Gaussian OU process with decay rate $\mu>0$ which is driven by a homogeneous Levy process $z(.)$ with positive increments and $z(0)=0$, e.g.:
+\begin{align*}
+  dv(t) = -\mu v(t) dt + dz(t)
+\end{align*}
+(Levy processes are precesses with independent and stationary increments). This model captures many stylized facts about asset prices, including serial dependence but not autocorrelation, volatility clustering, skewness, fat tails, etc. They assume that $v(t)$ is a sort of poisson process that jumps up suddenly then trails off exponentially (e.g. new information arriving in packets). In particular
+\begin{align*}
+  v(t) = \exp(-\mu t) v(0) + \sum_{j=1}^\infty \exp(-\mu(t-c_j))\epsilon_j\bm{1}(c_j < t)
+\end{align*}
+where $0<c_1<c_2<...$ are the arrivals of a poisson process with finite rate $\lambda$ and the $\epsilon_j$'s are iid $exp(\theta)$. Here $z(t) = \sum_{j=1}^\infty \epsilon_j\bm{1}(c_j < t)$. 
+
+This model fails to capture some stylized facts about the dependence of stock returns, but if instead we let
+\[
+v(t) = \sum_{i=1}^m v_i(t)
+\]
+where each $v_i$ has an independent levy process. Other work shows that $m=2$ is adequate for daily financial data. Some more details here that I'm skipping.
+
+\subsection{Data augmentation}
+Which parameterization to use? CP: 
+\begin{align*}
+  \Psi = \{(c_j, \epsilon_j)\}
+\end{align*}
+Note: $\Psi:[0, T]\times (0, \infty) \to \Re$.
+The NCP: $\tilde{\Psi}$ so that a prior, $\tilde{\Psi}$ is independent of the parameters. There are many ways to do this, but they all correspond to the same graphical model just with different priors on $\tilde{\Psi}$, so a different transfornation to $\Psi$. Over a wide range of the parameterspace in a simulation study, the NCP is just as good and sometimes significantly better than the CP. They also do a prior sensitivity analysis and a real data example.
+
+\section{A General Framework for the Parameterization of Hierarchical Models, \citet{papaspiliopoulos2007general}}
+Suppose we have observed data $Y$ unknown parameters $\Theta$ with prior dentiy $p(\Theta)$ and data model $p(Y\Theta)$ which cn be conveniently expressed using a hidden {\it layer} $X$ as
+\[
+p(Y|\Theta) = \int p(Y|X,\Theta)p(X|\Theta)d\mu(X)
+\]
+where $\mu$ is the measure wrt $p(X|\Theta)$ is defined. A reparameterization is $(X^*,\Theta)$ such that
+\[
+X=h(X^*,\Theta,Y)
+\]
+It's practical if $p(\Theta|X^*)$ and hence $p(\Theta|X^*,Y)$ is known up to a normalizing constant. The centered parameterization is (in a graphical model):
+\[
+\Theta \to X \to Y.
+\]
+The Gibbs sampler considered alternations between $X$ and $\Theta$, of course. The NCP is
+\[
+\Theta, \tilde{X} \to X \to Y.
+\]
+where $X=h(\tilde{X},\Theta)$.
+
+They go through a wide clases of models and show that what the order (in $n$) of $\tau_c$ and $\tau_{nc}$ (CP and NCP respectively) where $\tau = 1/log\gamma \approx 1/(1-\gamma)$ for $\gamma \approx 1$, where $\gamma = \sup_f\gamma_f$ and $\gamma_f = 1-\frac{E[var(f(\Theta)|X^*,Y)|Y]}{var[f(\Theta)|Y]}$, the bayesian fraction of missing information for $f$ maximized over all $f$. Sometimes the CP improves while the NCP worsens as sample size increases, e.g. in a simple hierarcichal model, and sometimes vice versa. Sometimes $\gamma$ is not very useful because it measures global dependence, and depending on your sample, dependence for your sampler might be drastically different.
+
+(They have a couple stochastic volatility examples)
+
+In order to construct an NCP they have a couple ideas that can be combined:
+\begin{enumerate}
+  \item Location: $h(\tilde{X},\Theta) = \tilde{X} + \Theta$. $X\sim F(\dot - \Theta) \implies \tilde{X} \sim F(.)$.
+  \item Scale: $h(\tilde{X},\Theta) = \Theta\tilde{X}$. $X\sim F(\dot / \Theta) \implies \tilde{X} \sim F(.)$.
+  \item Inverse CDF: $h(\tilde{X},\Theta) = F_\Theta^{-1}(X)$ where $X\sim F_\Theta$ implies $\tilde{X}\sim U(0,1)$.
+\end{enumerate}
+
+They acknowledge that alternating between a CP and an NCP works very well (page 12).
+
+Correcting a NCP - partially noncentered NCP - basically making an NCP take into account the data by using the posterior mean and SD instead of the prior mean and SD to construct the parameterization. (Maybe we should try this!!!)
+
+\section{Stability of the Gibbs Sampler for Bayesian Hierarchical Models, \citet{papaspiliopoulos2008stability}}
+Consider
+\begin{align*}
+  Y & \sim L(Y|X)\\
+  X & \sim L(X|\Theta)
+\end{align*}
+where $Y$ is the data, $X$ is the missing data, and $\Theta$ is the parameter. They explicitly how the relative tail behavior of $L(Y|X)$ and $L(X|\Theta)$ determines the stability of the Gibbs sampler (uniform, geometric or sub geometric convergence). And tail behavior thus determines the type of parameterization that should be adopted. Restricted to linear hierarchical models with general error distributions. So the model is
+\begin{align*}
+  \bm{Y}_i &= \bm{C}_i\bm{X}_i + \bm{Z}_{1i}\\
+  \bm{X}_i &= \bm{D}\bm{\Theta} + \bm{Z}_{2i}
+\end{align*}
+where $\bm{Z}_{1i}\stackrel{iid}{\sim} L(\bm{Z}_1)$, $\bm{Z}_{2i}\stackrel{iid}{\sim} L(\bm{Z}_2)$, and both are symmetric around $\bm{0}$, independent of each other.
+
+It's known that if the tails of $L(\bm{Z}_1)$ are heavier than the tails of $L(\bm{Z}_2)$ then inference for $\bm{X}$ is robust to outlying observations, whereas in the opposite case inference for $\bm{X}$ is less influenced by the prior in case of data-prior conflict.
+
+Place an improper flat prior on $\Theta$. The parameterization $(X,\Theta)$ is the CP, used to refer to a parameterization where the parameters and the data are conditionally independent given the missing data. The NCP is $(\tilde{X},\Theta)$ where $\tilde{X}_i=h(X_i,\Theta)$, $h(x,\theta)=x - D\theta$. 
+
+Their basic strategy is to consider 4 different types of distribution for $L(\bm{Z}_1)$ and $L(\bm{Z}_2)$. In order of fattest tails: Cauchy (C), Double Exponential (D), Gaussian (G), and Exponential power with $\beta>2$ (lighter than gaussian tails) (L). (C,E) denotes cauchy for $Z_1$ and double exponential for $Z_2$. We also have 3 types of stability results in order of most stable: Uniform ergodic (U), geometric ergodic (G) and non/sub-geometric (N). Basically, they find that Fatter tails for $Z_1$ than $Z_2$  leads to worse stability of the CP and better stability of the NCP. Thinner tails for $Z_1$ than $Z_2$ leads to better stability of the CP and worse of the NCP. A proper prior on $\Theta$ improves convergence properties all around. In the (E,E) model, the ratio of scale parameters matters. Heuristically though: the CP is better when $Z_1$ has lighter tails than $Z_2$ and worse when $Z_1$ has fatter tails. The NCP is the reverse, and both algorithms become more stable as the tails of both $Z_1$ and $Z_2$ become lighter.
+
+They also note that linear reparameterizations may only work when the tails of $Z_1$ and $Z_2$ are the same!
+
+\section{Cross-Fertilizing strategies for better EM mountain climbing and DA field exploration, \citet{van2010cross}}
+Exploration of lotss of different Gibbs samplers and EM algorithms and how they inform each other. Have not read.
 \section{Other Papers can't find a copy}
 These are in the back of the state space book:
 \begin{enumerate}
