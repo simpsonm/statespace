@@ -203,6 +203,89 @@ where
 \]
 Note: the tilde $D^*$ depends on $T_i$ and not $T$. When $Z_i$ doesn't depend on $i$, then $\tilde{D}^*=D^*$. (Note $T_i^* = E[b_i^2|Y_{obs}, \theta^*]$, $\theta = (\beta, \sigma^2, T)$, i.e. it depends on what we observed: $Z_i$, it's the posterior squared expectation). THis makes the M step really complicated though, s limiting the $a$'s to be either 0 or 1. In that case, $a=0$ is the minimizer if $\tilde{D}^* \geq 2/3$, while otherwise $a=1$ is. Ultimately they suggest using $a=(1,1,...,1)$ in at least a burn in period. They also note that ist suggests Gibbs methods.
 
+\section{Analytic Convergence Rates and Parameterization Issues for the Gibbs Sampler Applied to State Space Models, \citet{pitt1999analytic}}
+Main purpose of the paper: obtain the analytical convergence rate for the single-move Gibbs sampler applied to the states of the AR(1) states plus gaussian noise model. Then consider alternative parameterizations in the same model for a gibbs sampler with two blocks - parameters $\theta$ and states $\alpha$. Similar issues in the stochastic volatility model are considered.
+\subsection{AR(1)plus noise model}
+The model is
+\begin{align*}
+  y_t = \mu + \alpha_t + \epsilon_t && \epsilon_t \sim NID(0,\sigma_\epsilon^2)\\
+  \alpha_t = \phi \alpha_{t-1} + \eta_t && \eta_t \sim NID(0, \sigma_\eta^2)\\
+  &&\alpha_1 \sim NID(0, \sigma_\eta^2/(1-\phi^2))
+\end{align*}
+with $|\phi|<1$, though $|\phi|=1$ doesn't change their results (they claim). Start with $\theta=(\sigma_\epsilon^2, \sigma_\eta^2, \phi,\mu)'$ known. We focus on drawing each of the $\alpha$'s from their full conditional distribution. Attempt to find the geometric rate of convergence, i.e. the $\rho$ such that for all $r<\rho$ and all square integrable functions $f$ and some function $V(.)\geq 1$ such that the expectation under the target density $\pi(V)<\infty$ and
+\begin{align*}
+  |E[f(\alpha^{(i)}) - \pi(f)|\leq V(\alpha^{(0)}r^i.
+\end{align*}
+If such a $\rho<1$ exists, that is its geometric rate of convergence. They show that in the limit of an infinite time series. 
+\[
+\rho = 4\frac{\phi^2}{(1 + \phi^2 + \sigma_\eta^2\sigma_\epsilon^{-2})^2}
+\]
+So as $n\to infty$, $|\phi|\to 1$,, $\sigma_\eta^2\sigma_\epsilon^{-2}\to 0$ then $\rho\to 1$, so for persistent parameterizations the convergence rate will be close to 1, i.e. very slow. (This is duh - the more correlated the $\alpha$'s are, worse off you are from not blocking the $\alpha$'s together.)
+
+\subsection{Reparameterizations}
+Now consider the two models
+\begin{align*}
+  y|\alpha &\sim N(\mu\bm{1} + \alpha, \sigma^2_\epsilon I_n) && \alpha \sim N(0,D)\\
+  \intertext{and}
+  y|\omega &\sim N(\omega, \sigma^2_\epsilon I_n) && \omega \sim N(\mu\bm{1}, D)
+\end{align*}
+where we treat $D$ as known and $\mu$ as unknown. The first case is the usual parameterization of the AR(1) plus noise model, the second has $\omega_t = \mu + \phi(\omega_{t-1} - \mu) + \eta_t$. A flat prior is assumed on $\mu$ and $|\phi|<1$ to ensure that $\mu$ is identifiable. Assume that $\sigma_x^2$ and $\phi$ are known ($x=\eta,\epsilon$). Two block sampler - $\mu$ then $\alpha$ or $\omega$. Let $\rho_\mu(1,\alpha)$ denote the lag 1 autocorrelation for $\alpha$ (and $\omega$ of course). Then
+\begin{align*}
+  V & = (\sigma_\epsilon^2I + D^{-1})^{-1}\\
+  \rho_\mu(1,\alpha) & = 1 - \frac{1}{n}\bm{1}'VD^{-1}\bm{1}\\
+  \rho_{\mu}(1, \omega) & = 1 - \sigma_\epsilon^{-2}\frac{\bm{1}'VD^{-1}\bm{1}}{\bm{1}'D^{-1}\bm{1}}
+\end{align*}
+For persistent models $\rho_{\mu}(1,\alpha)$ is close to 1. $\rho_\mu(1,\omega) < \rho_\mu(1,\alpha)$ when $\bm{1}'D^{-1}\bm{1}\sigma_\epsilon^2 < n$. For the AR(1) plus noise model (structuring D) then becomes
+\begin{align*}
+  &\frac{\sigma_\epsilon^2\sigma_\eta^{-2}}{n}\left((n-2)(1+\phi^2) + 2 - 2(n-1)\phi\right) < 1\\
+  \intertext{in the limit}
+  &\sigma_\epsilon^2\sigma_\eta^{-2}(1-\phi)^2 < 1.
+\end{align*}
+
+In simulations, when atocorrelation is high and signal to noise ratio is low, awful mixing using the $\alpha$'s and good using the $\omega$'s. Similar results for the autocorrelation of the middle state ($\alpha$ or $\omega$).
+
+\section{The Art of Data Augmentation, \citet{van2001art}}
+Data is $Y_{obs}$ and we want to sample from $p(\theta|Y_{obs})\propto p(Y_{obs}|\theta)p(\theta)$. DA algorithm starts with $M:Y_{aug}\to Y_{obs}$, $Y_{obs}=M(Y_{aug})$ such that
+\[
+\int_{M(Y_{aug})=Y_{obs}} p(Y_{aug}|\theta)\mu(dY_{aug}) = p(Y_{obs}|\theta)
+\]
+(a.s. wrt some appropriate dominating measure). Then the standard DA algorithm based on this samples from $p(\theta|Y_{aug},Y_{obs})$ and $p(Y_{aug}|\theta,Y_{obs})$. (Slice sampling can be seen as a version of this)
+
+Based on the EM literature, there's a tradeoff between simplicity and speed - speed depends on the ``fraction of missing information'' so that the ``larger'' (in fisher info terms) the DA, the faster the convergence, but larger DAs are harder to construct.
+
+The geometric rate of convergence of the DA algorithm is
+\begin{align*}
+  \lambda^{DA}(\alpha) = & 1 - \inf_{h:var[h(\theta)|Y_{obs}]=1}E[var(h(\theta)|Y_{aug},\alpha)|Y_{obs},\alpha]
+\end{align*}
+where the expection is wrt the stationary density $p(\theta, Y_{aug}|Y_{obs},\alpha)$. The maximum autocorrelation over linear compinations is
+\begin{align*}
+  \sup_{x\neq 0}\mathrm{corr}(x'\theta^{(t)},x'\theta^{(t+1)})=\sup_{x\neq 0}\frac{x'var[E(\theta|Y_{aug},\alpha)|Y_{obs},\alpha]x}{x'var(\theta|Y_{obs})x}=\rho(\mathcal{F}_B(\alpha))
+\end{align*}
+Minimize one of these two in $\alpha$ is the basic strategy here, where $\mathcal{F}_B(\alpha)$ is the Bayesian fraction of missing information:
+\begin{align*}
+  \mathcal{F}_B(\alpha) = I - [var(\theta|Y_{obs})]^{-1}E[var(\theta|Y_{aug},,\alpha)|Y_{obs},\alpha]
+\end{align*}
+and $\rho(A)$ is the spectral radius of $A$. (i.e. maximum absolute value of eigenvalues of $A$). Note that this is often hard, but the EM criterion is easier to minimize in $\alpha$:
+\begin{align*}
+  \mathcal{F}_{EM}(\alpha} = I - I_{obs}I_{aug}^{-1}(\alpha)
+\end{align*}
+where 
+\begin{align*}
+  I_{aug}(\alpha) =& \left.\E \left[-\left.\frac{\partial^2 \log p(\theta|Y_{aug},\alpha)}{\partial \theta \dot \partial \theta}\right| Y_{obs},\theta,\alpha\right]\right|_{\theta=\theta^*}\\
+  I_{obs} =& -\left.\frac{\partial^2\log p(\theta|Y_{obs})}{\partial\theta \dot \partial\theta}\right|_{\theta=\theta^*}
+\end{align*}
+where $\theta^*$ is the posterior mode. Authors suggest using the EM criterion because it's easier (it's the same if the augmented data posterior is normal), and thus only worrying about minimizing $I_{aug}^{-1}(\alpha)$ in alpha. The essence of the idea: when it's too difficult to compare two stochastic algorithms (DA), instead compare their deterministic counterparts (EM) to decide which stochastic algorithm to use - often leads to good-if-not-best stochastic algorithms. Often we don't even need to know $\theta^*$.
+
+Basic idea of the paper:
+\begin{enumerate}
+  \item Minimize $I_{aug}$ in $\alpha$.
+  \item Put a prior on $\alpha$ and minimize $I_{aug}$ in the prior on $\alpha$. Sample $(\alpha,\theta)$ jointly or marginalize out $\alpha$.
+\end{enumerate}
+
+They have a bunch of examples and theoretical results related to these ideas, including difficulties with an improper prior on $\alpha$.
+
+They have a fantastic note on page 40 near the top about the ``art'' of this process because yes, we can find the ``optimal'' sort of DA algorithm, but it might require us to sample from the posterior with iid draws, which is what we're trying to do in the first place!
+
 \section{Other Papers can't find a copy}
 These are in the back of the state space book:
 \begin{enumerate}
@@ -213,7 +296,6 @@ These are in the back of the state space book:
 Papers to get:
 \begin{enumerate}
 \item Orchard and Woodbury 1972: A missing information principle
-\item Dempster, Laird and Rubin 1977:Maximum Likelihood from incomplete data via the EM algorithm
 \end{enumerate}
 
 \clearpage
