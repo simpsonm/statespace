@@ -44,7 +44,7 @@ itsim <- function(dat, y){
 
 parallel <- require(doMC, quietly=TRUE)
 if(parallel){
-  registerDoMC(8)
+  registerDoMC(10)
 }
 
 
