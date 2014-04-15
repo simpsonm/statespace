@@ -28,7 +28,7 @@ itsim <- function(dat, y){
   gam0 <- gam[1]
   cgam <- cumsum(gam[-1])
   agam <- sum(cgam^2)/(2*V)
-  bgam <- sum((dat-gam0)*cgam)/V
+  bgam <- sum((yt-gam0)*cgam)/V
   ys <- c(psi[1], yt)
   Ly <- ys[-1] - ys[-(T.T+1)]
   psiLT <- c(0,psi[-1])
