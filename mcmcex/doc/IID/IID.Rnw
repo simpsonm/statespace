@@ -1,0 +1,202 @@
+<<set-parent-IID, echo=FALSE, cache=FALSE>>=
+set_parent('../mcmcex.Rnw')
+@
+
+
+\section{Introduction}
+In this note we investigate the implications of a theorem of \citet{yu2011center} which suggest the possibility of obtaining IID draws from the posterior distribution of a DLM.
+
+\section{The Theorem}
+The following theorem is established by \citet{yu2011center} (Theorem 1):
+
+\begin{thm}
+  Given a posterior distribution of interest $p(\phi|y)$, $\theta\in \Theta$, suppose we have two augmentation schemes $\theta$ and $\tilde{\theta}$ such that their joint distribution, conditioning on both $\theta$ and $y$, is well defined for $\theta\in \Theta$ (a.s. w.r.t. $p(\theta|y)$. Denote the geometric rate of convergence of the DA algorithm under $\theta$ by $r_1$ and under $\tilde{\theta}$ by $r_2$. Then
+  \[
+  r_{1\&2}\leq \mathcal{R}_{1,2}\sqrt{r_1r_2}
+  \]
+  where $r_{1\&2}$ is the geometric rate of the GIS sampler interweaving between $\theta$ and $\tilde{\theta}$ and $\mathcal{R}_{1,2}$ is the maximal correlation between $\theta$ and $\tilde{\theta}$ in their joint posterior distribution $p(\theta,\tilde{\theta}|y)$.
+\end{thm}
+
+One implication of this theorem, as \cite{yu2011center} note, is that if $\theta$ and $\tilde{\theta}$ are independent in the posterior, then the GIS sampler will obtain iid draws from $p(\phi|y)$. 
+
+\section{Characterizing the posterior distribution of interest}
+
+The dynamic linear model for a time series of $k$-dimensional vectors $y_t$ is defined by
+\begin{align*}
+  y_t &= F_t\theta_t + v_t\\
+  \theta_t &= G_t\theta_{t-1} + w_t
+\end{align*}
+for $t=1,2,\cdots,T$ where
+\begin{align*}
+  v_t &\sim N_k(0,V)\\
+  w_t &\sim N_p(0,W).
+\end{align*}
+Let $\phi$ denote the unknown parameter. Here we allow that $\theta_0$, $F_{1:T}$, $G_{1:T}$, $V$, and $W$ all may depend on $\phi$. Typically $\theta_0$ is treated as part of the data augmentation and not as part of the set of parameters to be estimated, but we will see that for computational purposes thinking of $\theta_0$ as a parameter is natural.
+
+The above defines the usual augmented data model, but we ultimately need to characterize the posterior $p(\phi|y)$ not $p(\phi,\theta|y)$, so we need find the marginal distribution of $y$ given $\phi$. We can rewrite the model by recursively substituting as
+\begin{align*}
+  y_t &= v_t + F_t\left(w_t + G_tw_{t-1} + G_tG_{t-1}w_{t-2} + ... + G_tG_{t-1}\cdots G_{2}w_1 + G_tG_{t-1}\cdots G_1\theta_0\right)
+\end{align*}
+
+Now each $y_t$ is a linear combination of normal distributions, so $y_{1:T}$ has a marginal normal distribution such that
+\begin{align*}
+  \mathrm{E}[y_t|\phi] = & F_t\prod_{s=t}^1G_s\theta_0\\
+  \mathrm{Var}[y_t|\phi] = & V + F_tH_tW\\
+  \mathrm{Cov}[y_s,y_t|\phi] = F_tH_tW
+\end{align*}
+where
+\begin{align*}
+  \prod_{s=t}^1G_s &= G_tG_{t-1}\cdots G_1\\
+  \intertext{and}
+  H_t = I_p + G_t + G_tG_{t-1} + \cdots + G_tG_{t-1}\cdots G_2.
+\end{align*}
+
+Now define
+\begin{align*}
+  \mu &= \begin{bmatrix} F_1G_1\theta_0\\ F_2G_2G_1\theta_0\\ \vdots \\ F_TG_TG_{T-1}\cdots G_1\theta_0 \end{bmatrix}, 
+  && \tilde{V}_{k\times k} = 
+  \begin{bmatrix} V      & 0      & 0      &\ddots & 0 \\ 
+                  0      & V      & 0      &\ddots & 0 \\
+                  0      & 0      & V      &\ddots & 0 \\
+                  \ddots & \ddots & \ddots &\ddots & \ddots \\
+                  0      & 0      & 0      &\ddots & V
+  \end{bmatrix},
+  && \tilde{W}_{k\times k} = \begin{bmatrix} F_1H_1 \\ F_2H_2 \\ \vdots \\ F_TH_T \end{bmatrix} W 
+  \begin{bmatrix} H_1'F_1' & H_2'F_2' & \hdots & H_T'F_T' \end{bmatrix}.
+\end{align*}
+Then we have
+\begin{align*}
+  y_{1:T} \sim N_{p\times k}(\mu, \tilde{V} + \tilde{W}).
+\end{align*}
+Now given a prior $p(\phi)$, this defines the posterior distribution of interest $p(\phi|y_{1:T})$.
+
+If, instead, we assume $\theta_0 \sim N(m_0, C_0)$ in the prior, independent of any other parameters, and also integrate out $\theta_0$, we get
+\begin{align*}
+  y_{1:T} \sim N_{p\times k}(\mu^*, \tilde{V} + \tilde{W} + \tilde{C_0})
+\end{align*}
+where $\mu^*$ is defined analogously to $\mu$ with $m_0$ replacing $\theta_0$ and 
+\begin{align*}
+\tilde{C_0} = \begin{bmatrix}G_1 \\ G_2G_1 \\ \vdots \\ G_TG_{T-1}\cdots G_1 \end{bmatrix} C_0 \begin{bmatrix}G_1 & G_1'G_2' & \hdots & G_1'G_2'\cdots G_T' \end{bmatrix}
+\end{align*}
+
+This will ultimately show why thinking of $\theta_0$ as a ``parameter'' instead of part of the data augmentation is natural --- mainly because it results in a simpler covariance matrix for $y_{1:T}$ which we will see has advantages when trying to find independent DAs.
+
+\section{Finding DAs which are independent in the posterior}
+
+Now in order to obtain iid draws from this poterior, we need to find data agumentations $\theta$ and $\tilde{\theta}$ which are independent in the posterior. Here $\theta$ need not be the same as the $\theta_{1:T}$ used to define the model. Another requirement is that the joint posterior of $(\theta,\tilde{\theta})$ be well define. So to start we shall assume that $(y, \theta, \tilde{\theta})$ has a joint normal distribution conditional on the parameter, i.e.
+\begin{align*}
+  \left.\begin{bmatrix}\theta \\ \tilde{\theta} \\ y \end{bmatrix}\right|\phi \sim N\left( \begin{bmatrix} \alpha_{\theta} \\ \alpha_{\tilde{\alpha}} \\ \alpha_{y} \end{bmatrix}, 
+  \begin{bmatrix} \Omega_{\theta} & \Omega_{\theta,\tilde{\theta}}' & \Omega_{y, \theta}' \\
+    \Omega_{\theta,\tilde{\theta}} & \Omega_{\tilde{\theta}} & \Omega_{y, \tilde{\theta}}' \\
+    \Omega_{y, \theta} & \Omega_{y, \tilde{\theta}} & \Omega_y \end{bmatrix} \right).
+\end{align*}
+This implies that
+\begin{align*}
+  \left.\begin{bmatrix}\theta \\ \tilde{\theta} \end{bmatrix}\right|\phi,y \sim N\left(
+  \begin{bmatrix} \alpha_{\theta} + \Omega_{y, \theta}'\Omega_y^{-1}(y - \alpha_y) \\
+    \alpha_{\tilde{\theta}} + \Omega_{y, \tilde{\theta}}'\Omega_y^{-1}(y - \alpha_y) \end{bmatrix},
+  \begin{bmatrix} 
+    \Omega_{\theta} - \Omega_{y, \theta}'\Omega_y^{-1}\Omega_{y,\theta} & \Omega_{\theta, \tilde{\theta}}' - \Omega_{y, \tilde{\theta}}'\Omega_y^{-1}\Omega_{y, \theta} \\
+    \Omega_{\theta, \tilde{\theta}} - \Omega_{y, \theta}'\Omega_y^{-1}\Omega_{y, \tilde{\theta}} & \Omega_{\tilde{\theta}} - \Omega_{y, \tilde{\theta}}'\Omega_y^{-1}\Omega_{y, \tilde{\theta}} \end{bmatrix}\right).
+\end{align*}
+
+Now we want to define the various components of this distribution such that $\theta$ and $\tilde{\theta}$ are independent in the posterior, but we also are constrained to be consistent with the marginal distribution of $y$ implied by the data model. This constraint gives
+\begin{align*}
+  \alpha_y =& \mu\\
+  \Omega_y =& \tilde{V} + \tilde{W}.
+\end{align*}
+Our strategy will be to make $\theta$ and $\tilde{\theta}$ conditionally independent given $y$ in the data model, then ensure that they are still independent in the posterior. The first part of this strategy forces
+\begin{align*}
+  \Omega_{\theta,\tilde{\theta}} = \Omega_{y, \theta}'\Omega_y^{-1}\Omega_{y, \tilde{\theta}}.
+\end{align*}
+We also need to remove $\alpha_y=\mu$ from the means of $\theta$ and $\tilde{\theta}$ since $\mu$ depends on $\phi$ through the $G_t$'s. Setting
+\begin{align*}
+  \alpha_\theta &= \Omega_{y, \theta}'\Omega_y^{-1}\alpha_y\\
+  \alpha_{\tilde{\theta}} &= \Omega_{y, \tilde{\theta}}'\Omega_y^{-1}\alpha_y
+\end{align*}
+will suffice to do this. So now we have
+\begin{align*}
+  \left.\begin{bmatrix}\theta \\ \tilde{\theta} \end{bmatrix}\right|\phi,y \sim N\left(
+  \begin{bmatrix} \Omega_{y, \theta}'\Omega_y^{-1}y\\
+    \Omega_{y, \tilde{\theta}}'\Omega_y^{-1}y\end{bmatrix},
+  \begin{bmatrix} 
+    \Omega_{\theta} - \Omega_{y, \theta}'\Omega_y^{-1}\Omega_{y,\theta} & 0 \\
+0 & \Omega_{\tilde{\theta}} - \Omega_{y, \tilde{\theta}}'\Omega_y^{-1}\Omega_{y, \tilde{\theta}} \end{bmatrix}\right).
+\end{align*}
+
+Now our goal is to ensure that the mean and variance of $\theta$ conditional on $\phi$ and $y$ does not depend on $\tilde{W}$ but possibly on $\tilde{V}$ and similarly that the mean and variance of $\tilde{\theta}$ conditional on $\phi$ and $y$ does not depend on $\tilde{V}$ but possibly on $\tilde{W}$. This will guarantee that integrating $\phi$ out of the conditional posterior of $(\theta,\tilde{\theta})$ will preserve their independence so long as $\tilde{V}$ and $\tilde{W}$ are independent in the prior. In practice the latter is not hard to enforce --- $\tilde{V}$ only depends on $V$, while $\tilde{W}$ depends on $W$ and any unknown parameters in the $F_t$'s and $G_t$'s. So for example if the unknown parmeters are $\theta_0$, $V$, $W$, and $\psi$ where only the $F_t$'s and $G_t$'s depend on $\psi$, and the collection of these four parameters are independent in the prior, the the constraint is satisfied.
+
+We also could have done the same thing with $\theta_0$ treated as part of the augmentation instead of $\phi$, in which case the conditional distribution of $\theta$ and $\tilde{\theta}$ would be the same with the definitions of $\alpha_\theta$ and $\alpha_{\tilde{\theta}}$ changed accordingly and, more importantly, $\Omega_y = \tilde{V} + \tilde{W} + \tilde{C}_0$ where we treat $\tilde{C}_0$ as part of $\tilde{W}$ for the purpose of ensuring that $\theta$ and $\tilde{\theta}$ are independent in the posterior.
+
+In order to further simplify we will suppose $\Omega_y = \Omega_{y,\theta} = \Omega_{y,\tilde{\theta}}$ and that $\Omega_\theta = \Omega_y + \tilde{\Omega}_\theta$ and $\Omega_{\tilde{\theta}} = \Omega_y + \tilde{\Omega}_{\tilde{\theta}}$. This yields
+\begin{align*}
+  \left.\begin{bmatrix}\theta \\ \tilde{\theta} \end{bmatrix}\right|\phi,y \sim N\left(\begin{bmatrix} y \\ y \end{bmatrix}, \begin{bmatrix} \tilde{\Omega}_\theta & 0 \\ 0 & \tilde{\Omega}_{\tilde{\theta}} \end{bmatrix}\right).
+\end{align*}
+So long as $\Omega_{\theta}^*$ depends on possibly $\tilde{V}$ but not $\tilde{W}$ and $\Omega_{\tilde{\theta}}^*$ depends on possibly $\tilde{W}$ but not $\tilde{V}$, then $\theta$ and $\tilde{\theta}$ will be independent in the posterior. The full joint distribution of $(y,\theta,\tilde{\theta})$ is then given by
+\begin{align*}
+ \left. \begin{bmatrix}\theta \\ \tilde{\theta} \\ y \end{bmatrix}\right|\phi \sim N\left(\begin{bmatrix} \mu \\ \mu \\ \mu \end{bmatrix}, \begin{bmatrix} 
+   \tilde{\Omega}_\theta + \tilde{V} + \tilde{W} & \tilde{V} + \tilde{W} & \tilde{V} + \tilde{W} \\
+   \tilde{V} + \tilde{W} & \tilde{\Omega}_{\tilde{\theta}} + \tilde{V} + \tilde{W} & \tilde{V} + \tilde{W} \\
+   \tilde{V} + \tilde{W} & \tilde{V} + \tilde{W} & \tilde{V} + \tilde{W} \end{bmatrix}\right).
+\end{align*}
+It is easy to show that this covariance matrix is nonsingular so long as $\tilde{V}$, $\tilde{W}$, $\tilde{\Omega}_{\theta}$, and $\tilde{\Omega}_{\tilde{\Omega}}$ are nonsingular.
+
+\section{Constructing the GIS algorithm}
+At this point, conditional on a choice of $\tilde{\Omega}_{\theta}$ and $\tilde{\Omega}_{\tilde{\theta}}$, the only things that remain to be done in order to contruct the algorithm is to determine the conditional posterior distributions $p(\phi|\theta, y)$ and $p(\phi|\tilde{\theta}, y)$ The distributions $p(\theta|\phi,y)$ and $p(\tilde{\theta}|\phi,y)$ are alread determined above. The ``tilde'' $\Omega$'s should be chosen to primarily make determining the two different conditional posteriors of $\phi$ easy, both in terms of analytically writing them down and in terms of computation. It will turn out that this constraint very hard to meet.
+
+In order to see this, we will impose a bit more structure on the model. Specifically, let $F_t$ and $G_t$ be constant for each $t=1,2,\cdots,T$. We will suppose that $p(V,W,\theta_0)=p(V)p(W)p(\theta_0)$ but will ignore any additional structure on the prior.
+
+Now consider $(\theta, y)$. The joint distribution is
+\begin{align*}
+ \left. \begin{bmatrix}\theta \\ y \end{bmatrix}\right|\phi \sim N\left(\begin{bmatrix} \mu \\ \mu \end{bmatrix}, \begin{bmatrix} 
+   \tilde{\Omega}_\theta + \tilde{V} + \tilde{W} & \tilde{V} + \tilde{W} \\
+   \tilde{V} + \tilde{W} & \tilde{V} + \tilde{W} \end{bmatrix}\right).
+\end{align*}
+and we have
+\begin{align*}
+  \theta|y,\phi &\sim N(y, \Omega_{\theta})\\
+  y|\phi & \sim N(\mu, \tilde{V} + \tilde{W})
+\end{align*}
+with joint density
+\begin{align*}
+  p(y,\theta|\phi) &\propto |\tilde{\Omega}_{\theta}|^{-1/2}\exp\left[-\frac{1}{2}(\theta - y)'\tilde{\Omega}_{\theta}^{-1}(\theta-y)\right] |\tilde{V} + \tilde{W}|^{-1/2}\exp\left[-\frac{1}{2}(y - \mu)'(\tilde{V} + \tilde{W})^{-1}(y-\mu)\right].
+\end{align*}
+So in order to make the posterior for $\phi$ as simple as possible, it seems like a good idea make $\tilde{\Omega}_{\theta}$ independent of any element of $\phi$, i.e. $\tilde{\Omega}_{\theta}=I$, the identity matrix. However, this gives
+\begin{align*}
+  p(\phi|y,\theta) \propto |\tilde{V} + \tilde{W}|^{-1/2}\exp\left[-\frac{1}{2}(y - \mu)'(\tilde{V} + \tilde{W})^{-1}(y-\mu)\right]p(\phi)
+\end{align*}
+which is the original posterior distribution we wish to sample from.
+
+This problem does not appear intrinsic to trying to find two data augmentions which are independent in the posterior, but any attempt to contruct a DA by assuming a simple structure for the various $\Omega_{.}$'s appears to run in this problem. Further, treating $\theta_0$ as part of the DA instead of a parameter will not help the problem --- the only thing changed in this reasoing in that the matrix $\tilde{V} + \tilde{W} + \tilde{C}_0$ replaces $\tilde{V} + \tilde{W}$, in particular in $p(\phi|y,\theta)$. This, yet again, is the original posterior we wish to sample from.
+
+\section{No ``Sufficient Augmentation'' for $(V,W)$ exists (sort of)}
+A sufficient augmentation $\theta$ is a data augmentation such that $p(y|\theta,\phi)=p(y|\theta)$, i.e. $y$ and $\phi$ are conditionally independent given $\phi$. If we suppose that $\theta$ and $y$ have a joint normal distribution as above, then if $\theta$ is a sufficient augmentation $p(\phi|\theta,y)$ is jsut as hard to sample from as $p(\phi|y)$. To see this, start with 
+\begin{align*}
+ \left. \begin{bmatrix}\theta \\ y \end{bmatrix}\right|\phi \sim N\left(\begin{bmatrix} \alpha_\theta \\ \mu \end{bmatrix}, \begin{bmatrix} 
+   \Omega_\theta & \Omega_{y,\theta}' \\
+   \Omega_{y,\theta} & \tilde{V} + \tilde{W} \end{bmatrix}\right)
+\end{align*}
+which implies
+\begin{align*}
+  y|\theta,\phi &\sim N(\mu + \Omega_{y,\theta}'\Omega_\theta^{-1}(\theta - \alpha_\theta), \tilde{V} + \tilde{W} - \Omega_{y,\theta}'\Omega_{\theta}^{-1}\Omega_{y,\theta})\\
+  \theta|\phi &\sim N(\alpha_\theta, \Omega_\theta).
+\end{align*}
+Now for $\theta$ to be a sufficent augmentation we need
+\begin{align*}
+  &\mu + \Omega_{y,\theta}'\Omega_\theta^{-1}(\theta - \alpha_\theta)\\
+  \intertext{and}
+  &\tilde{V} + \tilde{W} - \Omega_{y,\theta}'\Omega_{\theta}^{-1}\Omega_{y,\theta}
+\end{align*}
+to be independent of $\phi$. This requires that
+\begin{align*}
+  \mu + \Omega_{y,\theta}'\Omega_\theta^{-1}(\theta - \alpha_\theta) = A\theta
+\end{align*}
+where $A$ a matrix which does not depend on $\phi$. Rearranging, this gives $A=\Omega_{y,\theta}'\Omega_{\theta}^{-1}$ so that $\mu = A\alpha_\theta$ and $\Omega_{y,\theta} = \Omega_{\theta}A'$. Then using the second equation, we now require $\Sigma = \tilde{V} + \tilde{W} - A\Omega_{\theta}A'$ free of $\phi$. This gives $A\Omega_{\theta}A' = \tilde{V} + \tilde{W} - \Sigma$. Consider $\tilde{\theta}=A\theta$. Then we have
+\[
+\tilde{\theta} \sim N(\mu, \tilde{V} + \tilde{W} - \Sigma)
+\]
+and thus the posterior of $\phi$ given $\theta$ can be written as
+\begin{align*}
+  p(\phi|\tilde{\theta}, y) &\propto p(\phi)|\tilde{V} + \tilde{W} - \Sigma|\exp\left[-\frac{1}{2}(\theta - \mu)'(\tilde{V} + \tilde{W} - \Sigma)^{-1}(\theta - \mu)\right]
+\end{align*}
+which is very similar to the posterior we wish to sample from. The transformation fro $\tilde{\theta}$ to $\theta$ is unlikely to make this any easier.

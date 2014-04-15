@@ -40,6 +40,34 @@ opts_chunk$set(dev="pdf",
 \section{Introduction}
 This document is compilation of notes on various papers and books from the relevant literature.
 
+\section{To Center or Not to Center, \citet{yu2011center}}
+Data augmentation: any joint model $p(Y_{obs}, Y_{mis}|\theta, \alpha)$ is a DA model if
+\[
+\int p(Y_{obs}, Y_{mis}|\theta, \alpha)\mu(dY_{mis}) = p(Y_{obs}|\theta)\ \ \mathrm{for all}\ \ Y_{obs}
+\]
+where $\alpha$ is the working parameter only identifiable from $Y_{aug}=\{Y_{mis}, Y_{obs}\}$. (They also note that the $Y_{mis}$ notation is sometimes not appropriate - e.g. when $Y_{obs}$ is determined entirely by $Y_{mis}$ such as a discrete choice model). Each choice of $\alpha$ corresponds to a potentially different DA. Instead of choosing a single DA scheme, ASIS singles out two special DA schemes - the ancillary augmentation (AA) and the sufficient augmentation (SA). {\it \bf The SA is a sufficient statistic for the parameter of interest, while the AA is an ancillary statistic.} ASIS couples them and goes back and forth between them. Note that SA = CP (centered parameterization) and AA = NCP (noncentered parameterization).
+
+\subsection{Ancillary and Sufficient DAs and interweaving}
+In order to define interweaving, suppose we have a pair of DA schemes $Y_{mis}$ and $\tilde{Y}_{mis}$ (not necessarily an SA-AA pair) such that their joint distribution $p(Y_{mis},\tilde{Y}_{mis}|\theta,Y_{obs})$ is well defined. This distribution is often degenerate in the sense that $\tilde{Y}_{mis}=M(Y_{mis};\theta)$ where $M(.;\theta)$ is a one-to-one mapping for a given $\theta$. ({\it \bf NOTE: I LET IT DEPEND ON THE DATA AS WELL!!!!}).
+Alternating:
+\[
+[Y_{mis}|\theta^{(t)}]\to[\theta|Y_{mis}]\to[\tilde{Y}|\theta]\to[\theta^{(t+1)}|\tilde{Y}_{mis}]
+\]
+This does NOT require a full joint distribution for $Y_{mis},\tilde{Y}_{mis}|\theta,Y_{obs}$. Interweaving:
+\[
+[Y_{mis}|\theta^{(t)}]\to[\tilde{Y}|Y_{mis}]\to[\theta^{(t+1)}|\tilde{Y}_{mis}]
+\]
+but usually it's convenient to draw $p(\tilde{Y}_{mis}|Y_{mis})$ by drawing $\theta\sim p(\theta|Y_{mis})$ and then $\tilde{Y}_{mis}\sim p(\tilde{Y}_{mis}|Y_{mis}, \theta)$ i.e.
+\[
+[Y_{mis}|\theta^{(t)}]\to[\theta|Y_{mis}]\to[\tilde{Y}_{mis}|Y_{mis},\theta]\to[\theta^{(t+1)}|\tilde{Y}_{mis}]
+\]
+So the only difference between interweaving and alternating is to replace the third step with the conditional draw $\tilde{Y}_{mis}\sim p(\tilde{Y}_{mis}|Y_{mis},\theta)$. This appears to introduce MORE dependence, however the resulting algorithm has less dependence between $\theta^{(t)}$ and $\theta^{(t+1)}$. This is a global interweaving strategy (GIS).
+
+{\it Theorem: the interweaving algorithm is as least as good as the worst of the two DA algorithms it is based on. Also when $Y_{mis}$ and $\tilde{Y}_{mis}$ are a posteriori independent, the interwoven algorithm will provide iid draws. So basically we want to minimize the dependence between the two DAs. Basu's theorem: any complete sufficient stat is independent of any ancillary stat given the parameter - useful!!! (And hence their emphasis and ASIS) }
+
+
+
+
 \section{Efficient Bayesian Parameter Estimation \citet{fruhwirth2004efficient}}
 Consider a common statespace model:
 \begin{align*}
