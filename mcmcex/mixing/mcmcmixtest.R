@@ -33,9 +33,9 @@ terminate called after throwing an instance of 'returnR'
 
 
 source("../code/mcmcexfun.R")
-T <- 100
-V <- 1000
-W <- 1
+T <- 10
+V <- 100
+W <- 100
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=10^7)
 simdata$av <- 5
@@ -45,8 +45,12 @@ simdata$bw <- (simdata$aw-1)*simdata$W.T
 simdata$m0 <- 0
 simdata$C0 <- 10^7
 par <- simdata
-n <- 500
+n <- 3000
+
+
+set.seed(12314124)
 dtime <- system.time(dist <- samwrap(par, n, "dist"))
+
 etime <- system.time(error <- samwrap(par, n, "error"))
 dcon <- apply(dist[,c(6:9)], 2, mean)
 econ <- apply(error[,c(2:5)], 2, mean)
@@ -98,9 +102,9 @@ newtimes <- cbind(times1, times2, times3)
 
 source("../code/mcmcexfun.R")
 set.seed(152893627)
-T <- 1000
-V <- 1
-W <- 1000
+T <- 10
+V <- 100
+W <- 100
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=10^7)
 simdata$av <- 5
@@ -110,10 +114,9 @@ simdata$bw <- (simdata$aw-1)*simdata$W.T
 simdata$m0 <- 0
 simdata$C0 <- 10^7
 par <- simdata
-n <- 100
+n <- 1000
 
 fullcis <- samwrap(par, n, "fullcis")
-
 state <- samwrap(par, n, "state")
 dist <- samwrap(par, n, "dist")
 error <- samwrap(par, n, "error")

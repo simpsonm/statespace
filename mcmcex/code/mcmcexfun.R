@@ -694,15 +694,18 @@ VWrejiter <- function(a, b, avw, bvw){
   df <- 1
   rej <- TRUE
   rejit <- 1
+  M <- optimize(logpirej, c(-10^2, 10^2), a=a, b=b, avw=avw, bvw=bvw, mn=mn, propvar=propvar, df=df, maximum=TRUE)$objective
   while(rej){
     prop <- rtprop(1, mn, propvar, df)
-    R <- logpirej(prop, a, b, avw, bvw, mn, propvar, df)
+    R <- logpirej(prop, a, b, avw, bvw, mn, propvar, df) - M
     u <- runif(1,0,1)
     if(log(u)<R){
       W <- exp(prop)
       rej <- FALSE
     }
     rejit <- rejit + 1
+    if(rejit == 100000)
+        rej <- FALSE
   }
   return(W)
 }
