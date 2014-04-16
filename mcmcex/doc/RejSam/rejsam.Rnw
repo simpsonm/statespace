@@ -72,3 +72,28 @@ This last condition is necessary and sufficient for $lp(y)$ to be concave so tha
 \subsection{Intelligently choosing a rejection sampler}
 In practice, adaptive rejection sampling is relatively efficient for $p_x(x)$ but inefficient for $p_y(y)$ --- so much so that rejection sampling with the $t$ approximation for $p_y(y)$ is more efficient. To minimize computation time, it is best to use adaptive rejection sampling for $p_x(x)$ when the concavity condition is satisfied. When it is not, the $t$ approximation works well.
 
+\section{Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$}
+
+\begin{align*}
+  p(&V,W|\tilde{\gamma}_{0:T},y_{1:T}) \propto |V|^{-(\lambda_V + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Lambda_VV^{-1}\right)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(y_t - F_t\theta_t(\tilde{\gamma}_{0:T})\right)'V^{-1}\left(y_t - F_t\theta_t(\tilde{\gamma}_{0:T})\right)\right]\\
+  &\times |W|^{-(\lambda_W + k + T + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Lambda_WW^{-1}\right)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T\tilde{\gamma}_t'L_V'W^{-1}L_V\tilde{\gamma}_t\right].
+\end{align*}
+
+Since $\theta(\tilde{\gamma}_{0:T})$ does not depend on $V$, we have $V|W,\tilde{\gamma}_{0:T},y_{1:T} \sim IW\left(\Lambda_W + L_V\sum_{t=1}^T\tilde{\gamma}_t\tilde{\gamma}_t'L_V', \lambda_W + T\right)$. The distribution of $W|V,\tilde{\gamma}_{0:T},y_{1:T}$ is more complicated. In section REFERENCE TO LLM SECTION we will show an example of how to sample from this distribution in the local level model.
+
+We can write the joint conditional posterior of $V$ and $W$ in this case as
+\begin{align*}
+    p(&V,W|\tilde{\psi}_{0:T},y_{1:T}) \propto |V|^{-(\lambda_V + k + T + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Lambda_VV^{-1}\right)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T\tilde{\psi}_t'L_W'V^{-1}L_W\tilde{\psi}_t\right] \nonumber\\
+    & \times |W|^{-(\lambda_W + k + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Lambda_WW^{-1}\right)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T(y_t - \tilde{\mu}_t)'(F_tWF_t')^{-1}(y_t-\tilde{\mu}_t)\right].
+\end{align*}
+Now since $\tilde{\mu}_t$ doesn't depend on $V$ we have $V|W,\tilde{\gamma}_{0:T},y_{1:T} \sim IW(\Lambda_V + L_W\sum_{t=1}^T\tilde{\psi}_t\tilde{\psi}_t'L_W', \lambda_V + T)$. The distribution of $W|V,\tilde{\psi}_{0:T}$ is once again complicated, but is analogous to that of $V|W,\tilde{\gamma}_{0:T}$ -- in section REFERENCE we give an example using the local level model. 
+
+So in the case of both wrongly scaled DAs we need to sample from a density of the form
+\begin{align*}
+  p(X) \propto X^{-\alpha -1}\exp\left[-\frac{a}{X} + \frac{b}{\sqrt{X}} - cX\right].
+\end{align*}
+The density of $Y=\log(X)$ is 
+\begin{align*}
+  p(Y) \propto \exp\left[-\alpha Y - ae^{-Y} + be^{-Y/2} - ce^Y\right].
+\end{align*}
+This density is easy to sample from fairly efficiently with rejection sampler using a $t$ or normal approximation as a proposal. It is also typically log concave, so adaptive rejection sampling will work as well. In particular when $b\leq 0$ or $a > \frac{3b}{16}\left(\frac{b}{16c}\right)^{1/3}$ the density of $Y$ is log concave.
