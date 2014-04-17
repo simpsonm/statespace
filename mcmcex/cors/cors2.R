@@ -6,7 +6,7 @@ T <- c(10, 100, 1000)
 V <- 10^(c(0:10)/2-2)
 W <- V
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
-simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
+y <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
 set.seed(234134530)
 
 samshort$iter <- 1:length(samshort[,1])
