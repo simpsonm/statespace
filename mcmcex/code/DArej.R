@@ -1,9 +1,3 @@
-## compute M in logtarget - logprop <= M
-propMda <- function(df, a, b, cc, avw, mn, propvar){
-  M <- optimize(logpirejda, c(-10^2,10^2), maximum=TRUE, a, b, cc, avw, mn, propvar, df)
-  return(M$objective)
-}
-
 ## log density of the t location scale family
 dtpropda <- function(x, mn, var, df){
   sd <- sqrt(var)
@@ -35,7 +29,7 @@ logpiVWprimeda <- function(VW, a, b, cc, avw){
 logconda <- function(a, b, cc, eps=.01){
   out <- (b <= 0)
   if(!out)
-      out <- (a > (3*b/16)*(b/(16*cc))^(1/3) + eps)
+      out <- (a > (b^2/(cc*16))*(1/4 - (b/c)^2/16^3) + eps)
   return(out)
 }
 
@@ -100,12 +94,8 @@ VWrejda <- function(a, b, cc, avw){
   }
   if(!adrej){ 
     propvar <- - 1 /( -a*exp(-mn) +(b/4)*exp(-mn/2) - cc*exp(mn) )
-    ##d <- optimize(propMda, c(1,10^3), maximum=FALSE,  a=a, b=b, cc=cc, avw=avw, 
-    ##              mn=mn, propvar=propvar)
-    ##M <- d$objective
-    ##df <- d$minimum
     df <- 10
-    M <- propMda(df, a, b, cc, avw, mn, propvar)
+    M <- optimize(logpirejda, c(-10^2,10^2), maximum=TRUE, a, b, cc, avw, mn, propvar, df)$objective
     rej <- TRUE
     rejit <- 1
     while(rej){
@@ -144,6 +134,7 @@ errorsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
   for(i in 1:n){
     ptma <- proc.time()
     psi <- awolpssmooth(dat, V, W, m0, C0)
+    psi <- c(psi[1], psi[-1]*sqrt(V/W))
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
     V <- Vpsiiterda(dat, psi, W, av, bv)
