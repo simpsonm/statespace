@@ -29,7 +29,7 @@ logpiVWprimeda <- function(VW, a, b, cc, avw){
 logconda <- function(a, b, cc, eps=.01){
   out <- (b <= 0)
   if(!out)
-      out <- (a > (b^2/(cc*16))*(1/4 - (b/c)^2/16^3) + eps)
+      out <- (a > (b^2/(cc*16))*(1/4 - (b/cc)^2/16^3) + eps)
   return(out)
 }
 
