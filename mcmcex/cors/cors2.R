@@ -19,11 +19,11 @@ samshort$bpsi <- 0
 n <- length(samshort[,1])
 for(i in 1:n){
   print(c(i,n))
-  V.T <- dat$V.T[i]
-  W.T <- dat$W.T[i]
-  T.T <- dat$T.T[i]
-  V <- dat$V[i]
-  W <- dat$W[i]
+  V.T <- samshort$V.T[i]
+  W.T <- samshort$W.T[i]
+  T.T <- samshort$T.T[i]
+  V <- samshort$V[i]
+  W <- samshort$W[i]
   yt <- y$y[y$V.T==V.T & y$W.T==W.T & y$T.T==T.T]
   theta <- awolthsmooth(yt, V, W, 0, 10^7)
   bv <- sum( (yt - theta[-1])^2 )
