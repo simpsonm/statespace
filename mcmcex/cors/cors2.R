@@ -1,5 +1,6 @@
 source("../code/mcmcexfun.R")
 source("../code/allatoncefun.R")
+##library(FactoMineR)
 load("trialtSAM.RData")
 set.seed(152893627)
 T <- c(10, 100, 1000)
@@ -16,9 +17,10 @@ samshort$agam <- 0
 samshort$bgam <- 0
 samshort$apsi <- 0
 samshort$bpsi <- 0
+samshort <- samshort[samshort$V.T==1 & samshort$W.T==1 & samshort$T.T==100,]
 n <- length(samshort[,1])
 for(i in 1:n){
-  print(c(i,n))
+  ##print(c(i,n))
   V.T <- samshort$V.T[i]
   W.T <- samshort$W.T[i]
   T.T <- samshort$T.T[i]
@@ -48,6 +50,7 @@ for(i in 1:n){
   samshort$bpsi[i] <- bpsi
 }
 
+
 newcors <- function(samcor){
   Vbv <- cor(samcor$V, samcor$bv)
   Wbv <- cor(samcor$W, samcor$bv)
@@ -57,6 +60,13 @@ newcors <- function(samcor){
   Wbgam <- cor(samcor$W, samcor$bgam)
   Vapsi <- cor(samcor$V, samcor$apsi)
   Vbpsi <- cor(samcor$V, samcor$bpsi)
+##  XV <- as.matrix(samcor[,17:18])
+##  YV <- as.matrix(samcor$V)
+##  Vrv <- coeffRV(XV,YV)
+##  XW <- as.matrix(samcor[,16:17])
+##  YW <- as.matrix(samcor$W)
+##  Wrv <- coeffRV(XW,YW)
+
 
   out <- data.frame(V=samcor$V.T[1], W=samcor$W.T[1], T=samcor$T.T[1])
   out$Vbv <- Vbv
@@ -67,6 +77,8 @@ newcors <- function(samcor){
   out$Wbgam <- Wbgam
   out$Vapsi <- Vapsi
   out$Vbpsi <- Vbpsi
+##  otu$Vrv <- Vrv$rv
+##  out$Wrv <- Wrv$rv
   return(out)
 }
 

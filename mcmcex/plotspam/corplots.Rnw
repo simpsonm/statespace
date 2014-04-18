@@ -180,7 +180,8 @@ ggplot(data=newpostcors, aes(x=V.T, y=W.T, fill=Vbpsi)) + #$
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
 @ 
 <<postplotVW, echo=FALSE, fig.height=3, fig.cap=cap>>=
-cap <- "Posterior correlation between $V$ and $W$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
+cap <- "Posterior correlation between $V$ and $W$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving 
+up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 postcors$T <- postcors$T.T
 ggplot(data=postcors, aes(x=V.T, y=W.T, fill=VW)) + #$
     geom_tile() +
