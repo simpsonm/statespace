@@ -4,7 +4,7 @@ set_parent('../mcmcex.Rnw')
 
 \section{Estimating the Model via Data Augmentation: Parameterization Issues}\label{sec:DLMest}
 A well known method to estimate the DLM is via data augmentation (DA), as in \citet{fruhwirth1994data} and \citet{carter1994gibbs}. The basic idea is to implement a Gibbs sampler with two blocks. The generic DA algorithm with parameter $\phi$, augmented data $\theta$, and data $y$ obtains the $k+1$'st state of the Markov chain, $\phi^{(k+1)}$, from the $k$'th state, $\phi^{(k)}$ as follows (we implicitly condition on the data $y$ in all algorithms and only superscript the previous and new draws of the model parameters --- intermediate draws of a DA or the model parameter are not superscripted since they are not part of the Markov chain for $\phi$):
-\begin{alg}[State Sampler for DLM]\label{DAalg}
+\begin{alg}[State Sampler for DLM]\label{alg:state}
 \begin{align*}
   [\theta|\phi^{(k)}] \to [\phi^{(k+1)}|\theta]
 \end{align*}
