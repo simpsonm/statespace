@@ -50,9 +50,6 @@ In dynamic linear models (DLMs), MCMC sampling can often be very slow for estima
 <<intro-child, child='intro/intro.Rnw', eval=TRUE>>=
 @ 
 
-<<model-child, child='DLMmodel/DLMmodel.Rnw', eval=TRUE>>=
-@ 
-
 <<DLMest-child, child='DLMest/DLMest.Rnw', eval=TRUE>>=
 @ 
 
@@ -62,6 +59,8 @@ In dynamic linear models (DLMs), MCMC sampling can often be very slow for estima
 <<<discussion-child, child='discussion/discussion.Rnw', eval=TRUE>>=
 @ 
 
+<<appendix-child, child='Appendix/appendix.Rnw', eval=TRUE>>=
+@ 
 
 \clearpage
 

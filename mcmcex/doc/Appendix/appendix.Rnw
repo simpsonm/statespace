@@ -1,16 +1,17 @@
-<<set-parent-LLMest, echo=FALSE, cache=FALSE>>=
+<<set-parent-Appendix, echo=FALSE, cache=FALSE>>=
 set_parent('../mcmcex.Rnw')
 @
 
+\section{Appendix}\label{sec:append}
 
-\section{Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$}
+\subsection{Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$}
 Both of these two densities are of the form
 \begin{align*}
 \log p(x) = lp(x) & -ax + b\sqrt{x} - (\alpha + 1)\log x -\beta/x + C 
 \end{align*}
-for $x>0$ where $C$ is some constant, $\alpha$ and $\beta$ are the hyperparameters for $x$, and $a>0$ \& $b\in \Re$ are parameters that depend on the data, $y$, the relevant data augmentation ($\psi$ or $\gamma$), and the other variable ($W$ or $V$). This density is not a known form and is difficult to sample from. We provide three different rejection sampling strategies below that work well under different circumstances, and combine them into a single strategy.
+for $x>0$ where $C$ is some constant, $\alpha$ and $\beta$ are the hyperparameters for $x$, and $a>0$ \& $b\in \Re$ are parameters that depend on the data, $y$, the relevant data augmentation ($\psi$ or $\gamma$), and the other variable ($W$ or $V$). This density is not a known form and is difficult to sample from. We provide two different rejection sampling strategies below that work well under different circumstances, and combine them into a single strategy.
 
-\subsection{Adaptive rejection sampling}
+\subsubsection{Adaptive rejection sampling}
 One nice strategy is to use adaptive rejection sampling, e.g. \citet{gilks1992adaptive}. This requires $lp(x)$ to be concave, which is easy enough to check. The second derivative of $lp(x)$ is:
 \begin{align*}
 \frac{\partial^2 lp(x)}{\partial x^2} &= -\frac{1}{4}bx^{-3/2} +(\alpha + 1)x^{-2} -2 \beta x^{-3}.
@@ -36,7 +37,7 @@ so that
 \end{align*}
 This last condition is necessary and sufficient for $lp(x)$ to be globally (for $x>0$) concave since $b < 0$ forces $LHS > 0$ for some $x$. When the condtion is satisfied, we can use adaptive rejection sampling --- which is already implemented in the \verb0R0 package \verb0ars0. We input the initial evalutions of $lp(x)$ at the mode $x^{mode}$ and at $2x^{mode}$ and $0.5x^{mode}$ in order to get the algorithm going.
 
-\subsection{Rejection sampling on the log scale}
+\subsubsection{Rejection sampling on the log scale}
 When $b \leq \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}$, which happens often --- especially for small $T$ --- we need to rely on a different method to sample from $p(x)$. A naive approach would be to construct a normal or $t$ approximation to $p(x)$ and use that as a proposal in a rejection sampler. It turns out that this is often very inefficient, but for $y=log(x)$ the approach works well. Note that
 \begin{align*}
   p_y(y) = p_x(e^y)e^y
@@ -49,7 +50,11 @@ The mode of this density $y^{mode}$ can be easily found numerically, and the sec
 \begin{align*}
   \frac{\partial^2 lp(y)}{\partial y^2} = -ae^y + \frac{b}{4}e^{y/2} - \beta e^{-y}.
 \end{align*}
-The $t$ approximation then uses the proposal distribution $t_{df}\left(y^{mode}, \left[\left.\frac{\partial^2 lp(y)}{\partial y^2}\right|_{y=y^{mode}}\right]^{-1}\right)$. In practice choosing degrees of freedom $v=1$ works very well over the region of the parameter space where adaptive rejection sampling cannot be used. We can easily use this method when adaptive rejection sampling does not work, then transform $y$ back to $x$. It remains to check that the tails of $t$ distribution dominate the tails of our target distribution. Let $lq(y)$ denote the log density of the proposoal distribution. Then we need
+The $t$ approximation then uses the proposal distribution 
+\begin{align*}
+  t_{v}\left(y^{mode}, \left[\left.\frac{\partial^2 lp(y)}{\partial y^2}\right|_{y=y^{mode}}\right]^{-1}\right).
+\end{align*}
+In practice choosing degrees of freedom $v=1$ works very well over the region of the parameter space where adaptive rejection sampling cannot be used. We can easily use this method when adaptive rejection sampling does not work, then transform $y$ back to $x$. It remains to check that the tails of $t$ distribution dominate the tails of our target distribution. Let $lq(y)$ denote the log density of the proposoal distribution. Then we need
 \begin{align*}
   lp(y) - lq(y) \leq M\\
   \intertext{for some constant M, i.e.}
@@ -61,28 +66,10 @@ where $a>0$, $\alpha>0$, $\beta>0$, $v>0$, $\sigma>0$, and $b,\mu\in \Re$. We ca
 \end{align*}
 So as $y\to\infty$ this quantity goes to $-\infty$ since the first term will eventually become negative no matter the value of $b$, and all other terms are always negative. Similarly as $y\to\-\infty$ this quantity goes to $-\infty$. Now pick any interval $(y_1,y_2)$ such that outside of the interval, $LHS<\epsilon$. Since treated as a function of $y$ the LHS is clearly continuous, it attains a maximum on this interval, and thus is bounded.
 
-\subsection{{\it Adaptive} rejection sampling on the log scale}
-We can also try adaptive rejection sampling on for $y=log(x)$. First we need to check the concavity of $lp(y)$. Using the second derivative of $lp(y)$ from above
-\begin{align*}
-  \frac{\partial^2 lp(y)}{\partial y^2} < 0 \iff & -ae^{2y} + \frac{b}{4}e^{3y/2} - \beta  < 0.
-\end{align*}
-So for $b \leq 0$ we have concavity of $lp(y)$ and can us adaptive rejection sampling. When $b > 0$, we can maximize the left hand size as before:
-\begin{align*}
-  \frac{\partial LHS}{\partial y} =& -2a e^{2y} + \frac{3}{8}b e^{3y/2} = 0\\
-  \implies & y^{max} = 2\log\left(\frac{3b}{16a}\right)
-\end{align*}
-so that
-\begin{align*}
-  LHS < LHS|_{y=y^{max}} &= -a\left(\frac{3b}{16a}\right)^{4} + \frac{b}{4}\left(\frac{3b}{16a}\right)^{3} - \beta < 0\\
-  \iff & \frac{1}{16}b\left(\frac{3b}{16a}\right)^{3} < \beta\\
-  \iff & b \leq 16\left(\frac{\beta a^3}{3^3}\right)^{1/4}.
-\end{align*}
-This last condition is necessary and sufficient for $lp(y)$ to be concave so that we can use adaptive rejection sampling for $y$ then transform back to $x$. This is convenient because $lp_x(x)$ and $lp_y(y)$ are concave in roughly opposite situations --- for $b$ large and $b$ small respectively.
-
-\subsection{Intelligently choosing a rejection sampler}
+\subsubsection{Intelligently choosing a rejection sampler}
 In practice, adaptive rejection sampling is relatively efficient for $p_x(x)$ but inefficient for $p_y(y)$ --- so much so that rejection sampling with the $t$ approximation for $p_y(y)$ is more efficient. To minimize computation time, it is best to use adaptive rejection sampling for $p_x(x)$ when the concavity condition is satisfied. When it is not, the $t$ approximation works well.
 
-\section{Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$}
+\subsection{Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$ in the LLM}
 
 Both the density of $\log(W)|V,\tilde{\gamma}_{0:T},y_{1:T}$ and the density of $\log(V)|W,\tilde{\psi}_{0:T},y_{1:T}$ have the following form:
 \begin{align*}
@@ -102,4 +89,4 @@ We then set the scale parameter to be
 \end{align*}
 as in the normal approximation, and the degrees of freedom parameter to $v=1$. This rejection sampler is tolerably efficient for our purposes, but it is not fast.
 
-It is also typically log concave, so adaptive rejection sampling will work as well. In particular when $b\leq 0$ or $a > \frac{3b}{16}\left(\frac{b}{16c}\right)^{1/3}$ the density of $Y$ is log concave.
+
