@@ -25,16 +25,18 @@ opts_chunk$set(dev="pdf",
 
 \title{Ancillarity-Sufficiency or not; Interweaving to improve MCMC estimation of the DLM}
 
+\author{Matthew Simpson\textsuperscript{1}, Jarad Niemi\textsuperscript{2}, Vivekananda Roy\textsuperscript{2}}
+
+\maketitle
+
+\begin{center}
 \small{---------------------------------------------------------------------------------------------------
 \\
 \textit{Second Bayesian Young Statisticians Meeting (BAYSM 2014)\\
 Vienna,  September 18--19, 2014}
 \\[-.3em]
 ---------------------------------------------------------------------------------------------------}
-
-\author{Matthew Simpson\textsuperscript{1}, Jarad Niemi\textsuperscript{2}, Vivekananda Roy\textsuperscript{2}}
-
-\maketitle
+\end{center}
 
 \begin{center}
  \vspace{-.5em}
