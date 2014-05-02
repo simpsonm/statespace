@@ -35,7 +35,7 @@ so that
   LHS|_{x=x^{max}} < 0 &\iff  \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} < 2\beta\\
     &\iff b > \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}.
 \end{align*}
-This last condition is necessary and sufficient for $lp(x)$ to be globally (for $x>0$) concave since $b < 0$ forces $LHS > 0$ for some $x$. When the condtion is satisfied, we can use adaptive rejection sampling --- which is already implemented in the \verb0R0 package \verb0ars0. We input the initial evalutions of $lp(x)$ at the mode $x^{mode}$ and at $2x^{mode}$ and $0.5x^{mode}$ in order to get the algorithm going.
+This last condition is necessary and sufficient for $lp(x)$ to be globally (for $x>0$) concave since $b < 0$ forces $LHS > 0$ for some $x$. When the condition is satisfied, we can use adaptive rejection sampling --- which is already implemented in the \verb0R0 package \verb0ars0. We input the initial evalutions of $lp(x)$ at the mode $x^{mode}$ and at $2x^{mode}$ and $0.5x^{mode}$ in order to get the algorithm going.
 
 \subsubsection{Rejection sampling on the log scale}
 When $b \leq \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}$, which happens often --- especially for small $T$ --- we need to rely on a different method to sample from $p(x)$. A naive approach would be to construct a normal or $t$ approximation to $p(x)$ and use that as a proposal in a rejection sampler. It turns out that this is often very inefficient, but for $y=log(x)$ the approach works well. Note that
@@ -67,7 +67,7 @@ where $a>0$, $\alpha>0$, $\beta>0$, $v>0$, $\sigma>0$, and $b,\mu\in \Re$. We ca
 So as $y\to\infty$ this quantity goes to $-\infty$ since the first term will eventually become negative no matter the value of $b$, and all other terms are always negative. Similarly as $y\to\-\infty$ this quantity goes to $-\infty$. Now pick any interval $(y_1,y_2)$ such that outside of the interval, $LHS<\epsilon$. Since treated as a function of $y$ the LHS is clearly continuous, it attains a maximum on this interval, and thus is bounded.
 
 \subsubsection{Intelligently choosing a rejection sampler}
-In practice, adaptive rejection sampling is relatively efficient for $p_x(x)$ but inefficient for $p_y(y)$ --- so much so that rejection sampling with the $t$ approximation for $p_y(y)$ is more efficient. To minimize computation time, it is best to use adaptive rejection sampling for $p_x(x)$ when the concavity condition is satisfied. When it is not, the $t$ approximation works well.
+In practice, adaptive rejection sampling is relatively efficient for $p_x(x)$ but inefficient for $p_y(y)$ --- so much so that rejection sampling with the $t$ approximation for $p_y(y)$ is more efficient. To minimize computation time, it is best to use adaptive rejection sampling for $p_x(x)$ when the concavity condition is satisfied. When it is not, the $t$ approximation works well enough.
 
 \subsection{Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$ in the LLM}
 

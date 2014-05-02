@@ -34,7 +34,7 @@ so that
   LHS|_{x=x^{max}} < 0 &\iff  \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} < 2\beta\\
     &\iff b > \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}.
 \end{align*}
-This last condition is necessary and sufficient for $lp(x)$ to be globally (for $x>0$) concave since $b < 0$ forces $LHS > 0$ for some $x$. When the condtion is satisfied, we can use adaptive rejection sampling --- which is already implemented in the \verb0R0 package \verb0ars0. We input the initial evalutions of $lp(x)$ at the mode $x^{mode}$ and at $2x^{mode}$ and $0.5x^{mode}$ in order to get the algorithm going.
+This last condition is necessary and sufficient for $lp(x)$ to be globally (for $x>0$) concave since $b < 0$ forces $LHS > 0$ for some $x$. When the condition is satisfied, we can use adaptive rejection sampling --- which is already implemented in the \verb0R0 package \verb0ars0. We input the initial evaluations of $lp(x)$ at the mode $x^{mode}$ and at $2x^{mode}$ and $0.5x^{mode}$ in order to get the algorithm going.
 
 \subsection{Rejection sampling on the log scale}
 When $b \leq \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}$, which happens often --- especially for small $T$ --- we need to rely on a different method to sample from $p(x)$. A naive approach would be to construct a normal or $t$ approximation to $p(x)$ and use that as a proposal in a rejection sampler. It turns out that this is often very inefficient, but for $y=log(x)$ the approach works well. Note that
@@ -49,7 +49,7 @@ The mode of this density $y^{mode}$ can be easily found numerically, and the sec
 \begin{align*}
   \frac{\partial^2 lp(y)}{\partial y^2} = -ae^y + \frac{b}{4}e^{y/2} - \beta e^{-y}.
 \end{align*}
-The $t$ approximation then uses the proposal distribution $t_{df}\left(y^{mode}, \left[\left.\frac{\partial^2 lp(y)}{\partial y^2}\right|_{y=y^{mode}}\right]^{-1}\right)$. In practice choosing degrees of freedom $v=1$ works very well over the region of the parameter space where adaptive rejection sampling cannot be used. We can easily use this method when adaptive rejection sampling does not work, then transform $y$ back to $x$. It remains to check that the tails of $t$ distribution dominate the tails of our target distribution. Let $lq(y)$ denote the log density of the proposoal distribution. Then we need
+The $t$ approximation then uses the proposal distribution $t_{df}\left(y^{mode}, \left[\left.\frac{\partial^2 lp(y)}{\partial y^2}\right|_{y=y^{mode}}\right]^{-1}\right)$. In practice choosing degrees of freedom $v=1$ works very well over the region of the parameter space where adaptive rejection sampling cannot be used. We can easily use this method when adaptive rejection sampling does not work, then transform $y$ back to $x$. It remains to check that the tails of $t$ distribution dominate the tails of our target distribution. Let $lq(y)$ denote the log density of the proposal distribution. Then we need
 \begin{align*}
   lp(y) - lq(y) \leq M\\
   \intertext{for some constant M, i.e.}

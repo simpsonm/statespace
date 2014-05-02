@@ -38,16 +38,16 @@ opts_chunk$set(dev="pdf",
 \begin{document}
 
 
-\title{Ancillarity-Sufficiency or not; Interweaving to Improve MCMC Estimation of the Local Level DLM}
+\title{Ancillarity-Sufficiency or not; Interweaving to Improve MCMC Estimation of the DLM}
 \author{Matt Simpson}
 \maketitle
 
 \begin{abstract}
-In dynamic linear models (DLMs), MCMC sampling can often be very slow for estimating the posterior density --- especially for longer time series. In particular, in some regions of the parameter space the standard data augmentation algorithm can mix very slowly. Recently ancillarity-sufficiency interweaving has been introduced as a method to take advantage of alternate parameterizations in multilevel models in order to improve the mixing and convergence properties of the chain. Focusing on the local level DLM, we explore alternate parameterizations and various interweaving algorithms through simulation in order to improve mixing. We conclude by explaining what our results may mean for MCMC in a more general DLM.
+In dynamic linear models (DLMs), MCMC sampling can often be very slow for estimating the posterior density --- especially for longer time series. In particular, in some regions of the parameter space the standard data augmentation algorithm can mix very slowly. Using some of the insights from the data augmentation for multilevel models literature, we explore several alternative data augmentations for a general class of DLMs and we show that no ``practical'' sufficient augmentation exists. In addition, we utilize these augmentations to construct several interweaving algorithms --- though we cannot construct an ancillary-sufficient interweaving algorithm (ASIS) since no sufficient augmentation exists, we find two ancillary augmentation and are able to construct a componentwise interweaving algorithm that uses ASIS for each model parameter conditional on the rest. Using the local level DLM, we show how to construct several of these algorithms and conduct a simulation study in order to discern their properties. We find that several algorithms that outperform the usual ``state sampler'' for many values of the population parameters, though there is room for improvement because one or more steps of the more efficient algorithms involves an often inefficient rejection sampling draw from a class of density that contains the generalized inverse Gaussian as a special case.
 \end{abstract}
 
 
-<<intro-child, child='intro/intro.Rnw', eval=TRUE>>=
+<<intro-child, child='Intro/intro.Rnw', eval=TRUE>>=
 @ 
 
 <<DLMest-child, child='DLMest/DLMest.Rnw', eval=TRUE>>=
@@ -56,7 +56,7 @@ In dynamic linear models (DLMs), MCMC sampling can often be very slow for estima
 <<LLMest-child, child='LLMest/LLMest.Rnw', eval=TRUE>>=
 @ 
 
-<<<discussion-child, child='discussion/discussion.Rnw', eval=TRUE>>=
+<<<discussion-child, child='Discuss/discuss.Rnw', eval=TRUE>>=
 @ 
 
 <<appendix-child, child='Appendix/appendix.Rnw', eval=TRUE>>=

@@ -45,18 +45,18 @@ In step 2, $V$ is drawn from the same inverse gamma distribution as in step 2 of
 \begin{align*}
   p(W|V,\gamma_{0:T},y_{1:T}) \propto & W^{-\alpha_W - 1}\exp\left[-\frac{1}{2V}\sum_{t=1}^T\left(y_t - \gamma_0 - \sqrt{W}\sum_{s=1}^t\gamma_s\right)^2\right]\exp\left[-\frac{\beta_W}{W}\right].
 \end{align*}
-This density is not any known form and is difficult to sample from, though its functional form is similar to the generalized inverse gaussian distribution. The density can be written as
+This density is not any known form and is difficult to sample from, though its functional form is similar to the generalized inverse Gaussian distribution. The density can be written as
 \begin{align*}
 p(W|V,\gamma_{0:T},y_{1:T}) \propto& W^{-\alpha_W - 1}\exp\left[-aW + b\sqrt{W} -\frac{\beta_W}{W}\right]. 
 \end{align*}
-where $a=\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and $b=\sum_{t=1}^T(y_t-\gamma_0)(\sum_{j=1}^t\gamma_j)/V$. It can be shown that $b > \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}$ implies that the density is log concave --- see the appendix for details. It turns out that this tends to hold over a wide region of the parameter space --- so long as $V$ is smaller or is not much larger than $W$. This allows for the use of adaptive rejection sampling in order to sample from this distribution in many cases, e.g. using \citet{gilks1992adaptive}. An alternative is to use a $t$ approximation to the conditional density as a proposal in a rejection sampler. This is much more computationally expensive when necessary, but it works ok on the log scale.
+where $a=\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and $b=\sum_{t=1}^T(y_t-\gamma_0)(\sum_{j=1}^t\gamma_j)/V$. It can be shown that $b > \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}$ implies that the density is log concave --- see the appendix for details. It turns out that this tends to hold over a wide region of the parameter space --- so long as $V$ is smaller or is not much larger than $W$. This allows for the use of adaptive rejection sampling in order to sample from this distribution in many cases, e.g. using \citet{gilks1992adaptive}. An alternative is to use a $t$ approximation to the conditional density as a proposal in a rejection sampler. This is much more computationally expensive when necessary, but it works OK on the log scale.
 
 The scaled error sampler is similar to the scaled disturbance sampler and this is easy to see in the local level model. Here $\psi_0=\theta_0$ and $\psi_t = (y_t - \theta_t)/\sqrt{V}$ for $t=1,2,\cdots,T$ so that $\theta_t = y_t - \sqrt{V}\psi_t$ for $t=1,2,\cdots,T$. From \eqref{dlmerrorjoint} we can write $p(V,W,\psi_{0:T}|y_{1:T})$ as
 \begin{align}
     p(&V,W,\psi_{0:T},y_{1:T}) \propto W^{-(\alpha_W + 1 + T/2)}\exp\left[-\frac{1}{W}\left(\beta_W + \frac{1}{2}\textstyle\sum_{t=1}^T(Ly_t - \sqrt{V}L\psi_t)^2\right)\right]\nonumber \\
  & V^{-(\alpha_V + 1)}\exp\left[-\frac{\beta_V}{V}\right]  \exp\left[-\frac{1}{2}\textstyle\sum_{t=1}^T\psi_t^2\right] \exp\left[-\frac{1}{2C_0}(\psi_0-m_0)^2 \right] \label{llmerrorjoint}
 \end{align}
-where we define $Ly_t=y_t-y_{t-1}$ for $t=2,3,\cdots,T$ \& $Ly_1=y_1 - \psi_0$ and $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ \& $L\psi_1=\psi_1-0$. Once again, $V$ and $W$ are no longer conditionally independent given $\psi_{0:T}$ and $y_{1:T}$. In fact, the density is analgous to \eqref{llmdistpost} with $V$ and $W$ switching places. The scaled error sampler obtained from drawing $V$ and $W$ separately is:
+where we define $Ly_t=y_t-y_{t-1}$ for $t=2,3,\cdots,T$ \& $Ly_1=y_1 - \psi_0$ and $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ \& $L\psi_1=\psi_1-0$. Once again, $V$ and $W$ are no longer conditionally independent given $\psi_{0:T}$ and $y_{1:T}$. In fact, the density is analogous to \eqref{llmdistpost} with $V$ and $W$ switching places. The scaled error sampler obtained from drawing $V$ and $W$ separately is:
 \begin{alg}Scaled Error Sampler for LLM.\label{alg:LLMerror}\\
   \begin{center}
     \begin{tabular}{lllll}
@@ -177,7 +177,7 @@ Section \ref{sec:DLMinter} contains the details for the interweaving algorithms 
 \label{GISalgorithms}
 \end{table}
 
-Interweaving algorithms are conceptually very similar to alternating algorithms. For every GIS algorithm, there is a corresponding alternating algorithm  where each $[DA_2|V,W,DA_1]$ step is replaced by a $[DA_2|V,W]$ step (here $DA_i$ is a data augmentation for $i=1,2$.). Table \ref{altalgorithms} contains each alternating algorithm. Note that there are two possible ``hybrid triple'' algorithms that we do not consider here where the move from $\theta_{0:T}$ to $\gamma_{0:T}$ interweaves and while the move from $\gamma_{0:T}$ to $\psi_{0:T}$ alternates and vice versa.
+Interweaving algorithms are conceptually very similar to alternating algorithms. For every GIS algorithm, there is a corresponding alternating algorithm  where each $[DA_2|V,W,DA_1]$ step is replaced by a $[DA_2|V,W]$ step (here $DA_i$ is a data augmentation for $i=1,2$.). Table \ref{altalgorithms} contains each alternating algorithm. Note that there are two possible ``hybrid triple'' algorithms that we do not consider here where the move from $\theta_{0:T}$ to $\gamma_{0:T}$ interweaves and while the move from $\gamma_{0:T}$ to $\psi_{0:T}$ alternates and vice-versa.
 \begin{table}[!h]
   \centering
 \begin{enumerate}
@@ -232,7 +232,7 @@ Table \ref{LLMalgorithms} lists each algorithm we considered for the local level
 
 \subsection{Simulation Setup}
 
-In order to test these algorithms, we simulated a fake dataset from the local level model for various choices of $V$, $W$, and $T$. We created a grid over $V$--$W$ space with $(V,W)$ ranging from $(10^{-2},10^{-2})$ to $(10^2, 10^2)$ and we simulated a dataset for all possible combinations of $V$ and $W$ with each of $T=10, 100, 1000$. Then for each dataset, we fit the local level model using each algorithm in Table \ref{LLMalgorithms}. We used the same rule for constructing priors for each model: $\theta_0\sim N(0,10^7)$, $V\sim IG(5, 4V^*)$, and $W\sim IG(5, 4W^*)$, mutually independent where $(V^*,W^*)$ are the true values of $V$ and $W$ used to simulate the time series. So both the prior and likelihood and thus the posterior roughly agree about the likely values of $V$ and $W$. 
+In order to test these algorithms, we simulated a fake dataset from the local level model for various choices of $V$, $W$, and $T$. We created a grid over $V$--$W$ space with $(V,W)$ ranging from $(10^{-2},10^{-2})$ to $(10^2, 10^2)$ and we simulated a dataset for all possible combinations of $V$ and $W$ with each of $T=10, 100, 1000$. Then for each dataset, we fit the local level model using each algorithm in Table \ref{LLMalgorithms}. We used the same rule for constructing priors for each model: $\theta_0\sim N(0,10^7)$, $V\sim IG(5, 4V^*)$, and $W\sim IG(5, 4W^*)$, mutually independent where $(V^*,W^*)$ are the true values of $V$ and $W$ used to simulate the time series. So the prior mean is equal to the true values of $V$ and $W$ so that both the prior and likelihood and thus the posterior roughly agree about the likely values of $V$ and $W$. We defend this choice in section \ref{sec:Discussion}.
 
 For each dataset and each sampler we obtained $n=3000$ draws and threw away the first $500$ as burn in. The chains were started at the true values used to simulated the time series, so we can examine the behavior of the chains to determine how well they mix but not how quickly they converge. Define the effective sample proportion (ESP) for a scalar component of the chain as the effective number of independent draws, i.e. effective sample size (ESS) (see e.g. \citet{gelman2003bayesian}) of the component divided by the actual sample size, i.e. $ESP=ESS/n$. An $ESP=1$ indicates that the Markov chain is behaving as if it obtains iid draws from the posterior. It is possible to obtain $ESP>1$ if the draws are negatively correlated and occasionally for some of our samplers our estimates of $ESP$ are greater than one, but we round this down to one for plotting purposes.
 
@@ -317,24 +317,33 @@ plotfun <- function(meltedsam, vars, sams, T, title){
 }
 load("../../cors/newpostcors.RData")
 newpostcors <- newpostcors[newpostcors$V.T <= 10^2 & newpostcors$W.T <= 10^2,]
-plotfuntime <- function(meltedsam, vars, sams, T, title, top){
-  castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable + samplers ~ ., 
-                     subset=.(variable %in% vars  & T.T==T & sampler %in% sams &
-                       V.T<=10^2 & W.T<=10^2))
+plotfuntime <- function(meltedsam, vars, sams, T, title, lims){
+  castedsam <- dcast(meltedsam, 
+                     formula=sampler + V.T + W.T + variable + 
+                     samplers ~ ., 
+                     subset=.(variable %in% vars  & 
+                         T.T==T & sampler %in% sams &
+                         V.T<=10^2 & W.T<=10^2))
   colnames(castedsam)[6] <- "value"
-  out <- ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=log(value*1000/60))) + #$
+  out <- ggplot(data=castedsam, aes(x=V.T, y=W.T, 
+                    fill=log(value*1000/60))) + #$
          geom_tile() +
-         scale_fill_gradient("Log min", high=muted("red"), low="white",
-           guide=guide_colorbar(barheight=10), na.value="red") +
-         facet_grid(variable~samplers, scales="free", labeller=label_parsed_split) +
-         scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+         scale_fill_gradient("Log min", 
+                             high=muted("red"), low="white",
+                             guide=guide_colorbar(barheight=10), 
+                             limits=lims, na.value="red") +
+         facet_grid(variable~samplers, scales="free", 
+                    labeller=label_parsed_split) +
+         scale_x_log10("V = noise", breaks=breaks) + 
+             scale_y_log10("W = signal", breaks=breaks) +
          ggtitle(paste(title, T, sep="")) +
-         theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+         theme(axis.text.x = element_text(angle = 90, 
+                   hjust = 1, vjust=0.5))
   return(out)
   ##, limits=c(0,top)
 }
 plotfuncor <- function(newpostcors, var, title){
-  dat <- newpostcors
+  dat <- newpostcors[newpostcors$T.T!=10,]
   id <- which(colnames(newpostcors)==var)
   colnames(dat)[id] <- "value"
   out <- ggplot(data=dat, aes(x=V.T, y=W.T, fill=value)) +
@@ -354,8 +363,7 @@ Figure \ref{baseESplot} contains plots of ESP for $V$ and $W$ in each chain of e
 
 Figure \ref{baseESplot} tells a different story for the scaled disturbance sampler. When the signal-to-noise ratio is less than one, ESPs for both $V$ and $W$ are nearly 1, i.e. the effective sample size is nearly the actual sample size of the chain. When the signal-to-noise ratio is greater than one, however, ESP for both $V$ and $W$ becomes small, especially for $V$. Once again the absolute values of $V$ and $W$ do not matter for this behavior --- just the relative values. The scaled error sampler has essentially the opposite properties. When $R$ is large, it has a near 1 ESP for both $V$ and $W$. On the other hand, when $R$ is small is has a low ESP for both $V$ and $W$, especially for $V$. The lesson here seems to be that the scaled disturbances are the preferred data augmentation for low signal-to-noise ratios and the scaled errors  are the preferred data augmentation for high signal-to-noise ratios, while the states are preferred for signal-to-noise ratios near 1. The wrongly scaled disturbances ($\tilde{\gamma}_{0:T}$) and wrongly scaled errors ($\tilde{\psi}_{0:T}$), on the other hand, look like worse versions of the state sampler. The pattern of mixing for $V$ and $W$ over the range of the parameter space is essentially the same as the state sampler, except the wrongly scaled disturbance sampler has worse mixing for $V$ than the state sampler almost everywhere and similarly the wrongly scaled error sampler has worse mixing for $W$ than the state sampler almost everywhere.
 
-The plots for $T=1000$ in Figure \ref{baseESplot} tell basically the same story, with a twist. Increasing the length of the time series seems to exacerbate all problems without changing the basic conclusions. As $T$ increases, $R$ has to be smaller and smaller for the scaled disturbance sampler to have decent mixing, and similarly $R$ has to be larger and larger for the scaled error sampler to have decent mixing. Interestingly, the scaled error sampler appears to mix well for both $V$ and $W$ over a larger region of the space $R<1$ than the scaled disturbance sampler does over $R>1$. The state sampler is stuck between a rock and a hard place, so to speak, since as $T$ increases, good mixing for $V$ requires $R$ to be smaller and smaller, but good mixing for $W$ requires $R$ to be larger and larger. The wrongly scaled samplers are again pretty similar to the state sampler for larger $T$ except the wrongly scaled sampler tends to be worse everywhere for the variance that was used to scale --- i.e. once again the wrongly scaled disturbance sampler has worse mixing for $V$ than the state sampler while the wrongly scaled error smapler has worse mixing for $W$ than the state sampler. However, the wrongly scaled samplers do appear to have slightly better mixing than the state sampler for the variance that was {\it not} used to scale. In particular, the wrongly scaled error sampler appears to have slightly better mixing for $V$ than the state sampler over part of the parameter space. 
-
+The plots for $T=1000$ in Figure \ref{baseESplot} tell basically the same story, with a twist. Increasing the length of the time series seems to exacerbate all problems without changing the basic conclusions. As $T$ increases, $R$ has to be smaller and smaller for the scaled disturbance sampler to have decent mixing, and similarly $R$ has to be larger and larger for the scaled error sampler to have decent mixing. Interestingly, the scaled error sampler appears to mix well for both $V$ and $W$ over a larger region of the space $R<1$ than the scaled disturbance sampler does over $R>1$. The state sampler is stuck between a rock and a hard place, so to speak, since as $T$ increases, good mixing for $V$ requires $R$ to be smaller and smaller, but good mixing for $W$ requires $R$ to be larger and larger. The wrongly scaled samplers are again pretty similar to the state sampler for larger $T$ except the wrongly scaled sampler tends to be worse everywhere for the variance that was used to scale --- i.e. once again the wrongly scaled disturbance sampler has worse mixing for $V$ than the state sampler while the wrongly scaled error sampler has worse mixing for $W$ than the state sampler. However, the wrongly scaled samplers do appear to have slightly better mixing than the state sampler for the variance that was {\it not} used to scale. In particular, the wrongly scaled error sampler appears to have slightly better mixing for $V$ than the state sampler over part of the parameter space. 
 The behavior of the wrongly scaled data augmentation algorithms is consistent with what we showed in Section \ref{sec:DLMinter} --- that the Full CIS algorithm based on the scaled errors and disturbances and the wrongly scaled errors and disturbances is equivalent to the Full CIS algorithm that replaces the wrongly scaled DAs with the usual latent states. Since the behavior of the state sampler and the wrongly scaled disturbance sampler are the same for $W$, we might expect that when drawing $W$ it does not matter whether we use the states or the wrongly scaled disturbances in the Full CIS algorithm. Similarly since the behavior of the state sampler and the wrongly scaled error sampler are the same for $V$, we might expect that it does not matter which one we use when drawing $V$. In fact this is what we found when constructing the Full CIS algorithm. Even though $(\gamma_{0:T}, \tilde{\gamma}_{0:T})$ forms an AA-SA pair for $W|V$ and $(\psi_{0:T},\tilde{\psi}_{0:T})$ forms an AA-SA pair for $V|W$ while $\theta_{0:T}$ is not a SA for $V$, replacing $\tilde{\gamma}_{0:T}$ and $\tilde{\psi}_{0:T}$ with $\theta_{0:T}$ does not actually change the CIS algorithm.
 
 We summarize some of the above results for convenience in Table \ref{tab:stnmix}.
@@ -378,29 +386,29 @@ So we can view $(b_V,b_W)$ as the data augmentation instead of $\theta_{0:T}$ an
 \begin{align*}
   [b_V, b_W|V^{(k)},W^{(k)}] \to [V^{(k+1)},W^{(k+1)}|b_V,b_W].
 \end{align*}
-Thus the dependence between $(V,W)$ and $(b_V,b_W)$ in the posterior will determine how much the state sampler moves in a given iteration. 
+Thus the dependence between $(V,W)$ and $(b_V,b_W)$ in the posterior will determine how much the state sampler moves in a given iteration and, in particular, it is possible that $V$ and $W$ have very different serial dependence from each other since we are drawing them jointly. When the dependence between $V$ and $b_V$ is high, the $(V,W)$ step will hardly move $V$ even if it drastically moves $W$ since $V$ and $W$ are independent. However, the $(b_V,b_W)$ step may move both elements a moderate amount since they both depend on $(V,W)$.
 
-For the scaled disturbance sampler, things are a bit more complicated. Now the data augmentation becomes
+For the scaled disturbance sampler, things are a bit more complicated. The draw of $V|W,\gamma_{0:T}$ still depends on $b_V$ since it is the same inverse gamma draw as in the state sampler, but the draw of $W|V,\gamma_{0:T}$ now depends on $a_\gamma$ and $b_\gamma$ defined below.
 \begin{align*}
-  b_V &= \beta_V + \sum_{t=1}^T(y_t - \gamma_0 -\sqrt{W}\sum_{s=1}^t\gamma_t^2)^2/2 = \beta_V + \sum_{t=1}^T(y_t - \theta_t)^2/2\\
+  b_V &= \beta_V + \sum_{t=1}^T\left(y_t - \gamma_0 - \sqrt{W}\sum_{s=1}^t\gamma_{s}\right)^2/2 = \beta_V + \sum_{t=1}^T(y_t - \theta_t)^2/2\\
   a_\gamma & = \sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V\\
   b_\gamma &=\sum_{t=1}^T(y_t-\gamma_0)(\sum_{j=1}^t\gamma_j)/V.
 \end{align*}
-This again comes from Section \ref{sec:LLMbase}. The draw of $V|W,\gamma_{0:T}$ is the same inverse gamma draw as in the state sampler. The draw of $W|V,\gamma_{0:T}$ depends on two random parameters, $a_\gamma$ and $b_\gamma$ defined above. So the dependence between $V$ and $b_V$ determines how much the marginal chain for $V$ chain moves in a single iteration, while the dependence between $W$ and $(a_\gamma,b_\gamma)$ determines how much the marginal chain for $W$ moves in a single iteration. The scaled error sampler is analogous to the scaled disturbance sampler except with 
+This again comes from Section \ref{sec:LLMbase}. So the dependence between $V$ and $b_V$ determines how much the chain moves in the $V$ step, and the dependence between $W$ and $(a_\gamma , b_\gamma)$ determines how much it moves in the $W$ step. The dependence between $(V,W)$ and $\gamma_{0:T}$ determines how much the chain moves in the DA step, but we can view this step instead as a draw of $b_V$ in which case the dependence between $W$ and $b_V$ determines how much the chain moves. So if any one of these steps has high dependence, we should expect every element of the chain, and $(V,W)$ in particular, to have high serial dependence in the chain. The scaled error sampler is analogous to the scaled disturbance sampler except with 
 \begin{align*}
   b_W &= \beta_W + \sum_{t=2}^T(Ly_t - \sqrt{V}L\psi_t)^2/2 = \beta_W + \sum_{t=1}^T(\theta_t - \theta_{t-1})^2/2\\
   a_\psi&=\sum_{t=1}^T(L\psi_t)^2/2W\\
-  b_\psi&=\sum_{t=1}^T(L\psi_tLy_t)/W
+  b_\psi&=\sum_{t=1}^T(L\psi_tLy_t)/W.
 \end{align*}
-and with the dependence in marginal chain for $W$ depending on the dependence between $b_W$ and $W$ while the dependence in the marginal chain for $V$ depending on the dependence betwee $(a_\psi, b_\psi)$ and $V$.
 
-In Figure \ref{corplot} we see that the posterior correlation between $V$ and $b_V$ is high when $R>1$ and is low when $R<1$. This explains why both the state sampler and the scaled disturbance sampler have low ESP's for $V$ when $R>1$. Similarly the posterior correlation between $W$ and $b_W$ is high when $R<1$ and is low when $R>1$, which explains why both the state sampler and scaled error sampler have low ESP's for $W$ when $R<1$. 
+In Figure \ref{corplot} we see that the posterior correlation between $V$ and $b_V$ is high in magnitude and positive when $R>1$ while the posterior correlation between $V$ and $b_W$ is high and negative. When $R$ is large enough though, the posterior correlation between $V$ and $b_W$ appears to evaporate, especially for smaller $T$. Similarly when $R<1$ the posterior correlation is high and positive between $W$ and $b_W$ and the posterior correlation between $W$ and $b_V$ is high and negative. Again as $R$ becomes large enough, especially for small $T$, the correlation between $W$ and $b_V$ goes to zero. We can use these results to explain the behavior of the state sampler. When $R>1$, the draw of $(b_V, b_W)$ is unlikely to move $b_V$ much since $b_V$ is so highly correlated with $V$ and essentially uncorrelated with $b_W$, but $b_W$ is essentially uncorrelated with $W$ and negatively correlated with $V$ so $b_W$ is likely to move a fair amount. Furthermore the draw of $V$ is highly correlated with $b_V$ while the draw of $W$ is essentially independent of $b_W$ (and the draws of $V$ and $W$ are independent conditional on $b_V$ and $b_W$). Thus when $R>1$ we should expect high serial dependence for $V$ and low serial dependence for $W$, and so low ESP for $V$ and high ESP for $W$, which is exactly what we see in Figure \ref{baseESplot}. Similarly when $R<1$ the posterior correlation between $V$ and $b_V$ is low, the correlation between $W$ and $b_W$ is high, the correlation between $V$ and $b_W$ is low, and the correlation between $W$ and $b_V$ is high but negative. So we should expect the exact opposite behavior --- low serial dependence for $V$ and high serial dependence for $W$ and thus high ESP for $V$ and low ESP for $W$. Again, this is exactly what we see in Figure \ref{baseESplot}.
 
-{\it Insert explanation of marginal chain for $W$ in the scaled disturbance sampler and for the marginal chain for $V$ in the scaled error sampler. Right now it doesn't look right - the correlation between $V$ and $a_\psi$ or $b_\psi$ is highest when $R$ is high, but for the scaled error sampler, autocorrelation in the marginal chain for $V$ is highest when $R$ is low. However, here's a thought. Consider the marginal chain for $W$ in the scaled disturbance sampler - this chain essentially consists of two steps, a draw of $(a_\gamma,b_\gamma|W)$ and a draw of $(W|a_\gamma , b_\gamma)$. When $W$ is negatively correlated with both $a_\gamma$ and $b_\gamma$, a large draw of $W$ in the chain means that we expect small draws of $a_\gamma$ and $b_\gamma$ because of the negative correlation which, in turn, means that we expect a large draw of the next $W$ again because of the negative correlation. This may explain what we are seeing.}
+In order to analyze the scaled disturbance sampler, we can look at each step separately and combine them together. First, suppose $R>1$. Then from Figure \ref{corplot} $b_V$ has high correlation with $V$ and low correlation with $W$, so the draw of $b_V$ should not move the chain much. Next, the draw of $V$ should again not move the chain much because of the high correlation between $V$ and $b_V$. Finally the draw of $W$ has a fair chance to move the chain because it has low correlation with both $a_\gamma$ and $b_\gamma$. But this has little impact on $b_V$ and thus the entire chain since $b_V$ is so highly correlated with $V$ but hardly correlated with $W$. So when $R>1$, we should expect high serial dependence and low ESP for $V$. We should also expect similar behavior for $W$ since the entire chain is hardly moving so $W$'s hyperparameters are hardly moving, though it makes sense for this dependence to be a bit weaker since we see such low correlation between $W$ and both $a_\gamma$ and $b_\gamma$. This is close to what we see, expect when $R>1$ the serial dependence is worse for $W$ rather than for $V$, as evidences by the high ESP for $W$ and high but slightly lower ESP for $V$ in Figure \ref{baseESplot}. When $R<1$ the posterior correlation in each of the steps is broken though in the $W$ step the correlation between $W$ and both $a_\gamma$ and $b_\gamma$ becomes negative and somewhat high. Here we should expect much less serial dependence in both $V$ and $W$ and indeed, we see ESP's near one for both variances.
 
+The scaled error sampler is analogous to the scaled disturbance sampler. When $R<1$ we see high posterior correlation between $W$ and $b_W$ which suggests that the $W$ step will not move the chain much. The $V$ step could move the chain a bit since $V$ is essentially uncorrelated with $a_\psi$ and $b_\psi$, but since $b_W$ is essentially uncorrelated with $V$ and highly correlated with $W$ this is unlikely to affect the entire chain much since both $b_W$ and $W$ are unlikely to move much. As a result we should see high serial dependence in the chain for $W$ and high though a bit lower serial dependence for $V$. This is close to what we see if Figure \ref{baseESplot} --- when $R<1$, the scaled error sampler has low ESP for both $V$ and $W$, an indication of high serial dependence in the chain. However, the ESP is lower and thus the serial dependence is higher for $V$ than it is for $W$, much like the case for the scaled disturbance sampler. When $R>1$, Figure \ref{corplot} shows low correlation between $W$ and $b_W$, which suggests that the $W$ step will be able to amply move the chain. Similarly, the correlation between $V$ and $b_W$ is mildly high but negative so the $b_W$ step, just before the $V$ step, should move the chain fairly well. Finally the correlation between $V$ and both $a_\psi$ and $b_\psi$ is mildly high and positive with $R>1$ --- and especially high when $T$ is large. As a result, when $R>1$ we should expect minimal serial dependence in the scaled error sampler for both $V$ and $W$, which is what we see with the high ESP's in Figure \ref{baseESplot}.
 
 <<baseESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=8, out.width=".7\\textwidth">>=
-cap <- "Effective sample proportion in the posterior sampler for a time series of lengths $T=100$ and $T=1000$, for $V$ and $W$, and for the state, scaled disturbance, scaled error, wrongly scaled disturbance, and wrongly scaleed error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than $1$ were rounded down to $1$"
+cap <- "Effective sample proportion in the posterior sampler for a time series of lengths $T=100$ and $T=1000$, for $V$ and $W$, and for the state, scaled disturbance, scaled error, wrongly scaled disturbance, and wrongly scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than $1$ were rounded down to $1$"
 vars <- c("V.ES", "W.ES")
 title <- "ESP for V and W in the base algorithms, T="
 ##p1 <- plotfun(meltedsam, vars, c(base,wrongs), 10, title)
@@ -411,33 +419,39 @@ p2
 p3
 @ 
 
-<<corplot, echo=FALSE, fig.height=3, fig.width=8, out.width=".49\\textwidth", fig.cap=cap>>=
+<<corplot, echo=FALSE, fig.height=3, fig.width=5, out.width=".245\\textwidth", fig.cap=cap>>=
 cap <- "Posterior correlation between $V$ or $W$ and $b_V$ or $b_W$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
-title <- "Posterior Correlation Between V and bv"
-p1 <- plotfuncor(newpostcors, "Vbv", title)
-title <- "Posterior Correlation Between W and bw"
-p2 <- plotfuncor(newpostcors, "Wbw", title)
-title <- "Posterior Correlation Between V and apsi"
-p3 <- plotfuncor(newpostcors, "Vapsi", title)
-title <- "Posterior Correlation Between W and agam"
-p4 <- plotfuncor(newpostcors, "Wagam", title)
-title <- "Posterior Correlation Between V and bpsi"
-p5 <- plotfuncor(newpostcors, "Vbpsi", title)
-title <- "Posterior Correlation Between W and bgam"
-p6 <- plotfuncor(newpostcors, "Wbgam", title)
-p1
-p2
-p3
-p4
-p5
-p6
+title <- expression(paste("Posterior Correlation Between V and ",b[V], sep=""))
+pvv <- plotfuncor(newpostcors, "Vbv", title)
+title <- expression(paste("Posterior Correlation Between W and ",b[W], sep=""))
+pww <- plotfuncor(newpostcors, "Wbw", title)
+title <- expression(paste("Posterior Correlation Between V and ",b[W], sep=""))
+pvw <- plotfuncor(newpostcors, "Vbw", title)
+title <- expression(paste("Posterior Correlation Between W and ",b[V], sep=""))
+pwv <- plotfuncor(newpostcors, "Wbv", title)
+title <- expression(paste("Posterior Correlation Between V and ",a[psi], sep=""))
+pva <- plotfuncor(newpostcors, "Vapsi", title)
+title <- expression(paste("Posterior Correlation Between W and ",a[gamma], sep=""))
+pwa <- plotfuncor(newpostcors, "Wagam", title)
+title <- expression(paste("Posterior Correlation Between V and ",b[psi], sep=""))
+pvb <- plotfuncor(newpostcors, "Vbpsi", title)
+title <- expression(paste("Posterior Correlation Between W and ",b[gamma], sep=""))
+pwb <- plotfuncor(newpostcors, "Wbgam", title)
+pvv
+pvw
+pva
+pvb
+pww
+pwv
+pwa
+pwb
 @ 
 
 \subsection{GIS and CIS Results}
 
-Based on the intuition in Section \ref{sec:DLMest} above, both the GIS and alternating algorithms should work best when at least one of the underlying base algorithms has a high ESP --- the basic idea is that when least one of the underlying algorithms has low autocorrelation, we should have low autocorrelation in the GIS algrothim using multiple DAs. This suggests that the Dist-Error GIS and alternating algorithms will have the best performance of the GIS and alternating algorithms using two DAs for both $V$ and $W$, especially for $R$ far away from one. When $R$ is near one it may offer no improvement, especially for large $T$. The State-Dist algorithms should have trouble with $V$ when $R$ is high since both the state sampler and the scaled disturbance sampler have trouble with $V$ when $R$ is high. Similarly, the State-Error GIS algorithm should have trouble with $W$ when $R$ is low since both underlying samplers have trouble with $W$ when $R$ is low. Since the triple algorithms add the state sampler into the Dist-Error algorithms, it seems plausible that it might improve mixing for one of $V$ or $W$ since for $R$ different from one, the state sampler has good mixing for at least one of $V$ of $W$. 
+Based on the intuition in Section \ref{sec:DLMest} above, both the GIS and alternating algorithms should work best when at least one of the underlying base algorithms has a high ESP --- the basic idea is that when least one of the underlying algorithms has low serial dependence in the chain, the we should have low serial dependence in the GIS and alternating algorithms since the serial dependence in the bad DA algorithm is broken by adding a lower dependence step before the next iteration. This suggests that the Dist-Error GIS and alternating algorithms will have the best performance of the GIS and alternating algorithms using two DAs for both $V$ and $W$, especially for $R$ far away from one. When $R$ is near one it may offer no improvement however, especially for large $T$. The State-Dist algorithms should have trouble with $V$ when $R$ is high since both the state sampler and the scaled disturbance sampler have trouble with $V$ when $R$ is high. Similarly, the State-Error GIS algorithm should have trouble with $W$ when $R$ is low since both underlying samplers have trouble with $W$ when $R$ is low. Since the triple algorithms add the state sampler into the Dist-Error algorithms, it seems plausible that it might improve mixing for one of $V$ or $W$ since for $R$ different from one, the state sampler has good mixing for at least one of $V$ of $W$. 
 
-There are a couple of ways to gain some intuition about what we expect the Full CIS algorithm to do before seeing the results. First, we mentioned in Section \ref{sec:DLMinter} that the Full CIS and the Dist-Error GIS algorithm consist of the same steps, just rearranged. This suggests that they should perform similarly so that we expect the Full CIS algorithm to have good mixing for both $V$ and $W$ when $R$ is sufficiently different from one. We can draw the same conclusion in a different way by noticing that in the Gibbs step for $V$, the CIS algorithm interweaves between the states and the scaled errors and in the Gibbs step for $W$ it interweaves between the states and the scaled disturbances. Since the state sampler has a high ESP for $V$ when $R<1$ and the scaled disturbance sampler has a high ESP for $V$ when $R>1$ we should expect the Full CIS sampler to have a high ESP for $V$ when $R$ is different from one. Similarly, since the state sampler has a high ESP for $W$ when $R>1$ and the scaled eror sampler has a high ESP for $W$ when $R<1$, we should expect the Full CIS sampler to have a high ESP for $W$ when $R$ is different from one.
+There are a couple of ways to gain some intuition about what we expect the Full CIS algorithm to do before seeing the results. First, we mentioned in Section \ref{sec:DLMinter} that the Full CIS and the Dist-Error GIS algorithm consist of the same steps, just rearranged. This suggests that they should perform similarly so that we expect the Full CIS algorithm to have good mixing for both $V$ and $W$ when $R$ is sufficiently different from one. We can draw the same conclusion in a different way by noticing that in the Gibbs step for $V$, the CIS algorithm interweaves between the states and the scaled errors and in the Gibbs step for $W$ it interweaves between the states and the scaled disturbances. Since the state sampler has a high ESP for $V$ when $R<1$ and the scaled disturbance sampler has a high ESP for $V$ when $R>1$ we should expect the Full CIS sampler to have a high ESP for $V$ when $R$ is different from one. Similarly, since the state sampler has a high ESP for $W$ when $R>1$ and the scaled error sampler has a high ESP for $W$ when $R<1$, we should expect the Full CIS sampler to have a high ESP for $W$ when $R$ is different from one.
 
 
 <<intESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=8, out.width=".7\\textwidth">>=
@@ -453,7 +467,7 @@ p2
 p3
 @ 
 
-We can verify most of these intuitions in Figure \ref{baseESplot}. First, the State-Dist GIS algorithm has high ESP for $W$ except for a narrow band where $R$ is near one, though this band becomes much wider as $T$ increases. The State-Dist GIS algorithm's mixing behavor for $V$ appears identical to the original state sampler --- high ESP when $R < 1$ and poor ESP when $R > 1$, and again the good region shrinks as $T$ increases. So this algorithm behaves as expected --- it takes advantage of the fact that the state and scaled disturbance DA algorithms make up a ``beauty and the beast'' pair for $W$ and thus improves mixing for $W$. However, the two underlying DA algorithms behave essentially indentically for $V$ so there is no improvement. Similarly the State-Error GIS algorithm's ESP for $W$ is essentially identical to the state and scaled error algorithms' ESP for $W$ --- high when $R$ large and low when $R$ small.  For $V$, the State-Error algorithm has a high ESP when $R$ is far enough away from one, especially when $T$ is small. The Dist-Error GIS algorithm also behaves as predicted --- when $R$ is not too close to one it has high ESP for both $V$ and $W$, though as $T$ increases $R$ has too be farther away from one in order for the ESPs to be high. The Dist-Error GIS algorithm behaves apparently identically to the Full CIS and triple GIS algorithms, with some differences when $T$ is small. The first of these is not surprising --- based on the intuition that the Dist-Error GIS and Full CIS algorithms are the same up to a reordering of each of their steps, we expected little if any difference. However, we had some hope that the triple GIS algorithm would improve upon the Dist-Error GIS algorithm somewhat by further breaking the correlation between iterations in the Markov chain. This did not happen and furthermore the State-Dist and State-Error samplers did not improve the ESP for $V$ or $W$ respectively. When the underlying DA algorithms form a ``beauty and the beast'' pair, the interweaving algorithm appears to mix just as well as the best mixing single DA algorithm. Figure \ref{altESplot} allows us to see the ESP of the alternating algorithms in order to compare them to the GIS algorithms. There appears to be little practical difference between the alternating and interweaving versions of a given algorithm based on any two or three of the base DAs --- both take advantage of the beauty and the beast nature of their underlying DAs but dependence between the two DAs prevent the GIS version from improving on the alternating version.
+We can verify most of these intuitions in Figure \ref{baseESplot}. First, the State-Dist GIS algorithm has high ESP for $W$ except for a narrow band where $R$ is near one, though this band becomes much wider as $T$ increases. The State-Dist GIS algorithm's mixing behavior for $V$ appears identical to the original state sampler --- high ESP when $R < 1$ and poor ESP when $R > 1$, and again the good region shrinks as $T$ increases. So this algorithm behaves as expected --- it takes advantage of the fact that the state and scaled disturbance DA algorithms make up a ``beauty and the beast'' pair for $W$ and thus improves mixing for $W$. However, the two underlying DA algorithms behave essentially identically for $V$ so there is no improvement. Similarly the State-Error GIS algorithm's ESP for $W$ is essentially identical to the state and scaled error algorithms' ESP for $W$ --- high when $R$ large and low when $R$ small.  For $V$, the State-Error algorithm has a high ESP when $R$ is far enough away from one, especially when $T$ is small. The Dist-Error GIS algorithm also behaves as predicted --- when $R$ is not too close to one it has high ESP for both $V$ and $W$, though as $T$ increases $R$ has too be farther away from one in order for the ESPs to be high and it has extra trouble with $W$ when $R$ is less than one but not small enough. The Dist-Error GIS algorithm behaves apparently identically to the Full CIS and triple GIS algorithms, with some differences when $T$ is small. The first of these is not surprising --- based on the intuition that the Dist-Error GIS and Full CIS algorithms are the same up to a reordering of each of their steps, we expected little if any difference. However, we had some hope that the triple GIS algorithm would improve upon the Dist-Error GIS algorithm somewhat by further breaking the correlation between iterations in the Markov chain. This did not happen and furthermore the State-Dist and State-Error samplers did not improve the ESP for $V$ or $W$ respectively over the original state sampler. When the underlying DA algorithms form a ``beauty and the beast'' pair, the interweaving algorithm appears to mix just as well as the best mixing single DA algorithm. Figure \ref{altESplot} allows us to see the ESP of the alternating algorithms in order to compare them to the GIS algorithms. There appears to be little practical difference between the alternating and interweaving versions of a given algorithm based on any two or three of the base DAs --- both take advantage of the beauty and the beast nature of their underlying DAs but dependence between the two DAs prevent the GIS version from improving on the alternating version. All of these results are summarized in Table \ref{tab:stnmix2} without distinguishing between the interweaving and alternating versions of an algorithm.
 
 <<altESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=7, out.width=".7\\textwidth">>=
 cap <- "Effective sample proportion in the posterior sampler for $V$ and $W$ in for $T=100$ and $T=1000$, in all four alternating samplers. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than one were rounded down to one."
@@ -468,20 +482,32 @@ p2
 p3
 @ 
 
+\begin{table}
+  \centering
+  \begin{tabular}{|l|ccccc|}\hline
+    Parameter & State-Dist        & State-Error       & Dist-Error        & Triple            & Full CIS \\\hline
+    V         & $R < 1$           & $R \not\approx 1$ & $R \not\approx 1$ & $R \not\approx 1$ & $R \not\approx 1$ \\
+    W         & $R \not\approx 1$ & $R > 1$           & $R \not\approx 1$ & $R \not\approx 1$ & $R \not\approx 1$\\\hline
+  \end{tabular}
+  \caption{Rule of thumb for when each interweaving or alternating algorithm has a high effective sample size for each variable as a function of the true signal-to-noise ratio, $R=W/V$.}
+  \label{tab:stnmix2}
+\end{table}
+
+
 \subsection{Computational time}\label{sec:LLMtime}
 
-A more important question than how well the chain mixes from a practical standpoint is the full computational time required to adequately characterize the posterior distribution. In order to investigate this, we compute the natural log of the average time in minutes required for each sampler to achieve an effective sample size of 1000 --- in other words the log time per 1000 effective draws. All simulations were performed on {\it INSERT DETAILS ABOUT IMPACT3}. While different systems will yield different absolute times, the relative times should at least be similar. Figure \ref{baseinttimeplot} contains plots of the log time per 1000 effective draws for both $V$ and $W$ and for each of the base and interweaving samplers --- note that the scales change as $T$ changes. 
+A more important question than how well the chain mixes from a practical standpoint is the full computational time required to adequately characterize the posterior distribution. In order to investigate this, we compute the natural log of the average time in minutes required for each sampler to achieve an effective sample size of 1000 --- in other words the log time per 1000 effective draws. All simulations were performed on a university cluster at Iowa State University with 24 Intel Xeon X5675 3.07 GHz processors. While different systems will yield different absolute times, the relative times should at least be similar. Figure \ref{baseinttimeplot} contains plots of the log time per 1000 effective draws for both $V$ and $W$ and for each of the base and interweaving samplers --- note that the scales change as $T$ changes. 
 
-For $T=100$ and $T=1000$ the pattern we saw for ESP begins also appears for time per 1000 effective draws. The state sampler becomes very slow to reach 1000 effective draws for $V$ when $R>1$ and for $W$ when $R<1$. The scaled disturbance and scaled error samplers behave as expected --- the scaled disturbance sampler is slow for both $V$ and $W$ when $R>1$ while the scaled disturbance sapler is slow for both $V$ and $W$ when $R<1$. The Dist-Error GIS, Triple GIS and Full CIS algorithms appear to be the big winners here and are almost indistinguishable. All three algorithms are slightly slower for $V$ when $R$ is near one, and when $R$ is near or below one all three are slow for $W$. Compared to the state sampler though, all three offer large gains over most of the parameter space. When we compare the GIS algorithms to their alternating counterparts in terms of log time per 1000 effective draws, again there is little difference. Figure \ref{altinttimeplot} shows the log time per 1000 effective draws for the alternating algorithms and we see essentially the same pattern as we saw for the GIS algorithms.
+For $T=100$ and $T=1000$ we see that the pattern we saw for ESP begins also appears for time per 1000 effective draws. The state sampler becomes slow to reach 1000 effective draws for $V$ when $R>1$ and for $W$ when $R<1$. The scaled disturbance and scaled error samplers behave as expected --- the scaled disturbance sampler is slow for both $V$ and $W$ when $R>1$ while the scaled disturbance sampler is slow for both $V$ and $W$ when $R<1$. The Dist-Error GIS, Triple GIS and Full CIS algorithms appear to be the big winners here and are almost indistinguishable. All three algorithms are slightly slower for $V$ when $R$ is near one, and when $R$ is near or below one all three are slow for $W$. Compared to the state sampler though, all three offer large gains over most of the parameter space. When we compare the GIS algorithms to their alternating counterparts in terms of log time per 1000 effective draws, again there is little difference. Figure \ref{altinttimeplot} shows the log time per 1000 effective draws for the alternating algorithms and we see essentially the same pattern as we saw for the GIS algorithms with no clear advantage to the alternating or interweaving version of any algorithm.
 
 <<baseinttimeplot, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.25, out.width=".8\\textwidth">>=
-cap <- "Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ and $T=1000$, in the state, scaled disturbance and scaled error samplers and for all five interweaving samplers. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. The signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. For plotting purposes, times larger than the top of the scale are displayed in bright red."
+cap <- "Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ and $T=1000$, in the state, scaled disturbance and scaled error samplers and for all five interweaving samplers. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. The signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 vars <- c("V.time", "W.time")
 sams <- c("dist", "error", "deint", "state", "seint", "sdint", "triint", "fullcis")
 title <- "Log of time (minutes) per 1000 effective draws for base and interweaving samplers, T="
 ##p1 <- plotfuntime(meltedsam, vars, sams, 10, title, 25*60/1000)
-p2 <- plotfuntime(meltedsam, vars, sams, 100, title, 60*60/1000)
-p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, 1100*60/1000)
+p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
+p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, c(-1,8))
 ##p1
 p2
 p3
@@ -489,12 +515,12 @@ p3
 
 
 <<altinttimeplot, fig.cap=cap, echo=FALSE, fig.width=8, fig.height=3.75, out.width=".49\\textwidth">>=
-cap <- "Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ and $T=1000$, in the alternating, GIS, and random kernel samplers. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. The signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. For plotting purposes, times larger than the top of the scale are displayed in bright red."
+cap <- "Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ and $T=1000$, in the alternating, GIS, and random kernel samplers. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. The signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high."
 sams <- c(alts,ints)
 title <- "Log of time (minutes) per 1000 effective draws for alternating samplers, T="
 ##p1 <- plotfuntime(meltedsam, vars, sams, 10, title, 25*60/1000)
-p2 <- plotfuntime(meltedsam, vars, sams, 100, title, 60*60/1000)
-p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, 1100*60/1000)
+p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
+p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, c(-1,8))
 ##p1
 p2
 p3
