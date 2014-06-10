@@ -22,6 +22,9 @@ epsfig, multicol, amsthm, bbm}
 \DeclareMathOperator{\vech}{vech}
 \DeclareMathOperator{\vect}{vec}
 
+
+\newcommand{\matt}[1]{{\color{red} Matt: #1}}
+
 <<setup, include=FALSE, cache=FALSE>>=
 options(replace.assign=TRUE,width=90)
 opts_knit$set(eval.after = "fig.cap")
@@ -59,6 +62,7 @@ In dynamic linear models (DLMs), MCMC sampling can often be very slow for estima
 <<<discussion-child, child='Discuss/discuss.Rnw', eval=TRUE>>=
 @ 
 
+\appendix
 <<appendix-child, child='Appendix/appendix.Rnw', eval=TRUE>>=
 @ 
 
