@@ -4,7 +4,7 @@ epsfig, multicol, amsthm, bbm}
 \usepackage{multicol}
 \usepackage{textcomp}
 \usepackage{fullpage}
-\usepackage[maxfloats=48]{morefloats} %for >18 figures
+%\usepackage[maxfloats=48]{morefloats} %for >18 figures
 \usepackage{booktabs}
 \usepackage{caption}
 \usepackage[authoryear]{natbib} %numbers instead of authoryear for [1] instead of [1980]
@@ -49,7 +49,7 @@ opts_chunk$set(dev="pdf",
 In dynamic linear models (DLMs), MCMC sampling can often be very slow for estimating the posterior density --- especially for longer time series. In particular, in some regions of the parameter space the standard data augmentation algorithm can mix very slowly. Using some of the insights from the data augmentation for multilevel models literature, we explore several alternative data augmentations for a general class of DLMs and we show that no ``practical'' sufficient augmentation exists. In addition, we utilize these augmentations to construct several interweaving algorithms --- though we cannot construct an ancillary-sufficient interweaving algorithm (ASIS) since no sufficient augmentation exists, we find two ancillary augmentation and are able to construct a componentwise interweaving algorithm that uses ASIS for each model parameter conditional on the rest. Using the local level DLM, we show how to construct several of these algorithms and conduct a simulation study in order to discern their properties. We find that several algorithms that outperform the usual ``state sampler'' for many values of the population parameters, though there is room for improvement because one or more steps of the more efficient algorithms involves an often inefficient rejection sampling draw from a class of density that contains the generalized inverse Gaussian as a special case.
 \end{abstract}
 
-\matt{Do we need to use knitr? I suggest we turn this into a straight LaTeX document. Likely the publishers will want a LaTeX document anyway (although I realize you could use the intermediate from a knitr compilation). If you use \verb@\include@ for the subdocuments then \verb@\includeonly@ is a convenient command to only compile one section at a time. But, I think we might also want to just make this a single document. This will make some changes easier, e.g. global replacements such as ``a SA'' to ``an SA'' or finding whether a particular equation is referenced anywhere.}
+\matt{Do we need to use knitr? I suggest we turn this into a straight LaTeX document. Likely the publishers will want a LaTeX document anyway (although I realize you could use the intermediate from a knitr compilation). If you use include for the subdocuments then includeonly is a convenient command to only compile one section at a time. But, I think we might also want to just make this a single document. This will make some changes easier, e.g. global replacements such as ``a SA'' to ``an SA'' or finding whether a particular equation is referenced anywhere.}
 <<intro-child, child='Intro/intro.Rnw', eval=TRUE>>=
 @ 
 
