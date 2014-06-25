@@ -1,0 +1,153 @@
+\documentclass{article}\usepackage[]{graphicx}\usepackage[]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol, amsthm, bbm}
+\usepackage{multicol}
+\usepackage{textcomp}
+\usepackage{fullpage}
+\usepackage[maxfloats=48]{morefloats} %for >18 figures
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage[authoryear]{natbib} %numbers instead of authoryear for [1] instead of [1980]
+%Indicator function: use as \indicator{X=x}
+\newcommand{\indicator}[1]{\mathbbm{1}{\left\{ {#1} \right\} }}
+%Independent: use as X \ind Y | Z
+\newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newtheorem{alg}{Algorithm}
+\newtheorem{thm}{Theorem}[subsection]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}[thm]{Corollary}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\B}{B}
+\DeclareMathOperator{\vech}{vech}
+\DeclareMathOperator{\vect}{vec}
+
+
+
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+
+
+\begin{document}
+
+WARNING: REFERENCES TO OTHER PARTS OF THE DOCUMENT WON'T WORK HERE
+
+
+
+
+
+\subsection{All without a loop (AWOL) smoothing}
+
+Traditionally in DLMs, the Kalman filter is used in order to draw from the latent states $\theta_{0:T}$ through forward filtering, backward sampling (FFBS). This requires running the Kalman filter in order to determine the marginal distribution of $\theta_T$, then drawing $\theta_t|\theta_{t+1:T}$ for $t=T-1,T-2,\cdots,1$ (\cite{carter1994gibbs}, \cite{fruhwirth1994data}). The all without a loop (AWOL) method determines the joint distribution of $\theta_{0:T}$ and draws from it all at once, i.e. without a loop. The idea comes from \cite{rue2001fast}, which introduces a Cholesky factorization algorithm for drawing from a Gaussian Markov Random Field (GMRF), and notes that the conditional distribution of $\theta_{0:T}$ given $y_{1:T}$ in a Gaussian linear statespace model is a special case. \cite{mccausland2011simulation} improves the idea by coming up with a slightly faster method in order to draw $\theta_{0:T}$ based on essentially the same reasoning. The name comes from \cite{kastner2013ancillarity}, who use the method along with ancillarity-sufficiency interweaving in order to speed up MCMC estimation of stochastic volatility models. 
+
+The basic idea is this. Suppose our model is
+\begin{align*}
+  y_t &= F_t\theta_t + v_t\\
+  \theta_t & = G_t\theta_{t-1} + w_t
+\end{align*}
+with $v_t\stackrel{ind}{\sim} N(0,V_t)$ independent of $w_t\stackrel{ind}{\sim}N(0,W_t)$ for $t=1,2,\cdots,T$ and $\theta_0\sim N(m_0,C_0)$. Now $(y_{1:T},\theta_{0:T})$ is joint normal conditional on $(V_{1:T},W_{1:T})$ (in this section, everything is conditonal on $V_{1:T}$ and $W_{1:T}$). So we can write $p(\theta_{0:T}|y_{1:T})$ as
+\begin{align*}
+  \log p(\theta_{0:T}|y_{1:T}) = -\frac{1}{2}g(\theta_{0:T},y_{1:T}) + K
+\end{align*}
+where $K$ is some constant with respect to $\theta_{0:T}$ and
+\begin{align*}
+  g(\theta_{0:T},y_{1:T}) = \theta_{0:T}'\Omega\theta_{0:T} - 2a'\theta_{0:T}.
+\end{align*}
+However, we also have
+\begin{align*}
+  \log p(\theta_{0:T}|y_{1:T}) = \log p(\theta_{0:T},y_{1:T}) - \log p(y_{1:T}).
+\end{align*}
+This means that
+\begin{align*}
+  g(\theta_{0:T}&,y_{1:T}) = (\theta_0 - m_0)C_0^{-1}(\theta_0 - m_0) + K'\\
+  & \sum_{t=1}^T(y_t - F_t\theta_t)'V_t^{-1}(y_t - F_t\theta_t) + \\
+  & \sum_{t=1}^T(\theta_t - G_t\theta_{t-1})'W_t^{-1}(\theta_t - G_t\theta_{t-1}).
+\end{align*}
+where $K'$ is another constant that doesn't depend on $\theta_{0:T}$.
+
+So now we can identify blocks of $\Omega$ with the cross product terms of the $\theta_t$'s and blocs of $a$ with the single product terms. Specifically, we $\Omega$ is a banded diagonal matrix with
+\begin{align*}
+  \Omega = \begin{bmatrix} \Omega_{00} & \Omega_{01} & 0 &\ddots & 0 & 0\\
+    \Omega_{10} & \Omega_{11} & \Omega_{12} & \ddots  & 0            & 0\\
+    0          & \Omega_{21} & \Omega_{22} & \ddots  & 0            & 0\\
+    \ddots     & \ddots     & \ddots     & \ddots  & \ddots       & \ddots \\
+    0          & 0          & 0          & \ddots  & \Omega_{T-1,T-1} & \Omega_{T-1,T}\\
+    0          & 0          & 0          & \ddots  & \Omega_{T,T-1} & \Omega_{TT}\end{bmatrix}
+\end{align*}
+and $a = (a_0', a_1', \cdots, a_T')$ where the $\Omega_{st}$'s and $a_{t}$'s defined below:
+\begin{align*}
+  \Omega_{00} & = C_0^{-1} + G_1'W_1^{-1}G_1 && \\
+  \Omega_{tt} & = F_t'V_t^{-1}F_t + W_t^{-1} + G_{t+1}'W_{t+1}^{-1}G_{t+1} &&  \mathrm{ for }\ \  t=1,2,\cdots T-1\\
+  \Omega_{TT} & = F_T'V_T^{-1}F_T + W_T^{-1} && \\
+  \Omega_{t,t-1} & = - W_t^{-1}G_t &&  \mathrm{ for }\ \  t=1,2,\cdots T\\
+  \Omega_{t-1,t} & = - G_t'W_t^{-1} = \Omega_{t,t-1}' && \mathrm{ for }\ \  t=1,2,\cdots T\\
+  a_0 & = C_0^{-1}m &&\\
+  a_t &= F_t'V_t^{-1}y_t &&  \mathrm{ for }\ \  t=1,2,\cdots T.
+\end{align*}
+Together, $\Omega$ and $a$ determine the normal distribution from which $\theta_{0:T}$ should be drawn. \cite{rue2001fast} shows how to take advantage of the sparsity of $\Omega$ in order to quickly compute its Cholesky factorization and in order to find the mean vector from $a$ and this factorization. \cite{mccausland2011simulation} shows that instead of computing these quantities directly, you can draw $\theta_T$ and $\theta_t|\theta_{t+1:T}$ iteratively, which ultimately reduces the number of linear algebra operations which must be performed and thus speeds up the computation despite taking advantage of essentially the same mathematical technology.
+
+The resulting algorithm requires a couple more intermediate quantities. Let $\Sigma_0 = \Omega_{00}^{-1}$, $\Sigma_t = (\Omega_{tt} - \Omega_{t,t-1}\Sigma_{t-1}\Omega_{t-1,t})^{-1}$ for $t=1,2,\cdots,T$, $m_0 = \Sigma_0a_0$, and $m_t = \Sigma_t(a_t - \Omega_{t,t-1}m_{t-1})$ for $t=1,2,\cdots,T$. Then
+\begin{align*}
+  \theta_T \sim & N(m_T, \Sigma_T) &&\\
+  \theta_{t|t+1:T} \sim & N(m_t - \Sigma_t\Omega_{t,t+1}\theta_{t+1}, \Sigma_t) && \mathrm{for}\ \ t=T-1,T-2,\cdots,0.
+\end{align*}
+\cite{mccausland2011simulation} shows how to quickly compute the required linear algebra operations finds that this method is often faster than simply doing the Cholesky factorization. Note that this method requires that the model retains the Markov property. This suggests that if we want to use a transformation of the latent states, which should not use, e.g., some function of their differences. This would make $\Omega$ fairly complicated and force us to do the full Cholesky factorization, or to use AWOL on the $\theta$'s and then transform them to e.g. the $\gamma$'s. A better idea would be to simply scale the states by the appropriate cholesky factor in order to retain the nice structure of $\Omega$. 
+
+
+\clearpage
+
+\bibliographystyle{plainnat}
+\bibliography{../mcmcex}
+\end{document}
+
+
+
+

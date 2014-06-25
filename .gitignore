@@ -8,3 +8,12 @@
 .Rproj.user
 *.Rproj
 *synctex.gz
+
+## ignore various extra files from tex and knitr compilations
+*.bbl
+*.log
+*.aux
+*.blg
+*.RData
+*.Rout
+*cache*

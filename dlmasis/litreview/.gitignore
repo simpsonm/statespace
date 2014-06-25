@@ -1,0 +1,16 @@
+# git: ignore this stuff for this directory only #
+##################################################
+
+
+# Outputs that you can compile yourself!!       
+*.log
+*.aux
+*.out
+*.bbl
+*.blg
+
+# These output folders come from knitr #
+*/auto
+*/figure
+/auto
+/figure

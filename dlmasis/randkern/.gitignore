@@ -1,0 +1,15 @@
+# git: ignore this stuff for this directory only #
+##################################################
+
+# .RData files that are HUGE #
+##############################
+*SAM.RData
+.Rhistory
+
+# Outputs that you can compile yourself!!       #
+# (See README.md for how to compile .Rnw files) #
+#################################################
+
+# These output folders come from knitr #
+/auto
+/figure

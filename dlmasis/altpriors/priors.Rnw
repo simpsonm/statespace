@@ -1,0 +1,343 @@
+\documentclass{article}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol, amsthm, bbm}
+\usepackage{multicol}
+\usepackage{textcomp}
+\usepackage{fullpage}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage[authoryear]{natbib} %numbers instead of authoryear for [1] instead of [1980]
+\newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newtheorem{alg}{Algorithm}
+\newtheorem{theorem}{Theorem}
+\DeclareMathOperator{\Tr}{Tr}
+\begin{document}
+
+<<setup, include=FALSE, cache=FALSE>>=
+options(replace.assign=TRUE,width=90)
+opts_knit$set(eval.after = "fig.cap")
+opts_chunk$set(dev="pdf",
+               fig.lp = "",
+               fig.keep="high",
+               fig.show="hold",
+               fig.align="center",
+               fig.pos="!ht")
+
+@
+
+\title{A note on priors}
+\author{Matt Simpson}
+\maketitle
+
+
+\section{Introduction}
+This note shows that depending on how you parameterize a DLM, a different natural conjugate prior results for each of the covariance matrices. However, there is a unifying framework from which to view each of these priors.
+
+\section{The Model}
+Consider the standard dynamic linear model with time varying variances. Let $y_t$ denote a $p\times 1$ vector of data for $t=1,2,\cdots,T$ and $\theta_t$ denote a $k\times 1$ vector of unobserved latent states for $t=0,1,\cdots,T$. Then the DLM can be written as:
+\begin{align}
+  y_t & = F_t\theta_t + v_t \label{dlmobseq}\\
+  \theta_t & = G_t\theta_{t-1} + w_t \label{dlmsyseq}
+\end{align}
+where $F_t$ is a $k\times p$ matrix and $G_t$ is a $k \times k$ matrix for $t=1,2,\cdots,T$ and for $t=1,2,\cdots,T$
+\begin{align*}
+  \begin{bmatrix} v_t \\ w_t \end{bmatrix} &\stackrel{ind}{\sim} N\left(\begin{bmatrix} \bm{0}_{p\times 1} \\ \bm{0}_{k\times 1} \end{bmatrix}, \begin{bmatrix} V_t & \bm{0}_{p\times p} \\ \bm{0}_{k\times k} & W_t \end{bmatrix} \right).
+\end{align*}
+
+The covariance matrices, $V_{1:T}$ and $W_{1:T}$, are the unknown parameters in addition to any unkown parameters contained in $F_{1:T}$ or $G_{1:T}$. For simplicity, we'll assume that these are matrices of constants. Equation \eqref{dlmobseq} is called the observation equation and equation \eqref{dlmsyseq} is called the system equation. Simillarly $v_t$'s are called the observation errors and the $V_t$'s are called the observation covariances while the $w_t$'s are called the system disturbances and the $W_t$'s are called the system covariances. The latent states, $\theta_{0:T}$, are a data augmentation (DA) that are used in the MCMC sampling algorithm in order to draw from the posterior distribution of $(V_{1:T},W_{1:T})$ though, often, we're interested in the posterior distribution of $\theta_{0:T}$ as well.
+
+To complete the model, we need priors on $\theta_0$, $V_{1:T}$ and $W_{1:T}$. The standard priors are the conditionally conjugate priors, i.e. 
+\begin{align*}
+  p(\theta_0,V_{1:T},W_{1:T}) = p(\theta_0)\prod_{t=1}^Tp(V_t)p(W_t)
+\end{align*}
+with
+\begin{align*}
+  \theta_0 & \sim N(m_0,C_0) \\
+  V_t & \sim IW(\Psi_t, \eta_t)\ for\ t=1,2,\cdots,T\\
+  W_t & \sim IW(\Omega_t, \delta_t)\ for\ t=1,2,\cdots,T\\
+\end{align*}
+for some fixed hyperparameters $m_0$ \& $C_0$ and $\Psi_t$, $\eta_t$, $\Omega_t$, \& $\delta_t$ for $t=1,2,\cdots,T$. Using these priors, we can use FFBS in order to sample the latent states conditional on $V_{1:T}$ and $W_{1:T}$, and each $V_t$ and $W_t$ has indpendent inverse Wishart full conditional distributions. \citet{fruhwirth1994data}, \citet{carter1994gibbs}, and \citet{petris2009dynamic} contain the details of FFBS and the rest of this algorithm.
+
+To complete the model we need a prior for $(\theta_0, V, W)$. Sylivia's suggestion is to use what ammounts to a $G\left(\frac{1}{2}, \frac{1}{2Q}\right)$ prior for each of $V$ and $W$ with $Q$ chosen appropriately, but to do this by specifying normal priors on $\pm \sqrt{V}$ and $\pm \sqrt{W}$.
+
+Let's ignore the dynamic setting for a moment and essentially impose that $W=0$ so that the model is just
+\begin{align*}
+  y_t \stackrel{iid}{\sim} & N(\theta, V).
+\end{align*}
+So now we need a prior for $(\theta, V)$.  We'll suppose $\theta$ is known to simplify even more, then suppose that $V$ has the $G(1/2, 1/(2Q))$ prior. This means that the prior density of $V$ is
+\begin{align*}
+  p(V) \propto & V^{-1/2}e^{-V/(2Q)}.\\
+\end{align*}
+Now let $\tau = \pm \sqrt{V}$ and suppose that a priori $\tau \sim N(0,Q)$. Then
+\begin{align*}
+  p(\tau) \propto & e^{-\tau^2/(2Q)}.\\
+\end{align*}
+If we transform from $\tau$ to $V$, $V=\tau^2$ and the jacobian is the same for both the positive and negative sides of $\tau$:
+\begin{align*}
+  |J| & = V^{-1/2}/2\\
+\end{align*}
+which gives 
+\begin{align*}
+  p(V) \propto & V^{-1/2} e^{-V/(2Q)}.\\
+\end{align*}
+So a $N(0,Q)$ prior on $\tau$ and a $G(1/2, 1/(2Q))$ prior on $V$ are equivalent. 
+
+Given this prior we can write the posterior distribution of $\tau$ as
+\begin{align*}
+  p(\tau|y_{1:T}) \propto & \tau^{-T}e^{\sum_{t=1}^T(y_t - \theta)^2/(2\tau^2)}e^{-\tau^2/(2Q)}\\
+  \propto & \tau^{-T}e^{-\frac{1}{2}\left(\sum_{t=1}^T(y_t-\theta)^2/\tau^2 + \frac{1}{Q}\tau^2\right)}
+\end{align*}
+or the posterior distribution of $V$ as
+\begin{align*}
+  p(V|y_{1:T}) \propto & V^{-(T+1)/2}e^{\sum_{t=1}^T(y_t - \theta)^2/(2V)}e^{-V/(2Q)}\\
+  \propto & V^{-(T+1)/2}e^{-\frac{1}{2}\left(\sum_{t=1}^T(y_t-\theta)^2/V + \frac{1}{Q}V\right)}.
+\end{align*}
+The distribution of $V$ is an instance of the generalized inverse gaussian distribution, or GIG. A random variable $x>0$ has a $GIG(a,b,p)$ distribution if the density of $x$ is given by
+\begin{align*}
+  p(x) \propto & x^{p-1}e^{-(ax + b/x)/2}
+\end{align*}
+for $a\ge 0$, $b \ge 0$, and $p$ real valued. The gamma and inverse gamma distributions (among others) are special cases.
+
+If we treat $y_t$ as a vector and thus $V$ as a matrix, let $CC'=V$ i.e. $C$ is the lower triangular cholesky decomposition of $V$. Then in a similar fashion you can put a normal prior on each of the components of $C$ (treating it as $\pm chol(V)$). Things get complicated here, but in a different setting this ends up being a pretty convenient prior for the variance of a hierachical distribution for regression parameters, and in the Gibbs sampler $C$ ends up being drawn from a normal distribution. We'll ignore that for now and go back to the LLM.
+
+Suppose now that $V=\tau^2$ and $W=\sigma^2$ with $(\tau,\sigma)\sim N(0,Q)N(0,R)$, i.e. indpendent mean zero normal distributions with potentially different variances. We'll assume that $\theta_0$ is independent of $(\tau,\sigma)$ in the prior with $\theta_0\sim N(m_0,C_0)$. Now we can write the conditional posteriors of $\tau$ and $\sigma$ as
+\begin{align*}
+  p(\tau|\theta_{0:T},\cdots)\propto & \tau^{-T} e^{-\left(\sum_{t=1}^T(y_t-\theta_t)^2/\tau^2 + \frac{1}{Q}\tau^2\right)/2}\\
+  p(\sigma|\theta_{0:T},\cdots)\propto & \sigma^{-T} e^{-\left(\sum_{t=1}^T(\theta_{t-1}-\theta_t)^2/\sigma^2 + \frac{1}{R}\sigma^2\right)/2}.
+\end{align*}
+
+Suppose now we reparameterize in terms of $\gamma_t=(\theta_t-\theta_{t-1})/\sqrt{W}=(\theta_t - \theta_{t-1})/\sigma$ for $t=1,\cdots,T$ and $\gamma_0=\theta_0$. The determinant of the jacobian of this transformation ends up being $W^{T/2}$. Then we have the conditional posteriors given $\gamma_{0:T}$ instead of $\theta_{0:T}$:
+\begin{align*}
+  p(\tau|\gamma_{0:T},\cdots)\propto & \tau^{-T} e^{-\left(\sum_{t=1}^T(y_t-\sigma\sum_{s=1}^t\gamma_s - \gamma_0)^2/\tau^2 + \frac{1}{Q}\tau^2\right)/2}\\
+  p(\sigma|\gamma_{0:T},\cdots)\propto & e^{-\left(\sum_{t=1}^T(y_t-\sigma\sum_{s=1}^t\gamma_s - \gamma_0)^2/\tau^2 + \frac{1}{R}\sigma^2\right)/2}.
+\end{align*}
+So $\tau$ still has a GIG distribution, but notice that $\sigma$ now has a normal distribution with variance $\hat{\Sigma}=\left(\frac{1}{\tau^2}\sum_{t=1}^T \left( \sum_{s=1}^t\gamma_s\right)^2 + \frac{1}{R}\right)^{-1}$ and mean $\hat{\mu}=\hat{\Sigma}\frac{1}{\tau^2}\sum_{t=1}^T(y_t-\gamma_0)\sum_{s=1}^t\gamma_s$. This means no awful rejection sampling in order to draw $W|\gamma_{0:T},\cdots$ or $V|\psi_{0:T},\cdots$.
+
+\section{Attempts to generalize}
+Computationally cheap MCMC is a good reason to use this prior provided that it's flexible enough for the purpose of inference. However, note that the shape parameter of the implied gamma distribution on the variance is held fixed in this family of probability distributions. In other words, we're assuming that $V\sim G(\alpha, \beta)$ with $\beta=1/(2Q)$ and $\alpha$ fixed at $\alpha=1/2$. The question is, then, is there a prior on $\tau=\pm \sqrt{V}$ that implies the $G(\alpha,1/(2Q))$ prior on $V$? There is, and it looks like this:
+\begin{align*}
+  p(\tau)\propto &(\tau^2)^{\alpha - 1/2}\exp\left[-\beta\tau^2\right].
+\end{align*}
+With $\beta=1/(2Q)$. To see that this results in a $G(\alpha,1/(2Q))$ prior on $V=\tau^2$, consider the transformation. The jacobian is the same as before, giving
+\begin{align*}
+  p(V)\propto & V^{\alpha-1}\exp\left[-\beta V\right].
+\end{align*}
+I'm calling the distribution of $\tau$ the ``signed Nakagami distribution'' for reasons that will be clear shortly. The normalizing constant of the signed Nakagami distribution is
+\begin{align*}
+  \int_{-\infty}^\infty (\tau^2)^{\alpha - 1/2}\exp\left[-\beta\tau^2\right]d\tau & = \int_{0}^\infty y^{\alpha -1} \exp\left[-\beta V\right]V \\
+  & = \Gamma(\alpha)/\beta^\alpha
+\end{align*}
+so
+\begin{align*}
+p(\tau) = & \frac{\beta^\alpha}{\Gamma(\alpha)}(\tau^2)^{\alpha-1/2}\exp\left[-\beta\tau^2\right].\\
+&= \frac{1}{\Gamma(\alpha) (2Q)^\alpha}(\tau^2)^{\alpha-1/2}\exp\left[-\frac{1}{2Q}\tau^2\right].
+\end{align*}
+Then the CDF of the signed Nakagami distribution is:
+\begin{align*}
+  P(\tau\leq x) & = \frac{1 + sgn(x)F(x^2;\alpha,\beta)}{2}
+\end{align*}
+where $F(x;\alpha,\beta)$ is the CDF of the gamma distribution with shape parameter $\alpha$ and rate parameter $\beta$. To see this, note that if $x<0$ then
+\begin{align*}
+  P(\tau \leq x) = &\int_{-\infty}^x \frac{\beta^\alpha}{\Gamma(\alpha) }(\tau^2)^{\alpha-1/2}\exp\left[-\beta\tau^2\right] d\tau \\
+    &=-\frac{1}{2}\int_\infty^{x^2} \frac{\beta^\alpha}{\Gamma(\alpha) }(\tau^2)^{\alpha-1/2}\exp\left[-\beta \tau\right] d\tau\\
+    &= \frac{1 - F(x^2;\alpha,\beta)}{2}.
+\end{align*}
+Now since the signed Nakagami distribution is clearly symmetric around 0, $P(\tau\leq 0)=1/2$ and thus if $x>0$
+\begin{align*}
+  P(\tau \leq x) = &\int_{-\infty}^x \frac{\beta^\alpha}{\Gamma(\alpha) }(\tau^2)^{\alpha-1/2}\exp\left[-\beta\tau^2\right] d\tau \\
+  &= \frac{1}{2} + \int_{0}^x \frac{\beta^\alpha}{\Gamma(\alpha) }(\tau^2)^{\alpha-1/2}\exp\left[-\beta\tau^2\right] d\tau \\
+    &=\frac{1}{2} + \frac{1}{2}\int_0^{x^2} \frac{\beta^\alpha}{\Gamma(\alpha) }(\tau^2)^{\alpha-1/2}\exp\left[-\beta \tau\right] d\tau\\
+    &= \frac{1 + F(x^2;\alpha,\beta)}{2}.
+\end{align*}
+
+Now the Nakagami distribution has pdf
+\begin{align*}
+  p(x) = \frac{2 \beta^\alpha}{ \Gamma(\alpha)}x^{2\alpha -1}\exp\left[-\beta x^2\right]
+\end{align*}
+for $x>0$, and cdf $P(x\leq t)=F(t^2;\alpha,\beta)$ for $t>0$ where again $F$ is the cdf of the gamma distribution with shape parameter $\alpha$ and rate parameter $\beta$. This is not the usual parameterization of the Nakagami distribution, but it's more convenient for our purposes. Now suppose we sign this distribution by flipping a fair coin. If it comes up heads, we'll call the drawn value of $x$ positive, while if it comes tails we'll call it negative. Let $w=1$ when the coin comes up heads and $w=-1$ when it comes up tails. Then if $t> 0$
+\begin{align*}
+  P(xw \leq t) =& P(x\leq t | w=1)P(w=1) + P(x\geq t|w=-1)P(w=-1) \\
+  &= F(t^2;\alpha,\beta)\frac{1}{2} + \frac{1}{2}\\
+  &=\frac{1+ F(t^2;\alpha,\beta)}{2}
+\end{align*}
+while if $t<0$
+\begin{align*}
+  P(xw \leq t) =& P(x\leq t | w=1)P(w=1) + P(x\geq t|w=-1)P(w=-1) \\
+  &= 0 + [1-F(t^2;\alpha,\beta)]\frac{1}{2}
+\end{align*}
+and finally $P(xw\leq 0) = P(w=-1) = 1/2$. So by flipping a fair coin in order to choose the sign of a random variate drawn from the Nakagami distribution, we obtain a draw from the signed Nakagami distribution. This is useful since in order to draw from the $Nakagami(\alpha,\beta)$ distribution, we can simply draw from the $G(\alpha,\beta)$ distribution and take the positive square root, thus drawing from the signed Nakagami distribution is simple and cheap.
+
+In the sources I've seen, the Nakagami distribution is only defined for $\alpha > 1/2$ and as $\alpha \to 1/2$ it converges to a half-normal distribution. However, the normalizing constant is finite for any $\alpha >0$ since the Nakagami distribution is simply the positive square root of the gamma distribution.
+
+Suppose we have the basic local level model from above again: 
+\begin{align*}
+  y_t &= \theta_t + v_t\\
+  \theta_t &= \theta_{t-1} + w_t
+\end{align*}
+with $v_t\stackrel{iid}{\sim} N(0,\tau^2)$ and $w_t \stackrel{iid}{\sim} N(0,\sigma^2)$. For priors we'll assume $p(\theta_0,\tau,\sigma)=p(\theta_0)p(\tau)p(\sigma)$ with $\theta_0\sim N(\theta_0,C_0)$ and signed Nakagami priors on $\tau$ and $\sigma$, i.e. $\tau\sim sNaka(a, 1/(2Q))$ and $\sigma \sim sNaka(b, 1/(2R))$. Then we can write the full conditional posteriors of $\tau$ and $\sigma$ as
+\begin{align*}
+  p(\tau|\theta_{0:T},\cdots) \propto & (\tau^2)^{a - (T+1)/2}\exp\left[-\frac{1}{2}\left(\frac{1}{Q}\tau^2 + \sum_{t=1}^T(y_t - \theta_t)^2 \frac{1}{\tau^2}\right)\right]\\
+  p(\sigma|\theta_{0:T},\cdots) \propto & (\sigma^2)^{b - (T+1)/2}\exp\left[-\frac{1}{2}\left(\frac{1}{R}\sigma^2 + \sum_{t=1}^T(\theta_t - \theta_{t-1})^2 \frac{1}{\sigma^2}\right)\right].
+\end{align*}
+This results in GIG distributions for both $\tau^2$ and $\sigma^2$ - again, this is something we can easily sample from, but consider conditioning on $\gamma_{0:T}$ instead of $\theta_{0:T}$ where again $\gamma_0=\theta_0$ and $\gamma_t = (\theta_t-\theta_{t-1})/\sigma$. This results in the conditional posteriors
+\begin{align*}
+  p(\tau|\gamma_{0:T},\cdots) & \propto  (\tau^2)^{a - (T+1)/2}\exp\left[-\frac{1}{2}\left(\frac{1}{Q}\tau^2 + \sum_{t=1}^T\left(y_t - \gamma_0 - \sigma\sum_{s=1}^t\gamma_s\right)^2\frac{1}{\tau^2} \right)\right]\\
+  p(\sigma|\gamma_{0:T},\cdots) &\propto  (\sigma^2)^{b - 1/2}\exp\left[-\frac{1}{2}\left(\frac{1}{R}\sigma^2 + \sum_{t=1}^T\left(y_t-\gamma_0 - \sigma\sum_{s=1}^t\gamma_s\right)^2\frac{1}{\tau^2}\right)\right]\\
+  \propto & (\sigma^2)^{b - 1/2}\exp\left[-\frac{1}{2}\left(\frac{1}{R} + \sum_{t=1}^T\left(\sum_{s=1}^t\frac{\gamma_s}{\tau}\right)^2\right)\left(\sigma - \left(\frac{1}{R} + \sum_{t=1}^T\left(\sum_{s=1}^t\frac{\gamma_s}{\tau}\right)^2\right)^{-1}\sum_{t=1}^T\frac{y_t-\gamma_0}{\tau}\sum_{s=1}^t\frac{\gamma_s}{\tau}\right)^2\right] 
+\end{align*}
+
+Again, $\tau$ has a GIG full conditional distribution. However, $\sigma$ has something a bit different --- it's related to the signed Nakagami distribution, but the density now has the form:
+\begin{align*}
+  p(x)\propto (x^2)^{\alpha - 1/2}\exp\left[-\frac{1}{2\beta}(x-\mu)^2\right].
+\end{align*}
+Using the known formulas for the absolute noncentral moments of the normal distribution, we can obtain the normalizing constant. If $x\sim N(\mu,\beta)$ and $p>0$ then 
+\begin{align*}
+  E[|x|^{p} ] = \frac{(2\beta)^{p/2}}{\sqrt{\pi}}\Gamma\left(\frac{1+p}{2}\right)M\left(-\frac{1}{2}p,\frac{1}{2},-\frac{1}{2}\frac{\mu^2}{\beta}\right)
+\end{align*}
+where $M(a,b,z)$ is the confluent hypergeometric function of the first kind, i.e.
+\begin{align*}
+  M(a,b,z) & = \sum_{n=0}^\infty \frac{a_{(n)}z^n}{b_{(n)}n!}
+\end{align*}
+where the notation $a_{(n)}$ means  $a_{(0)}=1$ and $a_{(n)} = a(a+1)(a+2)\cdots(a+n-1)$. Thus we can write the distribution in question as 
+\begin{align*}
+  p(x) =& \frac{1}{E[|z|^{2\alpha -1}]}\frac{1}{\sqrt{2\pi \beta}} (x^2)^{\alpha - 1/2}\exp\left[-\frac{1}{2\beta}(x-\mu)^2\right]\\
+  =& \frac{1}{(2\beta)^{\alpha}\Gamma\left(\alpha\right)M\left(\frac{1}{2}-\alpha,\frac{1}{2},-\frac{1}{2}\frac{\mu^2}{\beta}\right)}(x^2)^{\alpha - 1/2}\exp\left[-\frac{1}{2\beta}(x-\mu)^2\right]\\
+    =& \frac{1}{(2\beta)^{\alpha}e^{-\frac{1}{2}\frac{\mu^2}{\beta}}\Gamma\left(\alpha\right)M\left(\alpha,\frac{1}{2},\frac{1}{2}\frac{\mu^2}{\beta}\right)}(x^2)^{\alpha - 1/2}\exp\left[-\frac{1}{2\beta}(x-\mu)^2\right]\\
+\end{align*}
+where $z$ is a $N(\mu,\beta)$ random variable and the third line follows from Krummer's transformation: $M(a,b,z)=e^zM(b-a,b,-z)$. I'll call this the noncentral signed Nakagami distribution with noncentrality parameter $\mu$, or $nsNaka(\alpha, \beta, \mu)$ --- though note that this is not simply a location transformation of the original signed Nakagami distribution. Also note that while the signed Nakagami distribution only requires $\alpha>0$, the noncentral signed Nakagami distribution requires $\alpha\geq 1/2$ whenever $\mu\neq 0$. This is actually restricts our use of the signed Nakagami distribution as a prior to $\alpha\geq 1/2$ because if we put a $sNaka(\alpha,\beta)$ prior on $\sigma$, its full conditional posterior under the scaled disturbance parameterzation (the $\gamma_{0:T}$'s) is $nsNaka(\alpha,\delta,\mu)$ where $\mu>0$ and $\delta$ are functions of the data, the $\gamma$'s and $\tau$. So if we set $\alpha <1/2$ the full conditional isn't actually a probability distribution.
+
+\section{Properties of the noncentral signed Nakagami distribution}
+For reference, the density of the noncentral signed Nakagami distribution is
+\begin{align}\label{dens1}
+  p(x)  =& \frac{1}{(2\beta)^{\alpha}\Gamma\left(\alpha\right)M\left(\frac{1}{2}-\alpha,\frac{1}{2},-\frac{1}{2}\frac{\mu^2}{\beta}\right)}(x^2)^{\alpha - 1/2}\exp\left[-\frac{1}{2\beta}(x-\mu)^2\right].
+\end{align}
+with $\alpha\geq 1/2$, $\beta>0$ and $\mu\in\Re$ where $\Gamma(.)$ is the gamma function and $M(.,.,.)$ is the confluent hypergeometric function of the first kind, i.e.
+\begin{align*}
+M(a,b,z)=\sum_{n=0}^\infty\frac{\Gamma(a + n)\Gamma(b)z^n}{\Gamma(a)\Gamma(b+n)n!}  
+\end{align*}. 
+The main thing I would like to do is draw from this distribution cheaply. The cdf inversion method doesn't look too promising since ultimately I want to generalize this to multiple dimensions (for covariance matrices), though it might work fine in this case as long as the approximation routines for the confluent hypergeometric function work well. Rejection sampling is an option, but some care is involved because the distribution is often bimodal. If $\alpha=1/2$ clearly this is just a normal distribution so the mode is $\mu$. If $\alpha > 1/2$, however, consider the log density
+\begin{align*}
+\log(p(x)) & = \log(C) + (\alpha - 1/2)\log(x^2) - \frac{1}{2\beta}(x-\mu)^2.
+\end{align*}
+The FOC is
+\begin{align*}
+&  (\alpha - 1/2)\frac{2}{x} - \frac{1}{\beta}(x-\mu) = 0\\
+&\implies \frac{1}{\beta}x^2 - \frac{\mu}{\beta}x + 1 - 2\alpha = 0
+\end{align*}
+so that
+\begin{align*}
+  x^{mode} & = \frac{\mu/2 \pm \sqrt{\mu^2/\beta^2 + 4(2\alpha - 1)/\beta}}{2/\beta}\\
+    & = \mu/2 \pm \sqrt{\mu^2/4 + (2\alpha -1)\beta}.
+\end{align*}
+The SOSC requires 
+\begin{align*}
+  &-(2\alpha - 1)(x^{mode})^2- \frac{1}{\beta} < 0 \\
+  &\iff (x^{mode})^2 > -\beta(2\alpha -1)
+\end{align*}
+but
+\begin{align*}
+  (x^{mode})^2 = & \mu^2/2 + (2\alpha -1)\beta \pm \mu\sqrt{\mu^2/4 + (2\alpha-1)\beta}.
+\end{align*}
+So $\mu/2 + \sqrt{\mu^2/4 + (2\alpha -1)\beta}$ is always a mode while $\mu/2 - \sqrt{\mu^2/4 + (2\alpha -1)\beta}$ is a mode if
+\begin{align*}
+  &\mu^2/2  + 2\beta(2\alpha -1) - \mu\sqrt{\mu^2/4 + (2\alpha-1)\beta} >0\\
+  &\iff 2\left(\mu^2/4 + (2\alpha-1)\beta\right)>\mu\sqrt{\mu^2/4 + (2\alpha-1)\beta}\\
+  &\iff \mu^2/4 + (2\alpha - 1)\beta > \mu^2/4.
+\end{align*}
+So if $\alpha>1/2$ then both solutions are maximums and thus there are two modes.
+
+The first moment of this distribution is tricky to compute, but the second moment is pretty easy (up to approximating the confluent hypergeometric function). Let $C(\alpha,\beta,\mu)$ be the normalizing constant of the $nsNaka(\alpha,\beta,\mu)$ distribution, i.e. 
+\begin{align*}
+  \int_{-\infty}^{\infty}C(\alpha,\beta,\mu)(x^2)^{\alpha-1/2}\exp\left[-\frac{1}{2\beta}(x-\mu)^2\right]dx = 1.
+\end{align*}
+Then
+\begin{align*}
+  E[x^2] &= \int_{-\infty}^{\infty}C(\alpha,\beta,\mu)(x^2)^{\alpha}\exp\left[-\frac{1}{2\beta}(x-\mu)^2\right]\\
+  &= \frac{C(\alpha,\beta,\mu)}{C(\alpha+1,\beta,\mu)}\\
+  & = \frac{(2\beta)^{\alpha+1}\Gamma(\alpha+1)M\left(-\frac{1}{2}-\alpha,\frac{1}{2},-\frac{1}{2}\frac{\mu^2}{\beta}\right)}{(2\beta)^\alpha\Gamma(\alpha)M\left(\frac{1}{2}-\alpha,\frac{1}{2},-\frac{1}{2}\frac{\mu^2}{\beta}\right)}\\
+  & = 2\alpha\beta\frac{M\left(\alpha+1,\frac{1}{2},\frac{1}{2}\frac{\mu^2}{\beta}\right)}{M\left(\alpha,\frac{1}{2},\frac{1}{2}\frac{\mu^2}{\beta}\right)}
+\end{align*}
+
+\section{Some notes on other priors}
+I started with the $N(0,Q)$ prior on $\pm\sqrt{V}$ where $V$ is a variance parameter. This implies a $Gamma(1/2,1/(2Q))$ prior on $V$. I tried to generalize this by allowing the shape parameter of the implied Gamma distribution to be something other than 1/2. However, Another option is to pick a distribution for $\pm\sqrt{V}$ which is more general than the normal distribution, e.g. the non-standardized $t$ distribution, $t(m, Q, v)$ where $m$ is a location parameter, $Q$ is a scale parameter, and $v$ is the degrees of freedom. Using the fact that the $t$ distribution can be written as a scale mixuture of normals (if $x\sim t(m,Q,v)$ then $x|\omega \sim N(m,\omega)$ and $\omega\sim IG(v/2, vQ/2)$), we can get nice full conditional distributions for either $V$ or $\pm\sqrt{V}$ and either $W$ or $\pm\sqrt{W}$. This adds another Gibbs step to the algorithm but doesn't change much other than that, i.e. we still have GIG distributions for $V|\theta,...$ and $W|\theta,...$, but now they're also conditional on scale parameters $\omega_V$ and $\omega_W$ which now each have to be drawn in separate steps, but these will each be inverse gamma draws. The draw for $W|\gamma,...$ is still a normal draw, but again that's conditional on $\omega_W$ which also has to be drawn in a separate inverse gamma step. It would be interesting to generalize this even more - e.g. a scale mixture of signed Nakagami distributions, though this is equivalent to just putting a hyperprior on the scale parameter of the signed Nakagami distribution. In that sense, then, we're back to the problems of the previous section.
+
+Another thing that we can easily do and should mention is allow for dependence in the prior - $p(V,W)\neq p(V)p(W)$. The only sampling algorithm that draws $(V,W)$ jointly is the state sampler (and interweaving algorithms that depend on it), so it shouldn't change much elsewhere -- provided that $p(V|W)$ and $p(W|V)$ are of sufficiently nice form.
+
+\section{The conditionally conjugate prior for the general DLM}
+After choosing the priors for $\theta_0$, $V$ and $W$ we motivated the choice by appealing to conditional conjugacy and thus computation. If this is our main concern for choosing a prior,  it's worth asking what the conditional conjugate priors are under the scaled disturbances and the scaled errors. We'll look closely at the scaled disturbances, but the scaled errors are analogous. Based on \eqref{dlmdistmodel} we can write the augmented data likelihood as
+\begin{align*}
+  p(y_{1:T}|\gamma_{0:T}, V, W) \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\gamma_t'\gamma_t\right]|V|^{-T/2}\exp\left[-\frac{1}{2}\left(y_t - F_t\theta_t(\gamma_{0:T},W)\right)'V^{-1}\left(y_t - F_t\theta_t(\gamma_{0:T},W)\right)\right].
+\end{align*}
+Immediately we see that the conjugate prior for $V$ is inverse Wishart, so no change on that front. For $W$ on the other hand, it's unclear until we unpack $\theta_t(\gamma_{0:T},W)$. Recall that in our definition of the scaled disturbances for $t=1,2,\cdots,T$, $\gamma_t = L_W^{-1}w_t = L_W^{-1}(\theta_t - G_t\theta_{t-1})$ where $L_WL_W' = W$ while $\gamma_0=\theta_0$. The reverse transformation is thus the recursion $\theta_t = L_W\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. This implies that for $t=0,1,\cdots,T$
+\begin{align*}
+  \theta_t = \sum_{s=1}^t\left(\prod_{r=s+1}^tG_r\right)L_W\gamma_s + \prod_{r=1}^tG_r\gamma_0
+\end{align*}
+where for $s+1>t$ we define the empty product $\prod_{r=s+1}^tG_r = I_k$ the $k\times k$ identity matrix. Now recall that $L_VL_V = V$ and let $H_{st} = \prod_{r=s+1}^tG_r$. This allows us to write the full conditional distribution of $W$, ignoring the prior, as
+\begin{align*}
+  p(W&|\gamma_{0:T},\cdots)  \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(b_t \sum_{s=1}^tB_{st}L_W\gamma_s\right)'\left(b_t - \sum_{s=1}^tB_{st}L_W\gamma_s\right)\right]
+\end{align*}
+where we define $b_t = L_V^{-1}(y_t - F_tH_{0t}\gamma_0)$ and $B_{st} = L_V^{-1}F_tH_{st}$. This does not look like it has any conjugate form for $W$, but it looks like a normal kernel for $L_W\gamma_t$. It is not immediately clear whether $L_W$ will have a normal distribution, but this turns out to be true. If we follow the approach of \cite{fruhwirth2008bayesian} and vectorize $L_W$ by stacking the nonzero elements of each column on top of each other, we will see that the conditionally conjugate prior for the nonzero elements of $L_W$ is a normal distribution.
+
+In order to show this, we first have to introduce a bit of notation. Let $A=(a_{ij})$ be a $p\times q$ matrix. First we define the vectorization of $A$, $\vect(A)$, as the $pq\times 1$ column vector obtained by stacking the columns of $A$ on top of each other. If $p=q$ then we define the half vectorization of $A$, $\vech(A)$, as the $p(p+1)/2\times 1$ column vector obtained by first deleting the elements of $A$ above the main diagonal, then stacking the remaining elements on top of each other column by column. Formally,
+\begin{align*}
+  \vect(A) & = (a_{11}, a_{21}, \cdots, a_{p1}, a_{12}, a_{22}, \cdots a_{p2}, \cdots, a_{pq})'\\
+  \vech(A) & = (a_{11}, a_{21}, \cdots, a_{p1}, a_{22}, a_{32}, \cdots a_{p2}, \cdots, a_{pp})'.
+\end{align*}
+In particular if $a$ is a column vector, $\vect(a)=a$ and $\vect(a')=\vect(a)'$. Suppose $p=q$ so that $A$ is square. Then there exists a unique $p(p+1)/2\times p^2$ matrix $S_p$ such that $\vech(A) = S_p\vect(A)$, called the elimination matrix. We list a few of the properties of $S_p$ here, but see \cite{magnus1980elimination} or \cite{magnus1988linear} for more details.
+\begin{enumerate}
+  \item $S_pS_p'=I_{p(p+1)/2}$
+  \item If $A$ is lower triangular $\vect(A) = S_p'\vech(A) = S_p'S_p\vect(A)$.
+  \item $S_p = \sum_{i\geq j}^pu_{ij}\vect(E_{ij})'$ where $E_{ij}$ is a $p\times p$ matrix of zeroes except for a one in the $ij$'th spot and $u_{ij}$ is a $p(p+1)/2\times 1$ column vector of zeroes except for a one in the $[(j-1)p + i - j(j-1)/2]$'th spot.
+\end{enumerate}
+
+Now since we can assume the Jacobian from $W\to L_W$ will be absorbed into the prior, which we are ignoring, we have
+\begin{align*}
+  p(L_{W}&|\gamma_{0:T},\cdots) \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(b_t - \sum_{s=1}^tB_{st}L_s\gamma_s\right)'\left(b_t - \sum_{s=1}^tB_{st}L_W\gamma_s\right)\right]\\
+& \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(b_t - \sum_{s=1}^tB_{st}\vect(L_W\gamma_s)\right)'\left(b_t - \sum_{s=1}^tB_{st}\vect(L_W\gamma_s)\right)\right]\\
+  & \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(b_t - \sum_{s=1}^tB_{st}(\gamma_s'\otimes I_p)\vect(L_W))\right)'\left(b_t - \sum_{s=1}^tB_{st}(\gamma_s'\otimes I_p)\vect(L_W)\right)\right]\\
+  & \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(\sum_{s=1}^t\sum_{r=1}^t\vect(L_W)(\gamma_s'\otimes I_p)'B_{st}'B_{rt}(\gamma_r'\otimes I_p)\vect(L_W) - 2\sum_{s=1}^tb_t'B_{st}(\gamma_s'\otimes I_p)\vect(L_W)\right)\right]\\
+  & \propto \exp\left[-\frac{1}{2}\left(\vect(L_W)'\sum_{s=1}^T\sum_{r=1}^T(\gamma_s\gamma_r'\otimes C_{sr})\vect(L_W) - 2\sum_{s=1}^Tc_s'(\gamma_s'\otimes I_p)\vect(L_W)\right)\right]\\
+  & \propto \exp\left[-\frac{1}{2}\left(\vech(L_W)'S_p\sum_{s=1}^T\sum_{r=1}^T(\gamma_s\gamma_r'\otimes C_{sr})S_p'\vech(L_W) - 2\sum_{s=1}^Tc_s'(\gamma_s'\otimes I_p)S_p'\vech(L_W)\right)\right]
+\end{align*}
+where we define $C_{sr} = \sum_{t=r\vee s}^TB_{st}'B_{rt}$ and $c_s=\sum_{t=s}^TB_{st}'b_t$ and where $a\vee b = \max(a,b)$. Here we use two properties of the Kronecker product $\otimes$. First for any matrices $A:p\times q$ and $B:q\times r$, $\vect(AB) = (B'\otimes I_p)\vect(A)$. Second, for any $p\times 1$ vectors $a$ and $b$ and any $p\times p$ matrix $A$, $(a'\otimes I_p)'A(b' \otimes I_p) = ab'\otimes A$. 
+
+Now we have:
+\begin{align*}
+  p(\vech(L_W)&|\gamma_{0:T},\cdots)\propto \exp\left[-\frac{1}{2}\left(\vech(L_W) - \Omega^{-1}\omega\right)'\Omega\left(\vech(L_W) - \Omega^{-1}\omega\right)\right]
+\end{align*}
+where $\Omega$ is a $p(p+1)/2\times p(p+1)/2$ positive definite matrix defined by 
+\begin{align*}
+  \Omega=\sum_{s=1}^T\sum_{r=1}^TS_p(\gamma_s\gamma_r'\otimes C_{sr})S_p'
+\end{align*}
+and $\omega$ is a $p(p+1)/2\times 1$ vector defined by
+\begin{align*}
+  \omega=\sum_{s=1}^TS_p(\gamma_s\otimes I_p)c_s.
+\end{align*}
+
+So the conjugate prior on $L_W$ is a multivariate normal distribution. This seems a strange since we expect the diagonal elements of $L_W$ to be positive, but this is no problem as long as we view this prior as a clever trick for defining a prior on $W=L_WL_W'$ so that the signs of the diagonal elements do not matter. Strictly speaking we have subtly changed the definition of $L_W$ to a {\it signed} Cholesky decomposition of $W$, and thus subtly changed the defintion of the $\gamma_t$'s to take into account the signs of the diagonal elements of $L_W$. \cite{fruhwirth2008bayesian}, \cite{fruhwirth2011bayesian} and {\it CITE THE DYNAMIC PAPER SYLVIA IS WORKING ON WITH ANGELA AND THE STOCAHSTIC VOLATILITY PAPER BY SYLVIA AND GREGOR KASTNER} use this approach to choosing priors for the system (or hierarchical) variance when working with the scaled disturbances in dynamic and non-dynamic models, but only the first considers the covariance matrix case, rather than the scalar variance case, and that paper does not give the exlicit construction of the covariance matrix of $\vech(L_W)$ using the elimination matrix $S_p$.
+
+We have two covariance matrices, $W$ and $V$, and we want to put a different class of priors on each set. We can put the same sort of normal prior on $L_V$, the Cholesky decomposition of $V$. In the univariate case the conditional posterior of $V$ will come out to be a generalized inverse gaussian distribution which is a bit complicated but not awful to draw from. There is mild tension here though --  depending on how we choose to write down the model we end up with a different class of prior distributions for at least $W$. Now the reason for this difference is ultimately computation --- it is known that sometimes using the scaled disturbances improves mixing in the Markov chain --- but ideally computational concerns should not have an effect on inference. It would be nice to unite these priors two priors under a common class without sacrificing their respective computaitonal advantages under the relevant data augmentations. 
+
+For completeness, we show that the conditionally conjugate prior for $L_V$ is also a multivariate normal distribution. From \eqref{dlmerrorjoint} we have
+\begin{align*}
+  p(L_V|\psi_{0:T},\cdots)\propto & \exp\left[-\frac{1}{2}g(L_V)\right]
+\end{align*}
+where if we define $D_t=(F_t'WF_t)^{-1}$ and $H_t=F_tG_tF_{t-1}^{-1}$ we have up to an additive constant:
+\begin{align*}
+  g(L_V) = & \sum_{t=1}^T\left(y_t - (\psi_t' \otimes I_k)S_p'\vech(L_V)\right)'D_t\left(y_t - (\psi_t' \otimes I_k)S_p'\vech(L_V)\right) \\
+  & + \sum_{t=2}^T\left(y_{t-1} - (\psi_{t-1}' \otimes I_k )S_p'\vech(L_V)\right)'H_t'D_tH_t\left(y_{t-1} - (\psi_{t-1}' \otimes I_k )S_p'\vech(L_V)\right)\\
+  & + \sum_{t=2}^T\left(y_t - (\psi_t'\otimes I_k)S_p'\vech(L_V)\right)'D_tH_t\left(y_{t-1} - (\psi_{t-1}'\otimes I_k)S_p'\vech(L_V)\right) \\
+  & + \sum_{t=2}^T\left(y_{t-1} - (\psi_{t-1}'\otimes I_k)S_p'\vech(L_V)\right)'H_t'D_t\left(y_t - (\psi_t'\otimes I_k)S_p'\vech(L_V)\right)\\
+  & + 2\vech(L_V)'S_p(\psi_1'\otimes I_k)'D_1H_1\psi_0.
+\end{align*}
+This gives
+\begin{align*}
+  \Omega = & \sum_{t=1}^TS_p(\psi_t\psi_t'\otimes D_t)S_p' + \sum_{t=1}^{T-1}S_p'(\psi_t\psi_t'\otimes H_{t+1}'D_{t+1}H_{t+1})S_p' + 2\sum_{t=1}^{T-1}S_p(\psi_t\psi_{t+1}'\otimes H_{t+1}'D_{t+1})S_p'\\
+  \intertext{and}
+  \omega = & \sum_{t=1}^{T-1}S_p(\psi_t\otimes I_k)(D_t + H_{t+1}'D_{t+1}H_{t+1})y_t + \sum_{t=1}^{T-1}S_p(\psi_{t+1}\otimes I_k)D_{t+1}H_{t+1}y_t\\
+  & +\sum_{t=1}^{T-1}S_p(\psi_t\otimes I_k)H_{t+1}'D_{t+1}y_{t+1}  + S_p\left[(\psi_T\otimes I_k)D_Ty_T - (\psi_1\otimes I_k)D_1H_1\psi_0\right]
+\end{align*}
+so that if $L_V$ has a prior proportional to $1$, then $\vech(L_V)|\psi_{0:T},\cdots \sim N(\Omega^{-1}\omega, \Omega^{-1})$. 
+
+\end{document}
