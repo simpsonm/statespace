@@ -21,7 +21,7 @@ epsfig, multicol, amsthm, bbm}
 \DeclareMathOperator{\vech}{vech}
 \DeclareMathOperator{\vect}{vec}
 
-
+\graphicspath{{plots/}}
 \newcommand{\matt}[1]{{\color{red} Matt: #1}}
 
 \begin{document}
@@ -693,22 +693,22 @@ The scaled error sampler is analogous to the scaled disturbance sampler. When $R
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.7\textwidth]{plots/baseESplot1}
-\includegraphics[width=0.7\textwidth]{plots/baseESplot2}
+\includegraphics[width=0.7\textwidth]{baseESplot1}
+\includegraphics[width=0.7\textwidth]{baseESplot2}
 \caption{Effective sample proportion in the posterior sampler for a time series of lengths $T=100$ and $T=1000$, for $V$ and $W$, and for the state, scaled disturbance, scaled error, wrongly scaled disturbance, and wrongly scaled error samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than $1$ were rounded down to $1$.}
 \label{baseESplot}
 \end{figure}
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.24\textwidth]{plots/corplot1}
-\includegraphics[width=0.24\textwidth]{plots/corplot2}
-\includegraphics[width=0.24\textwidth]{plots/corplot3}
-\includegraphics[width=0.24\textwidth]{plots/corplot4}
-\includegraphics[width=0.24\textwidth]{plots/corplot5}
-\includegraphics[width=0.24\textwidth]{plots/corplot6}
-\includegraphics[width=0.24\textwidth]{plots/corplot7}
-\includegraphics[width=0.24\textwidth]{plots/corplot8}
+\includegraphics[width=0.24\textwidth]{corplot1}
+\includegraphics[width=0.24\textwidth]{corplot2}
+\includegraphics[width=0.24\textwidth]{corplot3}
+\includegraphics[width=0.24\textwidth]{corplot4}
+\includegraphics[width=0.24\textwidth]{corplot5}
+\includegraphics[width=0.24\textwidth]{corplot6}
+\includegraphics[width=0.24\textwidth]{corplot7}
+\includegraphics[width=0.24\textwidth]{corplot8}
 \caption{Posterior correlation between $V$ or $W$ and $b_V$ or $b_W$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high.}
 \label{corplot}
 \end{figure}
@@ -721,8 +721,8 @@ There are a couple of ways to gain some intuition about what we expect the Full 
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.7\textwidth]{plots/intESplot1}
-\includegraphics[width=0.7\textwidth]{plots/intESplot2}
+\includegraphics[width=0.7\textwidth]{intESplot1}
+\includegraphics[width=0.7\textwidth]{intESplot2}
 \caption{Effective sample proportion in the posterior sampler for $V$ and $W$ in for $T=100$ and $T=1000$, in all three GIS samplers based on any two of the base samplers and the full CIS sampler. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than one were rounded down to one.}
 \label{intESplot}
 \end{figure}
@@ -732,8 +732,8 @@ We can verify most of these intuitions in Figure \ref{baseESplot}. First, the St
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.7\textwidth]{plots/altESplot1}
-\includegraphics[width=0.7\textwidth]{plots/altESplot2}
+\includegraphics[width=0.7\textwidth]{altESplot1}
+\includegraphics[width=0.7\textwidth]{altESplot2}
 \caption{Effective sample proportion in the posterior sampler for $V$ and $W$ in for $T=100$ and $T=1000$, in all four alternating samplers. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high. Note that for plotting purposes, effective sample proportions larger than one were rounded down to one.}
 \label{altESplot}
 \end{figure}
@@ -759,8 +759,8 @@ For $T=100$ and $T=1000$ we see that the pattern we saw for ESP begins also appe
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.8\textwidth]{plots/baseinttimeplot1}
-\includegraphics[width=0.8\textwidth]{plots/baseinttimeplot2}
+\includegraphics[width=0.8\textwidth]{baseinttimeplot1}
+\includegraphics[width=0.8\textwidth]{baseinttimeplot2}
 \caption{Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ and $T=1000$, in the state, scaled disturbance and scaled error samplers and for all five interweaving samplers. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. The signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high.}
 \label{baseinttimeplot}
 \end{figure}
@@ -768,8 +768,8 @@ For $T=100$ and $T=1000$ we see that the pattern we saw for ESP begins also appe
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.49\textwidth]{plots/altinttimeplot1}
-\includegraphics[width=0.49\textwidth]{plots/altinttimeplot2}
+\includegraphics[width=0.49\textwidth]{altinttimeplot1}
+\includegraphics[width=0.49\textwidth]{altinttimeplot2}
 \caption{Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ and $T=1000$, in the alternating, GIS, and random kernel samplers. Horizontal and vertical axes indicate the true values of $V$ and $W$ respectively for the simulated data. The signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high.}
 \label{altinttimeplot}
 \end{figure}
