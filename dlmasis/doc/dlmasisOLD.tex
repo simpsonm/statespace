@@ -46,7 +46,7 @@ In DLMs, MCMC sampling can often be very slow for accurately estimating the post
 
 \subsection{Data augmentations}
 
-\subsection{Dynamic linear models} \matt{probably move this to section 2} \matt{references to West and Harrison, Petris et al, and Prado and West}
+\subsection{Dynamic linear models} \matt{probably move this to section 2} 
 
 
 
@@ -54,41 +54,8 @@ In DLMs, MCMC sampling can often be very slow for accurately estimating the post
 \section{Estimating the Model via Data Augmentation: Parameterization Issues}\label{sec:DLMest}
 \matt{Why not just talk about parameterizations in this section?}
 
-A well known method to estimate the parameters in a DLM is via data augmentation (DA), as in \citet{fruhwirth1994data} and \citet{carter1994gibbs}. The basic idea is to implement a Gibbs sampler with two blocks: 1) $\theta|\phi,y$ and 2) $\phi|\theta,y$. This DA algorithm with parameter $\phi$, augmented data $\theta$, and data $y$ obtains the $k+1$'st state of the Markov chain, $(\phi^{(k+1)},\theta^{(k+1)})$, from the $k$'th state, $\phi^{(k)}$ as follows:
-\begin{alg}State Sampler for DLMs.\label{alg:DA}\\
-  \begin{center}
-    \begin{tabular}{lll}
-      $[\theta|\phi^{(k)}]$& $\to$& $[\phi^{(k+1)}|\theta]$
-    \end{tabular}
-  \end{center}
-\end{alg}
-In the context of the DLM, the full joint distribution of $(V,W,\theta_{0:T},y_{1:T})$ is
-\begin{align}
-  p(&V,W,\theta_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\theta_0-m_0)'C_0^{-1}(\theta_0-m_0)\right] \nonumber\\
-  &\times   |V|^{-(\lambda_V + k + T + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_VV^{-1}\right)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T(y_t - F_t\theta_t)'V^{-1}(y_t - F_t\theta_t)\right] \nonumber\\
-   & \times |W|^{-(\lambda_W + p + T + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_WW^{-1}\right)\right]\exp\left[-\frac{1}{2}\sum_{t=1}^T(\theta_t-G_t\theta_{t-1})'W^{-1}(\theta_t-G_t\theta_{t-1})\right]\label{dlmjoint}
- \end{align}
-where $\tr(.)$ is the matrix trace operator. The first block runs a simulation smoother which draws the latent states $\theta$ from their Gaussian conditional posterior distribution given the model parameters via forward filtering, backward sampling (FFBS) \citet{fruhwirth1994data, carter1994gibbs}, or other alternatives \citet{koopman1993disturbance, de1995simulation, mccausland2011simulation}. The second block draws $\phi=(V,W)$ from their joint conditional posterior which in this model turns out to be independent inverse Wishart distributions. In particular
-\begin{align}
-  V|\theta_{0:T},y_{1:T} &\sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right) &
-  W|\theta_{0:T},y_{1:T} &\sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right) \label{eq:VWcond}
-\end{align}
-where $v_t = y_t - F_t\theta_t$ and $w_t = \theta_t - G_t\theta_{t-1}$. We are calling this algorithm the {\it state sampler}.
-
-As we will show in Section \ref{sec:LLMest}, the Markov chain constructed using the state sampler can mix poorly in some regions of the parameter space. For example, in the univariate local level model ($F_t=G_t=1$ for $t=1,2,\cdots,T$) and similar models it is known that if the variance of the latent states is too small, mixing will be poor for $W$ \citep{fruhwirth2004efficient}.
 
 
-
-
-
-The DA algorithm based on $\psi_{0:T}$ is similar to that of $\gamma_{0:T}$ except we note that simulation smoothing can be accomplished by directly applying the algorithm of \citet{mccausland2011simulation} because the precision matrix of $\psi_{0:T}$ retains the necessary tridiagonal structure. Also we mention in passing that there is a bit of symmetry here --- the joint conditional posterior of $(V,W)$ given $\gamma_{0:T}$ is from the same family of densities as that of $(W,V)$ given $\psi_{0:T}$ so that $V$ and $W$ essentially switch places. The upshot is that if we can draw from one we can draw from the other, so this part of our work has been essentially halved.
-
-
-
-
-
-
-In the case of both wrongly-scaled DA algorithms, the smoothing step can be accomplished in a manner analogous to the ``correctly scaled'' DA algorithms, i.e. the scaled disturbance and scaled error algorithms. The draw from the joint conditional posterior of $(V,W)$ is from a nonstandard density that, like for the correctly scaled DA algorithms, has a certain symmetry property. Specifically $V,W|\tilde{\gamma}_{0:T},y_{1:T}$ and $W,V|\tilde{\psi}_{0:T},y_{1:T}$ have densities from the same family so that by changing which of $\tilde{\gamma}_{0:T}$ or $\tilde{\psi}_{0:T}$ is conditioned on, $V$ and $W$ essentially switch places. This class of densities is different from the correctly scaled DA case, however. We will demonstrate this through an example in Section \ref{sec:LLMest}.
 
 
 
@@ -96,97 +63,6 @@ In the case of both wrongly-scaled DA algorithms, the smoothing step can be acco
 \section{Interweaving in the DLM: Global and Componentwise}\label{sec:DLMinter}
 \matt{I think the previous section should just be data augmentations with minimal discussion of sampling while this section should introduce sampling starting with the base samplers.}
 
-We now have five DAs for general DLMs. For simplicity we'll assume that $dim(y_t)=dim(\theta_t)$ and $F_t$ invertible for $t=1,2,\cdots,T$ so that the scaled errors are easy to work with. \matt{what can we do if it isn't?} The five DAs are the states, $\theta_{0:T}$, the scaled disturbances $\gamma_{0:T}$, the scaled errors $\psi_{0:T}$, the wrongly-scaled disturbances $\tilde{\gamma}_{0:T}$, and the wrongly-scaled errors $\tilde{\psi}_{0:T}$ \matt{We may consider acronyms for these DAs so that we can quickly reference them.} This allows us to construct several GIS algorithms based on Algorithm \ref{alg:GIS2}. \matt{Reintroduce alternating and interweaving here.} The main algorithms we consider are the State-Dist, State-Error, Dist-Error, and Triple GIS algorithms. The State-Dist algorithm, for example, interweaves between the states and the scaled disturbances, while the Triple GIS algorithm interweaves between the states, the scaled disturbances, and the scaled errors. Strictly speaking the order in which we sample the DAs in the algorithm does matter, but \citet{yu2011center} note that this tends not to make much difference. \matt{Do we have any experience to add to this? It would be great if we could say: like \citet{yu2011center} we say very little difference when reordering.} We always construct our algorithms so that the DAs are used in the order they were presented earlier in this paragraph \matt{for example...}.
-
-To illustrate the GIS algorithms, algorithm \ref{alg:SDint} is the state-dist GIS algorithm:
-\begin{alg}State-Dist GIS for DLMs.\label{alg:SDint}\\
-  \begin{center}
-    \begin{tabular}{lllllll}
-      $[\theta_{0:T}|V^{(k)},W^{(k)}]$&$\to$&$ [V,W|\theta_{0:T}]$&$\to$&$ [\gamma_{0:T}|V,W,\theta_{0:T}]$&$ \to $&$[V^{(k+1)},W^{(k+1)}|\gamma_{0:T}]$.
-    \end{tabular}
-  \end{center}
-\end{alg}
-\matt{Explain all steps.}
-The third step is actually a one-to-one transformation from $\theta_{0:T}$ to $\gamma_{0:T}$.  In practice we may want to break up step 4 into two steps if it is easier to draw from the full conditionals of $V$ and $W$ rather than drawing them jointly, though this will cost us both in terms of MCMC efficiency and theoretical tractability \matt{Do we have much for theoretical resuls? Perhaps just don't mention this.} for analyzing the algorithm. 
-
-\matt{Need a transition here. Why are you suddenly talking about a GIS algorithm? I think breaking this up into subsections will help, e.g. Base samplers followed by alternating and then interweaving samplers.} 
-None of the GIS algorithms we can construct are ASIS algorithms --- none of the DAs are a SA for $(V,W)$. The states, $\theta_{0:T}$, are a SA for $W|V$ though, so this motivates a CIS algorithm. A partial CIS algorithm is immediate:
-\begin{alg}Partial CIS for DLMs.\label{alg:PCIS}\\
-  \begin{center}
-    \begin{tabular}{lllll}
-    $[\theta_{0:T}|V^{(k)},W^{(k)}]$& $\to$& $[V^{(k+1)}|W^{(k)},\theta_{0:T}]$&$\to$ & \\
-    $[W|V^{(k+1)},\theta_{0:T}]$& $\to$& $[\gamma_{0:T}|V^{(k+1)},W,\theta_{0:T}]$& $\to$& $[W^{(k+1)}|V^{(k+1)},\gamma_{0:T}]$
-    \end{tabular}
-  \end{center}
-\end{alg}
-Steps 1-2 of this algorithm correspond to a Gibbs step for $V$ while steps 3-5 correspond to a Gibbs step for $W$. Step 4 is a transformation step since conditional on $V$ and $W$, $\gamma_{0:T}$ is a one-to-one transformation of $\theta_{0:T}$. This algorithm is actually the same as a version of the State-Dist interweaving algorithm with some of the steps rearranged, specifically algorithm \ref{alg:SDint}. So it should be similar in performance to a GIS algorithm.
-
-With a little more work, we can also construct a Full CIS algorithm that also turns out to be essentially the same as another GIS algorithm. Here we employ the wrongly-scaled disturbances $\tilde{\gamma}_{0:T}$ and wrongly-scaled errors $\tilde{\psi}_{0:T}$. Now we already know that $\gamma_{0:T}$ is an AA for $W|V$ and $\tilde{\gamma}_{0:T}$ is an SA for $W|V$, so the two form an AA-SA pair for $W|V$. Similarly,  $\psi_{0:T}$ is an AA for $V|W$ while $\tilde{\psi}_{0:T}$ is an SA for $V|W$ so together they form an AA-SA pair for $V|W$. \matt{Did we make these AA and SA relationships clear previously? We should probably reference the section where we made this clear.} Now we can construct a Full CIS algorithm:
-\begin{alg}Full CIS for DLMs, based on wrongly-scaled DAs.\label{alg:FCIS}\\
-  \begin{center}
-    \begin{tabular}{llllllll}
-      $[\tilde{\psi}_{0:T}|V^{(k)},W^{(k)}]$& $\to$& $[V|W^{(k)},\tilde{\psi}_{0:T}]$& $\to$& $[\psi_{0:T}|V,W^{(k)},\tilde{\psi}_{0:T}]$& $\to$& $[V^{(k+1)}|W^{(k)},\psi_{0:T}]$& $\to$\\
-      $[\tilde{\gamma}_{0:T}|V^{(k+1)},W^{(k)},\psi_{0:T}]$&$\to$& $[W|V^{(k+1)},\tilde{\gamma}_{0:T}]$& $\to$& $[\gamma_{0:T}|V^{(k+1)},W,\tilde{\gamma}_{0:T}]$& $\to$& $[W^{(k+1)}|V^{(k+1)},\gamma_{0:T}]$
-    \end{tabular}
-  \end{center}
-\end{alg}
-Steps 1-4 constitute a Gibbs step for $V$ and steps 5-8 constitute a Gibbs step for $W$. Steps 3, 5 and 7 are transformation steps --- the parameter we are drawing is a one-to-one function of the parameters we are conditioning on. It turns out that $p(V|W,\tilde{\gamma}_{0:T},y_{1:T})$ and $p(V|W,\theta_{0:T},y_{1:T})$ are the same density, and also that $p(W|V,\tilde{\psi}_{0:T},y_{1:T})$ and $p(W|V,\theta_{0:T},y_{1:T})$ are the same density. To see this \matt{put in the Appendix?}, from equation \eqref{dlmdistjoint} we can write the full conditional posterior of $V$ given $W$ and $\gamma_{0:T}$ as
- \begin{align*}
-  p(&V|W,\gamma_{0:T},y_{1:T}) \propto |V|^{-(\lambda_V + k + T + 2)/2} \exp\left[-\frac{1}{2}\left(tr\left(\Lambda_VV^{-1}\right) + \sum_{t=1}^T\left[y_t-F_t\theta_t(\gamma_{0:T},W)\right]'V^{-1}\left[y_t-F_t\theta_t(\gamma_{0:T},W)\right]\right)\right].
- \end{align*}
-Since $\theta_{0:T}$ is a function of $\gamma_{0:T}$ and $W$, this conditional distribution is unchanged from before when conditioning on $\theta_{0:T}$ instead of $\gamma_{0:T}$, so we have 
-\begin{align*}
-  V|W,\gamma_{0:T},y_{1:T} &\sim IW\left(\Lambda_V + \sum_{t=1}^T(y_t-F_t\theta_t(\gamma_{0:T},W))(y_t-F_t\theta_t(\gamma_{0:T},W))',\lambda_V + T\right),
-\end{align*}
-which is the same as the conditional distribution of $V|W,\theta_{0:T},y_{1:T}$ from equation \eqref{eq:VWcond}.
-
-Similarly, from equation \eqref{dlmerrorjoint} we have the full conditional distribution of $W$ given $V$ and $\psi_{0:T}$:
-\begin{align*}
-    p(&W|V,\psi_{0:T},y_{1:T}) \propto  |W|^{-(\lambda_W + k + T + 2)/2}\exp\left[-\frac{1}{2}\left(tr\left(\Lambda_WW^{-1}\right) + (y_t - \mu_t)'(F_tWF_t')^{-1}(y_t-\mu_t)\right)\right]
-\end{align*}
-where $\mu_1 = L_V\psi_1 + F_1G_1\psi_0$ and for $t=2,3,\cdots,T$, $\mu_t =L_V\psi_t + F_tG_tF_{t-1}^{-1}(y_{t-1} - L_{V}\psi_{t-1})$. Now 
-\begin{align*}
-  F_1^{-1}(y_1-\mu_1)=F_1^{-1}(y_1-L_V\psi_1 = F_1G_1\psi_0)=w_1
-\end{align*}
-and for $t=2,3,\cdots,T$, 
-\begin{align*}
-  F_t^{-1}(y_t-\mu_t)=F_t^{-1}(y_t-L_V\psi_t - F_tG_tF_{t-1}^{-1}[y_{t-1}-L_V\psi_{t-1}])=\theta_t-G_t\theta_{t-1}=w_t
-\end{align*}
-so that 
-\begin{align*}
-  W|V,\psi_{0:T},y_{1:T} \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)
-\end{align*}
-where we treat $w_{1:T}$ as a function of $\psi_{0:T}$, $y_{1:T}$, and $V$. This is once again the same as $p(W|V,\theta_{0:T},y_{1:T})$ from \eqref{eq:VWcond}. The upshot is that step 1 of Algorithm \ref{alg:FCIS} can be replaced with a draw from $p(\theta_{0:T}|V,W,y_{1:T})$, and any time we condition on one of the ``wrongly-scaled'' variables, we can condition on $\theta_{0:T}$ instead, yielding the following version of the same CIS algorithm:
-\begin{alg}Full CIS for DLMs, based on states.\label{alg:FCIS2}\\
-  \begin{center}
-    \begin{tabular}{llllllll}
-      $[\theta_{0:T}|V^{(k)},W^{(k)}]$& $\to $& $[V|W^{(k)},\theta_{0:T}]$& $\to$& $[\psi_{0:T}|V,W^{(k)},\theta_{0:T}]$& $\to$& $[V^{(k+1)}|W^{(k)},\psi_{0:T}]$& $\to$\\
-      $[\theta_{0:T}|V^{(k+1)},W^{(k)},\psi_{0:T}]$& $\to$& $[W|V^{(k+1)},\theta_{0:T}]$& $\to$& $[\gamma_{0:T}|V^{(k+1)},W,\theta_{0:T}]$& $\to$& $[W^{(k+1)}|V^{(k+1)},\gamma_{0:T}]$
-    \end{tabular}
-  \end{center}
-\end{alg}
-
-Compare this algorithm to the Dist-Error algorithm where we draw $V$ and $W$ separately:
-\begin{alg}Dist-Error GIS for DLMs.\label{alg:Dist-Error}\\
-  \begin{center}
-    \begin{tabular}{llllllll}
-      $[\gamma_{0:T}|V^{(k)},W^{(k)}]$& $\to $& $[V|W^{(k)},\gamma_{0:T}]$& $\to$& $[W|V,\gamma_{0:T}]$& $\to$\\
-      $[\psi_{0:T}|V,W,\gamma_{0:T}]$& $\to$& $[V^{(k+1)}|W,\psi_{0:T}]$& $\to$& $[W^{(k+1)}|V^{(k+1)},\psi_{0:T}]$&
-    \end{tabular}
-  \end{center}
-\end{alg}
-If move the first draw of $W$ to the end make explicit the transformation that would be required from $\psi_{0:T}$ to $\gamma_{0:T}$, we have:
-\begin{alg}Dist-Error GIS for DLMs, rearranged.\label{alg:Dist-Error2}\\
-  \begin{center}
-    \begin{tabular}{llllllll}
-      $[\gamma_{0:T}|V^{(k)},W^{(k)}]$& $\to $& $[V|W^{(k)},\gamma_{0:T}]$& $\to$& $[\psi_{0:T}|V,W,\gamma_{0:T}]$& $\to$& $[V^{(k+1)}|W,\psi_{0:T}]$& $\to$\\
-      $[W^{(k+1)}|V^{(k+1)},\psi_{0:T}]$& $\to$& $[\gamma_{0:T}|V,W,\psi_{0:T}]$&$\to$& $[W|V,\gamma_{0:T}]$.&&&
-    \end{tabular}
-  \end{center}
-\end{alg}
-Now anytime we draw $V$ conditional on $W$ and $\gamma_{0:T}$, it is the same as drawing $V$ conditional on $W$ and $\theta_{0:T}$, and similarly for $W$ conditional on $V$ and $\psi_{0:T}$ compared to $W$ conditional on $V$ and $\theta_{0:T}$, so we can replace $\gamma_{0:T}$ with $\theta_{0:T}$ in steps 1, 2, and 3, and we can replace $\psi_{0:T}$ with $\theta_{0:T}$ in steps 5 and 6, and insert the appropriate transformation step between step 4 and the new step 5. This gives us the full CIS algorithm, Algorithm \ref{alg:FCIS2}. So since these two algorithms are essentially the same up to rearranging their respective steps, we expect them to perform similarly. In fact, we will verify this intuition in Section \ref{sec:LLMest} with simulations using a particular DLM.
-
-\matt{Need a transition here. What is the bottom line for these algorithms? How many algorithms have we introduced? We started with the 5 base samplers, then we could consider alternating and interweaving among these, so that is (5 choose 2) times 2? And then we could consider the (?) triple? Shouldn't there be 5 choose 2 triple algorithms?}
 
 \section{Application: The Local Level Model}\label{sec:LLMest}
 
