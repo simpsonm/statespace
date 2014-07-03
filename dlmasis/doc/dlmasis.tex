@@ -276,7 +276,7 @@ The problem we run into is unlikely to be unique to the time series setting but 
 
 \section{MCMC Strategies for the DLM}\label{sec:Algs}
 
-A well known method to estimate the parameters in a DLM is via data augmentation (DA) \cite{fruhwirth1994data,carter1994gibbs}. The basic idea is to implement a Gibbs sampler with two blocks: 1) $\theta|\phi,y$ and 2) $\phi|\theta,y$. This DA algorithm with parameter $\phi$, augmented data $\theta$, and data $y$ obtains the $k+1$'st state of the Markov chain, $(\phi^{(k+1)},\theta^{(k+1)})$, from the $k$'th state, $\phi^{(k)}$ as follows:
+A well known method to estimate the parameters in a DLM uses the DA algorithm (algorithm \cite{alg:DA}) using the latent states $\theta_{0:T}$ as the DA \cite{fruhwirth1994data,carter1994gibbs}. The basic idea is to implement a Gibbs sampler with two blocks: 1) $\theta|\phi,y$ and 2) $\phi|\theta,y$. This DA algorithm with parameter $\phi$, DA $\theta$, and data $y$ obtains the $k+1$'st state of the Markov chain, $(\phi^{(k+1)},\theta^{(k+1)})$, from the $k$'th state, $\phi^{(k)}$ as follows:
 \begin{alg}State Sampler for DLMs.\label{alg:state}\\
   \begin{center}
     \begin{tabular}{lll}
