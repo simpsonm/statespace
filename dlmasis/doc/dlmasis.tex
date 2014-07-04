@@ -276,25 +276,32 @@ The problem we run into is unlikely to be unique to the time series setting but 
 
 \section{MCMC Strategies for the DLM}\label{sec:Algs}
 
-A well known method to estimate the parameters in a DLM uses the DA algorithm (algorithm \cite{alg:DA}) using the latent states $\theta_{0:T}$ as the DA \cite{fruhwirth1994data,carter1994gibbs}. The basic idea is to implement a Gibbs sampler with two blocks: 1) $\theta|\phi,y$ and 2) $\phi|\theta,y$. This DA algorithm with parameter $\phi$, DA $\theta$, and data $y$ obtains the $k+1$'st state of the Markov chain, $(\phi^{(k+1)},\theta^{(k+1)})$, from the $k$'th state, $\phi^{(k)}$ as follows:
-\begin{alg}State Sampler for DLMs.\label{alg:state}\\
-  \begin{center}
-    \begin{tabular}{lll}
-      $[\theta|\phi^{(k)}]$& $\to$& $[\phi^{(k+1)}|\theta]$
-    \end{tabular}
-  \end{center}
-\noindent \end{alg}
-The first block runs a simulation smoother which draws the latent states $\theta$ from their Gaussian conditional posterior distribution given the model parameters via forward filtering, backward sampling (FFBS) \cite{fruhwirth1994data,carter1994gibbs}, or other alternatives \cite{koopman1993disturbance,de1995simulation,mccausland2011simulation}. The second block draws $\phi=(V,W)$ from their joint conditional posterior which in this model turns out to be independent inverse Wishart distributions. In particular
-\begin{align}
-  V|\theta_{0:T},y_{1:T} &\sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right) &
-  W|\theta_{0:T},y_{1:T} &\sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right) \label{eq:VWcond}
-\end{align}
-where $v_t = y_t - F_t\theta_t$ and $w_t = \theta_t - G_t\theta_{t-1}$. We are calling this algorithm the {\it state sampler}.
+\subsection{Base samplers}
+Using any of the DAs introduced in section \ref{DAs}, we can construct several DA algorithms (Algorithm \ref{alg:DA}), which we call {\it base samplers}. A well known method to estimate the parameters in a DLM uses the DA algorithm using the latent states $\theta_{0:T}$ as the DA \cite{fruhwirth1994data,carter1994gibbs}. We are calling this algorithm the {\it state sampler}. In order to construct this sampler, we need two pieces --- the conditional posterior of $V$ and $W$ given $\theta_{0:T}$ and the conditional posterior of $\theta_{0:T}$ given $V$ and $W$. The density $p(\theta_{0:T}|V,W,y_{1:T})$ is multivariate normal, and any algorithm that obtains a random draw from it is called a simulation smoother in the literature. One commonly used simulation smoother is the forward filtering, backward sampling algorithm (FFBS) \cite{fruhwirth1994data,carter1994gibbs} which uses the Kalman filter, but there are several alternatives including \citeasnoun{koopman1993disturbance} and \citeasnoun{de1995simulation}. The smoothers introduced in \citeasnoun{mccausland2011simulation} and \citeasnoun{rue2001fast}, dubbed ``all without a loop'' smoothing (AWOL) by \citeasnoun{kastner2013ancillarity} are particularly efficient. Both methods exploit the tridiagonal structure of the precision matrix of the joint normal distribution for $\theta_{0:T}$ in order to speed up matrix computations. 
+
+The method of \citeasnoun{rue2001fast} exploits this structure in order to quickly compute a Cholesky decomposition of the precision matrix and as a result is also called the Cholesky factor algorithm (CFA). \citeasnoun{mccausland2011simulation}, on the other hand, exploits this structure in order to break up the random draw from $p(\theta_{0:T}|V,W,y_{1:T})$ into $T+1$ steps. The tridiagonal precision matrix ensures that $p(\theta_{t}|\theta_{t+1:T},V,W,y_{1:T}) = p(\theta_{t}|\theta_{t+1},V,W,y_{1:T})$ for $t=0,1,\cdots,T-1$. Then the algorithm initializes with a draw from $p(\theta_T|V,W,y_{1:T})$, then draws recursively from $p(\theta_{t}|\theta_{t+1:T}|V,W,y_{1:T})$ for $t=T-1,T-2,\cdots,0$. In effect, this algorithm takes the Cholesky decomposition and simulation steps of the CFA algorithm and mixes their sub-steps together.  As a result, we call this the mixed Cholesky factor algorithm (SCFA). The upshot for computational efficiency is that instead of working with a $(T+1)p\times (T+1)p$ precision matrix the MCFA works with $T+1$ $p\times p$ precision matricies which often, but not always, speeds up the computation relative to the CFA \cite{mccausland2011simulation}. We omit the details of this algorithm in the context of the DLM, but they can be found in the supplementary materials.
+
+\jarad{Maybe we need a better name. The original authors didn't name the algorithm and just want to refer to it with MMP, which is the first letters of each of their last names, but I'd like an intuitive name that points out the connection to and differences from the CFA algorithm.}
+
+In order to complete the state sampler, we need to obtain a draw from $p(V,W|\theta_{0:T},y_{1:T})$. From equation \ref{dlmjoint} it is easy to see that $V$ and $W$ have independent inverse Wishart distributions conditional on $\theta_{0:T}$ and $y_{1:T}$. In particular
+\begin{align*}
+  V|\theta_{0:T},y_{1:T} &\sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right), &
+  W|\theta_{0:T},y_{1:T} &\sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right) %\label{eq:VW|theta}
+\end{align*}
+where $v_t = y_t - F_t\theta_t$ and $w_t = \theta_t - G_t\theta_{t-1}$.
 
 As we will show in Section \ref{sec:LLMest}, the Markov chain constructed using the state sampler can mix poorly in some regions of the parameter space. For example, in the univariate local level model ($F_t=G_t=1$ for $t=1,2,\cdots,T$) and similar models it is known that if the variance of the latent states is too small relative to the variance of the data, mixing will be poor for $W$ \cite{fruhwirth2004efficient}.
 
-The DA algorithm based on $\psi_{0:T}$ is similar to that of $\gamma_{0:T}$ except we note that simulation smoothing can be accomplished by directly applying the algorithm of \citeasnoun{mccausland2011simulation} because the precision matrix of $\psi_{0:T}$ retains the necessary tridiagonal structure. Also we mention in passing that there is a bit of symmetry here --- the joint conditional posterior of $(V,W)$ given $\gamma_{0:T}$ is from the same family of densities as that of $(W,V)$ given $\psi_{0:T}$ so that $V$ and $W$ essentially switch places. The upshot is that if we can draw from one we can draw from the other, so this part of our work has been essentially halved.
+Next, we can use the scaled disturbances, $\gamma_{0:T}$, in order to construct a second DA algorithm called the {\it scaled disturbance sampler}. In the smoothing step, we need to obtain a draw from $p(\gamma_{0:T}|V,W,y_{1:T})$. This density is also Gaussian but does not have a tridagonal precision matrix. As a result, in order to obtain a draw from the conditional posterior of $\gamma_{0:T}$, we use the MCFA to instead draw from $p(\theta_{0:T}|V,W,y_{1:T})$, then use the definition of the scaled disturbances in order to transform from $\theta_{0:T}$ to $\gamma_{0:T}$. The density $p(V,W|\gamma_{0:T},y_{1:T})$ can be obtained from equation \eqref{dlmdistjoint}:
+\begin{align*}
+p(V,W&|\gamma_{0:T},y_{1:T}) \propto |W|^{-(\lambda_W + p + T + 2)/2} \exp\left[-\frac{1}{2}tr\left(\Lambda_WW^{-1}\right)\right] |V|^{-(\lambda_V + k + T + 2)/2}  \nonumber \\
+& \times\exp\left[-\frac{1}{2}\left(tr\left(\Lambda_VV^{-1}\right) + \sum_{t=1}^T\left[y_t-F_t\theta_t(\gamma_{0:T},W)\right]'V^{-1}\left[y_t-F_t\theta_t(\gamma_{0:T},W)\right]\right)\right].
+\end{align*}
+This density is rather complicated and does not appear easy to draw from. However, it is easy to see that $V|W,\gamma_{0:T},y_{1:T} \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$ where again $v_t = y_t - F_t\theta_t$. It is not easy to draw from $p(W|\gamma_{0:T},y_{1:T})$ so drawing $V$ and $W$ jointly must be abandaoned. However, the density $p(W|V,\gamma_{0:T},y_{1:T})$ is simpler and at least in the local level model, can be efficiently sampled from (section \ref{sec:LLM}). As a result, the scaled disturbance sampler has three steps instead of the two of the usual DA algorithm (Algorithm \ref{alg:DA}).
 
+The DA algorithm based on on the scaled errors, $\psi_{0:T}$, is called the {\it scaled error sampler} and is similar to the scaled disturbance sampler with a couple of key differences. First, the simulation smoothing step the scaled error sampler can be accomplished directly with the MCFA  because the precision matrix of the conditional posterior of $\psi_{0:T}$ retains the necessary tridiagonal structure. Once again, the draw of $V$ and $W$ has to be broken up into two steps. The full conditional distribution of $W$ is inverse Wishart, that is $W|\theta_{0:T},y_{1:T} \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$ where once again $w_t = \theta_t - G_t\theta_{t-1}$.The density of $V|W,\psi_{0:T},y_{1:T}$ is in the same class as that of $W|V,\gamma_{0:T},y_{1:T}$. In fact there is a strong symmetry here --- the joint conditional posterior of $(V,W)$ given $\gamma_{0:T}$ is from the same family of densities as that of $(W,V)$ given $\psi_{0:T}$ so that $V$ and $W$ essentially switch places when we condition of $\psi_{0:T}$ instead of $\gamma_{0:T}$.
+
+\matt{UPDATED THROUGH HERE}
 
 In the case of both wrongly-scaled DA algorithms, the smoothing step can be accomplished in a manner analogous to the ``correctly scaled'' DA algorithms, i.e. the scaled disturbance and scaled error algorithms. The draw from the joint conditional posterior of $(V,W)$ is from a nonstandard density that, like for the correctly scaled DA algorithms, has a certain symmetry property. Specifically $V,W|\tilde{\gamma}_{0:T},y_{1:T}$ and $W,V|\tilde{\psi}_{0:T},y_{1:T}$ have densities from the same family so that by changing which of $\tilde{\gamma}_{0:T}$ or $\tilde{\psi}_{0:T}$ is conditioned on, $V$ and $W$ essentially switch places. This class of densities is different from the correctly scaled DA case, however. We will demonstrate this through an example in Section \ref{sec:LLMest}.
 
@@ -331,7 +338,7 @@ With a little more work, we can also construct a Full CIS algorithm that also tu
       $[\tilde{\gamma}_{0:T}|V^{(k+1)},W^{(k)},\psi_{0:T}]$&$\to$& $[W|V^{(k+1)},\tilde{\gamma}_{0:T}]$& $\to$& $[\gamma_{0:T}|V^{(k+1)},W,\tilde{\gamma}_{0:T}]$& $\to$& $[W^{(k+1)}|V^{(k+1)},\gamma_{0:T}]$
     \end{tabular}
   \end{center}
-\noindent \end{alg}
+p\noindent \end{alg}
 Steps 1-4 constitute a Gibbs step for $V$ and steps 5-8 constitute a Gibbs step for $W$. Steps 3, 5 and 7 are transformation steps --- the parameter we are drawing is a one-to-one function of the parameters we are conditioning on. It turns out that $p(V|W,\tilde{\gamma}_{0:T},y_{1:T})$ and $p(V|W,\theta_{0:T},y_{1:T})$ are the same density, and also that $p(W|V,\tilde{\psi}_{0:T},y_{1:T})$ and $p(W|V,\theta_{0:T},y_{1:T})$ are the same density. To see this \matt{put in the Appendix?}, from equation \eqref{dlmdistjoint} we can write the full conditional posterior of $V$ given $W$ and $\gamma_{0:T}$ as
  \begin{align*}
   p(&V|W,\gamma_{0:T},y_{1:T}) \propto |V|^{-(\lambda_V + k + T + 2)/2} \exp\left[-\frac{1}{2}\left(tr\left(\Lambda_VV^{-1}\right) + \sum_{t=1}^T\left[y_t-F_t\theta_t(\gamma_{0:T},W)\right]'V^{-1}\left[y_t-F_t\theta_t(\gamma_{0:T},W)\right]\right)\right].
