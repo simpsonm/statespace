@@ -11,15 +11,12 @@ samout2 <- samout
 load("../../wrongscale/OldDAs/samout.RData")
 samout$stime <- 0
 samout <- rbind(samout2, samout)
-load("../../stagstate/stagstatesamout.RData")
-samout <- rbind(samout, stagstatesamout)
 rm(samout2)
-rm(stagstatesamout)
 base <- c("error", "state", "dist")
 alts <- c("sdalt", "sealt", "dealt", "trialt")
 ints <- c("sdint", "seint", "deint", "triint")
 kerns <- c("sdkern", "sekern", "dekern", "trikern")
-cis <- c("fullcis", "partialcis", "stagstate")
+cis <- c("fullcis", "partialcis")
 wrongs <- c("errorda", "distda")
 samout$V.ES[samout$sampler %in% kerns] <- samout$V.ES[samout$sampler %in% kerns]*2
 samout$W.ES[samout$sampler %in% kerns] <- samout$W.ES[samout$sampler %in% kerns]*2
@@ -36,7 +33,6 @@ samout$samplers[substr(samout$sampler, 1, 2)=="sd"] <- "State-Dist"
 samout$samplers[substr(samout$sampler, 1, 2)=="se"] <- "State-Error" 
 samout$samplers[substr(samout$sampler, 1, 2)=="de"] <- "Dist-Error" 
 samout$samplers[substr(samout$sampler, 1, 3)=="tri"] <- "Triple"
-samout$samplers[samout$sampler=="stagstate"] <- "StagState"
 samout$samplers[samout$sampler=="fullcis"] <- "FullCIS"
 samout$samplers[samout$sampler=="partialcis"] <- "PartialCIS"
 samout$samplers[samout$sampler=="error"] <- "Error"
@@ -45,7 +41,7 @@ samout$samplers[samout$sampler=="state"] <- "State"
 samout$samplers[samout$sampler=="errorda"] <- "W-Error"
 samout$samplers[samout$sampler=="distda"] <- "W-Dist"
 samlevels <- c("State", "Dist", "Error", "State-Dist", "State-Error", "Dist-Error", 
-               "Triple", "FullCIS", "PartialCIS", "W-Dist", "W-Error", "StagState")
+               "Triple", "FullCIS", "PartialCIS", "W-Dist", "W-Error")
 samout$samplers <- factor(samout$samplers, levels=samlevels)
 samout$V.time <- samout$time/samout$V.ES
 samout$W.time <- samout$time/samout$W.ES
@@ -165,7 +161,7 @@ ggsave(filename="corplot8.pdf", plot=pwb, width=5, height=3)
 
 ## intESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=8, out.width=".7\\textwidth"
 vars <- c("V.ES", "W.ES")
-sams <- c("deint", "seint", "sdint", "triint", "fullcis", "stagstate")
+sams <- c("deint", "seint", "sdint", "triint", "fullcis")
 title <- "ESP for V and W in the GIS and CIS algorithms, T="
 ##p1 <- plotfun(meltedsam, vars, sams, 10, title)
 p2 <- plotfun(meltedsam, vars, sams, 100, title)
@@ -191,7 +187,7 @@ ggsave(filename="altESplot2.pdf", plot=p3, width=7, height=3.75)
 
 ## baseinttimeplot, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.25, out.width=".8\\textwidth"
 vars <- c("V.time", "W.time")
-sams <- c("dist", "error", "deint", "state", "seint", "sdint", "triint", "fullcis", "stagstate")
+sams <- c("dist", "error", "deint", "state", "seint", "sdint", "triint", "fullcis")
 title <- "Log of time (minutes) per 1000 effective draws for base and interweaving samplers, T="
 ##p1 <- plotfuntime(meltedsam, vars, sams, 10, title, 25*60/1000)
 p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
