@@ -282,6 +282,9 @@ samwrap <- function(par, n, samp){
     time <- system.time(out <- distsamda(n, start, dat, av, aw, bv, bw, m0, C0))
   if(samp=="errorda")
     time <- system.time(out <- errorsamda(n, start, dat, av, aw, bv, bw, m0, C0))
+  if(samp=="stagstate")
+    time <- system.time(out <- stagstatesam(n, start, dat, av, aw, bv, bw, m0, C0))
+
   outdat <- data.frame(out)
   outdat$time <- time[1]
   cols <- ncol(outdat)
@@ -358,6 +361,35 @@ statesam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
   }
   return(out)
 }
+
+## staggered state sampler: samples V and W conditional on states
+## with an additional draw of the states inbetween V and W
+## (The CIS sampler when psi is used as the AA for W and gamma for V)
+stagstatesam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
+  T <- length(dat)
+  V <- start[1]
+  W <- start[2]
+  out <- samoutsetup(n, T)
+  Va <- av + T/2
+  Wa <- aw + T/2
+  for(i in 1:n){
+    ptma <- proc.time()
+    theta <- awolthsmooth(dat, V, W, m0, C0)
+    ptmb <- proc.time()
+    smoothtime <- ptmb[3]-ptma[3]
+    Vb <- bv + sum((dat-theta[-1])^2)/2
+    V <- rinvgamma(1, Va, Vb)
+    ptma <- proc.time()
+    theta <- awolthsmooth(dat, V, W, m0, C0)
+    ptmb <- proc.time()
+    Wb <- bw + sum((theta[-1]-theta[-(T+1)])^2)/2
+    smoothtime <- smoothtime + ptmb[3]-ptma[3]
+    W <- rinvgamma(1, Wa, Wb)
+    out[i,] <- c(NA,NA,NA,NA,NA,smoothtime,V,W,theta)
+  }
+  return(out)
+}
+
 
 ## scaled error sampler: samples V and W conditional on the scaled observation
 ## errors (plus the initial state, theta_0)
