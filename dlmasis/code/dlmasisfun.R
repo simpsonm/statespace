@@ -907,14 +907,13 @@ fullcissam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
   out <- samoutsetup(n, T)  
   for(i in 1:n){
     ptma <- proc.time()
-    theta <- awolthsmooth(dat, V, W, m0, C0)
+    psi <- awolpssmooth(dat, V, W, m0, C0)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
-    V <- rinvgamma(1, av + T/2, bv + sum((dat-theta[-1])^2)/2)
-    psi <- psitrans(dat, theta, V)
     Vout <- Vpsiiter(dat, psi, W, av, bv)
     V <- Vout[1]
     theta <- thetapsitrans(dat, psi, V)
+    V <- rinvgamma(1, av + T/2, bv + sum((dat-theta[-1])^2)/2)
     W <- rinvgamma(1, aw + T/2, bw + sum((theta[-1]-theta[-(T+1)])^2)/2)
     gam <- gamtrans(theta, W)
     Wout <- Wgamiter(dat, gam, V, aw, bw)
