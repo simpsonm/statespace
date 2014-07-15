@@ -104,7 +104,7 @@ plotfuntime <- function(meltedsam, vars, sams, T, title, lims){
   ##, limits=c(0,top)
 }
 plotfuncor <- function(newpostcors, var, title){
-  dat <- newpostcors[newpostcors$T.T!=10,]
+  dat <- newpostcors[newpostcors$T.T==100,]
   id <- which(colnames(newpostcors)==var)
   colnames(dat)[id] <- "value"
   out <- ggplot(data=dat, aes(x=V.T, y=W.T, fill=value)) +
@@ -149,14 +149,14 @@ title <- expression(paste("Posterior Correlation Between V and ",b[psi], sep="")
 pvb <- plotfuncor(newpostcors, "Vbpsi", title)
 title <- expression(paste("Posterior Correlation Between W and ",b[gamma], sep=""))
 pwb <- plotfuncor(newpostcors, "Wbgam", title)
-ggsave(filename="corplot1.pdf", plot=pvv, width=5, height=3)
-ggsave(filename="corplot2.pdf", plot=pvw, width=5, height=3)
-ggsave(filename="corplot3.pdf", plot=pva, width=5, height=3)
-ggsave(filename="corplot4.pdf", plot=pvb, width=5, height=3)
-ggsave(filename="corplot5.pdf", plot=pww, width=5, height=3)
-ggsave(filename="corplot6.pdf", plot=pwv, width=5, height=3)
-ggsave(filename="corplot7.pdf", plot=pwa, width=5, height=3)
-ggsave(filename="corplot8.pdf", plot=pwb, width=5, height=3)
+ggsave(filename="corplot1.pdf", plot=pvv, width=4, height=3)
+ggsave(filename="corplot2.pdf", plot=pvw, width=4, height=3)
+ggsave(filename="corplot3.pdf", plot=pva, width=4, height=3)
+ggsave(filename="corplot4.pdf", plot=pvb, width=4, height=3)
+ggsave(filename="corplot5.pdf", plot=pww, width=4, height=3)
+ggsave(filename="corplot6.pdf", plot=pwv, width=4, height=3)
+ggsave(filename="corplot7.pdf", plot=pwa, width=4, height=3)
+ggsave(filename="corplot8.pdf", plot=pwb, width=4, height=3)
 
 
 ## intESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=8, out.width=".7\\textwidth"
@@ -188,7 +188,7 @@ ggsave(filename="altESplot2.pdf", plot=p3, width=7, height=3.75)
 ## baseinttimeplot, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.25, out.width=".8\\textwidth"
 vars <- c("V.time", "W.time")
 sams <- c("dist", "error", "deint", "state", "seint", "sdint", "triint", "fullcis")
-title <- "Log of time (minutes) per 1000 effective draws for base and interweaving samplers, T="
+title <- "Log minutes per 1000 effective draws for base and interweaving samplers, T="
 ##p1 <- plotfuntime(meltedsam, vars, sams, 10, title, 25*60/1000)
 p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
 p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, c(-1,8))
@@ -200,7 +200,7 @@ ggsave(filename="baseinttimeplot2.pdf", plot=p3, width=10, height=3.25)
 
 ## altinttimeplot, fig.cap=cap, echo=FALSE, fig.width=8, fig.height=3.75, out.width=".49\\textwidth"
 sams <- c(alts,ints)
-title <- "Log of time (minutes) per 1000 effective draws for alternating samplers, T="
+title <- "Log minutes per 1000 effective draws for alternating samplers, T="
 ##p1 <- plotfuntime(meltedsam, vars, sams, 10, title, 25*60/1000)
 p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
 p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, c(-1,8))

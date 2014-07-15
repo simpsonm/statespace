@@ -17,3 +17,5 @@
 *.RData
 *.Rout
 *cache*
+*.out
+*.thm
