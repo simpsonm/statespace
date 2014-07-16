@@ -409,15 +409,8 @@ When the underlying DA algorithms form a ``beauty and the beast'' pair, the inte
 
 
 
-\section{Discussion}\label{sec:Discussion}
-Our results on computational time in Section \ref{sec:LLMtime} should be taken with a grain of salt because we did not put much effort \matt{I think you did put some effort into this. Instead, just describe this as the rate limiting step.} into efficiently sampling from $p(W|V,\gamma_{0:T},y_{1:T})$ or $p(V|W,\psi_{0:T},y_{1:T})$. Both densities have the form
-\[
-p(x)\propto x^{-\alpha-1}\exp\left[-ax + b\sqrt{x} - \frac{\beta}{x}\right]
-\]
-where $\alpha,\beta,a>0$. This density is the same as the generalized inverse Gaussian distribution (see e.g. \citet{jorgensen1982statistical} for its properties; \citet{dagpunar1989easily} and \citet{devroye2012random} for generating random draws) when $b=0$, this is almost surely not the case in our application. It is possible that sampling from this density can be significantly improved in which case, the relative speed of the algorithms based on either the scaled errors or the scaled disturbances will improve significantly. On the other hand, it might be worth putting effort into drawing $V$ and $W$ jointly conditional on the scaled disturbances or the scaled errors. The conditional distribution of $V$ given $W$, $p(V|W,\gamma_{0:T},y_{1:T})$, is inverse gamma in our example and inverse Wishart in general, so it is easy to derive the marginal density $p(W|\gamma_{0:T},y_{1:T})$. In our local level model example, this density turns out to be very difficult to sample from and, in particular, is not easily approximated for rejection sampling or for a Metropolis step. 
 
-We initially chose inverse Wishart priors for $V$ and $W$ partially because they are standard and partially for computational convenience, i.e. full Gibbs steps in the state sampler. There are well known problems with this prior \matt{Can reference my paper with Ignacio} in the hierarchical model literature, e.g. \citet{gelman2006prior}, though less is known about the time series case. Given that the prior has potential problems and is inconvenient for the scaled disturbances and the scaled errors, a better choice of prior is probably out there. \matt{$\leftarrow$ a throwaway sentence.} In particular, the conditionally conjugate prior for $\sqrt{W}$ using the scaled disturbances as the DA is a Gaussian distribution --- strictly speaking this prior is on $\pm \sqrt{W}$. If we use this prior for $\pm\sqrt{V}$ as well, the $V$ step in the Gibbs sampler becomes a draw from the generalized inverse Gaussian distribution. This prior has been used by \citet{fruhwirth2011bayesian} and \citet{fruhwirth2008bayesian} to speed up computation while using the scaled disturbances in hierarchical models and by \citet{fruhwirth2010stochastic} for time series models with a DA similar to the scaled disturbances (the latent states are scaled, but not centered). This prior seems particularly useful for variable selection problems, as evidenced by the papers which use it. We omit the results here, but using this prior does not alter our mixing results --- effective sample sizes were basically the same with either prior. There is a trade-off in computation time to consider, however. For example when using the scaled disturbances, the draw of $W|V,\gamma_{0:T},y_{1:T}$ is sped up by using the Gaussian prior on $\pm\sqrt{W}$ since it becomes a Gaussian draw while the $V|W,\gamma_{0:T},y_{1:T}$ is slower since it becomes a generalized inverse Gaussian draw instead of an inverse gamma. The gains outweigh the costs at least until a better way of sampling from $W$'s full conditional from the inverse gamma case is invented, but this only applies when $V$ is a scalar. When $V$ is a matrix, its full conditional becomes the matrix analogue of the generalized inverse Gaussian distribution and it is not clear how efficiently this can be sampled.
-
+ 
 In our simulations with the original inverse gamma priors and the with the normal prior on the standard deviations we mentioned above, we varied the prior so that the prior mean was the true value of the parameters used to simulate the datasets. This may seem suspect at first glance, but there is a method to our madness. In the data augmentation for multilevel models literature, a key quantity is called the fraction of missing information (\citet{van2001art}, for example). When $\phi$ is the model parameter, $\theta$ is the data augmentation and $y$ is the data, the Bayesian fraction of missing information is defined as
 \begin{align*}
   \mathcal{F}_B = I - [var(\phi|y)]^{-1}E[var(\phi|\theta,y)|y]
@@ -436,92 +429,6 @@ is the observed Fisher information matrix while $\phi^*$ is the posterior mode. 
 
 Some previous work has been done in choosing data augmentations for time series models. In the AR(1) plus noise model, \citet{pitt1999analytic} find that the signal-to-noise ratio along with the AR(1) coefficient determine the convergence rate of a Gibbs sampler. In addition, they find that as the length of the time series increases, the convergence rate slows down and compute asymptotic convergence rates for an infinite time series. Both of these results are consistent with our findings and further suggest that the signal-to-noise ratio will play a key role in the fraction of missing information, Bayesian or EM, however, \citet{pitt1999analytic} assume that both of the variances are fixed for simplicity. In a continuous time model, \citet{roberts2004bayesian} find that the Gibbs sampler based on a NCP is at least as efficient as the Gibbs sampler based on the CP and sometimes it is much more efficient, depending on the true values of the parameters. It is unclear whether the time series dependence or something unique to the model is driving this, but it is interesting that the NCP is essentially always better. The dynamic regression model with a stationary AR(1) process on the regression coefficient has been studied in \citet{fruhwirth2004efficient}. They use both the states and the scaled disturbances and several other DAs motivated by some results for Gibbs samplers in the hierarchical model literature. When they examine the behavior of the resulting DA algorithms, \citet{fruhwirth2004efficient} find that the relative behavior of the scaled disturbance (in their language, the ``noncentered disturbances'') and state samplers are similar to our own results in the local level model, though now the signal-to-noise ratio is no longer the crucial quantity, but rather some function of it that also depends on the distribution of the covariate and the autocorrelation parameter in some currently unknown way. \citet{fruhwirth2004efficient} also find that none of the other DA algorithms they consider are more efficient than both the state sampler and the scaled disturbance sampler --- one of these always ends up being faster. This holds true both when they assume that the autorcorrelation parameter is known but when it is assumed unknown. This is encouraging since the extra complexity from adding a new parameter to the model (in our general DLM notation, this is in the form of $G_t$ depending on an additional unknown parameter) could drastically change the properties of the DA algorithms based on an AA (e.g. the scaled disturbances), but it appears the differences are relatively small.
 
-\section{Appendix}\label{sec:append}
-
-\subsection{Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$}\label{sec:Append:scale}
-Both of these two densities are of the form
-\begin{align*}
-\log p(x) = lp(x) & -ax + b\sqrt{x} - (\alpha + 1)\log x -\beta/x + C 
-\end{align*}
-for $x>0$ where $C$ is some constant, $\alpha$ and $\beta$ are the hyperparameters for $x$, and $a>0$ and $b\in \Re$ are parameters that depend on the data, $y$, the relevant data augmentation ($\psi$ or $\gamma$), and the other variable ($W$ or $V$). This density is not a known form and is difficult to sample from. We provide two different rejection sampling strategies below that work well under different circumstances, and combine them into a single strategy.
-
-\subsubsection{Adaptive rejection sampling}
-One nice strategy is to use adaptive rejection sampling, e.g. \citet{gilks1992adaptive}. This requires $lp(x)$ to be concave, which is easy enough to check. The second derivative of $lp(x)$ is:
-\begin{align*}
-\frac{\partial^2 lp(x)}{\partial x^2} &= -\frac{1}{4}bx^{-3/2} +(\alpha + 1)x^{-2} -2 \beta x^{-3}.
-\end{align*}
-Then we have
-\begin{align*}
-  &\frac{\partial^2 lp(x)}{\partial x^2} < 0 \iff \\
-  &-\frac{b}{4}x^{3/2} + (\alpha + 1)x - 2\beta < 0
-\end{align*}
-which would imply that $lp(x)$ is concave. We can maximize the left hand side of the last equation very easily. When $b\leq 0$ the max occurs at $x=\infty$ such that $LHS > 0$, but when $b > 0$:
-\begin{align*}
-  \frac{\partial LHS}{\partial x} &= -\frac{3}{8}bx^{1/2} + \alpha + 1 = 0\\
-  \implies & x^{max} = \frac{(\alpha + 1)^2}{b^2}\frac{64}{9}.
-\end{align*}
-Then we have
-\begin{align*}
-  LHS \leq LHS|_{x=x^{max}} = \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} - 2\beta
-\end{align*}
-so that
-\begin{align*}
-  LHS|_{x=x^{max}} < 0 &\iff  \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} < 2\beta\\
-    &\iff b > \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}.
-\end{align*}
-This last condition is necessary and sufficient for $lp(x)$ to be globally (for $x>0$) concave since $b < 0$ forces $LHS > 0$ for some $x$. When the condition is satisfied, we can use adaptive rejection sampling --- which is already implemented in the \verb0R0 package \verb0ars0. We input the initial evalutions of $lp(x)$ at the mode $x^{mode}$ and at $2x^{mode}$ and $0.5x^{mode}$ in order to get the algorithm going.
-
-\subsubsection{Rejection sampling on the log scale}
-When $b \leq \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}$, which happens often --- especially for small $T$ --- we need to rely on a different method to sample from $p(x)$. A naive approach would be to construct a normal or $t$ approximation to $p(x)$ and use that as a proposal in a rejection sampler. It turns out that this is often very inefficient, but for $y=log(x)$ the approach works well. Note that
-\begin{align*}
-  p_y(y) = p_x(e^y)e^y
-\end{align*}
-so that we can write the log density of $y$ as (dropping the subscripts):
-\begin{align*}
-  lp(y) = -ae^y + be^{y/2} - \alpha y - \beta e^{-y}.
-\end{align*}
-The mode of this density $y^{mode}$ can be easily found numerically, and the second derivative is:
-\begin{align*}
-  \frac{\partial^2 lp(y)}{\partial y^2} = -ae^y + \frac{b}{4}e^{y/2} - \beta e^{-y}.
-\end{align*}
-The $t$ approximation then uses the proposal distribution 
-\begin{align*}
-  t_{v}\left(y^{mode}, \left[\left.\frac{\partial^2 lp(y)}{\partial y^2}\right|_{y=y^{mode}}\right]^{-1}\right).
-\end{align*}
-In practice choosing degrees of freedom $v=1$ works very well over the region of the parameter space where adaptive rejection sampling cannot be used. We can easily use this method when adaptive rejection sampling does not work, then transform $y$ back to $x$. It remains to check that the tails of $t$ distribution dominate the tails of our target distribution. Let $lq(y)$ denote the log density of the proposoal distribution. Then we need
-\begin{align*}
-  lp(y) - lq(y) \leq M\\
-  \intertext{for some constant M, i.e.}
-  -ae^y + be^{y/2} - \alpha y - \beta e^{-y} -\left(\frac{v+1}{2}\right)\log\left[1 + \frac{1}{v}\left(\frac{y-\mu}{\sigma}\right)\right]\leq M
-\end{align*}
-where $a>0$, $\alpha>0$, $\beta>0$, $v>0$, $\sigma>0$, and $b,\mu\in \Re$. We can rewrite the LHS as
-\begin{align*}
-    e^{y/2}(b-ae^{y/2}) - \alpha y - \beta e^{-y} -\left(\frac{v+1}{2}\right)\log\left[1 + \frac{1}{v}\left(\frac{y-\mu}{\sigma}\right)\right].
-\end{align*}
-So as $y\to\infty$ this quantity goes to $-\infty$ since the first term will eventually become negative no matter the value of $b$, and all other terms are always negative. Similarly as $y\to\-\infty$ this quantity goes to $-\infty$. Now pick any interval $(y_1,y_2)$ such that outside of the interval, $LHS<\epsilon$. Since treated as a function of $y$ the LHS is clearly continuous, it attains a maximum on this interval, and thus is bounded.
-
-\subsubsection{Intelligently choosing a rejection sampler}
-In practice, adaptive rejection sampling is relatively efficient for $p_x(x)$ but inefficient for $p_y(y)$ --- so much so that rejection sampling with the $t$ approximation for $p_y(y)$ is more efficient. To minimize computation time, it is best to use adaptive rejection sampling for $p_x(x)$ when the concavity condition is satisfied. When it is not, the $t$ approximation works well enough.
-
-\subsection{Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$ in the LLM}
-
-Both the density of $\log(W)|V,\tilde{\gamma}_{0:T},y_{1:T}$ and the density of $\log(V)|W,\tilde{\psi}_{0:T},y_{1:T}$ have the following form:
-\begin{align*}
-  p(y)\propto \exp\left[-\alpha y - ae^{-y} + be^{-y/2} - ce^y\right].
-\end{align*}
-where $\alpha>0$, $a>0$, $c>0$, and $b\in \Re$. The log density is:
-\begin{align*}
-  lp(y) = -\alpha y - ae^{-y} + be^{-y/2} - ce^y + C
-\end{align*}
-where $C$ is some constant. We only provide one strategy for rejection sampling from this density: the $t$ approximation. Similar reasoning to above shows that we can use a $t$ distribution as a proposal in a rejection sampler. Now we choose the location parameter by maximizing $lp(y)$ in $y$ numerically to find the mode, $y^{mode}$. Next the second derivative of $lp(y)$ is given by
-\begin{align*}
-  \frac{\partial^2 lp(y)}{\partial y^2} = -ae^{-y} + \frac{b}{4}e^{-y/2}-ce^y.
-\end{align*}
-We then set the scale parameter to be
-\begin{align*}
-  -\left[\left.\frac{\partial^2 lp(y)}{\partial y^2}\right|_{y=y^{mode}}\right]^{-1}
-\end{align*}
-as in the normal approximation, and the degrees of freedom parameter to $v=1$. This rejection sampler is tolerably efficient for our purposes, but it is not fast.
 
 
 

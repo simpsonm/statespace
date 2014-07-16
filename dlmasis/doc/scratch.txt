@@ -1,0 +1,13 @@
+things to do:
+
+add subsections to intro and DLM sections
+some lit review stuff is still floating in dlmasisOLD.tex - add it.
+check full document for coherence
+particularly discussion & results, but also where some abbreviations are introduced and so forth.
+Make it shorter! (probably)
+Couple \jarads left
+Cite Jarad & Ignatio's paper
+Change labels of algorithms in plots.
+beef up discussion, perhaps.
+spell check, obv
+add promised stuff to appendix

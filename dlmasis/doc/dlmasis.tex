@@ -168,7 +168,7 @@ for $i=1,2,\cdots,I_j$ and $j=1,2,\cdots,J$. Here, $ij$ indicates observation $i
 \section{Augmenting the DLM}\label{sec:DAs}
 The latent states $\theta_{1:T}$ defined in the definition of the DLM form the usual DA for use in DA algorithms to estimate the model. The only restriction on any given DA is that the joint posterior of the model parameter and the DA is such that if we integrate out the DA, we obtain the desired marginal posterior for the parameter. This leaves wide range of possibilities for alternate DAs to use the the MCMC sampling algorithm, as long as the resulting full conditional distributions of the DA and the model parameter are both easy to sample from. We will explore several alternatives found through manipulating $\theta_{0:T}$ in intuitive ways. The purpose of these constructions is primarily to use as grist for the interweaving mill, but each new DA will also implicitly define a new base DA algorithm.
 
-\subsection{The scaled disturbances} 
+\subsection{The scaled disturbances}\label{sec:DAs:dist}
 
 The next step is to apply the ideas of interweaving to sampling from the posterior of the dynamic linear model. \citeasnoun{papaspiliopoulos2007general} note that typically the usual parameterization results in an SA for the parameter $\phi$. All that would be necessary for an ASIS algorithm, then, is to construct an AA for $\phi$. We immediately run into a problem because the standard DA for a DLM is the latent states $\theta_{0:T}$. From equation \eqref{dlmbotheqs} and \eqref{dlmbotheqs} we see that $V$ is in the observation equation so that $\theta_{0:T}$ is not an SA for $(V,W)$ while $W$ is in the system equation so that $\theta_{0:T}$ is not an AA for $(V,W)$ either. In order to find an SA we need to somehow move $V$ from the observation equation to the system equation while leaving $W$ in the system equation. We also need to find an AA by somehow moving $W$ from the system equation to the observation equation while leaving $V$ in the observation equation. A naive thing to try is to condition on the disturbances instead of the states and see if the disturbances for an SA or an AA for $(V,W)$. The disturbances $w_{0:T}$ are defined by $w_t = \theta_t - G_t\theta_{t-1}$ for $t=1,,2,\cdots,T$ and and $w_0=\theta_0$. However it is easy to see that the conditional distributions $p(V,W|\theta_{0:T},y_{1:T})$ and $p(V,W|w_{0:T},y_{1:T})$ are identical (we omit these details) so the DA algorithm based on the $w_t$'s is identical to the algorithm based on the $\theta_t$'s.
 
@@ -187,10 +187,10 @@ where $\theta_t(\gamma_{0:T},W)$ denotes the recursive back transformation defin
 \end{align}
 for $t=1,2,\cdots,T$ where $I_p$ is the $p\times p$ identity matrix. Neither $V$ nor $W$ are in the system equation so the scaled disturbances are an AA for $(V,W)$. This parameterization is well known, e.g. \citeasnoun{fruhwirth2004efficient} use it in a dynamic regression model with stationary regression coefficient and the disturbance smoother of \citeasnoun{koopman1993disturbance} finds the conditional posterior of the scaled disturbances given the model parameters and the data. 
 
-\subsection{The scaled errors}\label{sec:scalederrors}
+\subsection{The scaled errors}\label{sec:DAs:error}
 The scaled disturbances immediately suggest an analogous augmentation using the scaled errors (SEs), i.e. $v_t=y_t - F_t\theta_t$ appropriately scaled by observation level covariance matrix $V$. Let $L_V$ denote the Cholesky decomposition of $V$, that is $L_VL_V'=V$, then we can define a version of the scaled errors (this time depending on how we order the elements of the vector $y_t$) as $\psi_t = L_V^{-1}(y_t - F_t\theta_t)$ for $t=1,2,\cdots,T$ and $\psi_0 = \theta_0$. 
 
-It is not straightforward to write down the model in terms of $\psi_{0:T}$ instead of $\theta_{0:T}$ and determine $p(\psi_{0:T}|V,W)$. When $dim(y_t)=k=p=dim(\theta_t)$, $F_t$ is $p\times p$ and is invertible for $t=1,2,\cdots,T$, $\psi_{0:T}$ is a one-to-one transformation of $\theta_{0:T}$ and the problem is easier. This restriction is not necessary --- $\theta_t$, $y_t$ or both could be augmented in order to construct an $\tilde{F}_t$ which is square and invertible using a more complicated data augmentation scheme, but we pass over this issue until the discussion section (Section \ref{sec:Discuss}) and assume that $F_t$ is $k\times k$ and invertible from now on. Given this assumption, $\theta_t = F_t^{-1}(y_t - L_V\psi_t)$ for $t=1,2,\cdots,T$ while $\theta_0=\psi_0$. The Jacobian of this transformation is block diagonal with a single copy of the identity matrix and the $F_t^{-1}L_V$'s along the diagonal, so $|J|=(\prod_{t=1}^T|F_t|^{-1})|V|^{T/2}$. Then from equation \eqref{dlmjoint} we can write the joint distribution of $(V, W, \psi_{0:T}, y_{1:T})$ as
+It is not straightforward to write down the model in terms of $\psi_{0:T}$ instead of $\theta_{0:T}$ and determine $p(\psi_{0:T}|V,W)$ in general. When $dim(y_t)=k=p=dim(\theta_t)$, $F_t$ is $p\times p$ and is invertible for $t=1,2,\cdots,T$, $\psi_{0:T}$ is a one-to-one transformation of $\theta_{0:T}$ and the problem is easier. This restriction is not necessary --- $\theta_t$, $y_t$ or both could be augmented in order to construct an $\tilde{F}_t$ which is square and invertible using a more complicated data augmentation scheme, but we pass over this issue until the discussion section (Section \ref{sec:Discuss:F}) and assume that $F_t$ is $k\times k$ and invertible from now on. Given this assumption, $\theta_t = F_t^{-1}(y_t - L_V\psi_t)$ for $t=1,2,\cdots,T$ while $\theta_0=\psi_0$. The Jacobian of this transformation is block diagonal with a single copy of the identity matrix and the $F_t^{-1}L_V$'s along the diagonal, so $|J|=(\prod_{t=1}^T|F_t|^{-1})|V|^{T/2}$. Then from equation \eqref{dlmjoint} we can write the joint distribution of $(V, W, \psi_{0:T}, y_{1:T})$ as
 \begin{align}
     p(&V,W,\psi_{0:T},y_{1:T}) \propto \exp\left[-\frac{1}{2}(\psi_0-m_0)'C_0^{-1}(\psi_0-m_0)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T\psi_t'\psi_t\right] \nonumber\\
   &\times |V|^{-(\lambda_V + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Lambda_VV^{-1}\right)\right]  \times |W|^{-(\lambda_W + p + T + 2)/2} \nonumber\\
@@ -307,10 +307,10 @@ where $v_t = y_t - F_t\theta_t$ and $w_t = \theta_t - G_t\theta_{t-1}$. Putting 
 \item Sample $V \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$ and $W \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$ independently. 
 \end{enumerate}
 \end{alg*}
-\noindent As we will show in Section \ref{sec:LLMest}, the Markov chain constructed using the state sampler can mix poorly in some regions of the parameter space. For example, in the univariate local level model ($F_t=G_t=1$ for $t=1,2,\cdots,T$) and similar models it is known that if the variance of the latent states is too small relative to the variance of the data, mixing will be poor for $W$ \cite{fruhwirth2004efficient}.
+\noindent As we will show in Section \ref{sec:LLM}, the Markov chain constructed using the state sampler can mix poorly in some regions of the parameter space. For example, in the univariate local level model ($F_t=G_t=1$ for $t=1,2,\cdots,T$) and similar models it is known that if the variance of the latent states is too small relative to the variance of the data, mixing will be poor for $W$ \cite{fruhwirth2004efficient}.
 
 Next, we can use the scaled disturbances, $\gamma_{0:T}$, in order to construct a second DA algorithm called the {\it scaled disturbance sampler}. In the smoothing step, we need to obtain a draw from $p(\gamma_{0:T}|V,W,y_{1:T})$, which is proportional to equation \eqref{dlmdistjoint}. This density is also Gaussian but does not have a tridagonal precision matrix. As a result, in order to obtain a draw from the conditional posterior of $\gamma_{0:T}$, we use the MCFA to instead draw from $p(\theta_{0:T}|V,W,y_{1:T})$, then use the definition of the scaled disturbances in order to transform from $\theta_{0:T}$ to $\gamma_{0:T}$. The density $p(V,W|\gamma_{0:T},y_{1:T})$ is also proportional to \eqref{dlmdistjoint}, but it is rather complicated and does not appear easy to draw from. It is easy to see that $V|W,\gamma_{0:T},y_{1:T} \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$ where again $v_t = y_t - F_t\theta_t$. It is not easy to draw from $p(W|\gamma_{0:T},y_{1:T})$ so we abandon drawing $V$ and $W$ jointly. However, the density $p(W|V,\gamma_{0:T},y_{1:T})$ is simpler and, at least in the local level model, can be efficiently sampled from (Section \ref{sec:LLM}). As a result, the scaled disturbance sampler has three steps instead of the two of the usual DA algorithm (Algorithm \nameref{alg:DA}). In this algorithm, we draw $V$ before $W$, i.e. $[\gamma_{0:T}|V^{(k)},W^{(k)}] \to [V^{(k+1)}|W^{(k)},\gamma_{0:T}] \to [W^{(k+1)}|V^{(k+1)},\gamma_{0:T}]$. Note that in order to draw $\gamma_{0:T}$, we first draw $\theta_{0:T}$ and transform, and that the draw of $V$ is the same whether we condition on $\gamma_{0:T}$ or $\theta_{0:T}$. As a result, in the scaled disturbance sampler we wait to transform from $\theta_{0:T}$ to $\gamma_{0:T}$ until just before the $W$ step, which reduces the computational cost of the algorithm. Thus the scaled disturbance sampler is as follows:
-\begin{alg*}[Dist]Scaled Disturbance Sampler\label{alg:DLMdist}
+\begin{alg*}[SD]Scaled Disturbance Sampler\label{alg:DLMdist}
 \begin{enumerate}
 \item Use the MCFA to sample $\theta_{0:T} \sim p(\theta_{0:T}|V,W,y_{1:T})$.
 \item Draw $V \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$.
@@ -321,7 +321,7 @@ Next, we can use the scaled disturbances, $\gamma_{0:T}$, in order to construct 
 Once again, this last step is difficult but we demonstrate how to accomplish it when $W$ is a scalar in the local level model in Section \ref{sec:LLM}.
 
 The DA algorithm based on on the scaled errors, $\psi_{0:T}$, is called the {\it scaled error sampler} and is similar to the scaled disturbance sampler with a couple of key differences. The conditional densities we are interested in are all proportional to equation \eqref{dlmerrorjoint}. First, the simulation smoothing step the scaled error sampler can be accomplished directly with the MCFA because the precision matrix of the conditional posterior of $\psi_{0:T}$ retains the necessary tridiagonal structure. Once again, the draw of $V$ and $W$ has to be broken up into two steps. The full conditional distribution of $W$ is inverse Wishart, that is $W|V,\psi_{0:T},y_{1:T} \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$ where once again $w_t = \theta_t - G_t\theta_{t-1}$.The density of $V|W,\psi_{0:T},y_{1:T}$ is in the same class as that of $W|V,\gamma_{0:T},y_{1:T}$. In fact there is a strong symmetry here --- the joint conditional posterior of $(V,W)$ given $\gamma_{0:T}$ is from the same family of densities as that of $(W,V)$ given $\psi_{0:T}$ so that $V$ and $W$ essentially switch places when we condition of $\psi_{0:T}$ instead of $\gamma_{0:T}$. We again draw $V$ before $W$ so that the scaled-error sampler looks very similar to the scaled disturbance sampler: 
-\begin{alg*}[Error]Scaled Error Sampler\label{alg:DLMerror}
+\begin{alg*}[SE]Scaled Error Sampler\label{alg:DLMerror}
 \begin{enumerate}
 \item Use the MCFA to sample $\psi_{0:T} \sim  p(\psi_{0:T}|V,W,y_{1:T})$
 \item Draw $V \sim p(V|W,\psi_{0:T},y_{1:T})$.
@@ -331,7 +331,7 @@ The DA algorithm based on on the scaled errors, $\psi_{0:T}$, is called the {\it
 Here the second step is the difficult one, and we demonstrate how to accomplish it in the local level model in Section \ref{sec:LLM}.
 
 The wrongly-scaled DA algorithms are close analogues to their correctly scaled cousins. Starting with the {\it wrongly-scaled disturbance sampler}, we can obtain the required full conditionals from equation \eqref{dlmdisttildejoint}. The simulation smoothing step to draw from $p(\tilde{\gamma}_{0:T}|V,W,y_{1:T})$ is similar to that of the scaled disturbance sampler --- the density is Gaussian, but the precision matrix is not tridiagonal, so we draw $\theta_{0:T}$ using the MCFA and trandform to obtain a draw of $\tilde{\gamma}_{0:T}$. The density of $V,W|\tilde{\gamma}_{0:T},y_{1:T}$ is too complicated to draw from directly, as was the case when we used the scaled disturbances. In this case, the full conditional distribution of $W$ is the same as its distribution when we condition on the states, i.e. $W|V,\tilde{\gamma}_{0:T},y_{1:T} \sim \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$ with $w_t = \theta_t - G_t\theta_{t-1}$ as before, and $\theta_{0:T}$ a function of $V$ and $\tilde{\gamma}_{0:T}$. The density for $V|\tilde{\gamma}_{0:T},y_{1:T}$ is once again difficult to draw from, but that of $V|W,\tilde{\gamma}_{0:T},y_{1:T}$ is easier to work with, especially in the local level example from Section \ref{sec:LLM}. So in the wrongly-scaled disturbance sampler, we also draw $(V,W)$ in two steps: 
-\begin{alg*}[W-Dist]Wrongly-Scaled Disturbance Sampler\label{alg:DLMwdist}
+\begin{alg*}[W-SD]Wrongly-Scaled Disturbance Sampler\label{alg:DLMwdist}
 \begin{enumerate}
 \item Use MCFA to draw $\theta_{0:T} \sim p(\theta_{0:T}|V,W,y_{1:T})$.
 \item Transform $\theta_{0:T}$ to $\tilde{\gamma}_{0:T}$.
@@ -342,7 +342,7 @@ The wrongly-scaled DA algorithms are close analogues to their correctly scaled c
 Here the third step is difficult and, once again, we demonstrate how to accomplish it in the local level model in Section \ref{sec:LLM}.
 
 The {\it wrongly-scaled error sampler} depends on equation \eqref{dlmerrortildejoint} for its full conditionals, and is closely related to both the wrongly-scaled disturbance sampler and the scaled error sampler. The density of $\tilde{\psi}_{0:T}|V,W,y_{1:T}$ is Gaussian with a tridiagonal precision matrix, so the simulation smoothing step can be accomplished using the MCFA. The density $p(V,W|\tilde{\psi}_{0:T},y_{1:T})$ is from the same class as $p(W,V|\tilde{\gamma}_{0:T},y_{1:T})$ so that $V$ and $W$ essentially switch places when we condition on $\tilde{\psi}_{0:T}$ instead of $\tilde{\gamma}_{0:T}$, much like in the correctly scaled case. In particular, $V|W,\tilde{\psi}_{0:T},y_{1:T} \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$ where $v_t = y_t - F_t\theta_t$ and $\theta_{0:T}$ is a function of $W$, $\tilde{\psi_{0:T}}$ and $y_{1:T}$. The density of $W|V,\tilde{\psi}_{0:T},y_{1:T}$ is from the same class as that of $V|W,\tilde{\gamma}_{0:T},y_{1:T}$. So we once again draw $V$ and $W$ separately, i.e. 
-\begin{alg*}[W-Error]Wongly-Scaled Error Sampler\label{alg:DLMwerror}
+\begin{alg*}[WSE]Wongly-Scaled Error Sampler\label{alg:DLMwerror}
 \begin{enumerate}
 \item Use MCFA to draw $\tilde{\psi}_{0:T} \sim p(\theta_{0:T}|V,W,y_{1:T})$.
 \item Draw $V \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$.
@@ -354,14 +354,14 @@ Here the last step is the difficult one, which we show how to accomplish in the 
 The densities $p(V,W|\gamma_{0:T},y_{1:T})$ and $p(V,W|\tilde{\psi}_{0:T}$ are both complex to work with and both imply the same full conditional inverse Wishart distribution for $V$, but they differ in their treatment of $W$. Because of the symmetry between the correctly and wrongly scaled versions of each density, the same can be said for $p(V,W|\tilde{\gamma}_{0:T},y_{1:T})$ and $p(V,W|\psi_{0:T},y_{1:T})$. In Section \ref{sec:LLM}, we will show how closely the two distributions are related in the local level model. Now given these five DA algorithms, we can move on to alternating and interweaving algorithms which combine two or more of the various DAs in interesting ways.
 
 \subsection{Alternating algorithms}\label{sec:Algs:alt}
-Recall that an alternating algorithm is an MCMC algorithm in which one iteration is composed of a single iteration of one DA algorithm followed by a signle iteration of another DA algorithm, as in Algorithm \nameref{alg:Alt}. Using the full conditional distributions defined in Section \ref{sec:Algs:base}, we have enough information to construct several alternating algorithms based on any two of the DA algorithms defined there. For example, the {\it State-Dist alternating sampler} which alternates between the states and the scaled disturbances, obtains the $k+1$'st iteration of $(V,W)$ from the $k$'th as follows:
+Recall that an alternating algorithm is an MCMC algorithm in which one iteration is composed of a single iteration of one DA algorithm followed by a signle iteration of another DA algorithm, as in Algorithm \nameref{alg:Alt}. Using the full conditional distributions defined in Section \ref{sec:Algs:base}, we have enough information to construct several alternating algorithms based on any two of the DA algorithms defined there. For example, the {\it State-SD alternating sampler} which alternates between the states and the scaled disturbances, obtains the $k+1$'st iteration of $(V,W)$ from the $k$'th as follows:
 \begin{align*}
 &[\theta_{0:T}|V^{(k)},W^{(k)}] \to [V^{(k+0.5)},W^{(k+0.5)}|\theta_{0:T}] \to\\ 
 &[\gamma_{0:T}|V^{(k+0.5)},W^{(k+0.5)}] \to [V^{(k+1)}|W^{(k+0.5)},\gamma_{0:T}] \to [W^{(k+1)}|V^{(k+1)},\gamma_{0:T}].
 \end{align*}
 The first line is an iteration of the state sampler while the second line is an iteration of the scaled disturbance sampler. No additional work is necessary to link up the two iterations --- we simply plug in the values of $V$ and $W$ obtained from the state sampler iteration into the draw of $\gamma_{0:T}$ from step one of the scaled disturbance sampler iteration.
 
-Each other alternating algorithm is analogous and can be constructed without any additional complications. There is the question of what order to use the base algorithms within an alternating algorithm which, in principle, could affect the congergence properties of the alternating algorithm. In practice this typically is not important. There is one additional wrinkle added by consider alternating algorithms which combine more than two base samplers. This class of samplers is not any more comlicated other than adding a couple extra steps. For example, the {\it State-Dist-Error alternating sampler} which alternates between the states, the scaled errors, and the scaled disturbances is as follows:
+Each other alternating algorithm is analogous and can be constructed without any additional complications. There is the question of what order to use the base algorithms within an alternating algorithm which, in principle, could affect the congergence properties of the alternating algorithm. In practice this typically is not important. There is one additional wrinkle added by consider alternating algorithms which combine more than two base samplers. This class of samplers is not any more comlicated other than adding a couple extra steps. For example, the {\it State-SD-SE alternating sampler} which alternates between the states, the scaled errors, and the scaled disturbances is as follows:
 \begin{align*}
 &[\theta_{0:T}|V^{(k)},W^{(k)}] \to [V^{(k+1/3)},W^{(k+1/3)}|\theta_{0:T}] \to\\ 
 &[\gamma_{0:T}|V^{(k+1/3)},W^{(k+1/3)}] \to [V^{(k+2/3)}|W^{(k+1/3)},\gamma_{0:T}] \to [W^{(k+2/3)}|V^{(k+2/3)},\gamma_{0:T}]\to \\
@@ -369,26 +369,26 @@ Each other alternating algorithm is analogous and can be constructed without any
 \end{align*}
 Once again, each of the required conditional distributions are defined in Section \ref{sec:Algs:base} so there is no real extra difficulty.
 
-The naming convention we use for these algorithms is to list each DA in the order in which they appear in the alteranting sampler, separated by hyphens. The scaled disturbances we shorten to ``Dist'', the scaled errors we shorten to ``Error'', and the wrongly-scaled version of each we write as ``Wdist'' and ``Werror'' respectively. So, for example, the alternating sampler which alternates between the scaled disturbances and the wrongly-scaled disturbances, in that order, we call the {\it Dist-Wdist alternating sampler} or {\it Dist-Wdist Alt}. The main purpose of these algorithm is to use as a baseline for evaluating the GIS algorithms based on the same sets of DAs.
+The naming convention we use for these algorithms is to list each DA in the order in which they appear in the alteranting sampler, separated by hyphens. The scaled disturbances we shorten to ``SD'', the scaled errors we shorten to ``SE'', and the wrongly-scaled version of each we write as ``WSD'' and ``WSE'' respectively. So, for example, the alternating sampler which alternates between the scaled disturbances and the wrongly-scaled disturbances, in that order, we call the {\it SD-WSD alternating sampler} or {\it SD-WSD Alt}. The main purpose of these algorithm is to use as a baseline for evaluating the GIS algorithms based on the same sets of DAs.
 
 \subsection{GIS Algorithms}\label{sec:Algs:GIS}
 We can use the various DAs of Section \ref{sec:DAs} in order to construct interweaving algorithms in addition to the alternating algorithms of the previous section. Recall that a general interweaving strategy (GIS) is an algorithm that draws first from the full conditional distribution of a DA, then draws from the conditional distribution of a new DA given the old DA and the data, then draws from the full conditional distribution of the model parameters given the new DA, in other words Algorithm \nameref{alg:GIS}. Given the full conditional distributions listed in Section \ref{sec:Algs:base}, the only additional ingredients we need are the densities of, for example, $p(\gamma_{0:T}|\theta_{0:T},y_{1:T})$ and $p(\psi_{0:T}|\theta_{0:T},y_{1:T})$. In practice, it is easier to obtain a joint draw of, e.g., $(V,W,\gamma_{0:T}|\theta_{0:T},y_{1:T})$, i.e. to use the extended version of the GIS algorithm, Algorithm \nameref{alg:GIS2}.
 
-So the only additional requirement in order to construct a GIS algorithm is to use the definitions of the various available DAs in order to perform the one-to-one transformations from any one DA to anopther. For example, in the {\it State-Dist GIS sampler} we obtain $(V^{(k+1)},W^{(k+1)})$ from $(V^{(k)},W^{(k)})$ as follows:
+So the only additional requirement in order to construct a GIS algorithm is to use the definitions of the various available DAs in order to perform the one-to-one transformations from any one DA to anopther. For example, in the {\it State-SD GIS sampler} we obtain $(V^{(k+1)},W^{(k+1)})$ from $(V^{(k)},W^{(k)})$ as follows:
 \begin{align*}
 &[\theta_{0:T}|V^{(k)},W^{(k)}] \to [W^{(k+0.5)},V^{(k+0.5)}|\theta_{0:T}] \to\\
 &[\gamma_{0:T}|V^{(k+0.5)},W^{(k+0.5)},\theta_{0:T}] \to [V^{(k+1)}|W^{(k+0.5)},\gamma_{0:T}] \to [W^{(k+1)}|V^{(k+1)},\gamma_{0:T}].
 \end{align*}
 Here, the first step of the second line is not a proper random draw --- rather, we transform $\theta_{0:T}$ to $\gamma_{0:T}$ by means of the defining equations for $\gamma_{0:T}$: $\gamma_0=\theta_0$ and $\gamma_t = L_W^{-1}(\theta_t - G_t\theta_{t-1})$ for $t=1,2,\cdots,T$ where $L_W$ is the Cholesky decomposition of $W$. 
 
-There are often some small improvements that can be made simply by thinking clearly about what the GIS algorithm is doing. For example in the above version of the State-Dist GIS sampler, the draw of $V$ in step two of line one and the draw of $V$ in step two of line two are redundant --- they come from the same distribution and only the last one is ever used in later steps. As a result, we can remove the second draw in order to save computational time so that the State-Dist GIS sampler is as follows:
+There are often some small improvements that can be made simply by thinking clearly about what the GIS algorithm is doing. For example in the above version of the State-SD GIS sampler, the draw of $V$ in step two of line one and the draw of $V$ in step two of line two are redundant --- they come from the same distribution and only the last one is ever used in later steps. As a result, we can remove the second draw in order to save computational time so that the State-SD GIS sampler is as follows:
 \begin{enumerate}
 \item Use the MCFA to sample $\theta_{0:T} \sim p(\theta_{0:T}|V,W,y_{1:T})$.
 \item Sample $V \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$ and $W \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$ independently.
 \item Transform $\theta_{0:T}$ to $\gamma_{0:T}$.
 \item Sample $W \sim p(W|V,\gamma_{0:T},y_{1:T})$.
 \end{enumerate}
-As another example, the {\it Dist-Error GIS sampler} is as follows:
+As another example, the {\it SD-SE GIS sampler} is as follows:
 \begin{enumerate}
 \item Use the MCFA to sample $\theta_{0:T} \sim p(\theta_{0:T}|V,W,y_{1:T})$.
 \item Sample $V \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$.
@@ -400,7 +400,7 @@ As another example, the {\it Dist-Error GIS sampler} is as follows:
 \end{enumerate}
 Note that like in the scaled disturbance algorithm, we draw $V$ in step two before transforming in step three since the conditional distribution of $V$ is unaffected by this transformation, and it is less costly the compute the hyperparameters of that inverse Wishart distribution from $\theta_{0:T}$ instead of $\gamma_{0:T}$.
 
-The naming convention for GIS algorithms is similar to that of alternating algorithms --- DAs appear in the name in the order that they appear in the algorithm, separated by hyphens, e.g. a GIS algorithm based on the states, scaled disturbances and scaled errors, in that order, would be called the {\it State-Dist-Error GIS sampler}. There is no additional difficulty encountered by using a GIS with greater than two DAs --- the required conditional distributions are still defined in Section \ref{sec:Algs:base} and the definitions of the various DAs should allow for the one-to-one transformation from any DA to another DA to be defined.  Also like alternating algorithms, the performance of GIS algorithms may depend on the order in which the DAs are used. \citeasnoun{yu2011center} note that this tends not to make much difference, which is consistent with our own experience.
+The naming convention for GIS algorithms is similar to that of alternating algorithms --- DAs appear in the name in the order that they appear in the algorithm, separated by hyphens, e.g. a GIS algorithm based on the states, scaled disturbances and scaled errors, in that order, would be called the {\it State-SD-SE GIS sampler}. There is no additional difficulty encountered by using a GIS with greater than two DAs --- the required conditional distributions are still defined in Section \ref{sec:Algs:base} and the definitions of the various DAs should allow for the one-to-one transformation from any DA to another DA to be defined.  Also like alternating algorithms, the performance of GIS algorithms may depend on the order in which the DAs are used. \citeasnoun{yu2011center} note that this tends not to make much difference, which is consistent with our own experience.
 
 \subsection{CIS algorithms}\label{sec:Algs:CIS}
 Recall that a component interweaving strategy (CIS) is an MCMC algorithm that uses GIS in a Gibbs step for part of the parameter vector and GIS in another Gibbs step for the other part of the parameter vector, i.e. Algorithm \nameref{alg:CIS}. The advantage of using CIS is that it is sometimes possible to find an AA-SA pair of DAs for each part of the parameter vector rather even when no such pair of DAs exist for the entire parameter vector. To wit, from Section \ref{sec:DAs} we know that the scaled disturbances and the wrongly-scaled disturbances form an AA-SA pair for $W|V$ while the scaled errors and the wrongly-scaled errors form an AA-SA pair for $V|W$. 
@@ -435,12 +435,12 @@ We can rearrange the order in which the Gibbs steps for $V$ and $W$ are taken wi
 &[\gamma_{0:T}|V^{(k)},W^{(k)}] \to [W^{(k+0.5)}|V^{(k)},\gamma_{0:T}] \to [\theta_{0:T}|V^{(k)},W^{(k+0.5)},\gamma_{0:T}] \to [W^{(k+1)}|V^{(k)},\theta_{0:T}]\to \\
 &[V^{(k+0.5)}|W^{(k+1)},\theta_{0:T}] \to [\psi_{0:T}|V^{(k+0.5)},W^{(k+1)},\theta_{0:T}] \to [V^{(k+1)}|W^{(k+1)},\psi_{0:T}].
 \end{align*}
-Since the draw of $V$ is from the same density whether we condition of $\theta_{0:T}$ or $\gamma_{0:T}$ and similar for $W$ given $\theta_{0:T}$ or $\psi_{0:T}$, we can move $V|W,\theta_{0:T}$ and $W|V,\theta_{0:T}$ without changing the MCMC properties of the algorithm in order to obtain the {\it Dist-Error GIS sampler} which interweaves between the scaled disturbances and the scaled errors:
+Since the draw of $V$ is from the same density whether we condition of $\theta_{0:T}$ or $\gamma_{0:T}$ and similar for $W$ given $\theta_{0:T}$ or $\psi_{0:T}$, we can move $V|W,\theta_{0:T}$ and $W|V,\theta_{0:T}$ without changing the MCMC properties of the algorithm in order to obtain the {\it SD-SE GIS sampler} which interweaves between the scaled disturbances and the scaled errors:
 \begin{align*}
 &[\gamma_{0:T}|V^{(k)},W^{(k)}] \to [V^{(k+0.5)}|W^{(k)},\gamma_{0:T}] \to[W^{(k+0.5)}|V^{(k+0.5)},\gamma_{0:T}] \to \\
 &[\psi_{0:T}|V^{(k+0.5)},W^{(k+0.5)}]\to [V^{(k+1)}|W^{(k+0.5)},\psi_{0:T}]\to [W^{(k+1)}|V^{(k+1)},\psi_{0:T}].
 \end{align*}
-As a result, since in most cases simply rearranging the steps of an MCMC sampler does little to impact the convergence and mixing properties of the sampler, we expect the CIS and Dist-Error GIS samplers to perform about the same along this axis so that computational cost per iteration and ease of implementation are the only real considerations involved in picking between the two.
+As a result, since in most cases simply rearranging the steps of an MCMC sampler does little to impact the convergence and mixing properties of the sampler, we expect the CIS and SD-SE GIS samplers to perform about the same along this axis so that computational cost per iteration and ease of implementation are the only real considerations involved in picking between the two.
 
 In our original defintion of the CIS sampler for the DLM we used the scaled disturbances as the AA for $W$ and the scaled errors and the AA for $V$. We could have reversed this or use the same AA for both $V$ and $W$ since both the scaled errors and scaled disturbances are AAs for $(V,W)$. Consider the version where we reverse the Gibbs steps where AAs are used, as below:
 \begin{align*}
@@ -487,9 +487,9 @@ The construction of the scaled error sampler in the local level model, Algorithm
 \begin{align*}
  p(V|W,\psi,y) \propto V^{-\alpha_V - 1}\exp\left[ -a_{\psi}V + b_{\psi}\sqrt{V} -\frac{\beta_V}{V}\right] 
 \end{align*}
-where $a_{\psi}=\sum_{t=1}^T(L\psi_t)^2/2W$ and $b_{\psi}=\sum_{t=1}^T(L\psi_tLy_t)/W$, and we define $Ly_t=y_t-y_{t-1}$ for $t=2,3,\cdots,T$, $Ly_1=y_1 - \psi_0$, $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ and $L\psi_1=\psi_1-0$. In other words, the form of $p(V|W,\psi,y)$ is the same as $p(W|V,\gamma,y)$. The general form of these two densities is $p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b\sqrt{x} -\beta/x\right]$. This density is the same as the generalized inverse Gaussian distribution when $b=0$ (see e.g. \citeasnoun{jorgensen1982statistical} for its properties; \citeasnoun{dagpunar1989easily} and \citeasnoun{devroye2012random} for generating random draws). In the appendix (Section \ref{sec:Append:scale}) we show that this density is often log concave, in which case adaptive rejection sampling \cite{gilks1992adaptive} works well. When the density is not log concave, we use a $t$ approximation in a rejection sampler for $\log(x)$ (Section \ref{sec:Append:scale}).
+where $a_{\psi}=\sum_{t=1}^T(L\psi_t)^2/2W$ and $b_{\psi}=\sum_{t=1}^T(L\psi_tLy_t)/W$, and we define $Ly_t=y_t-y_{t-1}$ for $t=2,3,\cdots,T$, $Ly_1=y_1 - \psi_0$, $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ and $L\psi_1=\psi_1-0$. In other words, the form of $p(V|W,\psi,y)$ is the same as $p(W|V,\gamma,y)$. The general form of these two densities is $p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b\sqrt{x} -\beta/x\right]$. In the appendix (Section \ref{sec:Append:scale}) we show that this density is often log concave, in which case adaptive rejection sampling \cite{gilks1992adaptive} works well. When the density is not log concave, we use a $t$ approximation in a rejection sampler for $\log(x)$ (Section \ref{sec:Append:wscale}).
 
-The construction of the wrongly-scaled disturbance and wrongly-scaled error samplers, Algorithms \nameref{alg:DLMwdist} and \nameref{alg:DLMwerror}, is similar. The local level model version of these algorithms closely tracks the general DLM version --- the draws of $\tilde{\gamma}$ and $\tilde{\psi}$ are exactly as in Algorithm \nameref{alg:DLMwdist} and Algorithm \nameref{alg:DLMwerror} respectively. In addition, $p(V|W,\tilde{\psi},y)=p(V|W,\theta,y)$ and $p(W|V,\tilde{\gamma},y)=p(W|V,\theta,y)$ so both draws are simply the inverse gamma draws as in the LLM version of the state sampler. Here, $p(W|V,\tilde{\psi},y)$ and $p(V|W,\tilde{\gamma},y)$ have the form $p(x)\propto x^{-\alpha-1}\exp\left[ -a/x + b/\sqrt{x} -c x\right]$, which is closely related to the difficult density from the correctly scaled samplers above. Again, this density is the same as the generalized inverse Gaussian density when $b=0$. For $p(V|W,\tilde{\gamma},y)$ we show in the supplemental materials that $\alpha=\alpha_V$, $a = a_{\tilde{\gamma}} = \beta_V + \frac{1}{2}\sum_{t=1}^T(y_t - \tilde{\gamma}_0)^2$, $b = b_{\tilde{\gamma}} = \sum_{t=1}^T(y_t - \tilde{\gamma}_0)\sum_{s=1}^t\tilde{\gamma}_s$, and $c = c_{\tilde{\gamma}} = \frac{1}{2W}\sum_{t=1}^T\tilde{\gamma}_t^2$ while for $p(W|V,\tilde{\psi},y)$ we show that $\alpha=\alpha_W$,   $a = a_{\tilde{\psi}} = \beta_W + \frac{1}{2}\sum_{t=1}^TL\tilde{y}_t^2$,  $b = b_{\tilde{\psi}} = \sum_{t=1}^TL\tilde{y}_tL\tilde{\psi}_t$, and $c = c_{\tilde{\psi}} = \frac{1}{2V}\sum_{t=1}^T\tilde{\psi}_t^2$. This density is harder to sampler from because adaptive rejection sampling does not work very well, so we construct a rejection sampler for $\log(x)$ using a $t$ approximation in the appendix (Section \ref{sec:Append:wscale}).
+The construction of the wrongly-scaled disturbance and wrongly-scaled error samplers, Algorithms \nameref{alg:DLMwdist} and \nameref{alg:DLMwerror}, is similar. The local level model version of these algorithms closely tracks the general DLM version --- the draws of $\tilde{\gamma}$ and $\tilde{\psi}$ are exactly as in Algorithm \nameref{alg:DLMwdist} and Algorithm \nameref{alg:DLMwerror} respectively. In addition, $p(V|W,\tilde{\psi},y)=p(V|W,\theta,y)$ and $p(W|V,\tilde{\gamma},y)=p(W|V,\theta,y)$ so both draws are simply the inverse gamma draws as in the LLM version of the state sampler. Here, $p(W|V,\tilde{\psi},y)$ and $p(V|W,\tilde{\gamma},y)$ have the form $p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b/\sqrt{x} -c/x\right]$, which is closely related to the difficult density from the correctly scaled samplers above. Again, this density is the same as the generalized inverse Gaussian density when $b=0$. For $p(V|W,\tilde{\gamma},y)$ we show in the supplemental materials that $\alpha=\alpha_V$, $a = a_{\tilde{\gamma}} = \frac{1}{2W}\sum_{t=1}^T\tilde{\gamma}_t^2$, $b = b_{\tilde{\gamma}} = \sum_{t=1}^T(y_t - \tilde{\gamma}_0)\sum_{s=1}^t\tilde{\gamma}_s$, and $c = c_{\tilde{\gamma}} = \beta_V + \frac{1}{2}\sum_{t=1}^T(y_t - \tilde{\gamma}_0)^2$ while for $p(W|V,\tilde{\psi},y)$ we show that $\alpha=\alpha_W$,   $a = a_{\tilde{\psi}} = \frac{1}{2V}\sum_{t=1}^T\tilde{\psi}_t^2$,  $b = b_{\tilde{\psi}} = \sum_{t=1}^TL\tilde{y}_tL\tilde{\psi}_t$, and $c = c_{\tilde{\psi}} = \beta_W + \frac{1}{2}\sum_{t=1}^TL\tilde{y}_t^2$. This density is harder to sampler from because adaptive rejection sampling does not work very well, so we construct a rejection sampler for $\log(x)$ using a $t$ approximation in the appendix (Section \ref{sec:Append:wscale}).
 
 Given the densities discussed above, all of the pieces are in place to construct each of the base, alternating and interweaving algorithms from Section \ref{sec:Algs} for the LLM. In the next secion, we explore the efficacy of each of these algorithms through simulations.
 
@@ -509,11 +509,11 @@ For each dataset and each sampler we obtained $n=3000$ draws and threw away the 
 \label{baseESplot}
 \end{figure}
 
-Figure \ref{baseESplot} contains plots of ESP for $V$ and $W$ in each chain of each base sampler for $T=100$ --- we omit the $T=10$ and $T=1000$ plots for brevity, but they can be found in the supplementary materials. The state sampler has a low ESP for $V$ and a high ESP for $W$ when the true signal-to-noise ratio, $R^*=W^*/V^*$, is larger than one. In contrast, when $R^*<1$ the state sampler has a low ESP for $W$ and a high ESP for $V$. When $R^*\approx 1$, the state sampler has a modest to low ESP for both $V$ and $W$. To summarize, the state sampler has mixing issues for whichever of $V$ or $W$ is smaller. The wrongly-scaled disturbance and wrongly-scaled error samplers are similar to the state sampler except W-Dist has lower ESP for $V$ and W-Error has lower ESP for $W$. The scaled disturbance sampler has low ESP for both $V$ and $W$ when $R^*>1$, and it is paricularly low for $W$. The scaled error sampler behaves almost exactly opposite ---it has low ESP for both when $R^*<1$ and in particular for $V$. We omit the results here, but as the length of the time series, $T$, increases, in all of these samplers the region of the parameter space with high ESP shrinks and in the low ESP regions, ESP drops closer to zero. We summarize some of the above results for convenience in Table \ref{tab:stnmix}.
+Figure \ref{baseESplot} contains plots of ESP for $V$ and $W$ in each chain of each base sampler for $T=100$ --- we omit the $T=10$ and $T=1000$ plots for brevity, but they can be found in the supplementary materials. The state sampler has a low ESP for $V$ and a high ESP for $W$ when the true signal-to-noise ratio, $R^*=W^*/V^*$, is larger than one. In contrast, when $R^*<1$ the state sampler has a low ESP for $W$ and a high ESP for $V$. When $R^*\approx 1$, the state sampler has a modest to low ESP for both $V$ and $W$. To summarize, the state sampler has mixing issues for whichever of $V$ or $W$ is smaller. The wrongly-scaled disturbance and wrongly-scaled error samplers are similar to the state sampler except WSD has lower ESP for $V$ and WSE has lower ESP for $W$. The scaled disturbance sampler has low ESP for both $V$ and $W$ when $R^*>1$, and it is paricularly low for $W$. The scaled error sampler behaves almost exactly opposite ---it has low ESP for both when $R^*<1$ and in particular for $V$. We omit the results here, but as the length of the time series, $T$, increases, in all of these samplers the region of the parameter space with high ESP shrinks and in the low ESP regions, ESP drops closer to zero. We summarize some of the above results for convenience in Table \ref{tab:stnmix}.
 \begin{table}
   \centering
   \begin{tabular}{|l|ccccc|}\hline
-    Parameter & State & Dist & Error & W-Dist & W-Error \\\hline
+    Parameter & State & SD & SEr & WSD & WSE \\\hline
     V & $R^* < 1$ & $R^* < 1$ & $R^* > 1$ & $R^* < 1$ & $R^* < 1$\\
     W & $R^* > 1$ & $R^* < 1$ & $R^* > 1$ & $R^* > 1$ & $R^* > 1$ \\\hline
   \end{tabular}
@@ -566,11 +566,11 @@ The scaled error sampler is analogous to the scaled disturbance sampler and a si
 
 \subsection{GIS and CIS Results}
 
-We fit the LLM to the simulated datasets using several GIS samplers and a CIS sampler as well. Since the wrongly-scaled samplers behaved similarly to the state sampler and neither of the underlying DAs were a SA for $V$ and $W$ jointly, we ignored them in the construction of the GIS samplers. Instead, we constructed the State-Dist, State-Error, Dist-Error, and Triple (State-Dist-Error) GIS samplers, as well as the CIS sampler, Algorithm \nameref{alg:DLMcis}. 
+We fit the LLM to the simulated datasets using several GIS samplers and a CIS sampler as well. Since the wrongly-scaled samplers behaved similarly to the state sampler and neither of the underlying DAs were a SA for $V$ and $W$ jointly, we ignored them in the construction of the GIS samplers. Instead, we constructed the State-SD, State-SE, SD-SE, and Triple (State-SD-SE) GIS samplers, as well as the CIS sampler, Algorithm \nameref{alg:DLMcis}. 
 
-Based on the intuition in Section \ref{sec:Intro}, both the GIS and alternating algorithms should work best when at least one of the underlying base algorithms has a high ESP --- when least one of the underlying algorithms has low serial dependence in the chain, the we should have low serial dependence in the GIS and alternating algorithms since the serial dependence in the bad DA algorithm is broken by adding a lower dependence step before the next iteration. This suggests that the Dist-Error GIS and alternating algorithms will have the best performance of the GIS and alternating algorithms using two DAs for both $V$ and $W$, especially for $R^*$ far away from one. When $R^*$ is near one it may offer no improvement however, especially for large $T$.
+Based on the intuition in Section \ref{sec:Intro}, both the GIS and alternating algorithms should work best when at least one of the underlying base algorithms has a high ESP --- when least one of the underlying algorithms has low serial dependence in the chain, the we should have low serial dependence in the GIS and alternating algorithms since the serial dependence in the bad DA algorithm is broken by adding a lower dependence step before the next iteration. This suggests that the SD-SE GIS and alternating algorithms will have the best performance of the GIS and alternating algorithms using two DAs for both $V$ and $W$, especially for $R^*$ far away from one. When $R^*$ is near one it may offer no improvement however, especially for large $T$.
 
-There are a couple of ways to gain some intuition about what we expect the CIS algorithm to do before seeing the results. First, we showed in Section \ref{sec:Algs:CIS} that the CIS and the Dist-Error GIS algorithm consist of the same steps, just rearranged. This suggests that they should perform similarly so that we expect the CIS algorithm to have good mixing for both $V$ and $W$ when $R^*$ is sufficiently different from one. We can draw the same conclusion in a different way by noticing that in the Gibbs step for $V$, the CIS algorithm interweaves between the states and the scaled errors and in the Gibbs step for $W$ it interweaves between the states and the scaled disturbances. Since the state sampler has a high ESP for $V$ when $R^*<1$ and the scaled disturbance sampler has a high ESP for $V$ when $R^*>1$ we should expect the CIS sampler to have a high ESP for $V$ when $R^*$ is different from one. Similarly, since the state sampler has a high ESP for $W$ when $R^*>1$ and the scaled error sampler has a high ESP for $W$ when $R^*<1$, we should expect the CIS sampler to have a high ESP for $W$ when $R$ is different from one.
+There are a couple of ways to gain some intuition about what we expect the CIS algorithm to do before seeing the results. First, we showed in Section \ref{sec:Algs:CIS} that the CIS and the SD-SE GIS algorithm consist of the same steps, just rearranged. This suggests that they should perform similarly so that we expect the CIS algorithm to have good mixing for both $V$ and $W$ when $R^*$ is sufficiently different from one. We can draw the same conclusion in a different way by noticing that in the Gibbs step for $V$, the CIS algorithm interweaves between the states and the scaled errors and in the Gibbs step for $W$ it interweaves between the states and the scaled disturbances. Since the state sampler has a high ESP for $V$ when $R^*<1$ and the scaled disturbance sampler has a high ESP for $V$ when $R^*>1$ we should expect the CIS sampler to have a high ESP for $V$ when $R^*$ is different from one. Similarly, since the state sampler has a high ESP for $W$ when $R^*>1$ and the scaled error sampler has a high ESP for $W$ when $R^*<1$, we should expect the CIS sampler to have a high ESP for $W$ when $R$ is different from one.
 
 \begin{figure}[!ht]
 \centering
@@ -580,7 +580,7 @@ There are a couple of ways to gain some intuition about what we expect the CIS a
 \label{intESplot}
 \end{figure}
 
-We can verify most of these intuitions in Figure \ref{intESplot}. First, the State-Dist GIS algorithm has high ESP for $W$ except for a narrow band where $R^*$ is near one. The State-Dist GIS algorithm's mixing behavior for $V$ appears identical to the original state sampler --- high ESP when $R^* < 1$ and poor ESP when $R^* > 1$. So this algorithm behaves as expected --- it takes advantage of the fact that the state and scaled disturbance DA algorithms make up a ``beauty and the beast'' pair for $W$ and thus improves mixing in the marginal chain for $W$. However, the two underlying DA algorithms behave essentially identically for $V$ so there is no improvement in that marginal chain. Similarly the State-Error GIS algorithm's ESP for $W$ is essentially identical to the state and scaled error algorithms' ESP for $W$ --- high when $R^*$ large and low when $R^*$ small. For $V$, the State-Error algorithm has a high ESP when $R^*$ is far enough away from one, especially when $T$ is small. The Dist-Error GIS algorithm also behaves as predicted --- when $R^*$ is not too close to one it has high ESP for both $V$ and $W$, though it has extra trouble with $W$ when $R^*$ is less than one but not small enough. The Dist-Error GIS algorithm behaves apparently identically to the CIS and triple GIS algorithms. The first of these is not surprising --- based on the intuition that the Dist-Error GIS and CIS algorithms are the same up to a reordering of each of their steps, we expected little if any difference. However, we had some hope that the Triple GIS algorithm would improve upon the Dist-Error GIS algorithm somewhat by further breaking the correlation between iterations in the Markov chain. 
+We can verify most of these intuitions in Figure \ref{intESplot}. First, the State-SD GIS algorithm has high ESP for $W$ except for a narrow band where $R^*$ is near one. The State-SD GIS algorithm's mixing behavior for $V$ appears identical to the original state sampler --- high ESP when $R^* < 1$ and poor ESP when $R^* > 1$. So this algorithm behaves as expected --- it takes advantage of the fact that the state and scaled disturbance DA algorithms make up a ``beauty and the beast'' pair for $W$ and thus improves mixing in the marginal chain for $W$. However, the two underlying DA algorithms behave essentially identically for $V$ so there is no improvement in that marginal chain. Similarly the State-SE GIS algorithm's ESP for $W$ is essentially identical to the state and scaled error algorithms' ESP for $W$ --- high when $R^*$ large and low when $R^*$ small. For $V$, the State-SE algorithm has a high ESP when $R^*$ is far enough away from one, especially when $T$ is small. The SD-SE GIS algorithm also behaves as predicted --- when $R^*$ is not too close to one it has high ESP for both $V$ and $W$, though it has extra trouble with $W$ when $R^*$ is less than one but not small enough. The SD-SE GIS algorithm behaves apparently identically to the CIS and triple GIS algorithms. The first of these is not surprising --- based on the intuition that the SD-SE GIS and CIS algorithms are the same up to a reordering of each of their steps, we expected little if any difference. However, we had some hope that the Triple GIS algorithm would improve upon the SD-SE GIS algorithm somewhat by further breaking the correlation between iterations in the Markov chain. 
 
 \begin{figure}[!ht]
 \centering
@@ -591,12 +591,12 @@ We can verify most of these intuitions in Figure \ref{intESplot}. First, the Sta
 \end{figure}
 
 
-We also fit each alternating sampler that corresponds to one of the GIS samplers we fit, that is the State-Dist, State-Error, Dist-Error and Triple (State-Dist-Error) Alt samplers. Figure \ref{altESplot} contains the ESP of these samplers for both $V$ and $W$. There appears to be little practical difference between the alternating and interweaving versions of a given algorithm based on any two or three of the base DAs --- both take advantage of the beauty and the beast nature of their underlying DAs, but apparently dependence between the two DAs prevents the GIS version of the sampler from improving on the alternating version. All of these results are summarized in Table \ref{tab:stnmix2} without distinguishing between the interweaving and alternating versions of an algorithm. We include simulations with differing sizes of $T$ using these samplers in the supplementary materials, but the upshot is that, like with the base samplers, increasing the length of the time series worsens ESP for both $V$ and $W$ in all samplers and shrinks the area of the parameter space in which ESP is high.
+We also fit each alternating sampler that corresponds to one of the GIS samplers we fit, that is the State-SD, State-SE, SD-SE and Triple (State-SD-SE) Alt samplers. Figure \ref{altESplot} contains the ESP of these samplers for both $V$ and $W$. There appears to be little practical difference between the alternating and interweaving versions of a given algorithm based on any two or three of the base DAs --- both take advantage of the beauty and the beast nature of their underlying DAs, but apparently dependence between the two DAs prevents the GIS version of the sampler from improving on the alternating version. All of these results are summarized in Table \ref{tab:stnmix2} without distinguishing between the interweaving and alternating versions of an algorithm. We include simulations with differing sizes of $T$ using these samplers in the supplementary materials, but the upshot is that, like with the base samplers, increasing the length of the time series worsens ESP for both $V$ and $W$ in all samplers and shrinks the area of the parameter space in which ESP is high.
 
 \begin{table}
   \centering
   \begin{tabular}{|l|ccccc|}\hline
-    Parameter & State-Dist        & State-Error       & Dist-Error        & Triple            & Full CIS \\\hline
+    Parameter & State-SD        & State-SE       & SD-SE        & Triple            & Full CIS \\\hline
     V         & $R^* < 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ \\
     W         & $R^* \not\approx 1$ & $R^* > 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$\\\hline
   \end{tabular}
@@ -610,7 +610,7 @@ We also fit each alternating sampler that corresponds to one of the GIS samplers
 
 A more important question than how well the chain mixes from a practical standpoint is the full computational time required to adequately characterize the targer posterior distribution. In order to investigate this, we compute the natural log of the average time in minutes required for each sampler to achieve an effective sample size of 1000 --- in other words the log minutes per 1000 effective draws. All simulations were performed on a university cluster with Intel Xeon X5675 3.07 GHz processors. While different systems will yield different absolute times, the relative times should at least be similar. Figure \ref{baseinttimeplot} contains plots of the log minutes per 1000 effective draws for both $V$ and $W$ and for each of the base and interweaving samplers.
 
-For $T=100$ we see that the pattern we saw for ESP begins also appears for time per 1000 effective draws. The state sampler becomes slow to reach 1000 effective draws for $V$ when $R^*>1$ and for $W$ when $R^*<1$. The scaled disturbance and scaled error samplers behave as expected --- the scaled disturbance sampler is slow for both $V$ and $W$ when $R^*>1$ while the scaled disturbance sampler is slow for both $V$ and $W$ when $R^*<1$. The Dist-Error GIS, Triple GIS and Full CIS algorithms appear to be the big winners here and are almost indistinguishable. All three algorithms are slightly slower for both $V$ and $W$ when $R^*$ is near one, though for larger $T$ (plots available in the supplemental materials) when $R^*$ is near or below one all three are slow for $W$. Compared to the state sampler though, all three offer large gains over most of the parameter space. When we compare the GIS algorithms to their alternating counterparts in terms of log minutes per 1000 effective draws there is little difference. Figure \ref{altinttimeplot} shows the log time per 1000 effective draws for the alternating algorithms and we see essentially the same pattern as we saw for the GIS algorithms with no clear advantage to the alternating or interweaving version of any algorithm.
+For $T=100$ we see that the pattern we saw for ESP begins also appears for time per 1000 effective draws. The state sampler becomes slow to reach 1000 effective draws for $V$ when $R^*>1$ and for $W$ when $R^*<1$. The scaled disturbance and scaled error samplers behave as expected --- the scaled disturbance sampler is slow for both $V$ and $W$ when $R^*>1$ while the scaled disturbance sampler is slow for both $V$ and $W$ when $R^*<1$. The SD-SE GIS, Triple GIS and Full CIS algorithms appear to be the big winners here and are almost indistinguishable. All three algorithms are slightly slower for both $V$ and $W$ when $R^*$ is near one, though for larger $T$ (plots available in the supplemental materials) when $R^*$ is near or below one all three are slow for $W$. Compared to the state sampler though, all three offer large gains over most of the parameter space. When we compare the GIS algorithms to their alternating counterparts in terms of log minutes per 1000 effective draws there is little difference. Figure \ref{altinttimeplot} shows the log time per 1000 effective draws for the alternating algorithms and we see essentially the same pattern as we saw for the GIS algorithms with no clear advantage to the alternating or interweaving version of any algorithm.
 
 
 \begin{figure}[!ht]
@@ -629,6 +629,137 @@ For $T=100$ we see that the pattern we saw for ESP begins also appears for time 
 \caption{Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ in the alternating samplers.}
 \label{altinttimeplot}
 \end{figure}
+
+\section{Discussion}\label{sec:Discuss}
+
+\subsection{Applicability to other DLMs}\label{sec:Discuss:F}
+
+In Section \ref{sec:DAs:error} we assumed that $F_t$ is square and invertible for all $t$ which made the construction of the scaled error sampler and other samplers that use the scaled errors easier. However, most DLMs do not have $F_t$'s which are square, let alone invertible. The samplers we constructed can still be used in this case with one tweak: an additional DA is required in order to ensure that $F_t$ is square and invertible for all $t$. The basic strategy is to add elements to $y_t$ or $\theta_t$ or both until $F_t$ is invertible, then add an additional step to the sampler in order to draw the new augmentation. A second issue is that often $G_t$ or $F_t$ or both depend on some unknown parameter which must also be sampled from in the various MCMC samplers. The second case is easily dealt with simply by adding another sampling step for the unknown parameters in $F_t$ and $G_t$. The following example shows how to deal with the first case.
+
+Consider the dynamic regression model
+\begin{align*}
+y_t & = \alpha_t + x_t\beta_t + v_t\\
+\alpha_t & = \alpha_{t-1} + w_{1,t}\\
+\beta_t & = \beta_{t-1} + w_{2,t}\\
+\end{align*}
+for $t=1,2,\cdots,T$ with $v_{1:T}$ independent of $w_{1:T} = (w_{1,1:T},w_{2,2:T})$, $v_t\stackrel{iid}{\sim} N(0,V)$ and $w_t \stackrel{iid}{\sim}N_2(0,W)$.  Here$\theta_t=(\alpha_t,\beta_t)'$ denotes the latent state for period $t$. The problem $F_t=[1,x_t]$ is not square nor invertible. But notice that the matrix
+\[
+F^*_t = \begin{bmatrix} 1 & x_t \\ 0 & 1 \end{bmatrix}
+\]
+is invertible. Now we add an additional DA $z_t$ to $y_t$ to construct $y_t^* = (y_t, z_t)'$ so that now the model is
+\begin{align*}
+y_t^* &= F_t^*\theta_t + v_t^*
+\theta_t = \theta_{t-1} + w_t
+\end{align*}
+where $v_t^* = (v_t, u_t)$ where $u_{1:T}$ is independent of $(v_{1:T}, w_{1:T})$ and $u_t\stackrel{iid}{\sim} N(0,1)$. By construction $v_t^*\stackrel{iid}{\sim} N_2(0,V^*)$ where $V^*=diag(V,1)$ and the full conditional distribution of $z_t$ is $N(\beta_t,1)$. Then we define the scaled errors as $\psi_0 = \theta_0$ and $\psi_t=L_{V^*}^{-1}(y_t^* - F_t^*\theta_t)$. Let $z=z_{1:T}$ and $y^*=y^*_{1:T}$ for brevity.
+
+In any of the samplers we constructed, before drawing the scaled errors, $\psi$, a draw of $z$ is required to complete $y$. Then $F_t^*$, $V^*$ and $y_t^*$ replace $F_t$, $V$ and $y_t$ wherever they appear in the full conditional distributions of $\psi_{0:T}$ and $W$ from Section \ref{sec:Algs}. Similarly, before transforming to or from the scaled errors in any of the interweaving algorithms, $y^*$ needs is required so a draw of $z$ is necessary. This is best handled by an update of $z$ from its full conditional at the beginning of every iteration of the sampler so that $y^*$ can be treated as the full data vector throughout the iteration.
+
+\subsection{Improving computational efficiency}
+
+A major computational bottleneck in most of our algorithms occurs when we have to draw from $p(W|V,\gamma,y)$, $p(V|W,\psi,y)$, $p(V|W,\tilde{\gamma},y)$ or $p(W|V,\tilde{\psi},y)$. The densities $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ have the form
+\[
+p(x)\propto x^{-\alpha-1}\exp\left[-ax + b\sqrt{x} - \beta/x\right]
+\]
+where $\alpha,\beta,a>0$, while the densities $p(W|V,\tilde{\psi},y)$ and $p(V|W,\tilde{\gamma},y)$ have the form
+\[
+p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b/\sqrt{x} -c/x\right]
+\]
+where $\alpha,a,c>0$. When $b=0$, both of these densities are special cases of the generalized inverse Gaussian (GIG) distribution so perhaps the methods used to speed up draws from the GIG can be used here \cite{jorgensen1982statistical,dagpunar1989easily,devroye2012random}. On the other hand, it might be worth putting effort into drawing $V$ and $W$ jointly conditional on the (wrongly) scaled disturbances or the (wrongly) scaled errors. Using the scaled disturbances, the conditional distribution of $V$ given $W$ is inverse gamma in the LLM and inverse Wishart in the general DLM, so it is easy to derive the marginal density $p(W|\gamma,y)$. In our LLM example, this density turns out to be very difficult to sample from and, in particular, it is not easy to come up with a generally good approximation for rejection sampling or for a Metropolis step. 
+
+The main problem is the interaction between the augmented data likelihood and the prior for the variance we used to scale the states, e.g. $p(y,\gamma|V,W)$ and $p(W)$. We initially chose inverse Wishart priors for $V$ and $W$ partially because they are standard and partially for computational convenience, i.e. they are conditional conjugate with the states which results in full Gibbs steps in the state sampler. But in this case, the may be a more convenient prior. In addition, there are well known inferential problems with this prior \matt{Can reference my paper with Ignacio} in the hierarchical model literature, e.g. \citeasnoun{gelman2006prior}, though it is unclear how much transfers over to the time series case. An alternative is to use the conditionally conjugate prior conditional on the scaled disturbances, or whichever DA we prefer.
+
+The conditionally conjugate prior for $\sqrt{W}$ using the scaled disturbances as the DA is a Gaussian distribution --- strictly speaking this prior is on $\pm \sqrt{W}$. If we use this prior for $\pm\sqrt{V}$ as well, the $V$ step in the scaled disturbance sampler becomes a draw from the generalized inverse Gaussian distribution. This prior has been used by \citeasnoun{fruhwirth2011bayesian} and \citeasnoun{fruhwirth2008bayesian} to speed up computation while using the scaled disturbances in hierarchical models and by \citeasnoun{fruhwirth2010stochastic} for time series models with a DA similar to the scaled disturbances (the latent states are scaled, but not centered). We omit the results here, but using this prior on both variances does not alter our mixing results for any of the MCMC samplers --- effective sample sizes were basically the same with either prior. There is a trade-off in computation time to consider, however. For example when using the scaled disturbances, the draw of $W|V,\gamma,y$ is sped up by using the Gaussian prior on $\pm\sqrt{W}$ since it becomes a Gaussian draw while the $V|W,\gamma,y$ is slower since it becomes a generalized inverse Gaussian draw instead of an inverse gamma. The gains outweigh the costs, at least in the local level model.
+
+In the general DLM, however, it is unclear whether this will hold. In particular in the scaled disturbance sampler, when $V$ is a matrix its full conditional becomes a matrix analogue of the generalized inverse Gaussian distribution. On the other hand, with the inverse Wishart priors, when $W$ is a matrix the full conditional of $W$ becomes a matrix analogue of the density in Section \ref{sec:LLM:fullcond} --- which is more general than the GIG distribution. It is not clear how efficiently either of these distributions can be sampled from.
+
+\section{Appendix}\label{sec:Append}
+
+\subsection{Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$}\label{sec:Append:scale}
+Both of these two densities are of the form
+\begin{align*}
+\log p(x) =  & -ax + b\sqrt{x} - (\alpha + 1)\log x -\beta/x + C 
+\end{align*}
+for $x>0$ where $C$ is some constant, $\alpha$ and $\beta$ are the hyperparameters for $x$, and $a>0$ and $b\in \Re$ are parameters that depend on the data, $y$, the relevant data augmentation ($\psi$ or $\gamma$), and the other variable ($W$ or $V$). This density is not a known form and is difficult to sample from. We provide two different rejection sampling strategies below that work well under different circumstances, and combine them into a single strategy.
+
+\subsubsection{Adaptive rejection sampling}
+One nice strategy is to use adaptive rejection sampling, e.g. \citeasnoun{gilks1992adaptive}. This requires $\log p(x)$ to be concave, which is easy enough to check. The second derivative of $\log p(x)$ is:
+\begin{align*}
+\frac{\partial^2 \log p(x)}{\partial x^2} &= -\frac{1}{4}bx^{-3/2} +(\alpha + 1)x^{-2} -2 \beta x^{-3}.
+\end{align*}
+Then we have
+\begin{align*}
+  &\frac{\partial^2 \log p(x)}{\partial x^2} < 0 \iff \\
+  &-\frac{b}{4}x^{3/2} + (\alpha + 1)x - 2\beta < 0
+\end{align*}
+which would imply that $\log p(x)$ is concave. We can maximize the left hand side of the last equation very easily. When $b\leq 0$ the max occurs at $x=\infty$ such that $LHS > 0$, but when $b > 0$:
+\begin{align*}
+  \frac{\partial LHS}{\partial x} &= -\frac{3}{8}bx^{1/2} + \alpha + 1 = 0\\
+  \implies & x^{max} = \frac{(\alpha + 1)^2}{b^2}\frac{64}{9}.
+\end{align*}
+Then we have
+\begin{align*}
+  LHS \leq LHS|_{x=x^{max}} = \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} - 2\beta
+\end{align*}
+so that
+\begin{align*}
+  LHS|_{x=x^{max}} < 0 &\iff  \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} < 2\beta\\
+    &\iff b > \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}.
+\end{align*}
+This last condition is necessary and sufficient for $\log p(x)$ to be globally (for $x>0$) concave since $b < 0$ forces $LHS > 0$ for some $x$. When the condition is satisfied, we can use adaptive rejection sampling --- which is already implemented in the \verb0R0 package \verb0ars0. We input the initial evalutions of $\log p(x)$ at the mode $x^{mode}$ and at $2x^{mode}$ and $0.5x^{mode}$ in order to get the algorithm going.
+
+\subsubsection{Rejection sampling on the log scale}
+When $b \leq \left(\frac{(\alpha + 1)^3}{\beta}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}$, which happens often --- especially for small $T$ --- we need to rely on a different method to sample from $p(x)$. A naive approach would be to construct a normal or $t$ approximation to $p(x)$ and use that as a proposal in a rejection sampler. It turns out that this is often very inefficient, but for $y=\log(x)$ the approach works well. Note that
+\begin{align*}
+  p_y(y) = p_x(e^y)e^y
+\end{align*}
+so that we can write the log density of $y$ as (dropping the subscripts):
+\begin{align*}
+  \log p(y) = -ae^y + be^{y/2} - \alpha y - \beta e^{-y}.
+\end{align*}
+The mode of this density $y^{mode}$ can be easily found numerically, and the second derivative is:
+\begin{align*}
+  \frac{\partial^2 \log p(y)}{\partial y^2} = -ae^y + \frac{b}{4}e^{y/2} - \beta e^{-y}.
+\end{align*}
+The $t$ approximation then uses the proposal distribution 
+\begin{align*}
+  t_{v}\left(y^{mode}, \left[-\left.\frac{\partial^2 \log p(y)}{\partial y^2}\right|_{y=y^{mode}}\right]^{-1}\right).
+\end{align*}
+In practice choosing degrees of freedom $v=1$ works very well over the region of the parameter space where adaptive rejection sampling cannot be used. We can easily use this method when adaptive rejection sampling does not work, then transform $y$ back to $x$. It remains to check that the tails of $t$ distribution dominate the tails of our target distribution. Let $\log q(y)$ denote the log density of the proposoal distribution. Then we need
+\begin{align*}
+  \log p(y) - \log q(y) \leq M\\
+  \intertext{for some constant M, i.e.}
+  -ae^y + be^{y/2} - \alpha y - \beta e^{-y} -\left(\frac{v+1}{2}\right)\log\left[1 + \frac{1}{v}\left(\frac{y-\mu}{\sigma}\right)\right]\leq M
+\end{align*}
+where $a>0$, $\alpha>0$, $\beta>0$, $v>0$, $\sigma>0$, and $b,\mu\in \Re$. We can rewrite the LHS as
+\begin{align*}
+    e^{y/2}(b-ae^{y/2}) - \alpha y - \beta e^{-y} -\left(\frac{v+1}{2}\right)\log\left[1 + \frac{1}{v}\left(\frac{y-\mu}{\sigma}\right)\right].
+\end{align*}
+So as $y\to\infty$ this quantity goes to $-\infty$ since the first term will eventually become negative no matter the value of $b$, and all other terms are always negative. Similarly as $y\to\-\infty$ this quantity goes to $-\infty$. Now pick any interval $(y_1,y_2)$ such that outside of the interval, $LHS<\epsilon$. Since treated as a function of $y$ the LHS is clearly continuous, it attains a maximum on this interval, and thus is bounded.
+
+\subsubsection{Intelligently choosing a rejection sampler}
+In practice, adaptive rejection sampling is relatively efficient for $p_x(x)$ but inefficient for $p_y(y)$ --- so much so that rejection sampling with the $t$ approximation for $p_y(y)$ is more efficient. To minimize computation time, it is best to use adaptive rejection sampling for $p_x(x)$ when the concavity condition is satisfied. When it is not, the $t$ approximation works well enough.
+
+\subsection{Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$ in the LLM}\label{sec:Append:wscale}
+
+Both the density of $\log(W)|V,\tilde{\gamma}_{0:T},y_{1:T}$ and the density of $\log(V)|W,\tilde{\psi}_{0:T},y_{1:T}$ have the following form:
+\begin{align*}
+  p(y)\propto \exp\left[-\alpha y - ae^{-y} + be^{-y/2} - ce^y\right].
+\end{align*}
+where $\alpha>0$, $a>0$, $c>0$, and $b\in \Re$. The log density is:
+\begin{align*}
+  \log p(y) = -\alpha y - ae^{-y} + be^{-y/2} - ce^y + C
+\end{align*}
+where $C$ is some constant. We only provide one strategy for rejection sampling from this density: the $t$ approximation. Similar reasoning to above shows that we can use a $t$ distribution as a proposal in a rejection sampler. Now we choose the location parameter by maximizing $\log p(y)$ in $y$ numerically to find the mode, $y^{mode}$. Next the second derivative of $\log p(y)$ is given by
+\begin{align*}
+  \frac{\partial^2 \log p(y)}{\partial y^2} = -ae^{-y} + \frac{b}{4}e^{-y/2}-ce^y.
+\end{align*}
+We then set the scale parameter to be
+\begin{align*}
+  -\left[\left.\frac{\partial^2 \log p(y)}{\partial y^2}\right|_{y=y^{mode}}\right]^{-1}
+\end{align*}
+as in the normal approximation, and the degrees of freedom parameter to $v=1$. This rejection sampler is tolerably efficient for our purposes, but it is not fast.
+
 
 
 \clearpage

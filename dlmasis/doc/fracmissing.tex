@@ -1,0 +1,58 @@
+\documentclass{article}
+\usepackage{JASA_manu} %formats document like ASA wants
+\usepackage{jasa_harvard} %formats citations like ASA wants
+\usepackage{amssymb, amsmath, amsthm, graphics, graphicx, color, fullpage}
+\usepackage{thmtools} %to format the Algorithm environment correctly
+\usepackage{nameref, hyperref, cleveref} %for named references
+
+% define algorithm environment
+\declaretheoremstyle[
+notefont=\bfseries, notebraces={}{},
+bodyfont=\normalfont\itshape,
+headformat=\NAME:\NOTE
+]{nopar}
+\declaretheorem[style=nopar, name=Algorithm, 
+refname={Algorithm,Algorithms},
+Refname={Algorithm,Algoritms},
+numbered=no]{alg*}
+
+\newtheorem{thm}{Theorem}[subsection]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\B}{B}
+\DeclareMathOperator{\vech}{vech}
+\DeclareMathOperator{\vect}{vec}
+
+\graphicspath{{plots/}}
+\newcommand{\matt}[1]{{\color{red} Matt: #1}}
+\newcommand{\jarad}[1]{{\color{red} Jarad: #1}}
+
+
+\begin{document}
+
+This is the fraction of missing information stuff from the original discussion. It's bracketed right now instead of completely removed because I can actually compute ``expected'' EM fraction of missing information now (i.e. $E[I_{aug}|V,W]$ and $E[I_{obs}|V,W]$ replace their counterparts below), at least for the states, so it may be interesting. The snag is that I can't compute the eigenvalues in that case. However, maybe if/when I try to compute the EM fraction for the scaled disturbances / scaled errors something will come of it. 
+\section{Fraction of Missing Info}
+In our simulations with the original inverse gamma priors and the with the normal prior on the standard deviations we mentioned above, we varied the prior so that the prior mean was the true value of the parameters used to simulate the datasets. This may seem suspect at first glance, but there is a method to our madness. In the data augmentation for multilevel models literature, a key quantity is called the fraction of missing information (\citeasnoun{van2001art}, for example). When $\phi$ is the model parameter, $\theta$ is the data augmentation and $y$ is the data, the Bayesian fraction of missing information is defined as
+\begin{align*}
+  \mathcal{F}_B = I - [var(\phi|y)]^{-1}E[var(\phi|\theta,y)|y]
+\end{align*}
+while the EM fraction of missing information is defined as
+\begin{align*}
+  \mathcal{F}_{EM} = I - I_{obs}I_{aug}^{-1}
+\end{align*}
+where 
+\begin{align*}
+  I_{aug}=& \left.\mathrm{E} \left[-\left.\frac{\partial^2 \log p(\phi|\theta,y)}{\partial \phi \dot \partial \phi}\right| y,\phi\right]\right|_{\phi=\phi^*}\\
+  \intertext{is the expected augmented Fisher information matrix and}
+  I_{obs} =& -\left.\frac{\partial^2\log p(\phi|y)}{\partial\phi \dot \partial\phi}\right|_{\phi=\phi^*}
+\end{align*}
+is the observed Fisher information matrix while $\phi^*$ is the posterior mode. The rate of convergence of the EM algorithm is governed by $\mathcal{F}_{EM}$ while the maximum lag-1 autocorrelation in the Gibbs sampler for any linear function of the model parameters is governed by $\mathcal{F}_{B}$ --- the larger the spectral radius of $\mathcal{F}$, the high the autocorrelation. While $\mathcal{F}_{B}$ is difficult to compute, $\mathcal{F}_{EM}$ is often easier and is a decent approximation to $\mathcal{F}_{B}$ to the degree that the posterior distribution is Gaussian. We currently cannot analytically compute either of these quantities in our model, but the significance of the signal-to-noise ratio in our results is likely related. In particular, the EM fraction of missing information requires the expected and observed information matrices at the posterior mode. So the behavior of the samplers likely depends on the posterior model signal-to-noise ratio, or perhaps the ratio of the posterior model signal to the posterior mode ratio (depending on whether we take the mode of $R$, of $V$ and $W$ separately or of $V$ and $W$ together). Given the way we choose our priors, the posterior mode of $(V,W)$ is likely to be close to the true values of $V$ and $W$ used to simulate the data, especially for longer time series. If we used the same prior for each simulation, the posterior mode and the true values of $V$ and $W$ are less likely to be close for some true values of $V$ and $W$. In fact, in simulations with a constant prior (details not reported here), plots such as Figure \ref{baseESplot} look somewhat similar but with a much less stark difference in ESP over different regions of the parameter space.
+
+
+\clearpage
+\bibliographystyle{ECA_jasa}  % proper bibliography style for ASA
+\bibliography{dlmasis}
+\end{document}
