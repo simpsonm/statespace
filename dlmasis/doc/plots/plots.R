@@ -31,19 +31,19 @@ samout$type[samout$sampler %in% kerns] <- "RKern"
 samout$type[samout$sampler %in% cis] <- "CIS" 
 samout$type[samout$sampler %in% wrongs] <- "W-Base" 
 samout$samplers <- "Base"
-samout$samplers[substr(samout$sampler, 1, 2)=="sd"] <- "State-Dist" 
-samout$samplers[substr(samout$sampler, 1, 2)=="se"] <- "State-Error" 
-samout$samplers[substr(samout$sampler, 1, 2)=="de"] <- "Dist-Error" 
+samout$samplers[substr(samout$sampler, 1, 2)=="sd"] <- "State-SD" 
+samout$samplers[substr(samout$sampler, 1, 2)=="se"] <- "State-SE" 
+samout$samplers[substr(samout$sampler, 1, 2)=="de"] <- "SD-SE" 
 samout$samplers[substr(samout$sampler, 1, 3)=="tri"] <- "Triple"
-samout$samplers[samout$sampler=="fullcis"] <- "FullCIS"
+samout$samplers[samout$sampler=="fullcis"] <- "CIS"
 samout$samplers[samout$sampler=="partialcis"] <- "PartialCIS"
-samout$samplers[samout$sampler=="error"] <- "Error"
-samout$samplers[samout$sampler=="dist"] <- "Dist"
+samout$samplers[samout$sampler=="error"] <- "SE"
+samout$samplers[samout$sampler=="dist"] <- "SD"
 samout$samplers[samout$sampler=="state"] <- "State"
-samout$samplers[samout$sampler=="errorda"] <- "W-Error"
-samout$samplers[samout$sampler=="distda"] <- "W-Dist"
-samlevels <- c("State", "Dist", "Error", "State-Dist", "State-Error", "Dist-Error", 
-               "Triple", "FullCIS", "PartialCIS", "W-Dist", "W-Error")
+samout$samplers[samout$sampler=="errorda"] <- "W-SE"
+samout$samplers[samout$sampler=="distda"] <- "W-SD"
+samlevels <- c("State", "SD", "SE", "State-SD", "State-SE", "SD-SE", 
+               "Triple", "CIS", "PartialCIS", "W-SD", "W-SE")
 samout$samplers <- factor(samout$samplers, levels=samlevels)
 samout$V.time <- samout$time/samout$V.ES
 samout$W.time <- samout$time/samout$W.ES
