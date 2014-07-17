@@ -40,10 +40,10 @@ samout$samplers[samout$sampler=="partialcis"] <- "PartialCIS"
 samout$samplers[samout$sampler=="error"] <- "SE"
 samout$samplers[samout$sampler=="dist"] <- "SD"
 samout$samplers[samout$sampler=="state"] <- "State"
-samout$samplers[samout$sampler=="errorda"] <- "W-SE"
-samout$samplers[samout$sampler=="distda"] <- "W-SD"
+samout$samplers[samout$sampler=="errorda"] <- "WSE"
+samout$samplers[samout$sampler=="distda"] <- "WSD"
 samlevels <- c("State", "SD", "SE", "State-SD", "State-SE", "SD-SE", 
-               "Triple", "CIS", "PartialCIS", "W-SD", "W-SE")
+               "Triple", "CIS", "PartialCIS", "WSD", "WSE")
 samout$samplers <- factor(samout$samplers, levels=samlevels)
 samout$V.time <- samout$time/samout$V.ES
 samout$W.time <- samout$time/samout$W.ES
@@ -208,4 +208,5 @@ p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
 p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, c(-1,8))
 ggsave(filename="altinttimeplot1.pdf", plot=p2, width=8, height=3.75)
 ggsave(filename="altinttimeplot2.pdf", plot=p3, width=8, height=3.75)
+
 
