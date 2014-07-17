@@ -10,7 +10,9 @@ load("../../mixing/samout.RData")
 samout2 <- samout
 load("../../wrongscale/OldDAs/samout.RData")
 samout$stime <- 0
-samout <- rbind(samout2, samout)
+samout2 <- rbind(samout2, samout)
+load("../../cis/fullcissamout.RData")
+samout <- rbind(samout2[samout2$sampler != "fullcis",], fullcissamout)
 rm(samout2)
 base <- c("error", "state", "dist")
 alts <- c("sdalt", "sealt", "dealt", "trialt")
