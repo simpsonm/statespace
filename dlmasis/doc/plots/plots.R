@@ -52,6 +52,7 @@ meltedsam <- melt(samout, id=c("type", "samplers", "sampler", "V.T", "W.T",
 Vs <- unique(meltedsam$V.T)[1:9] #$
 Ws <- Vs
 breaks <- Vs[seq(1,9,2)]
+labs <- c("0.01", "0.1", "1", "10", "100")
 label_both_parsed <- function(variable, value){
   llply(as.character(paste(variable, value, sep = ": ")), function(x) parse(text = x))
 }
@@ -73,7 +74,7 @@ plotfun <- function(meltedsam, vars, sams, T, title){
            guide=guide_colorbar(barheight=10),
            limits=c(0,1), na.value="white", trans="sqrt") +
          facet_grid(variable~samplers, scales="free", labeller=label_parsed_split) +
-         scale_x_log10("V = noise", breaks=breaks) + scale_y_log10("W = signal", breaks=breaks) +
+         scale_x_log10("V = noise", breaks=breaks, labels=labs) + scale_y_log10("W = signal", breaks=breaks, labels=labs) +
          ggtitle(paste(title, T, sep="")) +
          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
   return(out)
@@ -97,8 +98,8 @@ plotfuntime <- function(meltedsam, vars, sams, T, title, lims){
                              limits=lims, na.value="red") +
          facet_grid(variable~samplers, scales="free", 
                     labeller=label_parsed_split) +
-         scale_x_log10("V = noise", breaks=breaks) + 
-             scale_y_log10("W = signal", breaks=breaks) +
+         scale_x_log10("V = noise", breaks=breaks, labels=labs) + 
+         scale_y_log10("W = signal", breaks=breaks, labels=labs) +
          ggtitle(paste(title, T, sep="")) +
          theme(axis.text.x = element_text(angle = 90, 
                    hjust = 1, vjust=0.5))
@@ -114,8 +115,8 @@ plotfuncor <- function(newpostcors, var, title){
       scale_fill_gradient2("Corr", low=muted("blue"), high=muted("red"),
          limits=c(-1,1), mid="white") +
       facet_grid(.~T, scales="free", labeller=label_both) +
-      scale_x_log10("V = noise", breaks=breaks) +
-      scale_y_log10("W = signal", breaks=breaks) +
+      scale_x_log10("V = noise", breaks=breaks, labels=labs) +
+      scale_y_log10("W = signal", breaks=breaks, labels=labs) +
       ggtitle(title) +
       theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
   return(out)

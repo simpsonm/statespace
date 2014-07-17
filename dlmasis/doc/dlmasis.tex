@@ -606,8 +606,6 @@ We also fit each alternating sampler that corresponds to one of the GIS samplers
   \label{tab:stnmix2}
 \end{table}
 
-\matt{Any chance we can change the figures to avoid using scientific notation for V and W?}
-
 \subsection{Computational time}\label{sec:LLM:time}
 
 A more important question than how well the chain mixes from a practical standpoint is the full computational time required to adequately characterize the targer posterior distribution. In order to investigate this, we compute the natural log of the average time in minutes required for each sampler to achieve an effective sample size of 1000 --- in other words the log minutes per 1000 effective draws. All simulations were performed on a university cluster with Intel Xeon X5675 3.07 GHz processors. While different systems will yield different absolute times, the relative times should at least be similar. Figure \ref{baseinttimeplot} contains plots of the log minutes per 1000 effective draws for both $V$ and $W$ and for each of the base and interweaving samplers.
