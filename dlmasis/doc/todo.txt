@@ -1,0 +1,15 @@
+things to do:
+
+Cite Jarad & Ignatio's paper
+beef up discussion, perhaps - did some, maybe more.
+spell check, obv
+abstract
+
+stuff to go in the supplementary materials:
+(All of these things are candidates for inclusion in the appendix instead of the supplementary materials)
+MCFA algorithm for the DLM.
+Derivations of full conditionals in the local level model
+Code
+Show what the form of the tough densities are in the LLM
+T=10 and T=1000 plots.
+sylvia's prior results?
