@@ -4,7 +4,7 @@ library(coda)
 library(MCMCpack)
 library(ars)
 library(plyr)
-source("../code/allatoncefun.R")
+source("../code/mcfa.R")
 
 fullsim <- function(samplers, simdata, n, burn, parallel){
   out <- ddply(samplers, .(sampler), samsim, simdata=simdata, n=n,
@@ -128,7 +128,6 @@ samsummary <- function(sam, dat, burn, sampler){
 ###time per 1000 iterations
   time <- sam$time[1]/length(sam$time)*1000 
   stime <- mean(sam$stime)*1000
-###
   logconV <- mean(sam$logconV, na.rm=TRUE)
   adrejV <- mean(sam$adrejV, na.rm=TRUE)
   logconW <- mean(sam$logconW, na.rm=TRUE)
@@ -349,7 +348,7 @@ statesam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
   out <- samoutsetup(n, T)
   for(i in 1:n){
     ptma <- proc.time()
-    theta <- awolthsmooth(dat, V, W, m0, C0)
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
     VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
@@ -369,7 +368,7 @@ errorsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
   out <- samoutsetup(n, T)
   for(i in 1:n){
     ptma <- proc.time()
-    psi <- awolpssmooth(dat, V, W, m0, C0)
+    psi <- mcfapssmooth(dat, V, W, m0, C0)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
     Vout <- Vpsiiter(dat, psi, W, av, bv)
@@ -392,7 +391,7 @@ distsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
   out <- samoutsetup(n, T)
   for(i in 1:n){
     ptma <- proc.time()
-    theta <- awolthsmooth(dat, V, W, m0, C0)
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     gam <- gamtrans(theta, W)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
@@ -415,7 +414,7 @@ statedistinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7,
   for(i in 1:n){
     ## state sampler
     ptma <- proc.time()
-    theta <- awolthsmooth(dat, V, W, m0, C0)
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
     VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
@@ -424,7 +423,7 @@ statedistinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7,
     ## scaled disturbance sampler
     if(!inter){
       ptma <- proc.time()
-      theta <- awolthsmooth(dat, V, W, m0, C0)
+      theta <- mcfathsmooth(dat, V, W, m0, C0)
       gam <- gamtrans(theta, W)
       ptmb <- proc.time()
       smoothtime <- ptmb[3]-ptma[3] + smoothtime
@@ -451,7 +450,7 @@ stateerrorinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7
   for(i in 1:n){
     ## state sampnler
     ptma <- proc.time()
-    theta <- awolthsmooth(dat, V, W, m0, C0)
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
     VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
@@ -460,7 +459,7 @@ stateerrorinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7
     ## scaled error sampler
     if(!inter){
       ptma <- proc.time()
-      psi <- awolpssmooth(dat, V, W, m0, C0)
+      psi <- mcfapssmooth(dat, V, W, m0, C0)
       ptmb <- proc.time()
       smoothtime <- ptmb[3]-ptma[3] + smoothtime
     }
@@ -486,7 +485,7 @@ disterrorinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7,
   for(i in 1:n){
     ## scaled disturbance sampler
     ptma <- proc.time()
-    theta <- awolthsmooth(dat, V, W, m0, C0)
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     gam <- gamtrans(theta, W)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
@@ -497,7 +496,7 @@ disterrorinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7,
     ## scaled error sampler
     if(!inter){
       ptma <- proc.time()
-      psi <- awolpssmooth(dat, V, W, m0, C0)
+      psi <- mcfapssmooth(dat, V, W, m0, C0)
       ptmb <- proc.time()
       smoothtime <- ptmb[3]-ptma[3] + smoothtime
     }
@@ -523,7 +522,7 @@ tripleinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7, in
   for(i in 1:n){
     ## state sampler
     ptma <- proc.time()
-    theta <- awolthsmooth(dat, V, W, m0, C0)
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
     VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
@@ -532,7 +531,7 @@ tripleinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7, in
     ## scaled disturbance sampler
     if(!inter[1]){
       ptma <- proc.time()
-      theta <- awolthsmooth(dat, V, W, m0, C0)
+      theta <- mcfathsmooth(dat, V, W, m0, C0)
       gam <- gamtrans(theta, W)
       ptmb <- proc.time()
       smoothtime <- smoothtime + ptmb[3]-ptma[3]
@@ -547,7 +546,7 @@ tripleinter <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7, in
     ## scaled error sampler
     if(!inter[2]){
       ptma <- proc.time()
-      psi <- awolpssmooth(dat, V, W, m0, C0)
+      psi <- mcfapssmooth(dat, V, W, m0, C0)
       ptmb <- proc.time()
       smoothtime <- smoothtime + ptmb[3]-ptma[3]
     }
@@ -788,7 +787,7 @@ randkerniter <- function(dat, V, W, theta, av, aw, bv, bw, m0=0, C0=10^7, probs=
   kernel <- sample(kernels, 1, prob=probs)
   if(kernel=="state"){
     ptma <- proc.time()
-    theta <- awolthsmooth(dat, V, W, m0, C0)
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
     VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
@@ -799,7 +798,7 @@ randkerniter <- function(dat, V, W, theta, av, aw, bv, bw, m0=0, C0=10^7, probs=
   }
   if(kernel=="error"){
     ptma <- proc.time()
-    psi <- awolpssmooth(dat, V, W, m0, C0)
+    psi <- mcfapssmooth(dat, V, W, m0, C0)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
     Vout <- Vpsiiter(dat, psi, W, av, bv)
@@ -811,7 +810,7 @@ randkerniter <- function(dat, V, W, theta, av, aw, bv, bw, m0=0, C0=10^7, probs=
   }
   if(kernel=="dist"){
     ptma <- proc.time()
-    theta <- awolthsmooth(dat, V, W, m0, C0)
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     gam <- gamtrans(theta, W)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
@@ -853,7 +852,7 @@ partialcissam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
   out <- samoutsetup(n, T)  
   for(i in 1:n){
     ptma <- proc.time()
-    theta <- awolthsmooth(dat, V, W, m0, C0)
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
     VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
@@ -878,7 +877,7 @@ fullcissam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
   out <- samoutsetup(n, T)  
   for(i in 1:n){
     ptma <- proc.time()
-    psi <- awolpssmooth(dat, V, W, m0, C0)
+    psi <- mcfapssmooth(dat, V, W, m0, C0)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
     Vout <- Vpsiiter(dat, psi, W, av, bv)

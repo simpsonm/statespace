@@ -5,6 +5,7 @@ library(MCMCpack)
 library(ars)
 library(plyr)
 library(GeneralizedHyperbolic)
+source("../code/mcfa.R")
 
 fullsim <- function(samplers, simdata, n, burn, parallel){
   out <- ddply(samplers, .(sampler), samsim, simdata=simdata, n=n,
@@ -29,12 +30,12 @@ samsim <- function(samplers, simdata, n, burn, parallel){
   out <- ddply(sam, .(V.T, W.T, T.T), samsummary,
                .parallel=parallel, dat=simdata, burn=burn,
                sampler=sampler)
-  #if(sampler=="trialt"){
-  #  postcors <- ddply(sam, .(V.T, W.T, T.T), postcor, .parallel=parallel,
-  #                         dat=simdata, burn=burn)
-  #  save(postcors, file="postcors.RData")
-  #  rm(postcors)
-  #}
+#  if(sampler=="trialt"){
+#    postcors <- ddply(sam, .(V.T, W.T, T.T), postcor, .parallel=parallel,
+#                           dat=simdata, burn=burn)
+#    save(postcors, file="postcors.RData")
+#    rm(postcors)
+#  }
   rm(sam)
   save(out, file=paste(sampler, "OUT.RData", sep=""))
   print(paste(sampler, "finished", sep=" "))
@@ -131,12 +132,20 @@ samsummary <- function(sam, dat, burn, sampler){
   thetas <- theta0s[,-1]
   theta0 <- theta0s[,1]
   data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
-  time <- sam$time[1]/length(sam$time)*1000 #time per 1000 iterations
+  stime <- mean(sam$stime)*1000
+  time <- sam$time[1]/length(sam$time)*1000
+  logconV <- mean(sam$logconV, na.rm=TRUE)
+  adrejV <- mean(sam$adrejV, na.rm=TRUE)
+  logconW <- mean(sam$logconW, na.rm=TRUE)
+  adrejW <- mean(sam$adrejW, na.rm=TRUE)
   statkern <- mean(sam$kernel=="state", na.rm=TRUE)
   distkern <- mean(sam$kernel=="dist", na.rm=TRUE)
   errorkern <- mean(sam$kernel=="error", na.rm=TRUE)
-  init <- data.frame(time=time, statkern=statkern,
-                     distkern=distkern, errorkern=errorkern)
+  init <- data.frame(time=time, stime=stime,
+                     logconV=logconV,     adrejV=adrejV,
+                     logconW=logconW,     adrejW=adrejW,
+                     statkern=statkern, distkern=distkern,
+                     errorkern=errorkern)
   gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
   colnames(gammas) <- paste("gamma", 1:T.T, sep="")
   psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
@@ -230,53 +239,6 @@ dfun <- function(M, simgrid){
   data.frame(M, simgrid)
 }
 
-## Wrapper for quickly simulating from all samplers w/ multiple
-## chains at diff starting values
-samwrapstart <- function(par, n, samp){
-  dat <n- par$y[order(par$t)]
-  T <- length(dat)
-  Qv <- par$V.T[1]
-  Qw <- par$W.T[1]
-  start <- c(par$V.S[1]*Qv, par$W.S[1]*Qw)
-  if(samp=="state")
-    time <- system.time(out <- statesam(n, start, dat, Qv, Qw))
-  if(samp=="dist")
-    time <- system.time(out <- distsam(n, start, dat, Qv, Qw))
-  if(samp=="error")
-    time <- system.time(out <- errorsam(n, start, dat, Qv, Qw))
-  if(samp=="sdint")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, TRUE, 1))
-  if(samp=="seint")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, TRUE, 2))
-  if(samp=="deint")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, TRUE, 3))
-  if(samp=="triint")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, c(TRUE, TRUE), 4))
-  if(samp=="sdalt")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, FALSE, 1))
-  if(samp=="sealt")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, FALSE, 2))
-  if(samp=="dealt")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, FALSE, 3))
-  if(samp=="trialt")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, c(FALSE, FALSE), 4))
-  if(samp=="sdkern")
-    time <- system.time(out <- randkernsam(n, start, dat, Qv, Qw, c(1/2, 1/2, 0)))
-  if(samp=="sekern")
-    time <- system.time(out <- randkernsam(n, start, dat, Qv, Qw, c(1/2, 0, 1/2)))
-  if(samp=="dekern")
-    time <- system.time(out <- randkernsam(n, start, dat, Qv, Qw, c(0, 1/2, 1/2)))
-  if(samp=="trikern")
-    time <- system.time(out <- randkernsam(n, start, dat, Qv, Qw))
-  if(samp=="partialcis")
-    time <- system.time(out <- partialcissam(n, start, dat, Qv, Qw))
-  if(samp=="fullcis")
-    time <- system.time(out <- fullcissam(n, start, dat, Qv, Qw))
-  outdat <- data.frame(out)
-  outdat$time <- time[1]
-  return(outdat[,c(T+7, (T+2):(T+6), 1:(T+1))])
-}
-
 
 ## Wrapper for quickly simulating from all samplers
 samwrap <- function(par, n, samp){
@@ -284,63 +246,57 @@ samwrap <- function(par, n, samp){
   T <- length(dat)
   Qv <- par$V.T[1]
   Qw <- par$W.T[1]
+  m0 <- par$m0[1]
+  C0 <- par$C0[1]
   start <- c(Qv, Qw)
   print(paste(c("sampler: ", samp, "  T=", T, "  V=", Qv, "  W=", Qw), collapse=""))
   if(samp=="state")
-    time <- system.time(out <- statesam(n, start, dat, Qv, Qw))
+    time <- system.time(out <- statesam(n, start, dat, Qv, Qw, m0, C0))
   if(samp=="dist")
-    time <- system.time(out <- distsam(n, start, dat, Qv, Qw))
+    time <- system.time(out <- distsam(n, start, dat, Qv, Qw, m0, C0))
   if(samp=="error")
-    time <- system.time(out <- errorsam(n, start, dat, Qv, Qw))
+    time <- system.time(out <- errorsam(n, start, dat, Qv, Qw, m0, C0))
   if(samp=="sdint")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, TRUE, 1))
+    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, m0, C0, TRUE, 1))
   if(samp=="seint")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, TRUE, 2))
+    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, m0, C0, TRUE, 2))
   if(samp=="deint")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, TRUE, 3))
+    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, m0, C0, TRUE, 3))
   if(samp=="triint")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, c(TRUE, TRUE), 4))
+    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, m0, C0, c(TRUE, TRUE), 4))
   if(samp=="sdalt")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, FALSE, 1))
+    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, m0, C0, FALSE, 1))
   if(samp=="sealt")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, FALSE, 2))
+    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, m0, C0, FALSE, 2))
   if(samp=="dealt")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, FALSE, 3))
+    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, m0, C0, FALSE, 3))
   if(samp=="trialt")
-    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, c(FALSE, FALSE), 4))
-  if(samp=="sdkern")
-    time <- system.time(out <- randkernsam(n, start, dat, Qv, Qw, c(1/2, 1/2, 0)))
-  if(samp=="sekern")
-    time <- system.time(out <- randkernsam(n, start, dat, Qv, Qw, c(1/2, 0, 1/2)))
-  if(samp=="dekern")
-    time <- system.time(out <- randkernsam(n, start, dat, Qv, Qw, c(0, 1/2, 1/2)))
-  if(samp=="trikern")
-    time <- system.time(out <- randkernsam(n, start, dat, Qv, Qw))
-  if(samp=="partialcis")
-    time <- system.time(out <- partialcissam(n, start, dat, Qv, Qw))
+    time <- system.time(out <- samwrapper(n, start, dat, Qv, Qw, m0, C0, c(FALSE, FALSE), 4))
   if(samp=="fullcis")
-    time <- system.time(out <- fullcissam(n, start, dat, Qv, Qw))
-  outdat <- data.frame(out)
+    time <- system.time(out <- fullcissam(n, start, dat, Qv, Qw, m0, C0))
+    outdat <- data.frame(out)
   outdat$time <- time[1]
-  print(paste(c("sampler: ", samp, "  T=", T, "  V=", Qv, "  W=", Qw, " FINISHED"), collapse=""))
-  return(outdat[,c(T+7, (T+2):(T+6), 1:(T+1))])
+  cols <- ncol(outdat)
+  outdat <- outdat[,c( cols, 1:(cols-1) )]
+  print(paste(c(samp, " T=", T, " V=", start[1], " W=", start[2], " FINISHED"), collapse=""))
+  return(outdat)
 }
 
 
 ## A wrapper for quickly simulating from each of the interweaving/
 ## alternating samplers.
-samwrapper <- function(n, start, dat, Qv, Qw, inter, samp){
+samwrapper <- function(n, start, dat, Qv, Qw, m0, C0, inter, samp){
   if(samp==1){
-    out <- statedistinter(n, start, dat, Qv, Qw, inter)
+    out <- statedistinter(n, start, dat, Qv, Qw, m0, C0, inter)
   }
   if(samp==2){
-    out <- stateerrorinter(n, start, dat, Qv, Qw, inter)
+    out <- stateerrorinter(n, start, dat, Qv, Qw, m0, C0, inter)
   }
   if(samp==3){
-    out <- disterrorinter(n, start, dat, Qv, Qw, inter)
+    out <- disterrorinter(n, start, dat, Qv, Qw, m0, C0, inter)
   }
   if(samp==4){
-    out <- tripleinter(n, start, dat, Qv, Qw, c(inter, inter))
+    out <- tripleinter(n, start, dat, Qv, Qw, m0, C0, c(inter, inter))
   }
   return(out)
 }
@@ -366,44 +322,56 @@ llsim <- function(T, V, W, m0, C0){
   return(out)
 }
 
+samoutsetup <- function(n, T){
+  out <- data.frame(matrix(0, nrow=n, ncol=T+11))
+  colnames(out) <- c("logconV", "adrejV", 
+                     "logconW", "adrejW", 
+                     "kernel", "stime", "V", "W",
+                     "sigv", "sigw",
+                     paste("theta",0:T,sep=""))
+  return(out)
+}
+
 ## state sampler: samples V and W conditional on states
-statesam <- function(n, start, dat, Qv, Qw){
+statesam <- function(n, start, dat, Qv, Qw, m0=0, C0=10^7){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- mcmc(matrix(0, nrow=n, ncol=T+6))
-  colnames(out) <- c(paste("theta",0:T,sep=""), "V", "W", "sigv", "sigw", "kernel")
+  out <- samoutsetup(n, T)
   for(i in 1:n){
-    theta <- thetaiter(dat, V, W)
+    ptma <- proc.time()
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
+    ptmb <- proc.time()
+    smoothtime <- ptmb[3]-ptma[3]
     VWiter <- VWthetaiter(dat, theta, Qv, Qw)
     V <- VWiter[1]
     W <- VWiter[2]
     sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
     sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
-    out[i,] <- c(theta,V,W,sigv,sigw,NA)
+    out[i,] <- c(NA,NA,NA,NA,NA,smoothtime,V,W,sigv,sigw,theta)
   }
   return(out)
 }
 
 ## scaled error sampler: samples V and W conditional on the scaled observation
 ## errors (plus the initial state, theta_0)
-errorsam <- function(n, start, dat, Qv, Qw){
+errorsam <- function(n, start, dat, Qv, Qw, m0=0, C0=10^7){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
-  out <- mcmc(matrix(0, nrow=n, ncol=T+6))
-  colnames(out) <- c(paste("theta",0:T,sep=""), "V", "W", "sigv", "sigw", "kernel")
+  out <- samoutsetup(n, T)
   for(i in 1:n){
-    theta <- thetaiter(dat, V, W)
-    psi <- psitrans(dat, theta, sigv)
+    ptma <- proc.time()
+    psi <- mcfapssmooth(dat, V, W, m0, C0)
+    ptmb <- proc.time()
+    smoothtime <- ptmb[3]-ptma[3]
     Vout <- Vpsiiter(dat, psi, W, Qv)
     V <- Vout[1]
     sigv <- Vout[2]
     W <- Wpsiiter(dat, psi, sigv, Qw)
     sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
     theta <- thetapsitrans(dat, psi, sigv)
-    out[i,] <- c(theta,V,W,sigv,sigw,NA)
+    out[i,] <- c(NA,NA,NA,NA,NA, smoothtime, V, W, sigv, sigw, theta)
   }
   return(out)
 }
@@ -411,173 +379,200 @@ errorsam <- function(n, start, dat, Qv, Qw){
 
 ## scaled disturbance sampler: samples V and W conditional on the scaled
 ## system disturbances (plus the initial state, theta_0)
-distsam <- function(n, start, dat, Qv, Qw){
+distsam <- function(n, start, dat, Qv, Qw, m0=0, C0=10^7){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
+  out <- samoutsetup(n, T)
   sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
-  out <- mcmc(matrix(0, nrow=n, ncol=T+6))
-  colnames(out) <- c(paste("theta",0:T,sep=""), "V", "W", "sigv", "sigw", "kernel")
   for(i in 1:n){
-    theta <- thetaiter(dat, V, W)
+    ptma <- proc.time()
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     gam <- gamtrans(theta, sigw)
+    ptmb <- proc.time()
+    smoothtime <- ptmb[3]-ptma[3]
     V <- Vgamiter(dat, gam, sigw, Qv)
     Wout <- Wgamiter(dat, gam, V, Qw) 
     W <- Wout[1]
     sigw <- Wout[2]
     theta <- thetagamtrans(gam, sigw)
     sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
-    out[i,] <- c(theta,V,W,sigv,sigw,NA)
+    out[i,] <- c(NA,NA,NA,NA,NA, smoothtime, V, W, sigv, sigw, theta)
+
   }
   return(out)
 }
 
 ## state + dist interveaving or alternating sampler
-statedistinter <- function(n, start, dat, Qv, Qw, inter=TRUE){
+statedistinter <- function(n, start, dat, Qv, Qw, m0=0, C0=10^7, inter=TRUE){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- mcmc(matrix(0, nrow=n, ncol=T+6))
-  colnames(out) <- c(paste("theta",0:T,sep=""), "V", "W", "sigv", "sigw", "kernel")
+  out <- samoutsetup(n, T)
   for(i in 1:n){
     ## state sampler
-    theta <- thetaiter(dat, V, W)
+    ptma <- proc.time()
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
+    ptmb <- proc.time()
+    smoothtime <- ptmb[3]-ptma[3]
     VWiter <- VWthetaiter(dat, theta, Qv, Qw)
     V <- VWiter[1]
     W <- VWiter[2]
+    sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
     ## scaled disturbance sampler
     if(!inter){
-      theta <- thetaiter(dat, V, W)
+      ptma <- proc.time()
+      theta <- mcfathsmooth(dat, V, W, m0, C0)
+      gam <- gamtrans(theta, sigw)
+      ptmb <- proc.time()
+      smoothtime <- ptmb[3]-ptma[3] + smoothtime
     }
-    sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
-    gam <- gamtrans(theta, sigw)
+    else{
+      gam <- gamtrans(theta, sigw)
+    }
     V <- Vgamiter(dat, gam, sigw, Qv)
     Wout <- Wgamiter(dat, gam, V, Qw)
     W <- Wout[1]
     sigw <- Wout[2]
     theta <- thetagamtrans(gam, sigw)
     sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
-    out[i,] <- c(theta,V,W,sigv,sigw,NA)
+    out[i,] <- c(NA,NA,NA,NA,NA, smoothtime, V, W, sigv, sigw, theta)
   }
   return(out)
 }
 
 ## state + error interveaving/alternating sampler
-stateerrorinter <- function(n, start, dat, Qv, Qw, inter=TRUE){
+stateerrorinter <- function(n, start, dat, Qv, Qw, m0=0, C0=10^7, inter=TRUE){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- mcmc(matrix(0, nrow=n, ncol=T+6))
-  colnames(out) <- c(paste("theta",0:T,sep=""), "V", "W", "sigv", "sigw", "kernel")
+  out <- samoutsetup(n, T)
   for(i in 1:n){
     ## state sampler
-    theta <- thetaiter(dat, V, W)
+    ptma <- proc.time()
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
+    ptmb <- proc.time()
+    smoothtime <- ptmb[3]-ptma[3]
     VWiter <- VWthetaiter(dat, theta, Qv, Qw)
     V <- VWiter[1]
     W <- VWiter[2]
+    sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
     ## scaled error sampler
     if(!inter){
-      theta <- thetaiter(dat, V, W)
+      ptma <- proc.time()
+      psi <- mcfapssmooth(dat, V, W, m0, C0)
+      ptmb <- proc.time()
+      smoothtime <- ptmb[3]-ptma[3] + smoothtime
     }
-    sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
-    psi <- psitrans(dat, theta, sigv)
+    else{
+      psi <- psitrans(dat, theta, sigv)
+    }
     Vout <- Vpsiiter(dat, psi, W, Qv)
     V <- Vout[1]
     sigv <- Vout[2]
     W <- Wpsiiter(dat, psi, sigv,  Qw)
     sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
     theta <- thetapsitrans(dat, psi, sigv)
-    out[i,] <- c(theta,V,W,sigw,sigv,NA)
+    out[i,] <- c(NA,NA,NA,NA,NA, smoothtime, V, W, sigv, sigw, theta)
   }
   return(out)
 }
 
 ## dist + error interveaving/alternating sampler
-disterrorinter <- function(n, start, dat, Qv, Qw, inter=TRUE){
+disterrorinter <- function(n, start, dat, Qv, Qw, m0=0, C0=10^7, inter=TRUE){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
   sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
-  out <- mcmc(matrix(0, nrow=n, ncol=T+6))
-  colnames(out) <- c(paste("theta",0:T,sep=""), "V", "W", "sigv", "sigw", "kernel")
+  out <- samoutsetup(n, T)
   for(i in 1:n){
     ## scaled disturbance sampler
-    theta <- thetaiter(dat, V, W)
+    ptma <- proc.time()
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     gam <- gamtrans(theta, sigw)
+    ptmb <- proc.time()
+    smoothtime <- ptmb[3]-ptma[3]
     V <- Vgamiter(dat, gam, sigw, Qv)
     Wout <- Wgamiter(dat, gam, V, Qw)
     W <- Wout[1]
     sigw <- Wout[2]
     ## scaled error sampler
     if(!inter){
-      theta <- thetaiter(dat, V, W)
+      ptma <- proc.time()
+      psi <- mcfapssmooth(dat, V, W, m0, C0)
+      ptmb <- proc.time()
+      smoothtime <- ptmb[3]-ptma[3] + smoothtime
     }
     else{
+      sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
       theta <- thetagamtrans(gam, sigw)
+      psi <- psitrans(dat, theta, sigv)
     }
-    sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
-    psi <- psitrans(dat, theta, sigv)
     Vout <- Vpsiiter(dat, psi, W, Qv)
     V <- Vout[1]
     sigv <- Vout[2]
     W <- Wpsiiter(dat, psi, sigv, Qw)
     sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
     theta <- thetapsitrans(dat, psi, sigv)
-    out[i,] <- c(theta,V,W,sigv,sigw,NA)
+    out[i,] <- c(rep(NA,5), smoothtime, V, W, sigv, sigw, theta)
   }
     return(out)
 }
 
 ## state + dist + error interweaving/alternating sampler
-tripleinter <- function(n, start, dat, Qv, Qw, inter=c(TRUE, TRUE)){
+tripleinter <- function(n, start, dat, Qv, Qw, m0=0, C0=10^7, inter=c(TRUE, TRUE)){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- mcmc(matrix(0, nrow=n, ncol=T+6))
-  colnames(out) <- c(paste("theta",0:T,sep=""), "V", "W", "sigv", "sigw", "kernel")
+  out <- samoutsetup(n, T)
   for(i in 1:n){
     ## state sampler
-    theta <- thetaiter(dat, V, W)
+    ptma <- proc.time()
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
+    ptmb <- proc.time()
+    smoothtime <- ptmb[3]-ptma[3]
     VWiter <- VWthetaiter(dat, theta, Qv, Qw)
     V <- VWiter[1]
     W <- VWiter[2]
+    sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
     ## scaled disturbance sampler
     if(!inter[1]){
-      theta <- thetaiter(dat, V, W)
+      ptma <- proc.time()
+      theta <- mcfathsmooth(dat, V, W, m0, C0)
+      gam <- gamtrans(theta, sigw)
+      ptmb <- proc.time()
+      smoothtime <- smoothtime + ptmb[3]-ptma[3]
     }
-    sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
-    gam <- gamtrans(theta, sigw)
+    else{
+      gam <- gamtrans(theta, sigw)
+    }
     V <- Vgamiter(dat, gam, sigw, Qv)
     Wout <- Wgamiter(dat, gam, V, Qw)
     W <- Wout[1]
     sigw <- Wout[2]
     ## scaled error sampler
     if(!inter[2]){
-      theta <- thetaiter(dat, V, W)
+      ptma <- proc.time()
+      psi <- mcfapssmooth(dat, V, W, m0, C0)
+      ptmb <- proc.time()
+      smoothtime <- smoothtime + ptmb[3]-ptma[3]
     }
     else{
+      sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
       theta <- thetagamtrans(gam, sigw)
+      psi <- psitrans(dat, theta, sigv)
     }
-    sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
-    psi <- psitrans(dat, theta, sigv)
     Vout <- Vpsiiter(dat, psi, W, Qv)
     V <- Vout[1]
     sigv <- Vout[2]
     W <- Wpsiiter(dat, psi, sigv,  Qw)
     theta <- thetapsitrans(dat, psi, sigv)
     sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
-    out[i,] <- c(theta,V,W,sigv,sigw, NA)
+    out[i,] <- c(rep(NA,5), smoothtime, V, W, sigv, sigw, theta)
   }
     return(out)
 }
 
-## samples theta conditional on V and W
-thetaiter <- function(dat, V, W){
-  mod <- dlmModPoly(order=1, dV=V, dW=W)
-  filt <- dlmFilter(dat, mod)
-  theta <- dlmBSample(filt)
-  return(theta)
-}
 
 ## transforms theta to gamma
 gamtrans <- function(theta, sigw){
@@ -624,8 +619,8 @@ thetapsitrans <- function(dat, psi, sigv){
 }
 
 rgig2 <- function(n, a, b, p, eps=.0001){
-  ## transform into a GIG RV that won't have numerical probs
-  ## if a or b are near zero
+  ## transform into a GIG RV that won't have numerical probs if
+  ## a or b are near zero
   ## note: a is the coef of 1/x, b is the coef of x in dgig(x)
   if(a < eps | b < eps){
     g <- sqrt(b/a)
@@ -722,106 +717,27 @@ Wthetaiter <- function(dat, theta, Qw){
   return(W)
 }
 
-
-randkerniter <- function(dat, V, W, sigv, sigw, theta, Qv, Qw, probs=c(1/3, 1/3, 1/3)){
-  kernels <- c("state", "dist", "error")
-  kernel <- sample(kernels, 1, prob=probs)
-  if(kernel=="state"){
-    theta <- thetaiter(dat, V, W)
-    VWiter <- VWthetaiter(dat, theta, Qv, Qw)
-    V <- VWiter[1]
-    W <- VWiter[2]
-    sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
-    sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
-  }
-  if(kernel=="error"){
-    theta <- thetaiter(dat, V, W)
-    psi <- psitrans(dat, theta, sigv)
-    Vout <- Vpsiiter(dat, psi, W, Qv)
-    V <- Vout[1]
-    sigv <- Vout[2]
-    W <- Wpsiiter(dat, psi, sigv, Qw)
-    sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
-    theta <- thetapsitrans(dat, psi, sigv)
-  }
-  if(kernel=="dist"){
-    theta <- thetaiter(dat, V, W)
-    gam <- gamtrans(theta, sigw)
-    V <- Vgamiter(dat, gam, sigw, Qv)
-    Wout <- Wgamiter(dat, gam, V, Qw)
-    W <- Wout[1]
-    sigw <- Wout[2]
-    sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
-    theta <- thetagamtrans(gam, sigw)
-  }
-  out <- list(theta=theta, V=V, W=W, sigv=sigv, sigw=sigw, kernel=kernel)
-  return(out)
-}
-
-randkernsam <- function(n, start, dat, Qv, Qw, probs=c(1/3, 1/3, 1/3)){
-  T <- length(dat)
-  V <- start[1]
-  W <- start[2]
-  sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
-  sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
-  out <- data.frame(matrix(0, nrow=n, ncol=T+6))
-  colnames(out) <- c(paste("theta",0:T,sep=""), "V", "W", "sigv", "sigw", "kernel")
-  for(i in 1:n){
-    iter <- randkerniter(dat, V, W, sigv, sigw, theta, Qv, Qw, probs)
-    theta <- iter$theta
-    V <- iter$V
-    W <- iter$W
-    kernel <- iter$kernel
-    sigv <- iter$sigv
-    sigw <- iter$sigw
-    out[i,1:(T+5)] <- c(theta,V,W,sigv,sigw)
-    out[i,T+6] <- kernel
-  }
-  return(out)
-}
-
-partialcissam <- function(n, start, dat, Qv, Qw){
-  T <- length(dat)
-  V <- start[1]
-  W <- start[2]
-  out <- mcmc(matrix(0, nrow=n, ncol=T+6))
-  colnames(out) <- c(paste("theta",0:T,sep=""), "V", "W", "sigv", "sigw", "kernel")
-  for(i in 1:n){
-    theta <- thetaiter(dat, V, W)
-    VWiter <- VWthetaiter(dat, theta, Qv, Qw)
-    V <- VWiter[1]
-    W <- VWiter[2]
-    sigw <- (2*rbinom(1,1,1/2)-1)*sqrt(W)
-    gam <- gamtrans(theta, sigw)
-    Wout <- Wgamiter(dat, gam, V, Qw)
-    W <- Wout[1]
-    sigw <- Wout[2]
-    theta <- thetagamtrans(gam, sigw)
-    sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
-    out[i,] <- c(theta,V,W,sigv,sigw,NA)
-  }
-  return(out)
-}
-
-
-fullcissam <- function(n, start, dat, Qv, Qw){
+fullcissam <- function(n, start, dat, Qv, Qw, m0=0, C0=10^7){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
   p <- -(T-1)/2
-  out <- mcmc(matrix(0, nrow=n, ncol=T+6))
-  colnames(out) <- c(paste("theta",0:T,sep=""), "V", "W", "sigv", "sigw", "kernel")
+  out <- samoutsetup(n, T)  
   for(i in 1:n){
-    theta <- thetaiter(dat, V, W)
-    av <- sum((dat-theta[-1])^2)
-    bv <- 1/Qv
-    V <- rgig2(1, av, bv, p)
-    sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
-    psi <- psitrans(dat, theta, sigv)
+    ptma <- proc.time()
+    psi <- mcfapssmooth(dat, V, W, m0, C0)
+    ptmb <- proc.time()
+    smoothtime <- ptmb[3]-ptma[3]
+    ## V step
     Vout <- Vpsiiter(dat, psi, W, Qv)
     V <- Vout[1]
     sigv <- Vout[2]
     theta <- thetapsitrans(dat, psi, sigv)
+    av <- sum((dat-theta[-1])^2)
+    bv <- 1/Qv
+    V <- rgig2(1, av, bv, p)
+    sigv <- (2*rbinom(1,1,1/2)-1)*sqrt(V)
+    ## W step
     aw <- sum((theta[-1]-theta[-(T+1)])^2)
     bw <- 1/Qw
     W <- rgig2(1, aw, bw, p) 
@@ -831,7 +747,7 @@ fullcissam <- function(n, start, dat, Qv, Qw){
     W <- Wout[1]
     sigw <- Wout[2]
     theta <- thetagamtrans(gam, sigw)
-    out[i,] <- c(theta,V,W,sigv,sigw,NA)
+    out[i,] <- c(rep(NA,5), smoothtime, V, W, sigv, sigw, theta)
   }
   return(out)
 }

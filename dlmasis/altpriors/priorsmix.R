@@ -7,8 +7,9 @@ simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
 sams <- c("state", "dist", "error", "sdint", "seint", "deint",
           "triint", "sdalt", "sealt", "dealt", "trialt",
-          "sdkern", "sekern", "dekern", "trikern",
-          "fullcis", "partialcis")
+          "fullcis")
+simdata$m0 <- 0
+simdata$C0 <- 10^7
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
 n <- 3000

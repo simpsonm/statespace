@@ -1,4 +1,4 @@
-awolthsmooth <- function(y, V, W, m0, C0){
+mcfathsmooth <- function(y, V, W, m0, C0){
   n <- length(y)
   O0 <- 1/C0 + 1/W
   Ot <- 1/V + 2/W
@@ -26,7 +26,7 @@ awolthsmooth <- function(y, V, W, m0, C0){
   return(theta)
 }
 
-awolpssmooth <- function(y, V, W, m0, C0){
+mcfapssmooth <- function(y, V, W, m0, C0){
   n <- length(y)
   O0 <- 1/W + 1/C0
   Ot <- 2*V/W + 1
