@@ -6,6 +6,8 @@ library(plyr)
 library(xtable)
 library(reshape2)
 library(gridExtra)
+load("../../cors/newpostcors.RData")
+newpostcors <- newpostcors[newpostcors$V.T <= 10^2 & newpostcors$W.T <= 10^2,]
 load("../../mixing/samout.RData")
 samout2 <- samout
 load("../../wrongscale/OldDAs/samout.RData")
@@ -79,8 +81,6 @@ plotfun <- function(meltedsam, vars, sams, T, title){
          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
   return(out)
 }
-load("../../cors/newpostcors.RData")
-newpostcors <- newpostcors[newpostcors$V.T <= 10^2 & newpostcors$W.T <= 10^2,]
 plotfuntime <- function(meltedsam, vars, sams, T, title, lims){
   castedsam <- dcast(meltedsam, 
                      formula=sampler + V.T + W.T + variable + 
@@ -126,12 +126,12 @@ plotfuncor <- function(newpostcors, var, title){
 ## baseESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=8, out.width=".7\\textwidth"
 vars <- c("V.ES", "W.ES")
 title <- "ESP for V and W in the base algorithms, T="
-##p1 <- plotfun(meltedsam, vars, c(base,wrongs), 10, title)
+p1 <- plotfun(meltedsam, vars, c(base,wrongs), 10, title)
 p2 <- plotfun(meltedsam, vars, c(base,wrongs), 100, title)
 p3 <- plotfun(meltedsam, vars, c(base,wrongs), 1000, title)
-##p1
-ggsave(filename="baseESplot1.pdf", plot=p2, width=8, height=3.75)
-ggsave(filename="baseESplot2.pdf", plot=p3, width=8, height=3.75)
+ggsave(filename="baseESplot10.pdf", plot=p1, width=8, height=3.75)
+ggsave(filename="baseESplot100.pdf", plot=p2, width=8, height=3.75)
+ggsave(filename="baseESplot1000.pdf", plot=p3, width=8, height=3.75)
 
 
 
@@ -166,12 +166,12 @@ ggsave(filename="corplot8.pdf", plot=pwb, width=4, height=3)
 vars <- c("V.ES", "W.ES")
 sams <- c("deint", "seint", "sdint", "triint", "fullcis")
 title <- "ESP for V and W in the GIS and CIS algorithms, T="
-##p1 <- plotfun(meltedsam, vars, sams, 10, title)
+p1 <- plotfun(meltedsam, vars, sams, 10, title)
 p2 <- plotfun(meltedsam, vars, sams, 100, title)
 p3 <- plotfun(meltedsam, vars, sams, 1000, title)
-##p1
-ggsave(filename="intESplot1.pdf", plot=p2, width=8, height=3.75)
-ggsave(filename="intESplot2.pdf", plot=p3, width=8, height=3.75)
+ggsave(filename="intESplot10.pdf", plot=p1, width=8, height=3.75)
+ggsave(filename="intESplot100.pdf", plot=p2, width=8, height=3.75)
+ggsave(filename="intESplot1000.pdf", plot=p3, width=8, height=3.75)
 
 
 
@@ -179,12 +179,12 @@ ggsave(filename="intESplot2.pdf", plot=p3, width=8, height=3.75)
 vars <- c("V.ES", "W.ES")
 sams <- c(ints)
 title <- "ESP for V and W in the alternating algorithms, T="
-##p1 <- plotfun(meltedsam, vars, sams, 10, title)
+p1 <- plotfun(meltedsam, vars, sams, 10, title)
 p2 <- plotfun(meltedsam, vars, sams, 100, title)
 p3 <- plotfun(meltedsam, vars, sams, 1000, title)
-##p1
-ggsave(filename="altESplot1.pdf", plot=p2, width=7, height=3.75)
-ggsave(filename="altESplot2.pdf", plot=p3, width=7, height=3.75)
+ggsave(filename="altESplot10.pdf", plot=p1, width=7, height=3.75)
+ggsave(filename="altESplot100.pdf", plot=p2, width=7, height=3.75)
+ggsave(filename="altESplot1000.pdf", plot=p3, width=7, height=3.75)
 
 
 
@@ -192,22 +192,22 @@ ggsave(filename="altESplot2.pdf", plot=p3, width=7, height=3.75)
 vars <- c("V.time", "W.time")
 sams <- c("dist", "error", "deint", "state", "seint", "sdint", "triint", "fullcis")
 title <- "Log minutes per 1000 effective draws for base and interweaving samplers, T="
-##p1 <- plotfuntime(meltedsam, vars, sams, 10, title, 25*60/1000)
+p1 <- plotfuntime(meltedsam, vars, sams, 10, title, c(-5,3.5))
 p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
 p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, c(-1,8))
-##p1
-ggsave(filename="baseinttimeplot1.pdf", plot=p2, width=10, height=3.25)
-ggsave(filename="baseinttimeplot2.pdf", plot=p3, width=10, height=3.25)
+ggsave(filename="baseinttimeplot10.pdf", plot=p1, width=10, height=3.25)
+ggsave(filename="baseinttimeplot100.pdf", plot=p2, width=10, height=3.25)
+ggsave(filename="baseinttimeplot1000.pdf", plot=p3, width=10, height=3.25)
 
 
 
 ## altinttimeplot, fig.cap=cap, echo=FALSE, fig.width=8, fig.height=3.75, out.width=".49\\textwidth"
 sams <- c(alts,ints)
 title <- "Log minutes per 1000 effective draws for alternating samplers, T="
-##p1 <- plotfuntime(meltedsam, vars, sams, 10, title, 25*60/1000)
+p1 <- plotfuntime(meltedsam, vars, sams, 10, title, c(-5,1))
 p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
 p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, c(-1,8))
-ggsave(filename="altinttimeplot1.pdf", plot=p2, width=8, height=3.75)
-ggsave(filename="altinttimeplot2.pdf", plot=p3, width=8, height=3.75)
-
+ggsave(filename="altinttimeplot10.pdf", plot=p1, width=8, height=3.75)
+ggsave(filename="altinttimeplot100.pdf", plot=p2, width=8, height=3.75)
+ggsave(filename="altinttimeplot1000.pdf", plot=p3, width=8, height=3.75)
 

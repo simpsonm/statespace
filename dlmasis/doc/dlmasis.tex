@@ -123,7 +123,7 @@ The subclass of DLMs we will focus on sets $V_t=V$ and $W_t=W$ and treats $F_{t}
   y_t|\theta,V,W \stackrel{ind}{\sim} & N_k(F_t\theta_t,V) &
   \theta_t|\theta_{0:t-1},V,W  \sim & N_p(G_t\theta_{t-1},W) \label{dlmbotheqs}
 \end{align}
-for $t=1,2,\cdots T$. To complete the model specification in a Bayesian context, we need priors on $\theta_0$, $V$, and $W$. We will use the standard conditionally conjugate approach and assume that they are mutually independent a priori and that $\theta_0 \sim N_p(m_0, C_0)$, $V \sim IW(\Lambda_V, \lambda_V)$ and $W \sim IW(\Lambda_W, \lambda_W)$ where $m_0$, $C_0$, $\Lambda_V$, $\lambda_V$, $\Lambda_W$, and $\lambda_W$ are known hyperparameters and $IW(\Lambda, \lambda)$ denotes the inverse Wishart distribution with degrees of freedom $\lambda$ and positive definite scale matrix $\Lambda$. Then we can write the full joint distribution of $(V,W,\theta,y)$ is
+for $t=1,2,\cdots T$. To complete the model specification in a Bayesian context, we need priors on $\theta_0$, $V$, and $W$. We will use the standard conditionally conjugate approach and assume that they are mutually independent a priori and that $\theta_0 \sim N_p(m_0, C_0)$, $V \sim IW(\Lambda_V, \lambda_V)$ and $W \sim IW(\Lambda_W, \lambda_W)$ where $m_0$, $C_0$, $\Lambda_V$, $\lambda_V$, $\Lambda_W$, and $\lambda_W$ are known hyperparameters and $IW(\Lambda, \lambda)$ denotes the inverse Wishart distribution with degrees of freedom $\lambda$ and positive definite scale matrix $\Lambda$. Then we can write the full joint distribution of $(V,W,\theta,y)$ as
 \begin{align}
   p(&V,W,\theta,y) \propto \exp\left[-\frac{1}{2}(\theta_0-m_0)'C_0^{-1}(\theta_0-m_0)\right] \nonumber\\
   &\times   |V|^{-(\lambda_V + k + T + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_VV^{-1}\right)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T(y_t - F_t\theta_t)'V^{-1}(y_t - F_t\theta_t)\right] \nonumber\\
@@ -174,10 +174,10 @@ A natural way to create new DAs is by reparameterizing old DAs. \citeasnoun{papa
 
 We follow \citeasnoun{papaspiliopoulos2007general}'s suggestion to construct a pivotal quantity in order to find an ancillary augmentation. In particular, in order to obtain an ancillary augmentation for a variance parameter we must center the sufficient augmentation and scale it by the square root of that parameter. Based on this intuition, notice from equation \eqref{dlmbotheqs} that if we hold $V$ constant then $\theta$ is an SA for $W$ conditional on $V$, i.e. for $VV|W$. Similarly $\theta$ is an AA for $V|W$. This suggests that if we center and scale $\theta_{t}$ by $W$ appropriately for all $t$ we will have an ancillary augmentation for $V$ and $W$ jointly, thus creating the {\it scaled disturbances} (SDs).
 
-In the general DLM, the disturbances are vectors so to define the scaled disturbances let $L_W$ denote the Cholesky decomposition of $W$, i.e. the lower triangle matrix $L_W$ such that $L_WL_W' =W$. Then we will define the scaled disturbances $\gamma=\gamma_{0:T}=(\gamma_0',\gamma_1',\cdots,\gamma_T')'$ by $\gamma_0=\theta_0$ and $\gamma_t = L_W^{-1}(\theta_t-G_t\theta_{t-1})$ for $t=1,2,\cdots,T$. There are actually $p!$ different versions of the scaled disturbances depending on how we order the elements of $\theta_t$, as \citeasnoun{meng1998fast} note for EM algorithms in a different class of models. We will sidestep the issue of the best ordering of the latent states. No matter which ordering is chosen, we can confirm our intuition that the scaled disturbances are an AA for $V$ and $W$ jointly. The reverse transformation is defined recursively by $\theta_0=\gamma_0$ and $\theta_t=L_W\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. Then the Jacobian is block lower triangular with the identity matrix and $T$ copies of $L_W$ along the diagonal blocks, so $|J| = |L_W|^T=|W|^{T/2}$. From equation \eqref{dlmjoint} we can write the full joint distribution of $(V,W,\gamma,y)$ as
+In the general DLM the disturbances are vectors, so to define the scaled disturbances let $L_W$ denote the Cholesky decomposition of $W$, i.e. the lower triangle matrix $L_W$ such that $L_WL_W' =W$. Then we will define the scaled disturbances $\gamma=\gamma_{0:T}=(\gamma_0',\gamma_1',\cdots,\gamma_T')'$ by $\gamma_0=\theta_0$ and $\gamma_t = L_W^{-1}(\theta_t-G_t\theta_{t-1})$ for $t=1,2,\cdots,T$. There are actually $p!$ different versions of the scaled disturbances depending on how we order the elements of $\theta_t$, as \citeasnoun{meng1998fast} note for EM algorithms in a different class of models. We will sidestep the issue of the best ordering of the latent states. No matter which ordering is chosen, we can confirm our intuition that the scaled disturbances are an AA for $V$ and $W$ jointly. The reverse transformation is defined recursively by $\theta_0=\gamma_0$ and $\theta_t=L_W\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. Then the Jacobian is block lower triangular with the identity matrix and $T$ copies of $L_W$ along the diagonal blocks, so $|J| = |L_W|^T=|W|^{T/2}$. From equation \eqref{dlmjoint} we can write the full joint distribution of $(V,W,\gamma,y)$ as
  \begin{align}
   p(&V,W,\gamma,y) \propto \exp\left[-\frac{1}{2}(\gamma_0-m_0)'C_0^{-1}(\gamma_0-m_0)\right] \exp\left[-\frac{1}{2}\gamma_t'\gamma_t\right] \nonumber\\
-  &\times |W|^{-(\lambda_W + p + T + 2)/2} |V|^{-(\lambda_V + k + T + 2)/2} \exp\left[-\frac{1}{2}tr\left(\Lambda_WW^{-1}\right)\right]  \nonumber\\
+  &\times |W|^{-(\lambda_W + p + 2)/2} |V|^{-(\lambda_V + k + T + 2)/2} \exp\left[-\frac{1}{2}tr\left(\Lambda_WW^{-1}\right)\right]  \nonumber\\
   &\times \exp\left[-\frac{1}{2}\left(tr\left(\Lambda_VV^{-1}\right) + \sum_{t=1}^T\left[y_t-F_t\theta_t(\gamma,W)\right]'V^{-1}\left[y_t-F_t\theta_t(\gamma,W)\right]\right)\right] \label{dlmdistjoint}
  \end{align}
 where $\theta_t(\gamma,W)$ denotes the recursive back transformation defined by the scaled disturbances. So ultimately under the scaled disturbance parameterization we can write the model as
@@ -194,7 +194,7 @@ It is not straightforward to write down the model in terms of $\psi=(\psi_0',\ps
 \begin{align}
     p(&V,W,\psi,y) \propto \exp\left[-\frac{1}{2}(\psi_0-m_0)'C_0^{-1}(\psi_0-m_0)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T\psi_t'\psi_t\right] \nonumber\\
   &\times |V|^{-(\lambda_V + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Lambda_VV^{-1}\right)\right]  \times |W|^{-(\lambda_W + p + T + 2)/2} \nonumber\\
-   & \exp\left[-\frac{1}{2}\left(tr\left(\Lambda_WW^{-1}\right) + (y_t - \mu_t)'(F_tWF_t')^{-1}(y_t-\mu_t)\right)\right]\label{dlmerrorjoint}
+   & \exp\left[-\frac{1}{2}\left(tr\left(\Lambda_WW^{-1}\right) + \sum_{t=1}^T(y_t - \mu_t)'(F_tWF_t')^{-1}(y_t-\mu_t)\right)\right]\label{dlmerrorjoint}
 \end{align}
 where we define $\mu_1 = L_V\psi_1 + F_1G_1\psi_0$ and for $t=2,3,\cdots,T$, $\mu_t =L_V\psi_t + F_tG_tF_{t-1}^{-1}(y_{t-1} - L_{V}\psi_{t-1})$. The $|F_t|^{-1}$'s have been absorbed into the normalizing constant, but if they depended on some unknown parameter then we could not do this and as a result would have to take them into account in the Gibbs step for that parameter. Now we can write the model in terms of the scaled error parameterization:
 \begin{align*}
@@ -304,7 +304,7 @@ where $v_t = y_t - F_t\theta_t$ and $w_t = \theta_t - G_t\theta_{t-1}$. Putting 
 \end{alg*}
 \noindent As we will show in Section \ref{sec:LLM}, the Markov chain constructed using the state sampler can mix poorly in some regions of the parameter space. For example, in a dynamic regression through the orgin with stationary regression coefficient, it is known that if the variance of the latent states is too small relative to the variance of the data mixing will be poor for $W$ \cite{fruhwirth2004efficient}.
 
-Next, we can use the scaled disturbances, $\gamma$, in order to construct a second DA algorithm called the {\it scaled disturbance sampler}. In the smoothing step, we need to obtain a draw from $p(\gamma|V,W,y)$, which is proportional to equation \eqref{dlmdistjoint}. This density is also Gaussian but does not have a tridiagonal precision matrix. As a result, in order to obtain a draw from the conditional posterior of $\gamma$, we use the MCFA to instead draw from $p(\theta|V,W,y)$, then use the definition of the scaled disturbances in order to transform from $\theta$ to $\gamma$. The density $p(V,W|\gamma,y)$ is also proportional to \eqref{dlmdistjoint}, but it is rather complicated and does not appear easy to draw from. It is easy to see that $V|W,\gamma,y \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$ where again $v_t = y_t - F_t\theta_t$ and $\theta_t$ is a function of $\gamma$ and $W$. It is not easy to draw from $p(W|\gamma,y)$ so we abandon drawing $V$ and $W$ jointly. However, the density $p(W|V,\gamma,y)$ is simpler and, at least in the local level model, can be efficiently sampled from (Sections \ref{sec:LLM} and \ref{sec:Append}). As a result, the scaled disturbance sampler has three steps instead of the two of the usual DA algorithm (Algorithm \nameref{alg:DA}). In this algorithm, we draw $V$ before $W$, i.e. $[\gamma|V^{(k)},W^{(k)}] \to [V^{(k+1)}|W^{(k)},\gamma] \to [W^{(k+1)}|V^{(k+1)},\gamma]$. Note that in order to draw $\gamma$, we first draw $\theta$ and transform, and that the draw of $V$ is the same whether we condition on $\gamma$ or $\theta$. As a result, in the scaled disturbance sampler we wait to transform from $\theta$ to $\gamma$ until just before the $W$ step, which reduces the computational cost of the algorithm. Thus the scaled disturbance sampler is as follows:
+Next, we can use the scaled disturbances, $\gamma$, in order to construct a second DA algorithm called the {\it scaled disturbance sampler}. In the smoothing step, we need to obtain a draw from $p(\gamma|V,W,y)$, which is proportional to equation \eqref{dlmdistjoint}. This density is also Gaussian but does not have a tridiagonal precision matrix. As a result, in order to obtain a draw from the conditional posterior of $\gamma$, we use the MCFA to instead draw from $p(\theta|V,W,y)$, then use the definition of the scaled disturbances in order to transform from $\theta$ to $\gamma$. The density $p(V,W|\gamma,y)$ is also proportional to \eqref{dlmdistjoint}, but it is rather complicated and does not appear easy to draw from. It is easy to see that $V|W,\gamma,y \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$ where again $v_t = y_t - F_t\theta_t$ and $\theta_t$ is a function of $\gamma$ and $W$. It is not easy to draw from $p(W|\gamma,y)$ so we abandon drawing $V$ and $W$ jointly. However, the density $p(W|V,\gamma,y)$ is simpler and, at least in the local level model, can be efficiently sampled from (Section \ref{sec:LLM}). As a result, the scaled disturbance sampler has three steps instead of the two of the usual DA algorithm (Algorithm \nameref{alg:DA}). In this algorithm, we draw $V$ before $W$, i.e. $[\gamma|V^{(k)},W^{(k)}] \to [V^{(k+1)}|W^{(k)},\gamma] \to [W^{(k+1)}|V^{(k+1)},\gamma]$. Note that in order to draw $\gamma$, we first draw $\theta$ and transform, and that the draw of $V$ is the same whether we condition on $\gamma$ or $\theta$. As a result, in the scaled disturbance sampler we wait to transform from $\theta$ to $\gamma$ until just before the $W$ step, which reduces the computational cost of the algorithm. Thus the scaled disturbance sampler is as follows:
 \begin{alg*}[SD]Scaled Disturbance Sampler\label{alg:DLMdist}
 \begin{enumerate}
 \item Use the MCFA to sample $\theta \sim p(\theta|V,W,y)$.
@@ -313,7 +313,7 @@ Next, we can use the scaled disturbances, $\gamma$, in order to construct a seco
 \item Draw $W \sim p(W|V,\gamma,y)$.
 \end{enumerate}
 \end{alg*}\noindent
-Once again, this last step is difficult but we demonstrate how to accomplish it when $W$ is a scalar in the local level model in Sections \ref{sec:LLM} and \ref{sec:Append}.
+Once again, this last step is difficult but we demonstrate how to accomplish it when $W$ is a scalar in the local level model in the supplementary materials.
 
 The DA algorithm based on on the scaled errors is called the {\it scaled error sampler} and is similar to the scaled disturbance sampler with a couple of key differences. The conditional densities we are interested in are all proportional to equation \eqref{dlmerrorjoint}. First, the simulation smoothing step in the scaled error sampler can be accomplished directly with the MCFA because the precision matrix of the conditional posterior of $\psi$ retains the necessary tridiagonal structure. Once again, the draw of $V$ and $W$ has to be broken up into two steps. The full conditional distribution of $W$ is inverse Wishart, that is $W|V,\psi,y \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$ where $w_t = \theta_t - G_t\theta_{t-1}$. The density of $V|W,\psi,y$ is in the same class as that of $W|V,\gamma,y$. In fact there is a strong symmetry here --- the joint conditional posterior of $(V,W)$ given $\gamma$ is from the same family of densities as that of $(W,V)$ given $\psi$ so that $V$ and $W$ essentially switch places when we condition on $\psi$ instead of $\gamma$. We again draw $V$ before $W$ so that the scaled-error sampler looks very similar to the scaled disturbance sampler: 
 \begin{alg*}[SE]Scaled Error Sampler\label{alg:DLMerror}
@@ -323,7 +323,7 @@ The DA algorithm based on on the scaled errors is called the {\it scaled error s
 \item Draw $W \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$.
 \end{enumerate}
 \end{alg*}\noindent
-Here the second step is the difficult one, and we demonstrate how to accomplish it in the local level model in Sections \ref{sec:LLM} and \ref{sec:Append}.
+Here the second step is the difficult one.
 
 The wrongly scaled DA algorithms are close analogues to their correctly scaled cousins. Starting with the {\it wrongly scaled disturbance sampler}, we can obtain the required full conditionals from equation \eqref{dlmdisttildejoint}. The simulation smoothing step to draw from $p(\tilde{\gamma}|V,W,y)$ is similar to that of the scaled disturbance sampler --- the density is Gaussian, but the precision matrix is not tridiagonal, so we draw $\theta$ using the MCFA and trandform to obtain a draw of $\tilde{\gamma}$. The density of $V,W|\tilde{\gamma},y$ is too complicated to draw from directly, as was the case when we used the scaled disturbances. In this case, the full conditional distribution of $W$ is the same as its distribution when we condition on the states, i.e. $W|V,\tilde{\gamma},y \sim \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$ with $w_t = \theta_t - G_t\theta_{t-1}$ as before, and $\theta$ a function of $V$ and $\tilde{\gamma}$. The density for $V|\tilde{\gamma},y$ is once again difficult to draw from, but that of $V|W,\tilde{\gamma},y$ is easier to work with, at least in the local level model example in Section \ref{sec:LLM}. So in the wrongly scaled disturbance sampler, we also draw $(V,W)$ in two steps: 
 \begin{alg*}[WSD]Wrongly Scaled Disturbance Sampler\label{alg:DLMwdist}
@@ -334,7 +334,7 @@ The wrongly scaled DA algorithms are close analogues to their correctly scaled c
 \item Draw $W \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$.
 \end{enumerate}
 \end{alg*}\noindent
-Here the third step is difficult and, once again, we demonstrate how to accomplish it in the local level model in Sections \ref{sec:LLM} and \ref{sec:Append}. We could switch the order in which $V$ and $W$ are drawn in this algorithm so that we can draw $W$ before transforming $\theta$ to $\tilde{\gamma}$. This would make each iteration slightly cheaper and probably would not affect the mixing and covergence properties of the algorithm. However, we are more interested in comparing the mixing and convergence properties of the various samplers, so we always sample $V$ before $W$ when we cannot sampler them jointly.
+Now the third step is difficult and once again, we demonstrate how to accomplish it in the local level model in the supplementary materials. We could switch the order in which $V$ and $W$ are drawn in this algorithm so that we can draw $W$ before transforming $\theta$ to $\tilde{\gamma}$. This would make each iteration slightly cheaper and probably would not affect the mixing and covergence properties of the algorithm. However, we are more interested in comparing the mixing and convergence properties of the various samplers, so we always sample $V$ before $W$ when we cannot sampler them jointly.
 
 The {\it wrongly scaled error sampler} depends on equation \eqref{dlmerrortildejoint} for its full conditionals, and is closely related to both the wrongly scaled disturbance sampler and the scaled error sampler. The density of $\tilde{\psi}|V,W,y$ is Gaussian with a tridiagonal precision matrix, so the simulation smoothing step can be accomplished using the MCFA. The density $p(V,W|\tilde{\psi},y)$ is from the same class as $p(W,V|\tilde{\gamma},y)$ so that $V$ and $W$ essentially switch places when we condition on $\tilde{\psi}$ instead of $\tilde{\gamma}$, much like in the correctly scaled case. In particular, $V|W,\tilde{\psi},y \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$ where $v_t = y_t - F_t\theta_t$ and $\theta$ is a function of $W$, $\tilde{\psi}$ and $y$. The density of $W|V,\tilde{\psi},y$ is from the same class as that of $V|W,\tilde{\gamma},y$. So we again draw $V$ and $W$ separately, i.e. 
 \begin{alg*}[WSE]Wongly-Scaled Error Sampler\label{alg:DLMwerror}
@@ -344,7 +344,7 @@ The {\it wrongly scaled error sampler} depends on equation \eqref{dlmerrortildej
 \item Draw $W \sim p(W|V,\tilde{\psi},y)$
 \end{enumerate}
 \end{alg*}\noindent
-Here the last step is the difficult one, which we show how to accomplish in the local level model in Section. \ref{sec:LLM} and \ref{sec:Append}.
+In this sampler, the last step is the difficult one.
 
 The densities $p(V,W|\gamma,y)$ and $p(V,W|\tilde{\psi}$ are both complex to work with and both imply the same full conditional inverse Wishart distribution for $V$, but they differ in their treatment of $W$. Because of the symmetry between the correctly and wrongly scaled versions of each density, the same can be said for $p(V,W|\tilde{\gamma},y)$ and $p(V,W|\psi,y)$. In Section \ref{sec:LLM}, we will show how closely the two distributions are related in the local level model. Now given these five DA algorithms, we can move on to alternating and interweaving algorithms which combine two or more of the various DAs in interesting ways.
 
@@ -473,7 +473,7 @@ Now we can define the various DAs from Section \ref{sec:DAs} in the context of t
 
 \subsection{Full conditionals}\label{sec:LLM:fullcond}
 
-Here we list the full conditional distributions required to contruct each of the MCMC samplers in Section \ref{sec:Algs} for the LLM. Derivations of these conditionals can be found in the supplementary materials. In the state sampler, Algorithm \nameref{alg:DLMstate}, we need $p(\theta|V,W,y)$ and $p(V,W|\theta,y)$. The former is still Gaussian in the local level model so we still use the MCFA mentioned in Section \ref{sec:Algs:base} in order to obtain a draw of $\theta$. The supplementary materials explain how to perform this step in the general DLM and code is provided for accomplishing it in the local level model. As in the more general DLM, $V$ and $W$ are conditionally independent in the posterior given $\theta$. The independent inverse Wishart distributions of Section \ref{sec:Algs:base} turn into inverse gamma distributions: $V\sim IG(a_V,b_V)$  and $W\sim IG(a_W, b_W)$ where $a_V = \alpha_V + T/2$, $b_V = \beta_V + \sum_{t=1}^T(y_t - \theta_t)^2/2$, $a_W = \alpha_W + T/2$, and $b_W = \beta_W + \sum_{t=1}^T(\theta_t - \theta_{t-1})^2/2$.
+Here we list the full conditional distributions required to contruct each of the MCMC samplers in Section \ref{sec:Algs} for the LLM. Derivations of most of these conditionals can be found in the supplementary materials. In the state sampler, Algorithm \nameref{alg:DLMstate}, we need $p(\theta|V,W,y)$ and $p(V,W|\theta,y)$. The former is still Gaussian in the local level model so we still use the MCFA mentioned in Section \ref{sec:Algs:base} in order to obtain a draw of $\theta$. The supplementary materials explain how to perform this step in the general DLM and code is provided for accomplishing it in the local level model. As in the more general DLM, $V$ and $W$ are conditionally independent in the posterior given $\theta$. The independent inverse Wishart distributions of Section \ref{sec:Algs:base} turn into inverse gamma distributions: $V\sim IG(a_V,b_V)$  and $W\sim IG(a_W, b_W)$ where $a_V = \alpha_V + T/2$, $b_V = \beta_V + \sum_{t=1}^T(y_t - \theta_t)^2/2$, $a_W = \alpha_W + T/2$, and $b_W = \beta_W + \sum_{t=1}^T(\theta_t - \theta_{t-1})^2/2$.
 
 In order to construct Algorithm \nameref{alg:DLMdist} we need $p(\gamma|V,W,y)$, $p(V|W,\gamma,y)$ and $p(W|V,\gamma,y)$. Like in the general DLM, $p(V|W,\gamma,y)=p(V|W,\theta,y)$ and we draw $\gamma$ by using the MCFA to draw $\theta$ and transforming, so we simply draw $\theta$, draw $V|W,\theta,y$, then transform to $\gamma$. The only remaining draw is from $p(W|V,\gamma,y)$. In the supplementary materials we show that this density has the form
 \begin{align*}
@@ -481,14 +481,13 @@ p(W|V,\gamma,y) \propto& W^{-\alpha_W - 1}\exp\left[-a_\gamma W + b_\gamma \sqrt
 \end{align*}
 where $a_\gamma =\sum_{t=1}^T(\sum_{j=1}^t\gamma_j)^2/2V$ and $b_\gamma =\sum_{t=1}^T(y_t-\gamma_0)(\sum_{j=1}^t\gamma_j)/V$. 
 
-
 The construction of Algorithm \nameref{alg:DLMerror} in the LLM is similar to that of the scaled disturbance sampler. The MCFA is used to draw $\psi|V,W,y$, like in the general DLM. Again, $p(W|V,\psi,y)=p(W|V,\theta,y)$ so this step can be accomplished by transforming $\psi$ to $\theta$, then computing $a_W$ and $b_W$ as in the local level model version of the state sampler. The density of $V|W,\psi,y$ is
 \begin{align*}
  p(V|W,\psi,y) \propto V^{-\alpha_V - 1}\exp\left[ -a_{\psi}V + b_{\psi}\sqrt{V} -\frac{\beta_V}{V}\right] 
 \end{align*}
-where $a_{\psi}=\sum_{t=1}^T(L\psi_t)^2/2W$ and $b_{\psi}=\sum_{t=1}^T(L\psi_tLy_t)/W$, and we define $Ly_t=y_t-y_{t-1}$ for $t=2,3,\cdots,T$, $Ly_1=y_1 - \psi_0$, $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ and $L\psi_1=\psi_1-0$. In other words, the form of $p(V|W,\psi,y)$ is the same as $p(W|V,\gamma,y)$. The general form of these two densities is $p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b\sqrt{x} -c/x\right]$. In Section \ref{sec:Append:scale} we show that this density is often log concave, in which case adaptive rejection sampling \cite{gilks1992adaptive} works well. When the density is not log concave, we use a $t$ approximation in a rejection sampler for $\log(x)$.
+where $a_{\psi}=\sum_{t=1}^T(L\psi_t)^2/2W$ and $b_{\psi}=\sum_{t=1}^T(L\psi_tLy_t)/W$, and we define $Ly_t=y_t-y_{t-1}$ for $t=2,3,\cdots,T$, $Ly_1=y_1 - \psi_0$, $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ and $L\psi_1=\psi_1-0$. In other words, the form of $p(V|W,\psi,y)$ is the same as $p(W|V,\gamma,y)$. The general form of these two densities is $p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b\sqrt{x} -c/x\right]$. In the supplementary materials we show that this density is often log concave, in which case adaptive rejection sampling \cite{gilks1992adaptive} works well. When the density is not log concave, we use a $t$ approximation in a rejection sampler for $\log(x)$.
 
-The construction of Algorithms \nameref{alg:DLMwdist} and \nameref{alg:DLMwerror}, is similar. The local level model version of these algorithms closely tracks the general DLM version --- the draws of $\tilde{\gamma}$ and $\tilde{\psi}$ are exactly as in Algorithm \nameref{alg:DLMwdist} and Algorithm \nameref{alg:DLMwerror} respectively. In addition, $p(V|W,\tilde{\psi},y)=p(V|W,\theta,y)$ and $p(W|V,\tilde{\gamma},y)=p(W|V,\theta,y)$ so both draws are simply the inverse gamma draws as in the LLM version of the state sampler. Here, $p(W|V,\tilde{\psi},y)$ and $p(V|W,\tilde{\gamma},y)$ have the form $p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b/\sqrt{x} -c/x\right]$, which is closely related to the difficult density from the correctly scaled samplers above. Again, this density is the same as the generalized inverse Gaussian density when $b=0$. For $p(V|W,\tilde{\gamma},y)$ we show in the supplemental materials that $\alpha_{\tilde{\gamma}}=\alpha_V$, $a_{\tilde{\gamma}} = \frac{1}{2W}\sum_{t=1}^T\tilde{\gamma}_t^2$, $b_{\tilde{\gamma}} = \sum_{t=1}^T(y_t - \tilde{\gamma}_0)\sum_{s=1}^t\tilde{\gamma}_s$, and $c_{\tilde{\gamma}} = \beta_V + \frac{1}{2}\sum_{t=1}^T(y_t - \tilde{\gamma}_0)^2$ while for $p(W|V,\tilde{\psi},y)$ we show that $\alpha_{\tilde{\psi}}=\alpha_W$,   $a_{\tilde{\psi}} = \frac{1}{2V}\sum_{t=1}^T\tilde{\psi}_t^2$,  $b_{\tilde{\psi}} = \sum_{t=1}^TL\tilde{y}_tL\tilde{\psi}_t$, and $c_{\tilde{\psi}} = \beta_W + \frac{1}{2}\sum_{t=1}^TL\tilde{y}_t^2$. This density is harder to sampler from because adaptive rejection sampling does not work very well, so we construct a rejection sampler for $\log(x)$ using a $t$ approximation in the appendix (Section \ref{sec:Append:wscale}).
+The construction of Algorithms \nameref{alg:DLMwdist} and \nameref{alg:DLMwerror}, is similar. The local level model version of these algorithms closely tracks the general DLM version --- the draws of $\tilde{\gamma}$ and $\tilde{\psi}$ are exactly as in Algorithm \nameref{alg:DLMwdist} and Algorithm \nameref{alg:DLMwerror} respectively. In addition, $p(V|W,\tilde{\psi},y)=p(V|W,\theta,y)$ and $p(W|V,\tilde{\gamma},y)=p(W|V,\theta,y)$ so both draws are simply the inverse gamma draws as in the LLM version of the state sampler. Here, $p(W|V,\tilde{\psi},y)$ and $p(V|W,\tilde{\gamma},y)$ have the form $p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b/\sqrt{x} -c/x\right]$, which is closely related to the difficult density from the correctly scaled samplers above. Again, this density is the same as the generalized inverse Gaussian density when $b=0$. For $p(V|W,\tilde{\gamma},y)$ we show in the supplemental materials that $\alpha_{\tilde{\gamma}}=\alpha_V$, $a_{\tilde{\gamma}} = \frac{1}{2W}\sum_{t=1}^T\tilde{\gamma}_t^2$, $b_{\tilde{\gamma}} = \sum_{t=1}^T(y_t - \tilde{\gamma}_0)\sum_{s=1}^t\tilde{\gamma}_s$, and $c_{\tilde{\gamma}} = \beta_V + \frac{1}{2}\sum_{t=1}^T(y_t - \tilde{\gamma}_0)^2$ while for $p(W|V,\tilde{\psi},y)$ we show that $\alpha_{\tilde{\psi}}=\alpha_W$,   $a_{\tilde{\psi}} = \frac{1}{2V}\sum_{t=1}^T\tilde{\psi}_t^2$,  $b_{\tilde{\psi}} = \sum_{t=1}^TL\tilde{y}_tL\tilde{\psi}_t$, and $c_{\tilde{\psi}} = \beta_W + \frac{1}{2}\sum_{t=1}^TL\tilde{y}_t^2$. This density is harder to sampler from because adaptive rejection sampling does not work very well, so we construct a rejection sampler for $\log(x)$ using a $t$ approximation in the supplementary materials.
 
 Given the densities discussed above, all of the pieces are in place to construct each of the base, alternating and interweaving algorithms from Section \ref{sec:Algs} for the LLM. In the next secion, we explore the efficacy of each of these algorithms through simulations.
 
@@ -502,8 +501,7 @@ For each dataset and each sampler we obtained $n=3000$ draws and threw away the 
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.7\textwidth]{baseESplot1}
-%\includegraphics[width=0.7\textwidth]{baseESplot2}
+\includegraphics[width=0.7\textwidth]{baseESplot100}
 \caption{Effective sample proportion in the posterior sampler for a time series of length $T=100$, for $V$ and $W$ in the base samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high.}
 \label{baseESplot}
 \end{figure}
@@ -568,8 +566,7 @@ Based on the intuition in Section \ref{sec:Intro:int}, both the GIS and Alt algo
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.7\textwidth]{intESplot1}
-%\includegraphics[width=0.7\textwidth]{intESplot2}
+\includegraphics[width=0.7\textwidth]{intESplot100}
 \caption{ESP in the posterior sampler for $V$ and $W$ in for $T=100$ in all four GIS samplers based on any two or three of the states, scaled disturbances and scaled errors as well as the CIS sampler.}
 \label{intESplot}
 \end{figure}
@@ -578,9 +575,8 @@ We can verify most of these intuitions in Figure \ref{intESplot}. First, the Sta
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.7\textwidth]{altESplot1}
-%\includegraphics[width=0.7\textwidth]{altESplot2}
-\caption{ESP in the posterior sampler for $V$ and $W$ in for $T=100$ in all four alternating samplers based on any two or three of the states, scaled disturbances and scaled errors.}
+\includegraphics[width=0.7\textwidth]{altESplot100}
+\caption{ESP in the posterior sampler for $V$ and $W$ for $T=100$ in all four alternating samplers based on any two or three of the states, scaled disturbances and scaled errors.}
 \label{altESplot}
 \end{figure}
 
@@ -607,8 +603,7 @@ For $T=100$ we see that the pattern we saw for ESP begins also appears for log m
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.8\textwidth]{baseinttimeplot1}
-%\includegraphics[width=0.8\textwidth]{baseinttimeplot2}
+\includegraphics[width=0.8\textwidth]{baseinttimeplot100}
 \caption{Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ in the state, scaled disturbance and scaled error samplers and for all five interweaving samplers.}
 \label{baseinttimeplot}
 \end{figure}
@@ -616,8 +611,7 @@ For $T=100$ we see that the pattern we saw for ESP begins also appears for log m
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=0.7\textwidth]{altinttimeplot1}
-%\includegraphics[width=0.8\textwidth]{altinttimeplot2}
+\includegraphics[width=0.7\textwidth]{altinttimeplot100}
 \caption{Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ in the alternating samplers.}
 \label{altinttimeplot}
 \end{figure}
@@ -670,94 +664,6 @@ The main problem is the interaction between the augmented data likelihood and th
 In the LLM, the conditionally conjugate prior for $\sqrt{W}$ using the scaled disturbances as the DA is a Gaussian distribution --- strictly speaking this prior is on $\pm \sqrt{W}$. If we use this prior for $\pm\sqrt{V}$ as well, the $V$ step in the scaled disturbance sampler becomes a draw from the generalized inverse Gaussian distribution. This prior has been used by \citeasnoun{fruhwirth2011bayesian} and \citeasnoun{fruhwirth2008bayesian} to speed up computation while using the scaled disturbances in hierarchical models and by \citeasnoun{fruhwirth2010stochastic} for time series models with a DA similar to the scaled disturbances (the latent states are scaled, but not centered). We omit the results here, but using this prior on both variances does not alter our mixing results for any of the MCMC samplers --- effective sample sizes were basically the same with either prior. There is a trade-off in computation time to consider, however. For example when using the scaled disturbances, the draw of $W|V,\gamma,y$ is sped up by using the Gaussian prior on $\pm\sqrt{W}$ since it becomes a Gaussian draw while the $V|W,\gamma,y$ is slower since it becomes a generalized inverse Gaussian draw instead of an inverse gamma. The gains outweigh the costs, at least in the local level model.
 
 In the general DLM, however, it is unclear whether this will hold. In particular in the scaled disturbance sampler, when $V$ is a matrix its full conditional becomes a matrix analogue of the generalized inverse Gaussian distribution while when $W$ is a matrix, the nonzero elements of the Cholesky decomposition of $W$ now how the Gaussian prior and Gaussian full conditional posterior. The former is likely difficult to draw from efficiently and the latter requires additional matrix computations during every iteration. On the other hand with the inverse Wishart priors, when $W$ is a matrix the full conditional of $W$ becomes a matrix analogue of the density in Section \ref{sec:LLM:fullcond}, and this is more complicated than the matrix analogue of the GIG distribution.
-
-\section{Appendix}\label{sec:Append}
-
-\subsection{Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$}\label{sec:Append:scale}
-Both of these two densities are of the form
-\begin{align*}
-\log p(x) =  & - (\alpha + 1)\log x -ax + b\sqrt{x}  -c/x + C 
-\end{align*}
-for $x>0$ where $C$ is some constant, $\alpha>0$ and $c>0$ are the hyperparameters for $x$, and $a>0$ and $b\in \Re$ are parameters that depend on the data, $y$, the relevant data augmentation ($\psi$ or $\gamma$), and the other variable ($W$ or $V$). This density is not a known form and is difficult to sample from. We provide two different rejection sampling strategies below that work well under different circumstances, and combine them into a single strategy.
-
-\subsubsection{Adaptive rejection sampling:}
-One nice strategy is to use adaptive rejection sampling, e.g. \citeasnoun{gilks1992adaptive}. This requires $\log p(x)$ to be concave, which is easy enough to check. The second derivative of $\log p(x)$ is:
-\begin{align*}
-\frac{\partial^2 \log p(x)}{\partial x^2} &= -\frac{1}{4}bx^{-3/2} +(\alpha + 1)x^{-2} -2 c x^{-3}.
-\end{align*}
-Then we have
-\begin{align*}
-  &\frac{\partial^2 \log p(x)}{\partial x^2} < 0 \iff \\
-  &-\frac{b}{4}x^{3/2} + (\alpha + 1)x - 2c < 0
-\end{align*}
-which would imply that $\log p(x)$ is concave. We can maximize the left hand side of the last equation very easily. When $b\leq 0$ the max occurs at $x=\infty$ such that $LHS > 0$, but when $b > 0$:
-\begin{align*}
-  \frac{\partial LHS}{\partial x} &= -\frac{3}{8}bx^{1/2} + \alpha + 1 = 0\\
-  \implies & x^{max} = \frac{(\alpha + 1)^2}{b^2}\frac{64}{9}.
-\end{align*}
-Then we have
-\begin{align*}
-  LHS \leq LHS|_{x=x^{max}} = \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} - 2c
-\end{align*}
-so that
-\begin{align*}
-  LHS|_{x=x^{max}} < 0 &\iff  \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} < 2c\\
-    &\iff b > \left(\frac{(\alpha + 1)^3}{c}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}.
-\end{align*}
-This last condition is necessary and sufficient for $\log p(x)$ to be globally (for $x>0$) concave since $b < 0$ forces $LHS > 0$ for some $x$. When the condition is satisfied, we can use adaptive rejection sampling --- which is already implemented in the \verb0R0 package \verb0ars0. We input the initial evaluations of $\log p(x)$ at the mode $x^{mode}$ and at $2x^{mode}$ and $0.5x^{mode}$ in order to get the algorithm going.
-
-\subsubsection{Rejection sampling on the log scale:}
-
-When $b \leq \left(\frac{(\alpha + 1)^3}{c}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}$, which happens often --- especially for small $T$ --- we need to rely on a different method to sample from $p(x)$. A naive approach would be to construct a normal or $t$ approximation to $p(x)$ and use that as a proposal in a rejection sampler. It turns out that this is often very inefficient, but for $z=\log(x)$ the approach works well. Note that
-\begin{align*}
-  p_z(z) = p_x(e^z)e^z
-\end{align*}
-so that we can write the log density of $z$ as (dropping the subscripts):
-\begin{align*}
-  \log p(z) = -ae^z + be^{z/2} - \alpha z - c e^{-z}.
-\end{align*}
-The mode of this density $z^{mode}$ can be easily found numerically, and the second derivative is:
-\begin{align*}
-  \frac{\partial^2 \log p(z)}{\partial z^2} = -ae^z + \frac{b}{4}e^{z/2} - c e^{-z}.
-\end{align*}
-The $t$ approximation then uses the proposal distribution 
-\begin{align*}
-  t_{v}\left(z^{mode}, \left[-\left.\frac{\partial^2 \log p(z)}{\partial z^2}\right|_{z=z^{mode}}\right]^{-1}\right).
-\end{align*}
-In practice choosing degrees of freedom $v=1$ works very well over the region of the parameter space where adaptive rejection sampling cannot be used. We can easily use this method when adaptive rejection sampling does not work, then transform $z$ back to $x$. It remains to check that the tails of $t$ distribution dominate the tails of our target distribution. Let $\log q(z)$ denote the log density of the proposal distribution. Then we need
-\begin{align*}
-  \log p(z) - \log q(z) \leq M\\
-  \intertext{for some constant M, i.e.}
-  -ae^z + be^{z/2} - \alpha z - c e^{-z} -\left(\frac{v+1}{2}\right)\log\left[1 + \frac{1}{v}\left(\frac{z-\mu}{\sigma}\right)\right]\leq M
-\end{align*}
-where $a>0$, $c>0$, $\alpha>0$, $v>0$, $\sigma>0$, and $b,\mu\in \Re$. We can rewrite the LHS as
-\begin{align*}
-    e^{z/2}(b-ae^{z/2}) - \alpha z - c e^{-z} -\left(\frac{v+1}{2}\right)\log\left[1 + \frac{1}{v}\left(\frac{z-\mu}{\sigma}\right)\right].
-\end{align*}
-So as $z\to\infty$ this quantity goes to $-\infty$ since the first term will eventually become negative no matter the value of $b$, and all other terms are always negative. Similarly as $z\to\-\infty$ this quantity goes to $-\infty$. Now pick any interval $(z_1,z_2)$ such that outside of the interval, $LHS<\epsilon$. Since treated as a function of $z$ the LHS is clearly continuous, it attains a maximum on this interval, and thus is bounded.
-
-\subsubsection{Intelligently choosing a rejection sampler:}
-In practice, adaptive rejection sampling is relatively efficient for $p_x(x)$ but inefficient for $p_z(z)$ --- so much so that rejection sampling with the $t$ approximation for $p_z(z)$ is more efficient. To minimize computation time, it is best to use adaptive rejection sampling for $p_x(x)$ when the concavity condition is satisfied. When it is not, the $t$ approximation works well enough.
-
-\subsection{Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$ in the LLM}\label{sec:Append:wscale}
-
-Both the density of $\log(W)|V,\tilde{\gamma},y$ and the density of $\log(V)|W,\tilde{\psi},y$ have the following form:
-\begin{align*}
-  p(z)\propto \exp\left[-\alpha z - ae^{-z} + be^{-z/2} - ce^z\right].
-\end{align*}
-where $\alpha>0$, $a>0$, $c>0$, and $b\in \Re$. The log density is:
-\begin{align*}
-  \log p(z) = -\alpha z - ae^{-z} + be^{-z/2} - ce^z + C
-\end{align*}
-where $C$ is some constant. We only provide one strategy for rejection sampling from this density: the $t$ approximation. Similar reasoning to the previous subsection above shows that we can use a $t$ distribution as a proposal in a rejection sampler for this density. Now we choose the location parameter by maximizing $\log p(z)$ in $z$ numerically to find the mode, $z^{mode}$. Next the second derivative of $\log p(z)$ is given by
-\begin{align*}
-  \frac{\partial^2 \log p(z)}{\partial z^2} = -ae^{-z} + \frac{b}{4}e^{-z/2}-ce^z.
-\end{align*}
-We then set the scale parameter to be
-\begin{align*}
-  -\left[\left.\frac{\partial^2 \log p(z)}{\partial z^2}\right|_{z=z^{mode}}\right]^{-1}
-\end{align*}
-as in the normal approximation, and the degrees of freedom parameter to $v=1$. This rejection sampler is tolerably efficient for our purposes, but there is much room for improvement.
 
 
 
