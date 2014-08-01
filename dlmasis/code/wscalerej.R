@@ -123,7 +123,7 @@ VWrejtilde <- function(a, b, cc, avw){
 
 ## scaled error sampler: samples V and W conditional on the scaled observation
 ## errors (plus the initial state, theta_0)
-errorsamtilde <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
+werrorsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -150,7 +150,7 @@ errorsamtilde <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
 
 ## scaled disturbance sampler: samples V and W conditional on the scaled
 ## system disturbances (plus the initial state, theta_0)
-distsamtilde <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=0){
+wdistsam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]

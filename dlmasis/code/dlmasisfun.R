@@ -5,6 +5,7 @@ library(MCMCpack)
 library(ars)
 library(plyr)
 source("../code/mcfa.R")
+source("../code/wscalerej.R")
 
 fullsim <- function(samplers, simdata, n, burn, parallel){
   out <- ddply(samplers, .(sampler), samsim, simdata=simdata, n=n,
