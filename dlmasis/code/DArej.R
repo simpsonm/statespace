@@ -1,5 +1,5 @@
 ## log density of the t location scale family
-dtpropda <- function(x, mn, var, df){
+dtproptilde <- function(x, mn, var, df){
   sd <- sqrt(var)
   z <- (x-mn)/sd
   out <- dt(z, df, log=TRUE) - log(sd)
@@ -7,26 +7,26 @@ dtpropda <- function(x, mn, var, df){
 }
 
 ## simulate from the t location scale family
-rtpropda <- function(n, mn, var, df){
+rtproptilde <- function(n, mn, var, df){
   sd <- sqrt(var)
   temp <- rt(n, df=df)
   out <- mn + temp*sd
   return(out)
 }
 
-## log of the conditional posterior density of W (V) given V (W), gamma (psi), data
-logpiVWda <- function(VW, a, b, cc, avw){
+## log of the conditional posterior density of W (V) given V (W), gamma (psi), tildeta
+logpiVWtilde <- function(VW, a, b, cc, avw){
   out <-  - avw*VW - a*exp(-VW) + b*exp(-VW/2) - cc*exp(VW)
   return(out)
 }
 
 ## first derivative of log of the conditional posterior of W (V)
-logpiVWprimeda <- function(VW, a, b, cc, avw){
+logpiVWprimetilde <- function(VW, a, b, cc, avw){
   out <-  - avw + a*exp(-VW) - (b/2)*exp(-VW/2) - cc*exp(VW)
   return(out)
 }
 
-logconda <- function(a, b, cc, eps=.01){
+logcontilde <- function(a, b, cc, eps=.01){
   out <- (b <= 0)
   if(!out)
       out <- (a > (b^2/(cc*16))*(1/4 - (b/cc)^2/16^3) + eps)
@@ -34,12 +34,12 @@ logconda <- function(a, b, cc, eps=.01){
 }
 
 ## difference between log conditional posterior of W (V) and the proposal density
-logpirejda <- function(VW, a, b, cc, avw, mn, propvar, df){
-  out <- logpiVWda(VW, a, b, cc, avw) - dtpropda(VW, mn, propvar, df)
+logpirejtilde <- function(VW, a, b, cc, avw, mn, propvar, df){
+  out <- logpiVWtilde(VW, a, b, cc, avw) - dtproptilde(VW, mn, propvar, df)
   return(out)
 }
 
-Wgamiterda <- function(dat, gam, V, aw, bw){
+Wgamitertilde <- function(dat, gam, V, aw, bw){
   T <- length(dat)
   Wa <- aw + T/2
   Wb <- bw + V*sum(gam[-1]^2)/2
@@ -47,7 +47,7 @@ Wgamiterda <- function(dat, gam, V, aw, bw){
   return(W)
 }
 
-Vpsiiterda <- function(dat, psi, W, av, bv){
+Vpsiitertilde <- function(dat, psi, W, av, bv){
   T <- length(dat)
   Va <- av + T/2
   Vb <- bv + W*sum(psi[-1]^2)/2
@@ -55,18 +55,18 @@ Vpsiiterda <- function(dat, psi, W, av, bv){
   return(V)
 }
 
-Vgamiterda <- function(dat, gam, W, av, bv){
+Vgamitertilde <- function(dat, gam, W, av, bv){
   T <- length(dat)
   gam0 <- gam[1]
   cgams <- cumsum(gam[-1])
   a <- bv + sum((dat - gam0)^2)/2
   b <- sum((dat-gam0)*cgams)
   cc <- cgams[T]^2/(2*W)
-  V <- VWrejda(a,b,cc,av)
+  V <- VWrejtilde(a,b,cc,av)
   return(V)
 }
 
-Wpsiiterda <- function(dat, psi, V, aw, bw){
+Wpsiitertilde <- function(dat, psi, V, aw, bw){
   T <- length(dat)
   ys <- c(psi[1], dat)
   psis <- c(0,psi[-1])
@@ -75,18 +75,18 @@ Wpsiiterda <- function(dat, psi, V, aw, bw){
   a <- bw + sum(Ly^2)/2
   b <- sum(Ly*Lpsi)
   cc <- sum(Lpsi^2)/(2*V)
-  W <- VWrejda(a,b,cc,aw)
+  W <- VWrejtilde(a,b,cc,aw)
   return(W)
 }
 
 
-VWrejda <- function(a, b, cc, avw){
-  mn <- uniroot(logpiVWprimeda, c(-10^2, 10^2), a=a, b=b, cc=cc, avw=avw)$root
-  lcon <- logconda(a, b, cc)
+VWrejtilde <- function(a, b, cc, avw){
+  mn <- uniroot(logpiVWprimetilde, c(-10^2, 10^2), a=a, b=b, cc=cc, avw=avw)$root
+  lcon <- logcontilde(a, b, cc)
   lcon <- FALSE
   adrej <- lcon
   if(lcon){
-    try(VW <- ars(n=1, logpiVWda, logpiVWprimeda, x=c(mn-5*mn*2, mn, 5*mn*2),
+    try(VW <- ars(n=1, logpiVWtilde, logpiVWprimetilde, x=c(mn-5*mn*2, mn, 5*mn*2),
                   a=a, b=b, cc=cc, avw=avw))
     if(VW==0){
       adrej <- FALSE
@@ -95,12 +95,12 @@ VWrejda <- function(a, b, cc, avw){
   if(!adrej){ 
     propvar <- - 1 /( -a*exp(-mn) +(b/4)*exp(-mn/2) - cc*exp(mn) )
     df <- 10
-    M <- optimize(logpirejda, c(-10^2,10^2), maximum=TRUE, a, b, cc, avw, mn, propvar, df)$objective
+    M <- optimize(logpirejtilde, c(-10^2,10^2), maximum=TRUE, a, b, cc, avw, mn, propvar, df)$objective
     rej <- TRUE
     rejit <- 1
     while(rej){
-      VW <- rtpropda(1, mn, propvar, df)
-      R <- logpirejda(VW, a, b, cc, avw, mn, propvar, df) - M
+      VW <- rtproptilde(1, mn, propvar, df)
+      R <- logpirejtilde(VW, a, b, cc, avw, mn, propvar, df) - M
       u <- runif(1,0,1)
       if(log(u)<R){
         rej <- FALSE
@@ -123,7 +123,7 @@ VWrejda <- function(a, b, cc, avw){
 
 ## scaled error sampler: samples V and W conditional on the scaled observation
 ## errors (plus the initial state, theta_0)
-errorsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
+errorsamtilde <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -137,8 +137,8 @@ errorsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
     psi <- c(psi[1], psi[-1]*sqrt(V/W))
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
-    V <- Vpsiiterda(dat, psi, W, av, bv)
-    Wout <- Wpsiiterda(dat, psi, V,  aw, bw)
+    V <- Vpsiitertilde(dat, psi, W, av, bv)
+    Wout <- Wpsiitertilde(dat, psi, V,  aw, bw)
     W <- Wout[1]
     thetat <- dat - sqrt(W)*psi[-1]
     theta <- c(psi[1], thetat)
@@ -150,7 +150,7 @@ errorsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
 
 ## scaled disturbance sampler: samples V and W conditional on the scaled
 ## system disturbances (plus the initial state, theta_0)
-distsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=0){
+distsamtilde <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
@@ -165,9 +165,9 @@ distsamda <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=0){
     gam <- c(theta[1], gamt)
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
-    Vout <- Vgamiterda(dat, gam, W, av, bv)
+    Vout <- Vgamitertilde(dat, gam, W, av, bv)
     V <- Vout[1]
-    W <- Wgamiterda(dat, gam, V, aw, bw)
+    W <- Wgamitertilde(dat, gam, V, aw, bw)
     thetat <- gam[1] + cumsum(gam[-1])*sqrt(V)
     theta <- c(gam[1], thetat)
     out[i,] <- c(Vout[2:3],NA,NA,NA,smoothtime,V,W,theta)
