@@ -79,7 +79,7 @@ In other words, $V$ and $W$ are conditionally independent given $y$ and $\theta$
 \end{align*}
 where $v_t = y_t - F_t\theta_t$ and $w_t = \theta_t - G_t\theta_{t-1}$.
 
-\subsection{Scaled Disturbances}
+\subsection{Scaled disturbances}
 
 Let $L_W$ denote the Cholesky decomposition of $W$, i.e. the lower triangle matrix $L_W$ such that $L_WL_W' =W$. Then the scaled disturbances are defined as$\gamma=\gamma_{0:T}=(\gamma_0',\gamma_1',\cdots,\gamma_T')'$ by $\gamma_0=\theta_0$ and $\gamma_t = L_W^{-1}(\theta_t-G_t\theta_{t-1})$ for $t=1,2,\cdots,T$. The reverse transformation is defined recursively by $\theta_0=\gamma_0$ and $\theta_t=L_W\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. Then the Jacobian is block lower triangular with the identity matrix and $T$ copies of $L_W$ along the diagonal blocks, so $|J| = |L_W|^T=|W|^{T/2}$. From equation \eqref{dlmjoint} we can write the full joint distribution of $(V,W,\gamma,y)$ as
  \begin{align*}
@@ -135,14 +135,14 @@ In the local level model, the density is even simpler. The local level model ass
 \end{align*}
 where $a_\gamma =\sum_{t=1}^T(\sum_{s=1}^t\gamma_j)^2/2V$ and $b_\gamma =\sum_{t=1}^T(y_t-\gamma_0)(\sum_{s=1}^t\gamma_j)/V$. In Section \ref{sec:scaledraw} we show how to efficiently obtain a random draw from this density.
 
-\subsection{Scaled Errors}
+\subsection{Scaled errors}
 Let $L_V$ denote the Cholesky decomposition of $V$, that is $L_VL_V'=V$, then we can define the scaled errors as $\psi_t = L_V^{-1}(y_t - F_t\theta_t)$ for $t=1,2,\cdots,T$ and $\psi_0 = \theta_0$. Here we assume that $k=p$ and that $F_t$ is invertible for all $t$. Then the back transformation is $\theta_t = F_t^{-1}(y_t - L_V\psi_t)$ for $t=1,2,\cdots,T$ and $\theta_0=\psi_0$. The Jacobian of this transformation is block diagonal with a single copy of the identity matrix along with the $F_t^{-1}L_V$'s along the diagonal, so $|J|=(\prod_{t=1}^T|F_t|^{-1})|V|^{T/2}$. Then from equation \eqref{dlmjoint} we can write the joint distribution of $(V, W, \psi, y)$ as
 \begin{align*}
     p(&V,W,\psi,y) \propto \exp\left[-\frac{1}{2}(\psi_0-m_0)'C_0^{-1}(\psi_0-m_0)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T\psi_t'\psi_t\right] \nonumber\\
   &\times |V|^{-(\lambda_V + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Lambda_VV^{-1}\right)\right]  \times |W|^{-(\lambda_W + p + T + 2)/2} \nonumber\\
    & \exp\left[-\frac{1}{2}\left(tr\left(\Lambda_WW^{-1}\right) + \sum_{t=1}^T(y_t - \mu_t)'(F_tWF_t')^{-1}(y_t-\mu_t)\right)\right]\label{dlmerrorjoint}
 \end{align*}
-where we define $\mu_1 = L_V\psi_1 + F_1G_1\psi_0$ and for $t=2,3,\cdots,T$, $\mu_t =L_V\psi_t + F_tG_tF_{t-1}^{-1}(y_{t-1} - L_{V}\psi_{t-1})$. 
+where we define $\mu_1 = L_V\psi_1 + F_1G_1\psi_0$ and for $t=2,3,\cdots,T$, $\mu_t =L_V\psi_t + F_tG_tF_{t-1}^{-1}(y_{t-1} - L_{V}\psi_{t-1})$. The $|F_t|^{-1}$'s have been absorbed into the normalizing constant, but if they depended on some unknown parameter then we could not do this and as a result would have to take them into account in the Gibbs step of steps for the model parameters.
 
 The full conditional distribution of $\psi$ is
 \begin{align*}
@@ -151,7 +151,7 @@ The full conditional distribution of $\psi$ is
 \end{align*}
 where note that $\mu_t$ depends on $\psi$. This density is Gaussian and like with $\gamma$, we can use the MCFA from Section \ref{sec:MCFA} to draw from the full conditional of $\theta$ and then transform from $\theta$ to $\psi$. However it turns out the precision matrix of $\psi$'s full conditional distribution has the necessary block tridiagonal structure, so we use the MCFA directly on $\psi$. 
 
-pThe full conditional distribution of $(V,W)$ is complicated, like the case of the scaled disturbances, so we find the full conditionals of $V$ and $W$ separately instead. The full conditional of $W$ is 
+The full conditional distribution of $(V,W)$ is complicated, like the case of the scaled disturbances, so we find the full conditionals of $V$ and $W$ separately instead. The full conditional of $W$ is 
 \begin{align*}
  p(&W|V,\psi,y) \propto   p(V,W,\psi,y) \propto \times |W|^{-(\lambda_W + p + T + 2)/2} \exp\left[-\frac{1}{2}\left(tr\left(\left[\Lambda_W + \sum_{t=1}^TF_t^{-1}(y_t - \mu_t)(y_t-\mu_t)'(F_t^{-1})'\right]W^{-1}\right)\right)\right],
 \end{align*}
@@ -174,6 +174,26 @@ where $\mu_1 = \sqrt{V}\psi_1 + \psi_0$ and for $t=2,3,\cdots,T$, $\mu_t = \sqrt
  p(V|W,\psi,y) \propto V^{-\alpha_V - 1}\exp\left[ -a_{\psi}V + b_{\psi}\sqrt{V} -\frac{\beta_V}{V}\right] 
 \end{align*}
 where $a_{\psi}=\sum_{t=1}^T(L\psi_t)^2/2W$ and $b_{\psi}=\sum_{t=1}^T(L\psi_tLy_t)/W$, and we define $Ly_t=y_t-y_{t-1}$ for $t=2,3,\cdots,T$, $Ly_1=y_1 - \psi_0$, $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ and $L\psi_1=\psi_1-0$. In other words, the form of $p(V|W,\psi,y)$ is the same as $p(W|V,\gamma,y)$. The general form of these two densities is $p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b\sqrt{x} -c/x\right]$. In Section \ref{sec:scaledraw} we show how to efficiently sample from this distribution.
+
+\subsection{The wrongly scaled disturbances}
+
+The wrongly scaled disturbances are defined as  $\tilde{\gamma}=\tilde{\gamma}_{0:T}=(\tilde{\gamma}_0',\tilde{\gamma}_1',\cdots,\tilde{\gamma}_T')'$. The wrongly scaled disturbances are related to the scaled disturbances by $\tilde{\gamma}_t = L_V^{-1}L_W\gamma_t$ for $t=1,2,\cdots,T$ and $\tilde{\gamma_0}=\gamma_0$. The reverse transformation is $\gamma_t = L_W^{-1}L_V\tilde{\gamma}_t$ and the Jacobian is block diagonal with a copy of the identity matrix and $T$ copies of $L_W^{-1}L_V$ along the diagonal. Thus $|J|=|L_W|^{-T}|L_V|^T=|W|^{-T/2}|V|^{T/2}$. Then from equation \eqref{dlmdistjoint} we can write the joint distribution of $(V,W,\tilde{\gamma},y)$ as
+ \begin{align}
+  p(&V,W,\tilde{\gamma},y) \propto \exp\left[-\frac{1}{2}(\tilde{\gamma}_0-m_0)'C_0^{-1}(\tilde{\gamma}_0-m_0)\right] |V|^{-(\lambda_V + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Lambda_VV^{-1}\right)\right]  \nonumber\\
+  &\times  \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(y_t - F_t\theta_t(\tilde{\gamma},L_V)\right)'V^{-1}\left(y_t - F_t\theta_t(\tilde{\gamma},L_V)\right)\right]\nonumber\\
+   & \times |W|^{-(\lambda_W + p + T + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Lambda_WW^{-1}\right)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T\tilde{\gamma}_t'(L_V^{-1}W(L_V^{-1})')^{-1}\tilde{\gamma}_t\right]\label{dlmdisttildejoint}
+ \end{align}
+where $\theta_t(\tilde{\gamma},L_V)$ denotes the transformation from $\tilde{\gamma}$ to $\theta$ defined by the wrongly scaled disturbances. 
+
+\subsection{The wrongly scaled errors}
+
+The wrongly scaled errors are defined as $\tilde{\psi}=\tilde{\psi}_{0:T}=(\tilde{\psi}_0',\tilde{\psi}_1',\cdots,\tilde{\psi}_T')'$. The wrongly scaled errors are related to the scaled errors by $\tilde{\psi}_t=L_W^{-1}L_V\psi_t$ for $t=1,2,\cdots,T$ and $\tilde{\psi}_0=\psi_0$. Then $\psi_t = L_V^{-1}L_W\tilde{\psi}_t$ and the Jacobian is block diagonal with a copy of the identical matrix and $T$ copies of $L_V^{-1}L_W$ along the diagonal. So $|J|=|V|^{-T/2}|W|^{T/2}$ and from equation \eqref{dlmerrorjoint} we can write the joint distribution of $(V, W, \tilde{\psi}, y)$ as
+\begin{align}
+    p(&V,W,\tilde{\psi},y) \propto \exp\left[-\frac{1}{2}(\tilde{\psi}_0-m_0)'C_0^{-1}(\tilde{\psi}_0-m_0)\right] \nonumber\\
+   &\times |V|^{-(\lambda_V + p + T + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Lambda_VV^{-1}\right)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T\tilde{\psi}_t'(L_W^{-1}V(L_W^{-1})')^{-1}\tilde{\psi}_t\right] \nonumber\\
+    & \times |W|^{-(\lambda_W + p + 2)/2}\exp\left[-\frac{1}{2}tr\left(\Lambda_WW^{-1}\right)\right]\exp\left[-\frac{1}{2}\sum_{t=1}^T(y_t - \tilde{\mu}_t)'(F_tWF_t')^{-1}(y_t-\tilde{\mu}_t)\right]\label{dlmerrortildejoint}
+ \end{align}
+where we define $\tilde{\mu}_1 = L_W\tilde{\psi}_1 - F_1G_1\tilde{\psi_0}$ and for $t=2,3,\cdots,T$ $\tilde{\mu}_t =L_W\tilde{\psi}_t - F_tG_tF_{t-1}^{-1}(y_{t-1} - L_{W}\tilde{\psi}_{t-1})$.
 
 \section{Mixed Cholesky Factorization Algorithm (MCFA) for Simulation Smoothing}\label{sec:MCFA}
 
@@ -231,6 +251,30 @@ The resulting algorithm requires a couple more intermediate quantities. Let $\Si
   \theta_{t|t+1:T} \sim & N(m_t - \Sigma_t\Omega_{t,t+1}\theta_{t+1}, \Sigma_t) && \mathrm{for}\ \ t=T-1,T-2,\cdots,0.
 \end{align*}
 \citeasnoun{mccausland2011simulation} shows how to quickly compute the required linear algebra operations and finds that this method is often faster than simply doing the Cholesky factorization. This algorithm can also be applied to drawing the scaled errors, $\psi_{0:T}$, and the wrongly scaled errors, $\tilde{\psi}_{0:T}$.
+
+\section{Further augmentation for non-invertible $F_t$}\label{sec:Discuss:F}
+
+In Section \ref{sec:DAs:error} we assumed that $F_t$ is square and invertible for all $t$ which made the construction of the SE sampler and other samplers that use the scaled errors easier. However, most DLMs do not have $F_t$'s which are square, let alone invertible. The samplers we constructed can still be used in this case with one tweak: an additional DA is required in order to ensure that $F_t$ is square and invertible for all $t$. The basic strategy is to add elements to $y_t$ or $\theta_t$ or both until $F_t$ is invertible, then add an additional step to the sampler in order to draw the new augmentation. A second issue is that often $G_t$ or $F_t$ or both depend on some unknown parameter which must also be sampled from in the various MCMC samplers. The second case is easily dealt with simply by adding another sampling step for the unknown parameters in $F_t$ and $G_t$. The following example illustrates how to deal with the first case.
+
+Consider the dynamic regression model
+\begin{align*}
+y_t & = \alpha_t + x_t\beta_t + v_t\\
+\alpha_t & = \alpha_{t-1} + w_{1,t}\\
+\beta_t & = \beta_{t-1} + w_{2,t}\\
+\end{align*}
+for $t=1,2,\cdots,T$ with $v_{1:T}$ independent of $w_{1:T}=(w_1',w_2',\cdots,w_T')'$ where $w_t=(w_{1,t},w_{2,t})'$, $v_t\stackrel{iid}{\sim} N(0,V)$ and $w_t \stackrel{iid}{\sim}N_2(0,W)$.  Here the latent state in period $t$ is $\theta_t=(\alpha_t,\beta_t)'$. The problem is that $F_t=[1,x_t]$ is neither square nor invertible. But notice that the matrix
+\[
+F^*_t = \begin{bmatrix} 1 & x_t \\ 0 & 1 \end{bmatrix}
+\]
+is invertible. Now we add an additional DA $z_t$ to $y_t$ to construct $y_t^* = (y_t, z_t)'$ so that now the model is
+\begin{align*}
+y_t^* &= F_t^*\theta_t + v_t^*
+\theta_t = \theta_{t-1} + w_t
+\end{align*}
+where $v_t^* = (v_t, u_t)$ where $u_{1:T}$ is independent of $(v_{1:T}, w_{1:T})$ and $u_t\stackrel{iid}{\sim} N(0,1)$. By construction $v_t^*\stackrel{iid}{\sim} N_2(0,V^*)$ where $V^*=diag(V,1)$ and the full conditional distribution of $z_t$ is $N(\beta_t,1)$. Then we define the scaled errors as $\psi_0 = \theta_0$ and $\psi_t=L_{V^*}^{-1}(y_t^* - F_t^*\theta_t)$. Let $z=z_{1:T}$ and $y^*=y^*_{1:T}$ for brevity.
+
+In any of the samplers we constructed, before drawing the scaled errors, $\psi$, a draw of $z$ is required to complete $y$. Then $F_t^*$, $V^*$ and $y_t^*$ replace $F_t$, $V$ and $y_t$ wherever they appear in the full conditional distributions of $\psi$ and $W$ from Section \ref{sec:Algs}. Similarly, before transforming to or from the scaled errors in any of the interweaving algorithms, $y^*$ needs is required so a draw of $z$ is necessary. This is best handled by an update of $z$ from its full conditional at the beginning of every iteration of the sampler so that $y^*$ can be treated as the full data vector throughout the iteration.
+
 
 \section{Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$}\label{sec:scaledraw}
 Both of these two densities are of the form
