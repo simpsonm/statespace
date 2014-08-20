@@ -1,11 +1,10 @@
 things to do:
 
-Cite Jarad & Ignatio's paper
-beef up discussion, perhaps - did some, maybe more.
-spell check, obv
-abstract
+Iterate discussion and abstract. Anything missing from discussion?
 
-stuff to go in the supplementary materials:
-(All of these things are candidates for inclusion in the appendix instead of the supplementary materials)
-Code
-sylvia's prior results? - running full simulations for this
+Get supplementary  materials in order. Appendix and code.
+
+References to supplementary materials in paper - maybe like yu & meng - section at the end of hte paper with table of contents for appendix.
+
+couple \matt's added
+
