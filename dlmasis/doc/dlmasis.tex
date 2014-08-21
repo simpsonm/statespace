@@ -664,18 +664,22 @@ In the general DLM, however, it is unclear whether this will hold. In particular
 
 \section{Supplementary Materials}
 
-Appendices: This file provides 6 appendices cited in the main article:
-
+\matt{Guidelines: each external file has a separate \textbackslash item[Name:] in the description environment. Mode likely the names I have are inccorect - fix them. Also, there is probably more than one code file - each one should get an \textbackslash item}
+\begin{description}
+\item[Appendices:] This file provides 6 appendices cited in the main article:
 \begin{itemize}
-\item[] Appendix \zref{sec:DLMfullcond}: Derivations of joint distributions and full conditional distributions for each DA in the DLM.
-\item[] Appendix \zref{sec:MCFA}: Mixed Cholesky factorization algorithm (MCFA) for simulation smoothing.
-\item[] Appendix \zref{sec:F}: Further augmentation for non-invertible $F_t$.
-\item[] Appendix \zref{sec:scaledraw}: Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ in the LLM.
-\item[] Appendix \zref{sec:wscale}: Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$ in the LLM.
-\item[] Appendix \zref{sec:plots}: Further plots of ESP and computational time for different values of $T$.
+\item[] Appendix A: Derivations of joint distributions and full conditional distributions for each DA in the DLM.
+\item[] Appendix B: Mixed Cholesky factorization algorithm (MCFA) for simulation smoothing.
+\item[] Appendix C: Further augmentation for non-invertible $F_t$.
+\item[] Appendix D: Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ in the LLM.
+\item[] Appendix E: Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$ in the LLM.
+\item[] Appendix F: Further plots of ESP and computational time for different values of $T$.
 \end{itemize}
 
-Code: This file contains code for obtaining the simulations used in the LLM example from Section \ref{sec:LLM} and, in particular, for the MCFA and each MCMC algorithm for the LLM.
+\item[Code:] This file contains R code for obtaining the simulations used in the LLM example from Section \ref{sec:LLM} and, in particular, for the MCFA and each MCMC algorithm for the LLM.
+
+\end{description}
+
 
 \clearpage
 \bibliographystyle{ECA_jasa}  % proper bibliography style for ASA
