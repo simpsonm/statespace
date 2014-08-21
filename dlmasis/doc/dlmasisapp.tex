@@ -363,13 +363,11 @@ One nice strategy is to use adaptive rejection sampling, e.g. \citeasnoun{gilks1
 \end{align*}
 Then we have
 \begin{align*}
-  &\frac{\partial^2 \log p(x)}{\partial x^2} < 0 \iff \\
-  &-\frac{b}{4}x^{3/2} + (\alpha + 1)x - 2c < 0
+  &\frac{\partial^2 \log p(x)}{\partial x^2} < 0 && \iff &&-\frac{b}{4}x^{3/2} + (\alpha + 1)x - 2c < 0
 \end{align*}
 which would imply that $\log p(x)$ is concave. We can maximize the left hand side of the last equation very easily. When $b\leq 0$ the max occurs at $x=\infty$ such that $LHS > 0$, but when $b > 0$:
 \begin{align*}
-  \frac{\partial LHS}{\partial x} &= -\frac{3}{8}bx^{1/2} + \alpha + 1 = 0\\
-  \implies & x^{max} = \frac{(\alpha + 1)^2}{b^2}\frac{64}{9}.
+  \frac{\partial LHS}{\partial x} &= -\frac{3}{8}bx^{1/2} + \alpha + 1 = 0 && \implies && x^{max} = \frac{(\alpha + 1)^2}{b^2}\frac{64}{9}.
 \end{align*}
 Then we have
 \begin{align*}
@@ -377,10 +375,9 @@ Then we have
 \end{align*}
 so that
 \begin{align*}
-  LHS|_{x=x^{max}} < 0 &\iff  \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} < 2c\\
-    &\iff b > \left(\frac{(\alpha + 1)^3}{c}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}.
+  LHS|_{x=x^{max}} < 0 &\iff  \frac{(\alpha + 1)^3}{b^2}\frac{64}{27} < 2c &&\iff&& b > \left(\frac{(\alpha + 1)^3}{c}\right)^{1/2}\frac{4\sqrt{2}}{3\sqrt{3}}.
 \end{align*}
-This last condition is necessary and sufficient for $\log p(x)$ to be globally (for $x>0$) concave since $b < 0$ forces $LHS > 0$ for some $x$. When the condition is satisfied, we can use adaptive rejection sampling --- which is already implemented in the \verb0R0 package \verb0ars0. We input the initial evaluations of $\log p(x)$ at the mode $x^{mode}$ and at $2x^{mode}$ and $0.5x^{mode}$ in order to get the algorithm going.
+This last condition is necessary and sufficient for $\log p(x)$ to be globally (for $x>0$) concave since $b < 0$ forces $LHS > 0$ for some $x$. When the condition is satisfied, we can use adaptive rejection sampling --- which is already implemented in the \verb0R0 package \verb0ars0 \cite{PerezARS}. We input the initial evaluations of $\log p(x)$ at the mode $x^{mode}$ and at $2x^{mode}$ and $0.5x^{mode}$ in order to get the algorithm going.
 
 \subsection{Rejection sampling on the log scale}
 
@@ -402,17 +399,19 @@ p\begin{align*}
 \end{align*}
 In practice choosing degrees of freedom $v=1$ works very well over the region of the parameter space where adaptive rejection sampling cannot be used. We can easily use this method when adaptive rejection sampling does not work, then transform $z$ back to $x$. It remains to check that the tails of $t$ distribution dominate the tails of our target distribution. Let $\log q(z)$ denote the log density of the proposal distribution. Then we need
 \begin{align*}
-  \log p(z) - \log q(z) \leq M\\
-  \intertext{for some constant M, i.e.}
-  -ae^z + be^{z/2} - \alpha z - c e^{-z} -\left(\frac{v+1}{2}\right)\log\left[1 + \frac{1}{v}\left(\frac{z-\mu}{\sigma}\right)\right]\leq M
+  \log p(z) - \log q(z) \leq M
+\end{align*}
+for some constant M, i.e.
+\begin{align*}
+  -ae^z + be^{z/2} - \alpha z - c e^{-z} -\left(\frac{v+1}{2}\right)\log\left[1 + \frac{1}{v}\left(\frac{z-\mu}{\sigma}\right)^2\right]\leq M
 \end{align*}
 where $a>0$, $c>0$, $\alpha>0$, $v>0$, $\sigma>0$, and $b,\mu\in \Re$. We can rewrite the LHS as
 \begin{align*}
-    e^{z/2}(b-ae^{z/2}) - \alpha z - c e^{-z} -\left(\frac{v+1}{2}\right)\log\left[1 + \frac{1}{v}\left(\frac{z-\mu}{\sigma}\right)\right].
+    e^{z/2}(b-ae^{z/2}) - \alpha z - c e^{-z} -\left(\frac{v+1}{2}\right)\log\left[1 + \frac{1}{v}\left(\frac{z-\mu}{\sigma}\right)^2\right].
 \end{align*}
-So as $z\to\infty$ this quantity goes to $-\infty$ since the first term will eventually become negative no matter the value of $b$, and all other terms are always negative. Similarly as $z\to\-\infty$ this quantity goes to $-\infty$. Now pick any interval $(z_1,z_2)$ such that outside of the interval, $LHS<\epsilon$. Since treated as a function of $z$ the LHS is clearly continuous, it attains a maximum on this interval, and thus is bounded.
+So as $z\to\infty$ this quantity goes to $-\infty$ since the first term will eventually become negative no matter the value of $b$, and all other terms are always negative. Similarly as $z\to -\infty$ this quantity goes to $-\infty$. Now pick any interval $(z_1,z_2)$ such that outside of the interval, $LHS<\epsilon$. Since treated as a function of $z$ the LHS is clearly continuous, it attains a maximum on this interval, and thus is bounded.
 
-\subsection{Intelligently choosing a rejection sampler:}
+\subsection{Intelligently choosing a rejection sampler}
 In practice, adaptive rejection sampling is relatively efficient for $p_x(x)$ but inefficient for $p_z(z)$ --- so much so that rejection sampling with the $t$ approximation for $p_z(z)$ is more efficient. To minimize computation time, it is best to use adaptive rejection sampling for $p_x(x)$ when the concavity condition is satisfied. When it is not, the $t$ approximation works well enough.
 
 \section{Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$ in the LLM}\label{sec:wscale}
