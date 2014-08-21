@@ -2,9 +2,5 @@ things to do:
 
 Iterate discussion and abstract. Anything missing from discussion?
 
-Get supplementary  materials in order. Appendix and code.
-
-References to supplementary materials in paper - maybe like yu & meng - section at the end of hte paper with table of contents for appendix.
-
-couple \matt's added
+Get supplementary  materials in order. Code.
 
