@@ -42,15 +42,42 @@ numbered=no]{alg*}
 \begin{document}
 
 
-\title{Interweaving Markov chain Monte Carlo strategies for efficient
-estimation of dynamic linear models}
-\author{Matt Simpson, Jarad Niemi, Vivekananda Roy}
+\title{Interweaving Markov Chain Monte Carlo Strategies for Efficient
+Estimation of Dynamic Linear Models}
+\author{Matt Simpson\textsuperscript{1}, Jarad Niemi\textsuperscript{2}, Vivekananda Roy\textsuperscript{2}}
 \date{\today}
 \maketitle
 
-\begin{abstract}
-In dynamic linear models (DLMs) with unknown fixed parameters and latent states, a standard Markov chain Monte Carlo (MCMC) sampling strategy is to alternate sampling of latent states conditional on fixed parameters and sampling of fixed parameters conditional on latent states. In some regions of the parameter space, this standard data augmentation (DA) algorithm can be inefficient. To improve efficiency, we seek to employ the interweaving strategies of \citet{yu2011center} that combine separate DAs by weaving them together. Toward this end, we introduce a number of novel alternative DAs for a general class of DLMs: scaled errors, wrongly-scaled errors, and wrongly-scaled disturbances. Along with the latent states and the less commonly used scaled disturbances, this yields five unique DAs to employ in MCMC algorithms. Each DA implies a unique MCMC sampling strategy on its own and they can be combined into interweaving or alternating strategies that improve efficiency of the MCMC. We assess the strategies using the local level DLM and demonstrate a number of strategies that have improved efficiency relative to the standard approach with interweaving the scaled errors and scaled disturbances being the most efficient approach. \jarad{need a statement about supplementary material}
+\begin{center}
+ \vspace{-.5em}
+ {\small \textsuperscript{1} Iowa State University, Deptartments of Statistics and Economics, Ames, IA 50011-1210\\[-.3em]
+ {\tt simpsonm@iastate.edu}}
+ 
+ \vspace{.5em}
 
+{\small \textsuperscript{2} Iowa State University, Department of Statistics, Ames, IA 50011-1210\\[-.3em]
+{\tt <niemi,vroy>@iastate.edu}}
+
+\end{center}
+
+
+\newpage
+
+\mbox{}
+\vspace*{2in}
+\begin{center}
+\textbf{Author's Footnote:}
+\end{center}
+Matt Simpson is Doctoral Candidate, Departments of Economics and Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: simpsonm@iastate.edu); Jarad Niemi is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: niemi@iastate.edu); and Vivekananda Roy is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: vroy@iastate.edu). The authors thank Syliva Fr{\"u}hwirth-Schnatter for helpful comments.
+
+\newpage
+\begin{abstract}
+In dynamic linear models (DLMs) with unknown fixed parameters and latent states, a standard Markov chain Monte Carlo (MCMC) sampling strategy is to alternate sampling of latent states conditional on fixed parameters and sampling of fixed parameters conditional on latent states. In some regions of the parameter space, this standard data augmentation (DA) algorithm can be inefficient. To improve efficiency, we seek to employ the interweaving strategies of \citet{yu2011center} that combine separate DAs by weaving them together. Toward this end, we introduce a number of novel alternative DAs for a general class of DLMs: scaled errors, wrongly-scaled errors, and wrongly-scaled disturbances. Along with the latent states and the less commonly used scaled disturbances, this yields five unique DAs to employ in MCMC algorithms. Each DA implies a unique MCMC sampling strategy on its own and they can be combined into interweaving or alternating strategies that improve the efficiency of MCMC. We assess the strategies using the local level DLM and demonstrate several strategies that improve efficiency relative to the standard approach with interweaving the scaled errors and scaled disturbances being the most efficient approach. Supplemntary materials are available online for this article including the details of the implemented algorithms and code for reproducing the simulatons.
+
+\smallskip
+\noindent \textbf{Key Words:} Ancillary augmentation; Centered parameterization; Data augmentation; Non-centered parameteriation; Reparameterization; Sufficient augmentation; Time series
+
+\newpage
 
 %One of the interweaving strategies, ancillary-sufficient interweaving strategy (ASIS) requires one the two DAs to be a sufficient augmentation and the other to be an ancillary augmentation, also known as centered and noncenterd augmentations respectively. We show, however, that under reasonable assumptions any sufficient augmentation requires sampling from a density that is just as complicated as the target posterior distribution. Nonetheless, we utilize the available augmentations to construct several interweaving algorithms -- both the standard general interweaving strategy (GIS), of which ASIS is a subspecies, and the componentwise interweaving strategy (CIS) which applies GIS to sub-blocks of the parameter vector in a Gibbs-like structure. Though we cannot construct an ASIS algorithm, we are able to construct a CIS algorithm that uses ASIS in each parameter block. Using the local level DLM, we show how to construct several of these algorithms and conduct a simulation study in order to discern their properties. We find several algorithms that significantly outperform the standard DA for many regions of the parameter.
 \end{abstract}
@@ -97,8 +124,7 @@ Another option is to {\it interweave} the two DAs together \cite{yu2011center}. 
 \noindent The GIS algorithm obtains the next iteration of the parameter $\phi$ in three steps: 1) draw $\theta$ conditional on $\phi^{(k)}$, 2) draw $\gamma$ conditional on $\theta$, and 3) draw $\phi^{(k+1)}$ conditional on $\gamma$. This looks similar to the usual DA algorithm except a second DA is ``weaved'' in between the draw of the first DA and of the parameter vector. 
 
 The second step of the GIS algorithm is often accomplished by sampling $\phi|\theta$ and then $\gamma|\theta,\phi$. If we expand out step two, then the GIS algorithm becomes:
-\jarad{why GIS-E rather than eGIS?}
-\begin{alg*}[GIS-E]Expanded GIS\label{alg:GIS2}
+\begin{alg*}[eGIS]Expanded GIS\label{alg:GIS2}
   \begin{center}
     \begin{tabular}{lllllll}
       $[\theta|\phi^{(k)}]$& $\to$& $[\phi|\theta]$& $\to $&$[\gamma|\theta,\phi]$& $\to$& $[\phi^{(k+1)}|\gamma]$
@@ -184,9 +210,9 @@ where $H_t = G_tG_{t-1}\cdots G_1$ and $K_t = I_p + G_t + G_tG_{t-1} + \cdots + 
 \end{align*}
 and $\tilde{m}_{Tp\times 1} = (m_0', m_0', \cdots m_0')'$. Now we have the data model for $y$ without any data augmentation:
 \begin{align}
-  y|V,W \stackrel{ind}{\sim} N_{Tk}(D\tilde{m}, \tilde{V} + \tilde{W} + \tilde{C}) \label{margmodel}
+  y|V,W \stackrel{ind}{\sim} N_{Tk}(D\tilde{m}, \tilde{V} + \tilde{W} + \tilde{C}). \label{margmodel}
 \end{align}
-for $t=1,2,\cdots,T$. \jarad{why do we have ind and $t=1,2,\cdots,T$ here?} Given a prior $p(\phi)$, the posterior density we are interested in is $p(\phi|y)\propto p(y|\phi)p(\phi)$.
+Given a prior $p(\phi)$, the posterior density we are interested in is $p(\phi|y)\propto p(y|\phi)p(\phi)$.
 
 \section{Augmenting the DLM}\label{sec:DAs}
 The definition of the DLM includes $\theta$ and unsurprisingly $\theta$ is the standard DA used in estimation of the DLM. Any other DA would suffice to estimate the model--the only restriction is that the joint posterior of the model parameter and the DA is such that if we integrate out the DA, we obtain the desired marginal posterior for the parameter. This leaves wide range of possibilities for alternate DAs to use in Algorithm \nameref{alg:DA}, as long as the resulting full conditional distributions of the DA and the model parameter are both easy to sample from. We will explore several alternatives found through manipulating $\theta$ in intuitive ways. The purpose of these constructions is primarily to use as grist for the interweaving mill, but each new DA will also implicitly define a new base DA algorithm.
