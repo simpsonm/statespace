@@ -3,8 +3,10 @@
 \usepackage{natbib} %formats citations like ASA wants
 \usepackage{amssymb, amsmath, amsthm, graphics, graphicx, color, fullpage}
 \usepackage{thmtools} %to format the Algorithm environment correctly
-\usepackage{nameref, hyperref, cleveref} %for named references
+\usepackage[hidelinks]{hyperref}
+\usepackage{nameref, cleveref} %for named references
 \usepackage{zref-xr, zref-user} %for hyperlinked references to outside docs
+
 \zexternaldocument*{dlmasisapp} %supplementary materials
 %use \zref{label} to reference items there
 
@@ -128,7 +130,8 @@ In addition to the GIS, it is possible to define a componentwise interweaving st
 \end{alg*}\noindent
 where $\theta_i$ and $\gamma_i$ are distinct data augmentations for $i=1$ and $i=2$, but potentially $\gamma_1=\theta_2$  or $\gamma_2=\theta_1$. The first row draws $\phi_1$ conditional on $\phi_2$ using interweaving in a Gibbs step, while the second row does the same for $\phi_2$ conditional on $\phi_1$. The algorithm can easily be extended to greater than two blocks within $\phi$. The main attraction of CIS is that it is often easier to find an AA--SA pair of DAs for $\phi_1$ conditional on $\phi_2$ and another pair for $\phi_2$ conditional on $\phi_1$ than it is to find and AA--SA pair for $\phi=(\phi_1,\phi_2)$ jointly.
 
-Most of the work on constructing and using DAs has focused on hierarchical models \citep{van2001art,papaspiliopoulos2007general}, but relatively little attention has been paid to time series models despite similarities between some time series and hierarchical models. We seek to improve DA schemes in dynamic linear models (DLMs), i.e. linear Gaussian state-space models. Most of the existing literature focuses on non-Gaussian state-space models --- in particular the stochastic volatility model \citep{shephard1996statistical}, but few directly work with the class of DLMs we consider. %\citet{pitt1999analytic} study convergence in the AR(1) plus noise model, but assume the observation and system variances are constant throughout. \jarad{probably put this in chronological order}
+\jarad{this is a good introduction paragraph, although perhaps we should reorder chronologically and most citations should be citet's}
+Most of the work on constructing and using DAs has focused on hierarchical models \citep{van2001art,papaspiliopoulos2007general}, but relatively little attention has been paid to time series models despite similarities between some time series and hierarchical models. We seek to improve DA schemes in dynamic linear models (DLMs), i.e. linear Gaussian state-space models. Most of the existing literature focuses on non-Gaussian state-space models --- in particular the stochastic volatility model \citep{shephard1996statistical}, but few directly work with the class of DLMs we consider. %\citet{pitt1999analytic} study convergence in the AR(1) plus noise model, but assume the observation and system variances are constant throughout.
 \citet{strickland2008parameterisation} considers reparameterization of the stochastic volatility and stochastic conditional duration models. \citet{fruhwirth2008heston} also consider reparameterizations of the stochastic volatility model while \citet{kastner2013ancillarity} applies ASIS in order to estimate the model. \citet{bos2006inference} consider a class of DLMs where the variances are time-dependent following a stochastic volatility process and show how a reparameterization can improve MCMC estimation. In the non-Gaussian Ornstein--Uhlenbeck stochastic volatility process, \citet{roberts2004bayesian} explores several alternate parameterizations and finds that the sampler based on the NCP always outperforms the sampler based on the CP. \citet{fruhwirth2003bayesian} directly applies several reparameterization techniques to a particular DLM -- a dynamic regression model with stationary AR(1) regression coefficient-- but focuses on estimation of the regression coefficient process.
 
 The rest of the paper is organized as follows. In Section \ref{sec:DLM} we introduce the dynamic linear model, discuss the subclass of DLMs we consider, and explore some of the key properties of the model. Section \ref{sec:DAs} explores several possible DAs for our class of DLMs, including several novel DAs, and shows that any SA for the DLM is likely to be difficult to use. Section \ref{sec:Algs} discusses the various MCMC strategies available for the DLM, including several DA algorithms, alternating algorithms, and interweaving algorithms. Section \ref{sec:LLM} applies these algorithms to the local level model. Finally, Section \ref{sec:Discuss} discusses these results and suggests directions for further research.
@@ -136,18 +139,18 @@ The rest of the paper is organized as follows. In Section \ref{sec:DLM} we intro
 \section{Dynamic linear models} \label{sec:DLM}
 
 The general dynamic linear model is well studied \cite{harrison1999bayesian,petris2009dynamic,prado2010time} and is defined as
-\begin{align}
-y_t &= F_t\theta_t + v_t && v_t \stackrel{ind}{\sim} N_k(0,V_t) && (\mbox{observation equation}) \label{dlmtdobseq}\\
- \theta_t &= G_t\theta_{t-1} + w_t && w_t \stackrel{ind}{\sim} N_p(0,W_t) && (\mbox{system equation}) \label{dlmtdsyseq}
-\end{align}
-where $N_d(\mu,\Sigma)$ is a $d$-dimensional multivariate normal distribution with mean $\mu$ and covariance $\Sigma$ and the observation errors, $v_{t}$ for $t=1,2,\cdots,T$, and system disturbances, $w_{t}$ for $t=1,2,\cdots,T$, are assumed independent. The observed data is $y\equiv y_{1:T} \equiv (y_1',y_2',\cdots y_T')'$ while $\theta \equiv \theta_{0:T} \equiv (\theta_0',\theta_1',\cdots \theta_T')'$ is called the latent states and is the usual DA for this model. For each $t=1,2,\cdots,T$, $F_t$ is a $k\times p$ matrix and $G_t$ is a $p\times p$ matrix. Let $\phi$ denote the vector of unknown parameters in the model. Then possibly $F_{t}$, $G_{t}$, $V_{t}$, and $W_{t}$ are all functions of $\phi$ for $t=1,2,\cdots,T$.
+\begin{align*}
+y_t &= F_t\theta_t + v_t && v_t \stackrel{ind}{\sim} N_k(0,V_t) && (\mbox{observation equation}) \\
+ \theta_t &= G_t\theta_{t-1} + w_t && w_t \stackrel{ind}{\sim} N_p(0,W_t) && (\mbox{system equation}) 
+\end{align*}
+where $N_d(\mu,\Sigma)$ is a $d$-dimensional multivariate normal distribution with mean $\mu$ and covariance $\Sigma$ and the observation errors, $v_{t}$ for $t=1,2,\cdots,T$, and system disturbances, $w_{t}$ for $t=1,2,\cdots,T$, are assumed independent. The observed data is $y\equiv y_{1:T} \equiv (y_1',y_2',\cdots y_T')'$ while $\theta \equiv \theta_{0:T} \equiv (\theta_0',\theta_1',\cdots \theta_T')'$ is called the latent states and is the standard DA for this model. For each $t=1,2,\cdots,T$, $F_t$ is a $k\times p$ matrix and $G_t$ is a $p\times p$ matrix. Let $\phi$ denote the vector of unknown parameters in the model. Then possibly $F_{t}$, $G_{t}$, $V_{t}$, and $W_{t}$ are all functions of $\phi$ for $t=1,2,\cdots,T$.
 
 The subclass of DLMs we will focus on sets $V_t=V$ and $W_t=W$ and treats $F_{t}$ and $G_{t}$ as known for all $t$. Our results can be extended when $V_t$ or $W_t$ is time-varying or when $F_t$ or $G_t$ depend on unknown parameters, but we ignore those cases for simplicity. As a result $\phi=(V,W)$ is our unknown parameter vector and we can write the model as
 \begin{align}
   y_t|\theta,V,W \stackrel{ind}{\sim} & N_k(F_t\theta_t,V) &
   \theta_t|\theta_{0:t-1},V,W  \sim & N_p(G_t\theta_{t-1},W) \label{dlmbotheqs}
 \end{align}
-for $t=1,2,\cdots T$. To complete the model specification in a Bayesian context, we need priors on $\theta_0$, $V$, and $W$. We will use the standard conditionally conjugate approach and assume that they are mutually independent a priori and that $\theta_0 \sim N_p(m_0, C_0)$, $V \sim IW(\Lambda_V, \lambda_V)$ and $W \sim IW(\Lambda_W, \lambda_W)$ where $m_0$, $C_0$, $\Lambda_V$, $\lambda_V$, $\Lambda_W$, and $\lambda_W$ are known hyperparameters and $IW(\Lambda, \lambda)$ denotes the inverse Wishart distribution with degrees of freedom $\lambda$ and positive definite scale matrix $\Lambda$.
+for $t=1,2,\cdots T$. We assume the standard conditionally conjugate priors, i.e. independently $\theta_0 \sim N_p(m_0, C_0)$, $V \sim IW(\Lambda_V, \lambda_V)$ and $W \sim IW(\Lambda_W, \lambda_W)$ where $m_0$, $C_0$, $\Lambda_V$, $\lambda_V$, $\Lambda_W$, and $\lambda_W$ are known hyperparameters and $IW(\Lambda, \lambda)$ denotes the inverse Wishart distribution with degrees of freedom $\lambda$ and positive definite scale matrix $\Lambda$.
 
 \subsection{The implied marginal model}\label{sec:DLM:marg}
 
@@ -160,30 +163,30 @@ Then conditional on $\phi=(V,W)$ each $y_t$ is a linear combination of normal ra
   \mathrm{Var}[y_t|\phi] =  V + F_tK_tWK_t'F_t' + F_tH_tC_0H_t'F_t',\quad \mathrm{and} \quad
   \mathrm{Cov}[y_s,y_t|\phi] = F_sK_sWK_t'F_t' + F_sH_sC_0H_t'F_t',
 \end{align*}
-where $H_t = G_tG_{t-1}\cdots G_1$ and $K_t = I_p + G_t + G_tG_{t-1} + \cdots + G_tG_{t-1}\cdots G_2$. Next define $D_t = F_tG_tG_{t-1}\cdots G_1$. Then let
+where $H_t = G_tG_{t-1}\cdots G_1$ and $K_t = I_p + G_t + G_tG_{t-1} + \cdots + G_tG_{t-1}\cdots G_2$. Next define $D_t = F_tG_tG_{t-1}\cdots G_1$. Then let $\tilde{V}=\mathrm{I}\otimes V$ and $D$ be block diagonal with elements $D_1,\ldots,D_T$, 
+%\begin{align*}
+%\tilde{V}_{Tk\times Tk} & = \begin{bmatrix}
+%V & 0 & \cdots & 0\\
+%0 & V & \cdots & 0\\
+%\vdots & \vdots & \ddots & \vdots\\
+%0 & 0 & \cdots & V
+%\end{bmatrix}, &
+%D_{Tp\times Tk} &= \begin{bmatrix}
+%D_1 & 0 & \cdots & 0\\
+%0 & D_2 & \cdots & 0\\
+%\vdots & \vdots & \ddots & \vdots\\
+%0 & 0 & \cdots & D_T
+%\end{bmatrix},
+%\end{align*}
 \begin{align*}
-\tilde{V}_{Tk\times Tk} & = \begin{bmatrix}
-V & 0 & \ddots & 0\\
-0 & V & \ddots & 0\\
-\ddots & \ddots & \ddots & \ddots\\
-0 & 0 & \ddots & V
-\end{bmatrix}, &
-D_{Tp\times Tk} &= \begin{bmatrix}
-D_1 & 0 & \ddots & 0\\
-0 & D_2 & \ddots & 0\\
-\ddots & \ddots & \ddots & \ddots\\
-0 & 0 & \ddots & D_T
-\end{bmatrix},
-\end{align*}
-\begin{align*}
-\tilde{W}_{Tk\times Tk} &= \begin{bmatrix} K_1'F_1' & K_2'F_2' & \hdots K_T'F_T' \end{bmatrix}' W \begin{bmatrix} K_1'F_1' & K_2'F_2' & \hdots K_T'F_T' \end{bmatrix},&\\
-\tilde{C}_{Tk\times Tk} &= \begin{bmatrix} H_1'F_1' & H_2'F_2' & \hdots H_T'F_T' \end{bmatrix}' C_0 \begin{bmatrix} H_1'F_1' & H_2'F_2' & \hdots H_T'F_T' \end{bmatrix},&
+\tilde{W}_{Tk\times Tk} &= \begin{bmatrix} K_1'F_1' & K_2'F_2' & \cdots K_T'F_T' \end{bmatrix}' W \begin{bmatrix} K_1'F_1' & K_2'F_2' & \cdots K_T'F_T' \end{bmatrix}, &\\
+\tilde{C}_{Tk\times Tk} &= \begin{bmatrix} H_1'F_1' & H_2'F_2' & \cdots H_T'F_T' \end{bmatrix}' C_0 \begin{bmatrix} H_1'F_1' & H_2'F_2' & \cdots H_T'F_T' \end{bmatrix},&
 \end{align*}
 and $\tilde{m}_{Tp\times 1} = (m_0', m_0', \cdots m_0')'$. Now we have the data model for $y$ without any data augmentation:
 \begin{align}
-  y \stackrel{ind}{\sim} N_{Tk}(D\tilde{m}, \tilde{V} + \tilde{W} + \tilde{C}) \label{margmodel}
+  y|V,W \stackrel{ind}{\sim} N_{Tk}(D\tilde{m}, \tilde{V} + \tilde{W} + \tilde{C}) \label{margmodel}
 \end{align}
-for $t=1,2,\cdots,T$. Given a prior $p(\phi)$, the posterior density we are interested in is $p(\phi|y)\propto p(y|\phi)p(\phi)$.
+for $t=1,2,\cdots,T$. \jarad{why do we have ind and $t=1,2,\cdots,T$ here?} Given a prior $p(\phi)$, the posterior density we are interested in is $p(\phi|y)\propto p(y|\phi)p(\phi)$.
 
 \section{Augmenting the DLM}\label{sec:DAs}
 The definition of the DLM includes $\theta$ and unsurprisingly $\theta$ is the standard DA used in estimation of the DLM. Any other DA would suffice to estimate the model--the only restriction is that the joint posterior of the model parameter and the DA is such that if we integrate out the DA, we obtain the desired marginal posterior for the parameter. This leaves wide range of possibilities for alternate DAs to use in Algorithm \nameref{alg:DA}, as long as the resulting full conditional distributions of the DA and the model parameter are both easy to sample from. We will explore several alternatives found through manipulating $\theta$ in intuitive ways. The purpose of these constructions is primarily to use as grist for the interweaving mill, but each new DA will also implicitly define a new base DA algorithm.
