@@ -44,7 +44,7 @@ numbered=no]{alg*}
 
 \title{Interweaving Markov Chain Monte Carlo Strategies for Efficient
 Estimation of Dynamic Linear Models}
-\author{Matt Simpson\textsuperscript{1}, Jarad Niemi\textsuperscript{2}, Vivekananda Roy\textsuperscript{2}}
+\author{Matthew Simpson\textsuperscript{1}, Jarad Niemi\textsuperscript{2}, Vivekananda Roy\textsuperscript{2}}
 \date{\today}
 \maketitle
 
@@ -68,7 +68,7 @@ Estimation of Dynamic Linear Models}
 \begin{center}
 \textbf{Author's Footnote:}
 \end{center}
-Matt Simpson is Doctoral Candidate, Departments of Economics and Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: simpsonm@iastate.edu); Jarad Niemi is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: niemi@iastate.edu); and Vivekananda Roy is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: vroy@iastate.edu). The authors thank Syliva Fr{\"u}hwirth-Schnatter for helpful comments.
+Matthew Simpson is Doctoral Candidate, Departments of Economics and Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: simpsonm@iastate.edu); Jarad Niemi is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: niemi@iastate.edu); and Vivekananda Roy is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: vroy@iastate.edu). The authors thank Syliva Fr{\"u}hwirth-Schnatter for helpful comments.
 
 \newpage
 \begin{abstract}
@@ -511,7 +511,7 @@ Given the densities discussed above, all of the pieces are in place to construct
 
 In order to test these algorithms, we simulated data from the local level model for various choices of $V$, $W$, and $T$. We created a full factorial design with $V$ and $W$ each taking the values $10^{i}$ where $i=-2$, $-1.5$, $-1$, $-0.5$, $0$, $0.5$, $1$, $1.5$, $2$ and $T$ taking the values $10, 100, 1000$. Then for each dataset, we fit the local level model using a variety of the algorithms discussed in this paper. We used the same rule for constructing priors for each model: $\theta_0\sim N(0,10^7)$, $V\sim IG(5, 4V^*)$, and $W\sim IG(5, 4W^*)$, mutually independent where $(V^*,W^*)$ are the true values of $V$ and $W$ used to simulate the time series. Note that the prior means are equal to the true values of $V$ and $W$, so both the prior and likelihood and thus the posterior roughly agree about the likely values of $V$ and $W$. Ultimately, the reason for varying the prior with the true parameter values is that the results are useful --- intuitively, it turns out the behavior of each of these samplers depends on where in the parameter space the posterior distribution puts most of its mass.
 
-For each dataset and each sampler we obtained $n=3000$ draws and threw away the first $500$. The chains were started at the true values used to simulate the time series, so we can examine the behavior of the chains to determine how well they mix but not how quickly they converge. Define the effective sample proportion (ESP) for a scalar component of the chain as the effective number of independent draws, i.e. effective sample size \cite{gelman2003bayesian} of the component divided by the actual sample size, i.e. $ESP=ESS/n$. When $ESP=1$ the Markov chain is behaving as if it obtains iid draws from the posterior. It is possible to obtain $ESP>1$ if the draws are negatively correlated and this occasionally happens in our simulations, but when it does happen the correlation is weak and we round them down to one for plotting purposes.
+For each dataset and each sampler we obtained $n=3000$ draws and threw away the first $500$. The chains were started at the true values used to simulate the time series, so we can examine the behavior of the chains to determine how well they mix but not how quickly they converge. Define the effective sample proportion (ESP) for a scalar component of the chain as the effective number of independent draws, i.e. effective sample size \cite{gelman2013bayesian} of the component divided by the actual sample size, i.e. $ESP=ESS/n$. When $ESP=1$ the Markov chain is behaving as if it obtains iid draws from the posterior. It is possible to obtain $ESP>1$ if the draws are negatively correlated and this occasionally happens in our simulations, but when it does happen the correlation is weak and we round them down to one for plotting purposes.
 
 \subsection{Base sampler results}
 
@@ -682,7 +682,6 @@ In the general DLM, however, it is unclear whether this will hold. In particular
 
 
 \clearpage
-\bibliographystyle{ECA_jasa}  % proper bibliography style for ASA
+\bibliographystyle{ECA_jasa_matt}  % proper bibliography style for ASA
 \bibliography{dlmasis}
 \end{document}
-

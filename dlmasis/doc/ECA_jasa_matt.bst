@@ -1,3 +1,7 @@
+% This started out as the thing described below, but was modified by
+% Matthew Simpson to fix the inproceedings type 
+
+
 % This started out as agsm but was modified by Eric C. Anderson
 % to conform to JASA's standards
 
@@ -264,6 +268,7 @@ FUNCTION {format.authors}
     { "{vv~}{ll}{, jj}{, f.}" author format.names }
   if$
 }
+
 
 FUNCTION {format.editors}
 { editor empty$
@@ -870,11 +875,11 @@ FUNCTION {inproceedings}
   " \harvardyearleft " list.year * "\harvardyearright " * output.nonnull
   title.field field.used =
     { skip$ }
-    { format.title "title" output.check }
+    { format.title quote "title" output.check }  %Matt: changed to quote the title
   if$
   author "author" item.check
   crossref missing$
-    { format.in.ed.booktitle "booktitle" output.check
+    { format.in.ed.booktitle "booktitle" output.check.no.comma %Matt: changed to no
       format.bvolume output
       format.number.series output
       address empty$
