@@ -513,7 +513,7 @@ In order to test these algorithms, we simulated data from the local level model 
 
 For each dataset and each sampler we obtained $n=3000$ draws and threw away the first $500$. The chains were started at the true values used to simulate the time series, so we can examine the behavior of the chains to determine how well they mix but not how quickly they converge. Define the effective sample proportion (ESP) for a scalar component of the chain as the effective number of independent draws, i.e. effective sample size \cite{gelman2013bayesian} of the component divided by the actual sample size, i.e. $ESP=ESS/n$. When $ESP=1$ the Markov chain is behaving as if it obtains iid draws from the posterior. It is possible to obtain $ESP>1$ if the draws are negatively correlated and this occasionally happens in our simulations, but when it does happen the correlation is weak and we round them down to one for plotting purposes.
 
-\subsection{Base sampler results}
+\subsection{Simulation results}
 
 \begin{figure}[!ht]
 \centering
@@ -533,48 +533,6 @@ Figure \ref{baseESplot} contains plots of ESP for $V$ and $W$ in each chain of e
   \caption{Rule of thumb for when each base algorithm has a high ESP for each variable as a function of the true signal-to-noise ratio, $R^*=W^*/V^*$. Note that as the length of the time series increases, the farther away from one $R^*$ has to be for the sampler to have a high ESP.}
   \label{tab:stnmix}
 \end{table}
-
-Most of the patterns of Figure \ref{baseESplot} and Table \ref{tab:stnmix} can be explained by Figure \ref{corplot}, which contains the estimated posterior correlations between various functions of parameters estimated using the simulations from the Triple-Alt sampler for a time series with $T=100$. The state sampler consists of two steps --- a draw of $\theta$ given $V$ and $W$, and a draw of $(V,W)$ given $\theta$. From Section \ref{sec:LLM:fullcond} we have that conditional on $\theta$, $V$ and $W$ are independent in the posterior and each has an inverse gamma distribution that depends on the states only through the second parameter:
-\begin{align*}
-  b_V &= \beta_V + \sum_{t=1}^T(y_t - \theta_t)^2/2 &
-  b_W &= \beta_W + \sum_{t=1}^T(\theta_t - \theta_{t-1})^2/2.
-\end{align*}
-So we can view $(b_V,b_W)$ as the data augmentation instead of $\theta$ and thus the state sampler is
-\begin{align*}
-  [b_V, b_W|V^{(k)},W^{(k)}] \to [V^{(k+1)},W^{(k+1)}|b_V,b_W].
-\end{align*}
-Thus the dependence between $(V,W)$ and $(b_V,b_W)$ in the posterior will determine how much the state sampler moves in a given iteration and, in particular, it is possible that $V$ and $W$ have very different serial dependence from each other since we are drawing them jointly. When the dependence between $V$ and $b_V$ is high, the $(V,W)$ step will hardly move $V$ even if it drastically moves $W$ since $V$ and $W$ are independent. However, the $(b_V,b_W)$ step may move both elements a moderate amount since they both depend on $(V,W)$.
-
-In Figure \ref{corplot} we see that the posterior correlation between $V$ and $b_V$ is high in magnitude and positive when $R^*>1$ while the posterior correlation between $V$ and $b_W$ is moderate to low and negative. When $R^*$ is large enough though, the posterior correlation between $V$ and $b_W$ evaporates. Similarly when $R^*<1$ the posterior correlation between $W$ and $b_W$ is high and positive and the posterior correlation between $W$ and $b_V$ is high and negative. Again as $R^*$ becomes large enough the correlation between $W$ and $b_V$ goes to zero. So when $R^*>1$, the draw of $(b_V, b_W)$ is unlikely to move $b_V$ much since $b_V$ is so highly correlated with $V$ and essentially uncorrelated with $b_W$, but $b_W$ is essentially uncorrelated with $W$ and negatively correlated with $V$ so $b_W$ is likely to move a fair amount. Furthermore the draw of $V$ is highly correlated with $b_V$ while the draw of $W$ is essentially independent of $b_W$ (and the draws of $V$ and $W$ are independent conditional on $b_V$ and $b_W$). Thus when $R^*>1$ we should expect high serial dependence for $V$ and low serial dependence for $W$, and so low ESP for $V$ and high ESP for $W$, which is exactly what we see in Figure \ref{baseESplot}. By similar reasoning when $R^*<1$, we should expect low serial dependence for $V$ and high serial dependece for $W$ and thus high ESP for $V$ and low ESP for $W$, which can also be seen in Figure \ref{baseESplot}.
-
-For the SD sampler, things are a bit more complicated. The draw of $V|W,\gamma$ still depends on $b_V$ since it is the same inverse gamma draw as in the state sampler, but the draw of $W|V,\gamma$ now depends on $a_\gamma$ and $b_\gamma$ defined in Section \ref{sec:LLM:fullcond} as
-\begin{align*}
-  a_\gamma & = \frac{1}{2V}\sum_{t=1}^T\left(\sum_{j=1}^t\gamma_j\right)^2&
-  b_\gamma &= \frac{1}{V}\sum_{t=1}^T(y_t-\gamma_0)\left(\sum_{j=1}^t\gamma_j\right).
-\end{align*}
-So the dependence between $V$ and $b_V$ determines how much the chain moves in the $V$ step, and the dependence between $W$ and $(a_\gamma , b_\gamma)$ determines how much it moves in the $W$ step. The dependence between $(V,W)$ and $\gamma$ determines how much the chain moves in the DA step, but we can view this step instead as a draw of $b_V$ in which case the dependence between $W$ and $b_V$ determines how much the chain moves in that step. So if any one of these steps has high dependence, we should expect every element of the chain, and $(V,W)$ in particular, to have high serial dependence in the chain. The SE sampler is analogous to the SD sampler except with $b_W$, $a_\psi$ and $b_\psi$ where
-\begin{align*}
-  a_\psi&=\frac{1}{2W}\sum_{t=1}^T(L\psi_t)^2&
-  b_\psi&=\frac{1}{W}\sum_{t=1}^T(L\psi_tLy_t).
-\end{align*}
-
-\begin{figure}[!ht]
-\centering
-\includegraphics[width=0.24\textwidth]{corplot1}
-\includegraphics[width=0.24\textwidth]{corplot2}
-\includegraphics[width=0.24\textwidth]{corplot3}
-\includegraphics[width=0.24\textwidth]{corplot4}
-\includegraphics[width=0.24\textwidth]{corplot5}
-\includegraphics[width=0.24\textwidth]{corplot6}
-\includegraphics[width=0.24\textwidth]{corplot7}
-\includegraphics[width=0.24\textwidth]{corplot8}
-\caption{Posterior correlation between $V$ or $W$ and $b_V$, $b_W$, $a_\gamma$, $b_\gamma$, $a_\psi$ or $b_\psi$. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data with $T=100$.}
-\label{corplot}
-\end{figure}
-
-In order to analyze the SD sampler, first suppose $R^*>1$. Then from Figure \ref{corplot} $b_V$ has high correlation with $V$ and low correlation with $W$, so the draw of $b_V$ should not move the chain much. Next, the draw of $V$ should again not move the chain much because of the high correlation between $V$ and $b_V$. Finally the draw of $W$ has a fair chance to move the chain because it has low correlation with both $a_\gamma$ and $b_\gamma$. But this has little impact on $b_V$ and thus the entire chain since $b_V$ is so highly correlated with $V$ but hardly correlated with $W$. So when $R^*>1$, we should expect high serial dependence and low ESP for $V$. We should also expect similar behavior for $W$ since the entire chain is hardly moving so $W$'s hyperparameters are hardly moving. This is roughly what we see in Figure \ref{baseESplot}, though this reasoning does not allow us to predict which of $V$ and $W$ will have lower ESP. When $R^*<1$ the posterior correlation in each of the steps is broken, though in the $W$ step the correlation between $W$ and both $a_\gamma$ and $b_\gamma$ becomes negative and somewhat high in magnitude. Here we should not expect less serial dependence in $V$ or $W$, but we should perhaps expect higher ESP's since negatively correlated draws decrease Monte Carlo standard error. Indeed, we see ESP's near one for both variances in Figure \ref{baseESplot}. The SE sampler is analogous to the SD sampler and a similar analysis applies --- the posterior correlations between $V$ or $W$ and $b_W$, $a_\psi$ or $b_\psi$ in Figure \ref{corplot} roughly predict the ESP of the SE sampler in Figure \ref{baseESplot}. When one or more of the correlations are high, ESPs for $V$ and $W$ are low while when all of the correlations are low, both ESPs are high. We omit a similar analysis of the wrongly-scaled samplers for brevity, but note that their behavior will allows us to predict the behavior of the CIS sampler.
-
-\subsection{GIS and CIS Results}
 
 We fit the LLM to the simulated datasets using several GIS samplers and a CIS sampler as well. Since the wrongly-scaled samplers behaved similarly to the state sampler and neither of the underlying DAs were a SA for $V$ and $W$ jointly, we ignored them in the construction of the GIS samplers. Instead, we constructed the State-SD, State-SE, SD-SE, and Triple (State-SD-SE) GIS samplers, as well as the CIS sampler.
 
@@ -642,8 +600,7 @@ The importance of the true signal-to-noise ratio in DLms to the mixing and conve
 
 While it is clear that the signal-to-noise ratio is the key quantity for determining how well one of MCMC algorithms we discussed will perform in the local level model, in the general DLM we do not know whether the signal-to-noise ratio has any relevance. However, given the results of previous work discussed above it is likely that the signal-to-noise ratio will in some way determine how well each algorithm performs. The precise manner in which convergence and mixing behavior depends on the true signal-to-noise ratio is unkown, but it is likely a consequence of the relevance of the Bayesian fraction of missing information and the related EM fraction of missing information to the performance of the DA and EM algorithms (see \citet{van2001art} for a good explication of both concepts).
 
-
-\subsection{Improving computational efficiency}
+%\subsection{Improving computational efficiency}
 
 A major computational bottleneck in most of our algorithms occurs when we have to draw from $p(W|V,\gamma,y)$, $p(V|W,\psi,y)$, $p(V|W,\tilde{\gamma},y)$ or $p(W|V,\tilde{\psi},y)$. The densities $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ have the form
 \[
@@ -664,7 +621,7 @@ In the general DLM, however, it is unclear whether this will hold. In particular
 
 \section{Supplementary Materials}
 
-\matt{Guidelines: each external file has a separate \textbackslash item[Name:] in the description environment. Mode likely the names I have are inccorect - fix them. Also, there is probably more than one code file - each one should get an \textbackslash item}
+\matt{Guidelines: each external file has a separate \textbackslash item[Name:] in the description environment. Most likely the names I have are incorrect - fix them. Also, there is probably more than one code file - each one should get an \textbackslash item}
 \begin{description}
 \item[Appendices:] This file provides 6 appendices cited in the main article:
 \begin{itemize}
