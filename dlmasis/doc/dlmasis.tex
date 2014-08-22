@@ -68,7 +68,7 @@ Estimation of Dynamic Linear Models}
 \begin{center}
 \textbf{Author's Footnote:}
 \end{center}
-Matthew Simpson is Doctoral Candidate, Departments of Economics and Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: simpsonm@iastate.edu); Jarad Niemi is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: niemi@iastate.edu); and Vivekananda Roy is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: vroy@iastate.edu). %The authors thank Sylvia Fr{\"u}hwirth-Schnatter for helpful comments. \jarad{we want Sylvia to be a reviewer and this may eliminate her from consideration. we can always add it back at the end}
+Matthew Simpson is Doctoral Candidate, Departments of Economics and Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: simpsonm@iastate.edu); Jarad Niemi is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: niemi@iastate.edu); and Vivekananda Roy is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: vroy@iastate.edu). %The authors thank Sylvia Fr{\"u}hwirth-Schnatter for helpful comments. 
 
 \newpage
 \begin{abstract}
@@ -76,11 +76,13 @@ In dynamic linear models (DLMs) with unknown fixed parameters% and latent states
 , a standard Markov chain Monte Carlo (MCMC) sampling strategy is to alternate sampling of latent states conditional on fixed parameters and sampling of fixed parameters conditional on latent states. In some regions of the parameter space, this standard data augmentation (DA) algorithm can be inefficient. To improve efficiency, we seek to employ the interweaving strategies of \citet{yu2011center} that combine separate DAs by weaving them together. For this, we introduce a number of novel alternative DAs for a general class of DLMs: scaled errors, wrongly-scaled errors, and wrongly-scaled disturbances. With the latent states and the less commonly used scaled disturbances, this yields five unique DAs to employ in MCMC algorithms. Each DA implies a unique MCMC sampling strategy and they can be combined into interweaving or alternating strategies that improve MCMC efficiency. We assess the strategies using the local level DLM and demonstrate that several strategies improve efficiency relative to the standard approach, the most efficient being interweaving the scaled errors and scaled disturbances. Supplemntary materials are available online for this article including the details of the implemented algorithms, additional plots of the simulation results, and code for reproducing the simulatons.
 
 \smallskip
-\noindent \textbf{Key Words:} Ancillary augmentation; Centered parameterization; Data augmentation; Non-centered parameteriation; Reparameterization; Sufficient augmentation; Time series
+\noindent \textbf{Key Words:} Ancillary augmentation; Centered parameterization; Data augmentation; Non-centered parameteriation; Reparameterization; Sufficient augmentation; Time series; State-space model
 \end{abstract}
 
 
 \newpage
+
+\section{Introduction}
 
 The Data Augmentation (DA) algorithm of \citet{tanner1987calculation} and the closely related EM algorithm of \citet{dempster1977maximum} have become widely used strategies for computing posterior distributions and maximum likelihood estimates. There is a long history of using ideas from the EM literature to inform the construction of DA algorithms and vice versa \citep{meng1997algorithm,van2010cross}, and a large literature has grown up around the various possible improvements to both algorithms \citep{meng1997algorithm,meng1999seeking,liu1999parameter,hobert2008theoretical,yu2011center} though much of the work on constructing and using DAs has focused on hierarchical models \citep{gelfand1995efficient,roberts1997updating,meng1998fast,van2001art,bernardo2003non,papaspiliopoulos2007general,papaspiliopoulos2008stability}. Relatively little attention has been paid to time series models despite similarities between some time series and hierarchical models, though there are some examples \citep{pitt1999analytic,fruhwirth2003bayesian,fruhwirth2006auxiliary}. 
 
