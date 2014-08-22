@@ -68,7 +68,7 @@ Estimation of Dynamic Linear Models}
 \begin{center}
 \textbf{Author's Footnote:}
 \end{center}
-Matthew Simpson is Doctoral Candidate, Departments of Economics and Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: simpsonm@iastate.edu); Jarad Niemi is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: niemi@iastate.edu); and Vivekananda Roy is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: vroy@iastate.edu). The authors thank Syliva Fr{\"u}hwirth-Schnatter for helpful comments.
+Matthew Simpson is Doctoral Candidate, Departments of Economics and Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: simpsonm@iastate.edu); Jarad Niemi is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: niemi@iastate.edu); and Vivekananda Roy is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: vroy@iastate.edu). %The authors thank Sylvia Fr{\"u}hwirth-Schnatter for helpful comments. \jarad{we want Sylvia to be a reviewer and this may eliminate her from consideration. we can always add it back at the end}
 
 \newpage
 \begin{abstract}
@@ -77,11 +77,10 @@ In dynamic linear models (DLMs) with unknown fixed parameters% and latent states
 
 \smallskip
 \noindent \textbf{Key Words:} Ancillary augmentation; Centered parameterization; Data augmentation; Non-centered parameteriation; Reparameterization; Sufficient augmentation; Time series
+\end{abstract}
+
 
 \newpage
-
-%One of the interweaving strategies, ancillary-sufficient interweaving strategy (ASIS) requires one the two DAs to be a sufficient augmentation and the other to be an ancillary augmentation, also known as centered and noncenterd augmentations respectively. We show, however, that under reasonable assumptions any sufficient augmentation requires sampling from a density that is just as complicated as the target posterior distribution. Nonetheless, we utilize the available augmentations to construct several interweaving algorithms -- both the standard general interweaving strategy (GIS), of which ASIS is a subspecies, and the componentwise interweaving strategy (CIS) which applies GIS to sub-blocks of the parameter vector in a Gibbs-like structure. Though we cannot construct an ASIS algorithm, we are able to construct a CIS algorithm that uses ASIS in each parameter block. Using the local level DLM, we show how to construct several of these algorithms and conduct a simulation study in order to discern their properties. We find several algorithms that significantly outperform the standard DA for many regions of the parameter.
-\end{abstract}
 
 The Data Augmentation (DA) algorithm of \citet{tanner1987calculation} and the closely related EM algorithm of \citet{dempster1977maximum} have become widely used strategies for computing posterior distributions and maximum likelihood estimates. There is a long history of using ideas from the EM literature to inform the construction of DA algorithms and vice versa \citep{meng1997algorithm,van2010cross}, and a large literature has grown up around the various possible improvements to both algorithms \citep{meng1997algorithm,meng1999seeking,liu1999parameter,hobert2008theoretical,yu2011center} though much of the work on constructing and using DAs has focused on hierarchical models \citep{gelfand1995efficient,roberts1997updating,meng1998fast,van2001art,bernardo2003non,papaspiliopoulos2007general,papaspiliopoulos2008stability}. Relatively little attention has been paid to time series models despite similarities between some time series and hierarchical models, though there are some examples \citep{pitt1999analytic,fruhwirth2003bayesian,fruhwirth2006auxiliary}. 
 
