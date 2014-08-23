@@ -227,13 +227,13 @@ We follow \citet{papaspiliopoulos2007general}'s suggestion to construct a pivota
 
 In the general DLM the disturbances are vectors, so to define the scaled disturbances let $L_W$ denote the Cholesky decomposition of $W$, i.e. the lower triangle matrix $L_W$ such that $L_WL_W' =W$. Then we will define the scaled disturbances $\gamma\equiv\gamma_{0:T}\equiv(\gamma_0',\gamma_1',\cdots,\gamma_T')'$ by $\gamma_0=\theta_0$ and $\gamma_t = L_W^{-1}(\theta_t-G_t\theta_{t-1})$ for $t=1,2,\cdots,T$. There are actually $p!$ different versions of the scaled disturbances depending on how we order the elements of $\theta_t$, as \citet{meng1998fast} note for EM algorithms in a different class of models. Here we will use the most natural ordering.
 %We will sidestep the issue of the best ordering of the latent states. 
-The reverse transformation is defined recursively by $\theta_0=\gamma_0$ and $\theta_t=L_W\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. Ultimately under the scaled disturbance parameterization we can write the model as
+The reverse transformation is defined recursively by $\theta_0(\gamma,W)=\gamma_0$ and $\theta_t(\gamma,W)=L_W\gamma_t + G_t\theta_{t-1}(\gamma,W)$ for $t=1,2,\cdots,T$. Ultimately under the scaled disturbance parameterization we can write the model as
 \jarad{matt: this isn't correct, what is $theta_t(\gamma,W)$?}
 \begin{equation}
-  y_t|\gamma,V,W  \stackrel{ind}{\sim} N_k\left(F_t\theta_t(\gamma,W), V\right) \qquad
+  y_t|\gamma,V,W  \stackrel{ind}{\sim} N_k\left(F_t\theta_t(\gamma,W), V\right), \qquad
   \gamma_t  \stackrel{iid}{\sim}N_p(0,I_p) \label{dlmdistmodel}
 \end{equation}
-for $t=1,2,\cdots,T$ where $I_p$ is the $p\times p$ identity matrix. Neither $V$ nor $W$ are in the system equation so the scaled disturbances are an AA for $(V,W)$. 
+for $t=1,2,\cdots,T$ where $I_p$ is the $p\times p$ identity matrix. Neither $V$ nor $W$ are in the system equation so the scaled disturbances are an AA for $(V,W)$.
 
 The disturbance smoother of \citet{koopman1993disturbance} finds the conditional posterior of the scaled disturbances given the model parameters and the data and \citet{fruhwirth2004efficient} use it in a dynamic regression model with stationary regression coefficients.
 
@@ -600,7 +600,7 @@ In the LLM, the conditionally conjugate prior for $\sqrt{W}$ using the scaled di
 In the general DLM, however, it is unclear whether this will hold. In particular in the scaled disturbance sampler, when $V$ is a matrix its full conditional becomes a matrix analogue of the generalized inverse Gaussian distribution while when $W$ is a matrix, the nonzero elements of the Cholesky decomposition of $W$ now how the Gaussian prior and Gaussian full conditional posterior. The former is likely difficult to draw from efficiently and the latter requires additional matrix computations during every iteration. On the other hand with the inverse Wishart priors, when $W$ is a matrix the full conditional of $W$ becomes a matrix analogue of the density in Section \ref{sec:LLM:fullcond}, and this is more complicated than the matrix analogue of the GIG distribution.
 
 
-\section{Supplementary Materials}
+\section{Supplementary Materials}\label{sec:Supp}
 
 \matt{Guidelines: each external file has a separate \textbackslash item[Name:] in the description environment. Most likely the names I have are incorrect - fix them. Also, there is probably more than one code file - each one should get an \textbackslash item}
 \begin{description}
