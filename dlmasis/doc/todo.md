@@ -1,16 +1,16 @@
-things to do:
+**To Do:**
 
-1) Fix the bibliography - currently it repeats author's names instead of replacing with dashes.
+* Fix the bibliography - currently it repeats author's names instead of replacing with dashes.
 
-2) Iterate discussion and abstract. Anything missing from discussion?
+* Iterate discussion and abstract. Anything missing from discussion?
 
-3) Get supplementary materials in order. Code in particular.
+* Get supplementary materials in order. Code in particular.
 
-4) After supplementary materials are in order, fix the supplementary materials section at the end.
+* After supplementary materials are in order, fix the supplementary materials section at the end.
 
-5) Find material that can be cut - goal: under 25 pages
+* Find material that can be cut - goal: under 25 pages
 
-6) Do we have any acknowledgements that I'm forgetting? Maybe Alicia (if she ever gives us comments)? Maybe I should acknowledge all conference participants where I presented the poster? Financial acknowledgements that I might not know about?
+* Do we have any acknowledgements that I'm forgetting? Maybe Alicia (if she ever gives us comments)? Maybe I should acknowledge all conference participants where I presented the poster? Financial acknowledgements that I might not know about?
 
 
 For future reference, see this re: subheadings
