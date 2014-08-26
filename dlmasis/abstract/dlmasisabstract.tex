@@ -1,0 +1,33 @@
+\documentclass[10pt]{article}
+\usepackage{amssymb, amsmath, amsthm, graphics, graphicx, color, fullpage}
+\usepackage[authoryear]{natbib}
+\begin{document}
+
+
+\title{Interweaving Markov Chain Monte Carlo Strategies for Efficient
+Estimation of Dynamic Linear Models}
+\author{\textbf{Matthew Simpson}\textsuperscript{1}, Jarad Niemi\textsuperscript{2}, Vivekananda Roy\textsuperscript{2}}
+\date{\today}
+\maketitle
+
+\begin{center}
+ \vspace{-.5em}
+ {\small \textsuperscript{1} Iowa State University, Deptartments of Statistics and Economics, Ames, IA 50011-1210\\[-.3em]
+ {\tt simpsonm@iastate.edu}}
+ 
+ \vspace{.5em}
+
+{\small \textsuperscript{2} Iowa State University, Department of Statistics, Ames, IA 50011-1210\\[-.3em]
+{\tt <niemi,vroy>@iastate.edu}}
+
+\end{center}
+
+\begin{abstract}
+In dynamic linear models (DLMs) with unknown fixed parameters% and latent states
+, a standard Markov chain Monte Carlo (MCMC) sampling strategy is to alternate sampling of latent states conditional on fixed parameters and sampling of fixed parameters conditional on latent states. In some regions of the parameter space, this standard data augmentation (DA) algorithm can be inefficient. To improve efficiency, we seek to employ the interweaving strategies of \citet{yu2011center} that combine separate DAs by weaving them together. For this, we introduce a number of novel alternative DAs for a general class of DLMs: scaled errors, wrongly-scaled errors, and wrongly-scaled disturbances. With the latent states and the less commonly used scaled disturbances, this yields five unique DAs to employ in MCMC algorithms. Each DA implies a unique MCMC sampling strategy and they can be combined into interweaving or alternating strategies that improve MCMC efficiency. We assess the strategies using the local level DLM and demonstrate that several strategies improve efficiency relative to the standard approach, the most efficient being interweaving the scaled errors and scaled disturbances. 
+\end{abstract}
+
+\bibliographystyle{plainnat}
+\bibliography{abstractbib}
+
+\end{document}
