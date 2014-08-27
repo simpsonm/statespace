@@ -1,7 +1,7 @@
 ## code for running the simulations from the paper.
 ## WARNING: THIS WILL TAKE ON THE ORDER OF WEEKS TO COMPLETE ON A UNIVERSITY CLUSTER
 source("dlmasisfun.R")
-set.seed(152893627) ## needed to replicated my dataset
+set.seed(152893627) ## needed to replicate my dataset
 ## set the time series lengths and the true values of V and W
 T <- c(10, 100, 1000)
 V <- 10^(c(0:10)/2-2)
@@ -28,7 +28,10 @@ parallel <- require(doMC, quietly=TRUE)
 if(parallel){
   registerDoMC(8)
 }
-## can randomize see here for obtaining a different posterior sample
+
+## can randomize seed here for obtaining a different posterior sample
+## from the same posterior distribution
+
 ## run the samplers
 system.time(samout <- fullsim(samplers, simdata, n, burn, parallel))
 save(samout, file="samout.RData")

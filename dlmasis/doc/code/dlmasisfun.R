@@ -243,7 +243,8 @@ samsummary <- function(sam, dat, burn, sampler){
   return(out)
 }
 
-## convenience function for finding the first order autocorrelation of a TS
+## convenience function for finding the first order
+## autocorrelation of a time series
 corfun <- function(x){
   acf(x, lag.max=1, plot=FALSE)[[1]][2]
 }
