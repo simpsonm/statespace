@@ -177,7 +177,7 @@ ggsave(filename="intESplot1000.pdf", plot=p3, width=8, height=3.75)
 
 ## altESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=7, out.width=".7\\textwidth"
 vars <- c("V.ES", "W.ES")
-sams <- c(ints)
+sams <- c(alts)
 title <- "ESP for V and W in the alternating algorithms, T="
 p1 <- plotfun(meltedsam, vars, sams, 10, title)
 p2 <- plotfun(meltedsam, vars, sams, 100, title)
@@ -185,7 +185,6 @@ p3 <- plotfun(meltedsam, vars, sams, 1000, title)
 ggsave(filename="altESplot10.pdf", plot=p1, width=7, height=3.75)
 ggsave(filename="altESplot100.pdf", plot=p2, width=7, height=3.75)
 ggsave(filename="altESplot1000.pdf", plot=p3, width=7, height=3.75)
-
 
 
 ## baseinttimeplot, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.25, out.width=".8\\textwidth"
@@ -200,9 +199,9 @@ ggsave(filename="baseinttimeplot100.pdf", plot=p2, width=10, height=3.25)
 ggsave(filename="baseinttimeplot1000.pdf", plot=p3, width=10, height=3.25)
 
 
-
 ## altinttimeplot, fig.cap=cap, echo=FALSE, fig.width=8, fig.height=3.75, out.width=".49\\textwidth"
-sams <- c(alts,ints)
+vars <- c("V.time", "W.time")
+sams <- c(alts)
 title <- "Log minutes per 1000 effective draws for alternating samplers, T="
 p1 <- plotfuntime(meltedsam, vars, sams, 10, title, c(-5,1))
 p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
@@ -210,4 +209,3 @@ p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, c(-1,8))
 ggsave(filename="altinttimeplot10.pdf", plot=p1, width=8, height=3.75)
 ggsave(filename="altinttimeplot100.pdf", plot=p2, width=8, height=3.75)
 ggsave(filename="altinttimeplot1000.pdf", plot=p3, width=8, height=3.75)
-
