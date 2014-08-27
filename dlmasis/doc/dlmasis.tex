@@ -586,10 +586,9 @@ In the LLM, the conditionally conjugate prior for $\sqrt{W}$ using the scaled di
 
 In the general DLM, however, it is unclear whether this will hold. In particular in the scaled disturbance sampler, when $V$ is a matrix its full conditional becomes a matrix analogue of the generalized inverse Gaussian distribution while when $W$ is a matrix, the nonzero elements of the Cholesky decomposition of $W$ now how the Gaussian prior and Gaussian full conditional posterior. The former is likely difficult to draw from efficiently and the latter requires additional matrix computations during every iteration. On the other hand with the inverse Wishart priors, when $W$ is a matrix the full conditional of $W$ becomes a matrix analogue of the density in Section \ref{sec:LLM:fullcond}, and this is more complicated than the matrix analogue of the GIG distribution.
 
-
+\newpage
 \section{Supplementary Materials}\label{sec:Supp}
 
-\matt{Guidelines: each external file has a separate \textbackslash item[Name:] in the description environment. Most likely the names I have are incorrect - fix them. Also, there is probably more than one code file - each one should get an \textbackslash item}
 \begin{description}
 \item[appendices.pdf:] This file provides 7 appendices cited in the main article:
 \begin{itemize}
@@ -607,6 +606,8 @@ In the general DLM, however, it is unclear whether this will hold. In particular
 \item[dlmasisfun.R:] This file contains several R functions for obtaining the simulations from a variety of MCMC algorithms in the local level model, summarizing those simulations appropriately, and for simulating data from the model.
 
 \item[dlmasismixrun.R:] This file contains R code that uses the functions in \verb0dlmasisfun.R0 and \verb0mcfa.R0 to obtain the simulations used in the local level model example from Section \ref{sec:LLM}.
+
+\item[plots.R:] This file contains R code that uses the output from \verb0dlmasismixrun.R0 to create the various plots in the main document and the appendices.
 
 \end{description}
 

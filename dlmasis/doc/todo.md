@@ -4,14 +4,11 @@
 
 * Iterate discussion and abstract. Anything missing from discussion?
 
-* Get supplementary materials in order. Code in particular.
-
-* After supplementary materials are in order, fix the supplementary materials section at the end.
-
 * Find material that can be cut - goal: under 25 pages
 
-* Do we have any acknowledgements that I'm forgetting? Maybe Alicia (if she ever gives us comments)? Maybe I should acknowledge all conference participants where I presented the poster? Financial acknowledgements that I might not know about?
+* Cover letter
 
+* Blinded version
 
 For future reference, see this re: subheadings
 
