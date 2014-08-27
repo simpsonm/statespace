@@ -4,7 +4,6 @@
 \usepackage{amssymb, amsmath, amsthm, graphics, graphicx, color, fullpage}
 \usepackage{thmtools} %to format the Algorithm environment correctly
 \usepackage{nameref, hyperref, cleveref} %for named references
-\usepackage{zref-xr, zref-user} %for hyperlinked references to outside docs
 
 % define algorithm environment
 \declaretheoremstyle[
@@ -40,6 +39,7 @@ Estimation of Dynamic Linear Models}
 \author{Matt Simpson, Jarad Niemi, Vivekananda Roy}
 \maketitle
 \appendix
+\renewcommand\thefigure{\thesection.\arabic{figure}}    
 \section{Full conditional distributions in the general DLM for various DAs}\label{sec:DLMfullcond}
 
 The class of DLMs we consider is defined as follows:
@@ -435,6 +435,9 @@ We then set the scale parameter to be
 as in the normal approximation, and the degrees of freedom parameter to $v=1$. This rejection sampler is tolerably efficient for our purposes, but there is much room for improvement.
 
 \section{Using posterior correlations to understand patterns of ESP}
+
+\setcounter{figure}{0}    
+
 Most of the patterns in Figure \ref{baseESplot} in the next section can be explained by Figure \ref{corplot}, which contains the estimated posterior correlations between various functions of parameters estimated using the simulations from the Triple-Alt sampler for a time series with $T=100$. We omit a similar analysis for $T=10$ and $T=1000$. The state sampler consists of two steps --- a draw of $\theta$ given $V$ and $W$, and a draw of $(V,W)$ given $\theta$. From Section \ref{subsec:states} we have that conditional on $\theta$, $V$ and $W$ are independent in the posterior and each has an inverse gamma distribution that depends on the states only through the second parameter:
 \begin{align*}
   b_V &\equiv \beta_V + \sum_{t=1}^T(y_t - \theta_t)^2/2 &
@@ -477,6 +480,9 @@ In order to analyze the SD sampler, first suppose $R^*>1$. Then from Figure \ref
 
 
 \section{Plots for all values of $T$}\label{sec:plots}
+
+\setcounter{figure}{0}    
+
 \begin{figure}[!h]
 \centering
 \includegraphics[width=0.48\textwidth]{../plots/baseESplot10}
