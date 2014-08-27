@@ -145,7 +145,7 @@ plotfuncor <- function(postcors, var, title){
 }
 
 
-## create plot of base sampler ESPs, Figure 1
+## create plot of base sampler ESPs, Figures 1 and G.1
 vars <- c("V.ES", "W.ES") ## effective sample size for V and W
 title <- "ESP for V and W in the base algorithms, T="
 ## plots include base samplers (state, SD, and SE) and
@@ -159,7 +159,7 @@ ggsave(filename="baseESplot1000.pdf", plot=p3, width=8, height=3.75)
 
 
 
-# create plot of posterior correlations from Appendix F
+# create plot of posterior correlations, Figure F.1
 title <- expression(paste("Posterior Correlation Between V and ",b[V], sep=""))
 pvv <- plotfuncor(postcors, "Vbv", title)
 title <- expression(paste("Posterior Correlation Between W and ",b[W], sep=""))
@@ -186,7 +186,7 @@ ggsave(filename="corplot7.pdf", plot=pwa, width=4, height=3)
 ggsave(filename="corplot8.pdf", plot=pwb, width=4, height=3)
 
 
-## create plot of interweaving ESPs, Figure 2
+## create plot of interweaving ESPs, Figures 2 and G.2
 vars <- c("V.ES", "W.ES") ## effective sample size for V and W
 ## Includes SD-SE Int, SE-State Int, SD-State Int, Triple Int, and CIS samplers
 sams <- c("deint", "seint", "sdint", "triint", "fullcis") 
@@ -200,7 +200,7 @@ ggsave(filename="intESplot1000.pdf", plot=p3, width=8, height=3.75)
 
 
 
-#create plot of alternating ESPs, Figure 3
+## create plot of alternating ESPs, Figures 3 and G.3
 vars <- c("V.ES", "W.ES") ## effective sample size for V and W
 ## Includes SD-SE Alt, SE-State Alt, SD-State Alt, and Triple Alt
 sams <- c(alts)
@@ -215,7 +215,7 @@ ggsave(filename="altESplot1000.pdf", plot=p3, width=7, height=3.75)
 
 
 ## create plot of log time per 1000 effective draws for
-## base and interweaving samplers, Figure 4
+## base and interweaving samplers, Figures 4 and G.4
 vars <- c("V.time", "W.time") ## time per effective draw for V and W
 ## Includes SD, SE, DE Int, State, SE Int, SD Int, Triple Int and CIS samplers
 sams <- c("dist", "error", "deint", "state", "seint", "sdint", "triint", "fullcis")
@@ -229,11 +229,11 @@ ggsave(filename="baseinttimeplot1000.pdf", plot=p3, width=10, height=3.25)
 
 
 
-## creatue plot of log time per 1000 effective draws for
-## alternating and interweaving samplers
+## create plot of log time per 1000 effective draws for
+## alternating samplers, Figure G.5
 vars <- c("V.time", "W.time") ## time per effective draw for V and W
-## Includes DE Alt/Int, SE Alt/Int, SD Alt/Int, and Triple Alt/Int samplers
-sams <- c(alts,ints)
+## Includes DE Alt, SE Alt, SD Alt, and Triple Alt samplers
+sams <- c(alts)
 title <- "Log minutes per 1000 effective draws for alternating samplers, T="
 p1 <- plotfuntime(meltedsam, vars, sams, 10, title, c(-5,1))
 p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
