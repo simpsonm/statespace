@@ -1,7 +1,5 @@
 **To Do:**
 
-* Fix the bibliography - currently it repeats author's names instead of replacing with dashes.
-
 * Iterate discussion and abstract. Anything missing from discussion?
 
 * Find material that can be cut - goal: under 25 pages
