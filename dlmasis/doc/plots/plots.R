@@ -16,6 +16,8 @@ samout2 <- rbind(samout2, samout)
 load("../../cis/fullcissamout.RData")
 samout <- rbind(samout2[samout2$sampler != "fullcis",], fullcissamout)
 rm(samout2)
+
+## Correctly name things
 base <- c("error", "state", "dist")
 alts <- c("sdalt", "sealt", "dealt", "trialt")
 ints <- c("sdint", "seint", "deint", "triint")
@@ -44,28 +46,41 @@ samout$samplers[samout$sampler=="dist"] <- "SD"
 samout$samplers[samout$sampler=="state"] <- "State"
 samout$samplers[samout$sampler=="errorda"] <- "WSE"
 samout$samplers[samout$sampler=="distda"] <- "WSD"
-samlevels <- c("State", "SD", "SE",  "WSD", "WSE", "State-SD", "State-SE", "SD-SE", 
-               "Triple", "CIS", "PartialCIS")
+samlevels <- c("State", "SD", "SE", "State-SD", "State-SE", "SD-SE", 
+               "Triple", "CIS", "PartialCIS", "WSD", "WSE")
 samout$samplers <- factor(samout$samplers, levels=samlevels)
+
+## time per effective draw of V and W
 samout$V.time <- samout$time/samout$V.ES
 samout$W.time <- samout$time/samout$W.ES
+
+## Used to create the plots - puts the dataframe in a convenient form
 meltedsam <- melt(samout, id=c("type", "samplers", "sampler", "V.T", "W.T", 
                             "T.T"))
-Vs <- unique(meltedsam$V.T)[1:9] #$
-Ws <- Vs
+
+## Breaks for both axes
+Vs <- unique(meltedsam$V.T)[1:9] 
 breaks <- Vs[seq(1,9,2)]
+## labels for both axes
 labs <- c("0.01", "0.1", "1", "10", "100")
-label_both_parsed <- function(variable, value){
-  llply(as.character(paste(variable, value, sep = ": ")), function(x) parse(text = x))
-}
-label_both_parsed_split <- function(variable, value){
-  llply(as.character(paste(variable, value, sep = ": ")), 
-        function(x) parse(text = strsplit(x, "\\.")[[1]][1]))
-}
+
+## Function for taking the variable names, splitting off irrelevant text, and
+## parsing the result as Latex.
 label_parsed_split <- function(variable, value){
   llply(as.character(value), function(x) parse(text = strsplit(x, "\\.")[[1]][1]))
 }
-plotESfun <- function(meltedsam, vars, sams, T, title, guide, type){
+
+## Function for creating each of the ESP plots.
+## meltedsam = dataframe that has been melted appropriately
+## vars = variables to include in the plot (vector of strings)
+## sams = samplers used in the plots (vector of strings)
+## T = length of the time series (10, 100 or 1000)
+## title = title of the plot
+## guide = TRUE to include a legend
+## type = TRUE to facet by sampler type (for GIS vs Alt plots)
+##   else facets by variable (V or W)
+## Returns a plot created by ggplot
+plotfunES <- function(meltedsam, vars, sams, T, title, guide, type){
   if(guide){
     guide <- guide_colorbar(barheight=10)
   }
@@ -90,6 +105,18 @@ plotESfun <- function(meltedsam, vars, sams, T, title, guide, type){
               axis.text.y = element_text(angle = 45, hjust = 1, vjust=0.8))
   return(out)
 }
+
+## Function for creating the computation time plots.
+## meltedsam = dataframe that has been melted appropriately
+## vars = variables to include in the plot (vector of strings)
+## sams = samplers used in the plots (vector of strings)
+## T = length of the time series (10, 100 or 1000)
+## title = title of the plot
+## guide = TRUE to include a legend
+## type = TRUE to facet by sampler type (for GIS vs Alt plots)
+##   else facets by variable (V or W)
+## lims = lower and upper limits of the scale
+## Returns a plot created by ggplot
 plotfuntime <- function(meltedsam, vars, sams, T, title, lims, guide, type){
   if(guide){
     guide <- guide_colorbar(barheight=10)
@@ -117,6 +144,12 @@ plotfuntime <- function(meltedsam, vars, sams, T, title, lims, guide, type){
                axis.text.y = element_text(angle = 45, hjust = 1, vjust=0.8))
   return(out)
 }
+
+## Function for creating the posterior correlation plots for T=100
+## postcors = data frame of posterior correlation information
+## var = variable to include in the plot (string) 
+## title = title of the plot
+## Returns a plot created by ggplot
 plotfuncor <- function(newpostcors, var, title){
   dat <- newpostcors[newpostcors$T.T==100,]
   id <- which(colnames(newpostcors)==var)
@@ -139,15 +172,15 @@ plotfuncor <- function(newpostcors, var, title){
 titlea <- "ESP for V in Alt and GIS samplers, T="
 titleb <- "ESP for W in Alt and GIS samplers, T="
 titlec <- "ESP for V and W in base and CIS samplers, T="
-p1a <- plotESfun(meltedsam, "V.ES", c(alts,ints), 10, titlea, FALSE, TRUE)
-p1b <- plotESfun(meltedsam, "W.ES", c(alts,ints), 10, titleb, FALSE, TRUE)
-p1c <- plotESfun(meltedsam, c("V.ES", "W.ES"), c(base,wrongs,"fullcis"), 10, titlec, TRUE, FALSE)
-p2a <- plotESfun(meltedsam, "V.ES", c(alts,ints), 100, titlea, FALSE, TRUE)
-p2b <- plotESfun(meltedsam, "W.ES", c(alts,ints), 100, titleb, FALSE, TRUE)
-p2c <- plotESfun(meltedsam, c("V.ES", "W.ES"), c(base,wrongs,"fullcis"), 100, titlec, TRUE, FALSE)
-p3a <- plotESfun(meltedsam, "V.ES", c(alts,ints), 1000, titlea, FALSE, TRUE)
-p3b <- plotESfun(meltedsam, "W.ES", c(alts,ints), 1000, titleb, FALSE, TRUE)
-p3c <- plotESfun(meltedsam, c("V.ES", "W.ES"), c(base,wrongs,"fullcis"), 1000, titlec, TRUE, FALSE)
+p1a <- plotfunES(meltedsam, "V.ES", c(alts,ints), 10, titlea, FALSE, TRUE)
+p1b <- plotfunES(meltedsam, "W.ES", c(alts,ints), 10, titleb, FALSE, TRUE)
+p1c <- plotfunES(meltedsam, c("V.ES", "W.ES"), c(base,wrongs,"fullcis"), 10, titlec, TRUE, FALSE)
+p2a <- plotfunES(meltedsam, "V.ES", c(alts,ints), 100, titlea, FALSE, TRUE)
+p2b <- plotfunES(meltedsam, "W.ES", c(alts,ints), 100, titleb, FALSE, TRUE)
+p2c <- plotfunES(meltedsam, c("V.ES", "W.ES"), c(base,wrongs,"fullcis"), 100, titlec, TRUE, FALSE)
+p3a <- plotfunES(meltedsam, "V.ES", c(alts,ints), 1000, titlea, FALSE, TRUE)
+p3b <- plotfunES(meltedsam, "W.ES", c(alts,ints), 1000, titleb, FALSE, TRUE)
+p3c <- plotfunES(meltedsam, c("V.ES", "W.ES"), c(base,wrongs,"fullcis"), 1000, titlec, TRUE, FALSE)
 ggsave(filename="altintESplotV10.pdf", plot=p1a, width=6, height=3.75)
 ggsave(filename="altintESplotW10.pdf", plot=p1b, width=6, height=3.75)
 ggsave(filename="basecisESplot10.pdf", plot=p1c, width=9.4, height=3.75)
@@ -158,7 +191,7 @@ ggsave(filename="altintESplotV1000.pdf", plot=p3a, width=6, height=3.75)
 ggsave(filename="altintESplotW1000.pdf", plot=p3b, width=6, height=3.75)
 ggsave(filename="basecisESplot1000.pdf", plot=p3c, width=9.4, height=3.75)
 
-## time plots, for creating Figures 2, G.4, G.5 and G.6
+## log time plots, for creating Figures 2, G.4, G.5 and G.6
 titlea <- "Time per 1000 eff. draws in base and CIS samplers, T="
 titleb <- "Time per 1000 eff. draws for V in Alt and GIS samplers, T="
 titlec <- "Time per 1000 eff. draws for W in Alt and GIS samplers, T="
