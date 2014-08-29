@@ -1,5 +1,6 @@
-% This started out as the thing described below, but was modified by
-% Matthew Simpson to fix INPROCEEDINGS
+% This started out as ECA_jasa described below, but was modified by
+% Matthew W. Simpson to fix INPROCEEDINGS and replace repeated authors
+% with dashes
 
 
 % This started out as agsm but was modified by Eric C. Anderson
@@ -77,6 +78,8 @@ ENTRY
   { extra.label sort.label list.year }
 
 INTEGERS { output.state before.all mid.sentence after.sentence after.block }
+
+
 
 FUNCTION {init.state.consts}
 { #0 'before.all :=
@@ -262,13 +265,26 @@ FUNCTION {format.names}
   while$
 }
 
+STRINGS {oldname str}        %% Matt added for use with name.or.dash
+
+FUNCTION {name.or.dash}      %% detects repeated names and replaces with dashes
+{ 'str :=
+    oldname empty$
+     { str 'oldname := str }
+     { str oldname =
+         { "---{}---{}---{}---" }
+         { str 'oldname := str }
+       if$
+     }
+    if$
+}
+
 FUNCTION {format.authors}
 { author empty$
     { "" }
     { "{vv~}{ll}{, jj}{, f.}" author format.names }
   if$
 }
-
 
 FUNCTION {format.editors}
 { editor empty$
@@ -756,12 +772,12 @@ FUNCTION {output.bibitem}
 }
 
 FUNCTION {list.label.output}
-{ make.list.label " " * write$
+{ make.list.label name.or.dash " " * write$  % Matt added name.or.dash here
 }
 
 FUNCTION {article}
 { output.bibitem
-  list.label.output
+  list.label.output 
   " \harvardyearleft " list.year * "\harvardyearright " * output.nonnull
   author "author" item.check
   title.field field.used =
@@ -1399,3 +1415,5 @@ FUNCTION {end.bib}
 }
 
 EXECUTE {end.bib}
+
+
