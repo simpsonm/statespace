@@ -162,7 +162,7 @@ plotfuncor <- function(newpostcors, var, title){
 }
 
 
-## ESP plots, for creating Figures 1, G.1, G.2 and G.3.
+## ESP plots, for creating Figures 1, H.1, H.2 and H.3.
 titlea <- "ESP for V in Alt and GIS samplers, T="
 titleb <- "ESP for W in Alt and GIS samplers, T="
 titlec <- "ESP for V and W in base and CIS samplers, T="
@@ -185,7 +185,7 @@ ggsave(filename="altintESplotV1000.pdf", plot=p3a, width=6, height=3.75)
 ggsave(filename="altintESplotW1000.pdf", plot=p3b, width=6, height=3.75)
 ggsave(filename="basecisESplot1000.pdf", plot=p3c, width=9.4, height=3.75)
 
-## log time plots, for creating Figures 2, G.4, G.5 and G.6
+## log time plots, for creating Figures 2, H.4, H.5 and H.6
 titlea <- "Time per 1000 eff. draws in base and CIS samplers, T="
 titleb <- "Time per 1000 eff. draws for V in Alt and GIS samplers, T="
 titlec <- "Time per 1000 eff. draws for W in Alt and GIS samplers, T="
@@ -208,7 +208,7 @@ ggsave(filename="basecistimeplot1000.pdf", plot=p3a, width=9.4, height=3.75)
 ggsave(filename="altgisVtimeplot1000.pdf", plot=p3b, width=6, height=3.75)
 ggsave(filename="altgisWtimeplot1000.pdf", plot=p3c, width=6, height=3.75)
 
-## corplot, for creating Figure F.1
+## corplot, for creating Figure G.1
 title <- expression(paste("Posterior Correlation Between V and ",b[V], sep=""))
 pvv <- plotfuncor(newpostcors, "Vbv", title)
 title <- expression(paste("Posterior Correlation Between W and ",b[W], sep=""))
