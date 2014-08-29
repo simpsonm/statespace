@@ -492,13 +492,15 @@ For each dataset and each sampler we obtained $n=3000$ draws and threw away the 
 
 \subsection{Simulation results}
 
-Figure \ref{baseESplot} contains plots of ESP for $V$ and $W$ in each chain of each base sampler for $T=100$ --- we omit the $T=10$ and $T=1000$ plots for brevity, but they can be found in the supplementary materials (Appendix G). The State sampler has a low ESP for $V$ and a high ESP for $W$ when the true signal-to-noise ratio, $R^*=W^*/V^*$, is larger than one. In contrast, when $R^*<1$ the State sampler has a low ESP for $W$ and a high ESP for $V$. To summarize, the state sampler has mixing issues for whichever of $V$ or $W$ is smaller. The WSD and WSE samplers are similar to the state sampler except WSD has lower ESP for $V$ and WSE has lower ESP for $W$. The SD sampler has low ESP for both $V$ and $W$ when $R^*>1$, and it is particularly low for $W$. The SE sampler behaves almost exactly opposite ---it has low ESP for both when $R^*<1$ and in particular for $V$. We omit the results here, but as $T$ increases, in all samplers the region of the parameter space with high ESP shrinks and in the low ESP regions, ESP drops closer to zero. We summarize some of the above results for convenience in Table \ref{tab:stnmix}. In Appendix F of the supplementary materials, we discuss how the pattern of correlations between various quantities in the posterior distribution roughly determines of pattern of ESPs we see in Figure \ref{baseESplot}.
+The top panel of Figure \ref{ESplot} contains plots of ESP for $V$ and $W$ in each chain of each base samplers for $T=100$ --- we omit the $T=10$ and $T=1000$ plots for brevity, but they can be found in the supplementary materials (Appendix G). The State sampler has a low ESP for $V$ and a high ESP for $W$ when the true signal-to-noise ratio, $R^*=W^*/V^*$, is larger than one. In contrast, when $R^*<1$ the State sampler has a low ESP for $W$ and a high ESP for $V$. To summarize, the state sampler has mixing issues for whichever of $V$ or $W$ is smaller. The WSD and WSE samplers are similar to the state sampler except WSD has lower ESP for $V$ and WSE has lower ESP for $W$. The SD sampler has low ESP for both $V$ and $W$ when $R^*>1$, and it is particularly low for $W$. The SE sampler behaves almost exactly opposite ---it has low ESP for both when $R^*<1$ and in particular for $V$. We omit the results here, but as $T$ increases, in all samplers the region of the parameter space with high ESP shrinks and in the low ESP regions, ESP drops closer to zero. We summarize some of the above results for convenience in Table \ref{tab:stnmix}. In Appendix F of the supplementary materials, we discuss how the pattern of correlations between various quantities in the posterior distribution roughly determines of pattern of ESPs we see in Figure \ref{ESplot}.
 
 \begin{figure}[!h]
 \centering
-\includegraphics[width=0.7\textwidth]{baseESplot100}
-\caption{Effective sample proportion in the posterior sampler for a time series of length $T=100$, for $V$ and $W$ in the base samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high.}
-\label{baseESplot}
+\includegraphics[width=0.75\textwidth]{basecisESplot100}
+\includegraphics[width=0.49\textwidth]{altintESplotV100}
+\includegraphics[width=0.49\textwidth]{altintESplotW100}
+\caption{Effective sample proportion in the posterior sampler for a time series of length $T=100$, for $V$ and $W$ in the each sampler. The top panel contains ESP for $V$ and $W$ for the base and CIS samplers, the bottom left panel contains ESP for $V$ in the Alt and GIS samplers, and the bottom right panel contains ESP for $W$ in the Alt and GIS samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high.}
+\label{ESplot}
 \end{figure}
 
 \begin{table}
@@ -512,27 +514,11 @@ Figure \ref{baseESplot} contains plots of ESP for $V$ and $W$ in each chain of e
   \label{tab:stnmix}
 \end{table}
 
-We fit the LLM to the simulated datasets using several GIS samplers and a CIS sampler as well. Since the wrongly-scaled samplers behaved similarly to the state sampler and neither of the underlying DAs were a SA for $V$ and $W$ jointly, we ignored them in the construction of the GIS samplers. Instead, we constructed the State-SD, State-SE, SD-SE, and Triple (State-SD-SE) GIS samplers, as well as the CIS sampler. Figure \ref{intESplot} has plots of ESP for each of the interweaving algorithms. First, the State-SD GIS algorithm has high ESP for $W$ except for a narrow band where $R^*$ is near one while its mixing behavior for $V$ appears identical to the original State sampler --- high ESP when $R^* < 1$ and poor ESP when $R^* > 1$. So this algorithm takes advantage of the fact that the state and SD DA algorithms make up a ``beauty and the beast'' pair for $W$ and thus improves mixing in the marginal chain for $W$. Similarly the State-SE GIS algorithm's ESP for $W$ is essentially identical to the State and SE algorithms' ESP for $W$ while its ESP for $V$ is high ESP when $R^*$ is far enough away from one. The SD-SE GIS algorithm combines the best of both worlds --- when $R^*$ is not too close to one it has high ESP for both $V$ and $W$, though it has extra trouble with $W$ when $R^*$ is less than one but not small enough. 
+We fit the LLM to the simulated datasets using several GIS samplers and a CIS sampler as well. Since the wrongly-scaled samplers behaved similarly to the state sampler and neither of the underlying DAs were a SA for $V$ and $W$ jointly, we ignored them in the construction of the GIS samplers. Instead, we constructed the State-SD, State-SE, SD-SE, and Triple (State-SD-SE) GIS samplers, as well as the CIS sampler. The bottom two panels of Figure \ref{ESplot} has plots of ESP for each of the GIS algorithms while the top panel has the plots of ESP for the CIS sampler. First, the State-SD GIS algorithm has high ESP for $W$ except for a narrow band where $R^*$ is near one while its mixing behavior for $V$ appears identical to the original State sampler --- high ESP when $R^* < 1$ and poor ESP when $R^* > 1$. So this algorithm takes advantage of the fact that the state and SD DA algorithms make up a ``beauty and the beast'' pair for $W$ and thus improves mixing in the marginal chain for $W$. Similarly the State-SE GIS algorithm's ESP for $W$ is essentially identical to the State and SE algorithms' ESP for $W$ while its ESP for $V$ is high ESP when $R^*$ is far enough away from one. The SD-SE GIS algorithm combines the best of both worlds --- when $R^*$ is not too close to one it has high ESP for both $V$ and $W$, though it has extra trouble with $W$ when $R^*$ is less than one but not small enough. 
 
 We showed in Section \ref{sec:Algs:CIS} that the CIS and the SD-SE GIS algorithm consist of the same steps, just rearranged. This suggests that they should perform similarly and in fact the SD-SE GIS algorithm behaves essentially identically to the CIS and Triple GIS algorithms. The second of these is somewhat surprising --- we had some hope that the Triple GIS algorithm would improve upon the SD-SE GIS algorithm somewhat by further breaking the correlation between iterations in the Markov chain.
 
-
-\begin{figure}[!h]
-\centering
-\includegraphics[width=0.7\textwidth]{intESplot100}
-\caption{ESP in the posterior sampler for $V$ and $W$ in for $T=100$ in all four GIS samplers based on any two or three of the states, scaled disturbances and scaled errors as well as the CIS sampler.}
-\label{intESplot}
-\end{figure}
-
-
-We also fit each Alt sampler that corresponds to one of the GIS samplers we fit, that is the State-SD, State-SE, SD-SE and Triple (State-SD-SE) Alt samplers. Figure \ref{altESplot} contains the ESP of these samplers for both $V$ and $W$. There appears to be little practical difference between the alternating and interweaving versions of a given algorithm based on any two or three of the base DAs --- both take advantage of the beauty and the beast nature of their underlying DAs, but apparently dependence between the two DAs prevents the GIS version of the sampler from improving on the Alt version. All of the alternating and interweaving results are summarized in Table \ref{tab:stnmix2}. We include simulations with differing sizes of $T$ using these samplers in the supplementary materials (Appendix G), but the upshot is that, like with the base samplers, increasing the length of the time series worsens ESP for both $V$ and $W$ in all samplers and in particular shrinks the area of the parameter space in which ESP is high.
-
-\begin{figure}[!h]
-\centering
-\includegraphics[width=0.7\textwidth]{altESplot100}
-\caption{ESP in the posterior sampler for $V$ and $W$ for $T=100$ in all four alternating samplers based on any two or three of the states, scaled disturbances and scaled errors.}
-\label{altESplot}
-\end{figure}
+We also fit each Alt sampler that corresponds to one of the GIS samplers we fit, that is the State-SD, State-SE, SD-SE and Triple (State-SD-SE) Alt samplers. The bottom two panels of Figure \ref{ESplot} also contains the ESP of these samplers for both $V$ and $W$. There appears to be little practical difference between the two categories of algorithms --- both take advantage of the beauty and the beast nature of their underlying DAs, but apparently dependence between the two DAs prevents the GIS version of the sampler from improving on the Alt version. All of the alternating and interweaving results are summarized in Table \ref{tab:stnmix2}. We include simulations with differing sizes of $T$ using these samplers in the supplementary materials (Appendix G), but the upshot is that, like with the base samplers, increasing the length of the time series worsens ESP for both $V$ and $W$ in all samplers and in particular shrinks the area of the parameter space in which ESP is high.
 
 \begin{table}
   \centering
@@ -547,14 +533,16 @@ We also fit each Alt sampler that corresponds to one of the GIS samplers we fit,
 
 \subsection{Computational time}\label{sec:LLM:time}
 
-From a practical standpoint a more important question than how well the chain mixes is the full computational time required to adequately characterize the target posterior distribution. In order to investigate this, we compute the natural log of the average time in minutes required for each sampler to achieve an effective sample size of 1000 --- in other words the log minutes per 1000 effective draws. All simulations were performed on a university cluster with Intel Xeon X5675 3.07 GHz processors. While different systems will yield different absolute times, the relative times should at least be similar. Figure \ref{baseinttimeplot} contains plots of the log minutes per 1000 effective draws for both $V$ and $W$ and for each of the base and interweaving samplers.
+From a practical standpoint a more important question than how well the chain mixes is the full computational time required to adequately characterize the target posterior distribution. In order to investigate this, we compute the natural log of the average time in minutes required for each sampler to achieve an effective sample size of 1000 --- in other words the log minutes per 1000 effective draws. All simulations were performed on a university cluster with Intel Xeon X5675 3.07 GHz processors. While different systems will yield different absolute times, the relative times should at least be similar. Figure \ref{baseinttimeplot} contains plots of the log minutes per 1000 effective draws for both $V$ and $W$ and for each of the samplers.
 
 For $T=100$ the pattern we saw for ESP also appears for log minutes per 1000 effective draws. The State sampler becomes slow to reach 1000 effective draws for $V$ when $R^*>1$ and for $W$ when $R^*<1$. The SD and SE samplers behave as expected --- the SD sampler is slow for both $V$ and $W$ when $R^*>1$ while the SD sampler is slow for both $V$ and $W$ when $R^*<1$. The SD-SE GIS, Triple GIS and Full CIS algorithms appear to be the big winners here and are almost indistinguishable. All three algorithms are slightly slower for both $V$ and $W$ when $R^*$ is near one, though for larger $T$,  when $R^*$ is near or below one all three are slow for $W$ (plots available in Appendix G of the supplementary materials). Compared to the state sampler, all three offer large gains over most of the parameter space. A similar plot for the alternating algorithms in included in Appendix G of the supplementary materials, but there is essentially no difference between a GIS algorithm and the corresponding alternating algorithm in terms of log time per 1000 effective draws. We favor the SD-SE GIS and Alt algorithms because they are the easiest to implement.
 
 \begin{figure}[!h]
 \centering
-\includegraphics[width=0.8\textwidth]{baseinttimeplot100}
-\caption{Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ in the state, scaled disturbance and scaled error samplers and for all five interweaving samplers.}
+\includegraphics[width=0.75\textwidth]{basecistimeplot100}
+\includegraphics[width=0.49\textwidth]{altgisVtimeplot100}
+\includegraphics[width=0.49\textwidth]{altgisWtimeplot100}
+\caption{Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ in each sampler. Log times larger than three $\log \mathrm{min}$ are rounded down to three for plotting purposes.}
 \label{baseinttimeplot}
 \end{figure}
 

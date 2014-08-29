@@ -44,8 +44,8 @@ samout$samplers[samout$sampler=="dist"] <- "SD"
 samout$samplers[samout$sampler=="state"] <- "State"
 samout$samplers[samout$sampler=="errorda"] <- "WSE"
 samout$samplers[samout$sampler=="distda"] <- "WSD"
-samlevels <- c("State", "SD", "SE", "State-SD", "State-SE", "SD-SE", 
-               "Triple", "CIS", "PartialCIS", "WSD", "WSE")
+samlevels <- c("State", "SD", "SE",  "WSD", "WSE", "State-SD", "State-SE", "SD-SE", 
+               "Triple", "CIS", "PartialCIS")
 samout$samplers <- factor(samout$samplers, levels=samlevels)
 samout$V.time <- samout$time/samout$V.ES
 samout$W.time <- samout$time/samout$W.ES
@@ -65,46 +65,57 @@ label_both_parsed_split <- function(variable, value){
 label_parsed_split <- function(variable, value){
   llply(as.character(value), function(x) parse(text = strsplit(x, "\\.")[[1]][1]))
 }
-plotfun <- function(meltedsam, vars, sams, T, title){
-  castedsam <- dcast(meltedsam, formula=sampler + V.T + W.T + variable + samplers ~ ., 
+plotESfun <- function(meltedsam, vars, sams, T, title, guide, type){
+  if(guide){
+    guide <- guide_colorbar(barheight=10)
+  }
+  if(type){
+    facgrid <- facet_grid(type~samplers, scales="free", labeller=label_parsed_split)
+  }
+  else{
+    facgrid <- facet_grid(variable~samplers, scales="free", labeller=label_parsed_split)
+  }
+  castedsam <- dcast(meltedsam, formula=samplers + V.T + W.T + variable + type ~ ., 
                      subset=.(variable %in% vars  & T.T==T & sampler %in% sams &
-                       V.T<=10^2 & W.T<=10^2))
-  colnames(castedsam)[6] <- "value"
-  out <- ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + #$
-         geom_tile() +
-         scale_fill_gradient("ESP", low=muted("red"), high="white",
-           guide=guide_colorbar(barheight=10),
-           limits=c(0,1), na.value="white", trans="sqrt") +
-         facet_grid(variable~samplers, scales="free", labeller=label_parsed_split) +
-         scale_x_log10("V = noise", breaks=breaks, labels=labs) + scale_y_log10("W = signal", breaks=breaks, labels=labs) +
-         ggtitle(paste(title, T, sep="")) +
-         theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
-  return(out)
-}
-plotfuntime <- function(meltedsam, vars, sams, T, title, lims){
-  castedsam <- dcast(meltedsam, 
-                     formula=sampler + V.T + W.T + variable + 
-                     samplers ~ ., 
-                     subset=.(variable %in% vars  & 
-                         T.T==T & sampler %in% sams &
                          V.T<=10^2 & W.T<=10^2))
   colnames(castedsam)[6] <- "value"
-  out <- ggplot(data=castedsam, aes(x=V.T, y=W.T, 
-                    fill=log(value*1000/60))) + #$
+  out <- ggplot(data=castedsam, aes(x=V.T, y=W.T, fill=value/2500)) + geom_tile() +
+         scale_fill_gradient("ESP", low=muted("red"), high="white", guide=guide,
+                             limits=c(0,1), na.value="white") +
+         facgrid +
+         scale_x_log10("V = noise", breaks=breaks) + 
+         scale_y_log10("W = signal", breaks=breaks) +
+         ggtitle(paste(title, T, sep="")) +
+         theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.8),
+              axis.text.y = element_text(angle = 45, hjust = 1, vjust=0.8))
+  return(out)
+}
+plotfuntime <- function(meltedsam, vars, sams, T, title, lims, guide, type){
+  if(guide){
+    guide <- guide_colorbar(barheight=10)
+  }
+  if(type){
+    facgrid <- facet_grid(type~samplers, scales="free", labeller=label_parsed_split)
+  }
+  else{
+    facgrid <- facet_grid(variable~samplers, scales="free", labeller=label_parsed_split)
+  }
+  castedsam <- dcast(meltedsam, formula=samplers + V.T + W.T + variable + type ~ ., 
+                     subset=.(variable %in% vars  & T.T==T & sampler %in% sams &
+                         V.T<=10^2 & W.T<=10^2))
+  colnames(castedsam)[6] <- "value"
+  out <- ggplot(data=castedsam, aes(x=V.T, y=W.T,
+                    fill=log(value*1000/60))) + 
          geom_tile() +
-         scale_fill_gradient("Log min", 
-                             high=muted("red"), low="white",
-                             guide=guide_colorbar(barheight=10), 
-                             limits=lims, na.value="red") +
-         facet_grid(variable~samplers, scales="free", 
-                    labeller=label_parsed_split) +
+         scale_fill_gradient("Log min", high=muted("red"), low="white", guide=guide,
+                             limits=lims, na.value=muted("red")) +
+         facgrid +
          scale_x_log10("V = noise", breaks=breaks, labels=labs) + 
          scale_y_log10("W = signal", breaks=breaks, labels=labs) +
          ggtitle(paste(title, T, sep="")) +
-         theme(axis.text.x = element_text(angle = 90, 
-                   hjust = 1, vjust=0.5))
+         theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.8),
+               axis.text.y = element_text(angle = 45, hjust = 1, vjust=0.8))
   return(out)
-  ##, limits=c(0,top)
 }
 plotfuncor <- function(newpostcors, var, title){
   dat <- newpostcors[newpostcors$T.T==100,]
@@ -118,24 +129,59 @@ plotfuncor <- function(newpostcors, var, title){
       scale_x_log10("V = noise", breaks=breaks, labels=labs) +
       scale_y_log10("W = signal", breaks=breaks, labels=labs) +
       ggtitle(title) +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=0.8),
+            axis.text.y = element_text(angle = 90, hjust = 1, vjust=0.8))
   return(out)
 }
 
 
-## baseESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=8, out.width=".7\\textwidth"
-vars <- c("V.ES", "W.ES")
-title <- "ESP for V and W in the base algorithms, T="
-p1 <- plotfun(meltedsam, vars, c(base,wrongs), 10, title)
-p2 <- plotfun(meltedsam, vars, c(base,wrongs), 100, title)
-p3 <- plotfun(meltedsam, vars, c(base,wrongs), 1000, title)
-ggsave(filename="baseESplot10.pdf", plot=p1, width=8, height=3.75)
-ggsave(filename="baseESplot100.pdf", plot=p2, width=8, height=3.75)
-ggsave(filename="baseESplot1000.pdf", plot=p3, width=8, height=3.75)
+## ESP plots, for creating Figures 1, G.1, G.2 and G.3.
+titlea <- "ESP for V in Alt and GIS samplers, T="
+titleb <- "ESP for W in Alt and GIS samplers, T="
+titlec <- "ESP for V and W in base and CIS samplers, T="
+p1a <- plotESfun(meltedsam, "V.ES", c(alts,ints), 10, titlea, FALSE, TRUE)
+p1b <- plotESfun(meltedsam, "W.ES", c(alts,ints), 10, titleb, FALSE, TRUE)
+p1c <- plotESfun(meltedsam, c("V.ES", "W.ES"), c(base,wrongs,"fullcis"), 10, titlec, TRUE, FALSE)
+p2a <- plotESfun(meltedsam, "V.ES", c(alts,ints), 100, titlea, FALSE, TRUE)
+p2b <- plotESfun(meltedsam, "W.ES", c(alts,ints), 100, titleb, FALSE, TRUE)
+p2c <- plotESfun(meltedsam, c("V.ES", "W.ES"), c(base,wrongs,"fullcis"), 100, titlec, TRUE, FALSE)
+p3a <- plotESfun(meltedsam, "V.ES", c(alts,ints), 1000, titlea, FALSE, TRUE)
+p3b <- plotESfun(meltedsam, "W.ES", c(alts,ints), 1000, titleb, FALSE, TRUE)
+p3c <- plotESfun(meltedsam, c("V.ES", "W.ES"), c(base,wrongs,"fullcis"), 1000, titlec, TRUE, FALSE)
+ggsave(filename="altintESplotV10.pdf", plot=p1a, width=6, height=3.75)
+ggsave(filename="altintESplotW10.pdf", plot=p1b, width=6, height=3.75)
+ggsave(filename="basecisESplot10.pdf", plot=p1c, width=9.4, height=3.75)
+ggsave(filename="altintESplotV100.pdf", plot=p2a, width=6, height=3.75)
+ggsave(filename="altintESplotW100.pdf", plot=p2b, width=6, height=3.75)
+ggsave(filename="basecisESplot1000.pdf", plot=p2c, width=9.4, height=3.75)
+ggsave(filename="altintESplotV1000.pdf", plot=p3a, width=6, height=3.75)
+ggsave(filename="altintESplotW1000.pdf", plot=p3b, width=6, height=3.75)
+ggsave(filename="basecisESplot1000.pdf", plot=p3c, width=9.4, height=3.75)
 
+## time plots, for creating Figures 2, G.4, G.5 and G.6
+titlea <- "Time per 1000 eff. draws in base and CIS samplers, T="
+titleb <- "Time per 1000 eff. draws for V in Alt and GIS samplers, T="
+titlec <- "Time per 1000 eff. draws for W in Alt and GIS samplers, T="
+p1a <- plotfuntime(meltedsam, c("V.time", "W.time"), c(base,wrongs,"fullcis"), 10, titlea, c(-5,2), TRUE, FALSE)
+p1b <- plotfuntime(meltedsam, "V.time", c(alts,ints), 10, titleb, c(-5,2), FALSE, TRUE)
+p1c <- plotfuntime(meltedsam, "W.time", c(alts,ints), 10, titlec, c(-5,2), FALSE, TRUE)
+p2a <- plotfuntime(meltedsam, c("V.time", "W.time"), c(base,wrongs,"fullcis"), 100, titlea, c(-3.5,3), TRUE, FALSE)
+p2b <- plotfuntime(meltedsam, "V.time", c(alts,ints), 100, titleb, c(-3.5,3), FALSE, TRUE)
+p2c <- plotfuntime(meltedsam, "W.time", c(alts,ints), 100, titlec, c(-3.5,3), FALSE, TRUE)
+p3a <- plotfuntime(meltedsam, c("V.time", "W.time"), c(base,wrongs,"fullcis"), 1000, titlea, c(-1,6), TRUE, FALSE)
+p3b <- plotfuntime(meltedsam, "V.time", c(alts,ints), 1000, titleb, c(-1,6), FALSE, TRUE)
+p3c <- plotfuntime(meltedsam, "W.time", c(alts,ints), 1000, titlec, c(-1,6), FALSE, TRUE)
+ggsave(filename="basecistimeplot10.pdf", plot=p1a, width=9.4, height=3.75)
+ggsave(filename="altgisVtimeplot10.pdf", plot=p1b, width=6, height=3.75)
+ggsave(filename="altgisWtimeplot10.pdf", plot=p1c, width=6, height=3.75)
+ggsave(filename="basecistimeplot100.pdf", plot=p2a, width=9.4, height=3.75)
+ggsave(filename="altgisVtimeplot100.pdf", plot=p2b, width=6, height=3.75)
+ggsave(filename="altgisWtimeplot100.pdf", plot=p2c, width=6, height=3.75)
+ggsave(filename="basecistimeplot1000.pdf", plot=p3a, width=9.4, height=3.75)
+ggsave(filename="altgisVtimeplot1000.pdf", plot=p3b, width=6, height=3.75)
+ggsave(filename="altgisWtimeplot1000.pdf", plot=p3c, width=6, height=3.75)
 
-
-## corplot, echo=FALSE, fig.height=3, fig.width=5, out.width=".245\\textwidth", fig.cap=cap
+## corplot, for creating Figure F.1
 title <- expression(paste("Posterior Correlation Between V and ",b[V], sep=""))
 pvv <- plotfuncor(newpostcors, "Vbv", title)
 title <- expression(paste("Posterior Correlation Between W and ",b[W], sep=""))
@@ -160,52 +206,3 @@ ggsave(filename="corplot5.pdf", plot=pww, width=4, height=3)
 ggsave(filename="corplot6.pdf", plot=pwv, width=4, height=3)
 ggsave(filename="corplot7.pdf", plot=pwa, width=4, height=3)
 ggsave(filename="corplot8.pdf", plot=pwb, width=4, height=3)
-
-
-## intESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=8, out.width=".7\\textwidth"
-vars <- c("V.ES", "W.ES")
-sams <- c("deint", "seint", "sdint", "triint", "fullcis")
-title <- "ESP for V and W in the GIS and CIS algorithms, T="
-p1 <- plotfun(meltedsam, vars, sams, 10, title)
-p2 <- plotfun(meltedsam, vars, sams, 100, title)
-p3 <- plotfun(meltedsam, vars, sams, 1000, title)
-ggsave(filename="intESplot10.pdf", plot=p1, width=8, height=3.75)
-ggsave(filename="intESplot100.pdf", plot=p2, width=8, height=3.75)
-ggsave(filename="intESplot1000.pdf", plot=p3, width=8, height=3.75)
-
-
-
-## altESplot, fig.cap=cap, echo=FALSE, fig.height=3.75, fig.width=7, out.width=".7\\textwidth"
-vars <- c("V.ES", "W.ES")
-sams <- c(alts)
-title <- "ESP for V and W in the alternating algorithms, T="
-p1 <- plotfun(meltedsam, vars, sams, 10, title)
-p2 <- plotfun(meltedsam, vars, sams, 100, title)
-p3 <- plotfun(meltedsam, vars, sams, 1000, title)
-ggsave(filename="altESplot10.pdf", plot=p1, width=7, height=3.75)
-ggsave(filename="altESplot100.pdf", plot=p2, width=7, height=3.75)
-ggsave(filename="altESplot1000.pdf", plot=p3, width=7, height=3.75)
-
-
-## baseinttimeplot, fig.cap=cap, echo=FALSE, fig.width=10, fig.height=3.25, out.width=".8\\textwidth"
-vars <- c("V.time", "W.time")
-sams <- c("dist", "error", "deint", "state", "seint", "sdint", "triint", "fullcis")
-title <- "Log minutes per 1000 effective draws for base and interweaving samplers, T="
-p1 <- plotfuntime(meltedsam, vars, sams, 10, title, c(-5,3.5))
-p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
-p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, c(-1,8))
-ggsave(filename="baseinttimeplot10.pdf", plot=p1, width=10, height=3.25)
-ggsave(filename="baseinttimeplot100.pdf", plot=p2, width=10, height=3.25)
-ggsave(filename="baseinttimeplot1000.pdf", plot=p3, width=10, height=3.25)
-
-
-## altinttimeplot, fig.cap=cap, echo=FALSE, fig.width=8, fig.height=3.75, out.width=".49\\textwidth"
-vars <- c("V.time", "W.time")
-sams <- c(alts)
-title <- "Log minutes per 1000 effective draws for alternating samplers, T="
-p1 <- plotfuntime(meltedsam, vars, sams, 10, title, c(-5,1))
-p2 <- plotfuntime(meltedsam, vars, sams, 100, title, c(-3.5,5))
-p3 <- plotfuntime(meltedsam, vars, sams, 1000, title, c(-1,8))
-ggsave(filename="altinttimeplot10.pdf", plot=p1, width=8, height=3.75)
-ggsave(filename="altinttimeplot100.pdf", plot=p2, width=8, height=3.75)
-ggsave(filename="altinttimeplot1000.pdf", plot=p3, width=8, height=3.75)
