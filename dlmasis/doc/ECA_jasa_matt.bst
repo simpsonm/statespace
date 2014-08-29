@@ -1,5 +1,5 @@
 % This started out as the thing described below, but was modified by
-% Matthew Simpson to fix the inproceedings type 
+% Matthew Simpson to fix INPROCEEDINGS
 
 
 % This started out as agsm but was modified by Eric C. Anderson
