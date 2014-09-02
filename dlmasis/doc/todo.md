@@ -6,7 +6,7 @@
 
 * Cover letter
 
-* Blinded version
+* Blinded version - finished, but check for anything that slipped through.
 
 * Question: is there a CIS-like structure for alternating algorithms? I.e. alternate within blocks?
 
