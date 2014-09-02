@@ -1,10 +1,10 @@
 **To Do:**
 
-* Iterate discussion and abstract. Anything missing from discussion?
+This todo list assumes we are submitting essentially as is. If we decide to make larger cuts, then there is more to do!
 
-* Find material that can be cut - goal: under 25 pages
+* Cover letter - see guidelines.txt in the coverletter folder. We need some suggested reviewers.
 
-* Cover letter
+* Question - we want Sylvia as a suggested reviewer, but can/should we still include her name in the acknowledgements of the unblinded version?
 
 * Blinded version - finished, but check for anything that slipped through.
 
