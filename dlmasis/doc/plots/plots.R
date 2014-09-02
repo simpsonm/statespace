@@ -98,11 +98,11 @@ plotfunES <- function(meltedsam, vars, sams, T, title, guide, type){
          scale_fill_gradient("ESP", low=muted("red"), high="white", guide=guide,
                              limits=c(0,1), na.value="white") +
          facgrid +
-         scale_x_log10("V = noise", breaks=breaks) + 
-         scale_y_log10("W = signal", breaks=breaks) +
+         scale_x_log10("V = noise", breaks=breaks, labels=labs) + 
+         scale_y_log10("W = signal", breaks=breaks, labels=labs) +
          ggtitle(paste(title, T, sep="")) +
          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.8),
-              axis.text.y = element_text(angle = 45, hjust = 1, vjust=0.8))
+              axis.text.y = element_text(angle = 0, hjust = 1.1, vjust=0.8))
   return(out)
 }
 
@@ -141,7 +141,7 @@ plotfuntime <- function(meltedsam, vars, sams, T, title, lims, guide, type){
          scale_y_log10("W = signal", breaks=breaks, labels=labs) +
          ggtitle(paste(title, T, sep="")) +
          theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.8),
-               axis.text.y = element_text(angle = 45, hjust = 1, vjust=0.8))
+               axis.text.y = element_text(angle = 0, hjust = 1.1, vjust=0.8))
   return(out)
 }
 
@@ -162,8 +162,8 @@ plotfuncor <- function(newpostcors, var, title){
       scale_x_log10("V = noise", breaks=breaks, labels=labs) +
       scale_y_log10("W = signal", breaks=breaks, labels=labs) +
       ggtitle(title) +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=0.8),
-            axis.text.y = element_text(angle = 90, hjust = 1, vjust=0.8))
+      theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.8),
+            axis.text.y = element_text(angle = 0, hjust = 1.1, vjust=0.8))
   return(out)
 }
 
