@@ -1,58 +1,4 @@
-\documentclass[xcolor=dvipsnames]{beamer}\usepackage{graphicx, color}
-%% maxwidth is the original width if it is less than linewidth
-%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
-\makeatletter
-\def\maxwidth{ %
-  \ifdim\Gin@nat@width>\linewidth
-    \linewidth
-  \else
-    \Gin@nat@width
-  \fi
-}
-\makeatother
-
-\definecolor{fgcolor}{rgb}{0.2, 0.2, 0.2}
-\newcommand{\hlnumber}[1]{\textcolor[rgb]{0,0,0}{#1}}%
-\newcommand{\hlfunctioncall}[1]{\textcolor[rgb]{0.501960784313725,0,0.329411764705882}{\textbf{#1}}}%
-\newcommand{\hlstring}[1]{\textcolor[rgb]{0.6,0.6,1}{#1}}%
-\newcommand{\hlkeyword}[1]{\textcolor[rgb]{0,0,0}{\textbf{#1}}}%
-\newcommand{\hlargument}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
-\newcommand{\hlcomment}[1]{\textcolor[rgb]{0.180392156862745,0.6,0.341176470588235}{#1}}%
-\newcommand{\hlroxygencomment}[1]{\textcolor[rgb]{0.43921568627451,0.47843137254902,0.701960784313725}{#1}}%
-\newcommand{\hlformalargs}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
-\newcommand{\hleqformalargs}[1]{\textcolor[rgb]{0.690196078431373,0.250980392156863,0.0196078431372549}{#1}}%
-\newcommand{\hlassignement}[1]{\textcolor[rgb]{0,0,0}{\textbf{#1}}}%
-\newcommand{\hlpackage}[1]{\textcolor[rgb]{0.588235294117647,0.709803921568627,0.145098039215686}{#1}}%
-\newcommand{\hlslot}[1]{\textit{#1}}%
-\newcommand{\hlsymbol}[1]{\textcolor[rgb]{0,0,0}{#1}}%
-\newcommand{\hlprompt}[1]{\textcolor[rgb]{0.2,0.2,0.2}{#1}}%
-
-\usepackage{framed}
-\makeatletter
-\newenvironment{kframe}{%
- \def\at@end@of@kframe{}%
- \ifinner\ifhmode%
-  \def\at@end@of@kframe{\end{minipage}}%
-  \begin{minipage}{\columnwidth}%
- \fi\fi%
- \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
- \colorbox{shadecolor}{##1}\hskip-\fboxsep
-     % There is no \\@totalrightmargin, so:
-     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
- \MakeFramed {\advance\hsize-\width
-   \@totalleftmargin\z@ \linewidth\hsize
-   \@setminipage}}%
- {\par\unskip\endMakeFramed%
- \at@end@of@kframe}
-\makeatother
-
-\definecolor{shadecolor}{rgb}{.97, .97, .97}
-\definecolor{messagecolor}{rgb}{0, 0, 0}
-\definecolor{warningcolor}{rgb}{1, 0, 1}
-\definecolor{errorcolor}{rgb}{1, 0, 0}
-\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
-
-\usepackage{alltt}
+\documentclass[xcolor=dvipsnames]{beamer}
 \makeatletter\def\Hy@xspace@end{}\makeatother 
 \usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
 epsfig, multicol, amsthm}
@@ -60,7 +6,7 @@ epsfig, multicol, amsthm}
 \usepackage[T1]{fontenc}
 \usepackage[ansinew]{inputenc}
 \usepackage[numbers]{natbib}
-\newcommand{\newblock}{}  %needed to make beamer and natbib play nice
+%\newcommand{\newblock}{}  %needed to make beamer and natbib play nice
 \usepackage{tikz}
 \usetikzlibrary{fit}					% fitting shapes to coordinates
 \usetheme{Boadilla}
@@ -69,11 +15,12 @@ epsfig, multicol, amsthm}
 \newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
 \def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
 
-\title[DLM Interweaving]{Ancillarity-Sufficiency or not; Interweaving to Improve MCMC Estimation of the Local Level DLM}
+\title[Interweaving MCMC Strats for DLMs]{Interweaving Markov Chain Monte Carlo Strategies for Efficient
+Estimation of Dynamic Linear Models}
 %\subtitle{}
-\author[Matt Simpson]{Matt Simpson}
+\author[M. Simpson]{Matthew Simpson}
 \date{\today}
-\institute[Dep. of Statistics, ISU]{Department of Statistics, Iowa State University}
+\institute[Deps of Stat \& Econ, ISU]{Departments of Statistics and Economics, Iowa State University}
 
 
 %\title[short title]{long title}
@@ -83,13 +30,8 @@ epsfig, multicol, amsthm}
 %\institution[short name]{long name}
 
 % very important to use option [fragile] for frames containing code output!
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
 
 \begin{document}
-
-
-
-
 
 \begin{frame}
 \titlepage
@@ -161,6 +103,8 @@ epsfig, multicol, amsthm}
   \end{tikzpicture}
   \end{figure}
 \end{frame}
+
+
 
 \begin{frame}
  \frametitle{The Univariate Local Level Model}
@@ -467,28 +411,13 @@ where $ESS$ is the ``effective sample size.'' $ESS$ is estimated by fitting an $
   The effective sample proportion is the effective sample size as a proportion of the actual sample size, i.e. $ESP=ESS/K$.
 \end{frame}
 
-
-
-
 \begin{frame}
   \frametitle{Simulation Results for the Base Algorithms, $T=10$}
   
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=1\textwidth]{figure/baseESplotT10} 
-
-\end{knitrout}
-
 \end{frame}
 
 \begin{frame}
     \frametitle{Simulation Results for the Base Algorithms, $T=1000$}
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=1\textwidth]{figure/baseESplotT1000} 
-
-\end{knitrout}
-
 
 \end{frame}
 
@@ -536,47 +465,21 @@ The State-Dist interweaving sampler, for example:
 \begin{frame}
     \frametitle{Simulation Results for the GIS Algorithms, $T=10$}
     
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=1\textwidth]{figure/altintESplotT10-1} 
-
-\end{knitrout}
-
-
 \end{frame}
 
 \begin{frame}
     \frametitle{Simulation Results for the GIS Algorithms, $T=10$}
     
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=1\textwidth]{figure/altintESplotT10-2} 
-
-\end{knitrout}
-
 \end{frame}
 
 \begin{frame}
     \frametitle{Simulation Results for the GIS Algorithms, $T=1000$}
     
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=1\textwidth]{figure/altintESplotT1000-1} 
-
-\end{knitrout}
-
-
 \end{frame}
 
 \begin{frame}
     \frametitle{Simulation Results for the GIS Algorithms, $T=1000$}
     
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=1\textwidth]{figure/altintESplotT1000-2} 
-
-\end{knitrout}
-
 \end{frame}
 
 \begin{frame}
@@ -664,28 +567,13 @@ which makes full CIS look like an extention of partial CIS:
 \end{frame}
 
 
-
-
-
 \begin{frame}
 \frametitle{Simulation Results for CIS Algorithms, $T=10$}
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=1\textwidth]{figure/cisESplotT10} 
-
-\end{knitrout}
 
 \end{frame}
 
 \begin{frame}
 \frametitle{Simulation Results for CIS Algorithms, $T=1000$}
-
-\begin{knitrout}\footnotesize
-\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}
-\includegraphics[width=1\textwidth]{figure/cisESplotT1000} 
-
-\end{knitrout}
-
 
 \end{frame}
  
@@ -728,7 +616,7 @@ Multivariate analogue of $W/V$: $|W|/|V|$? Ratio of eigenvalues?
 \begin{frame}[allowframebreaks]
         \frametitle{References}
         \bibliographystyle{plainnat}
-        \bibliography{../mcmcex.bib}
+        \bibliography{../doc/dlmasis}
 \end{frame} 
 
 
