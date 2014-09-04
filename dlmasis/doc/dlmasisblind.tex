@@ -449,7 +449,7 @@ For each dataset and each sampler we obtained $n=3000$ draws and threw away the 
 
 \subsection{Simulation results}
 
-The top panel of Figure \ref{ESplot} contains plots of ESP for $V$ and $W$ in each chain of each base samplers for $T=100$ --- we omit the $T=10$ and $T=1000$ plots for brevity, but they can be found in the supplementary materials (Appendix H). The State sampler has a low ESP for $V$ and a high ESP for $W$ when the true signal-to-noise ratio, $R^*=W^*/V^*$, is larger than one. In contrast, when $R^*<1$ the State sampler has a low ESP for $W$ and a high ESP for $V$. To summarize, the state sampler has mixing issues for whichever of $V$ or $W$ is smaller. The WSD and WSE samplers are similar to the state sampler except WSD has lower ESP for $V$ and WSE has lower ESP for $W$. The SD sampler has low ESP for both $V$ and $W$ when $R^*>1$, and it is particularly low for $W$. The SE sampler behaves almost exactly opposite ---it has low ESP for both when $R^*<1$ and in particular for $V$. We omit the results here, but as $T$ increases, in all samplers the region of the parameter space with high ESP shrinks and in the low ESP regions, ESP drops closer to zero. We summarize some of the above results for convenience in Table \ref{tab:stnmix}. In Appendix G of the supplementary materials, we discuss how the pattern of correlations between various quantities in the posterior distribution roughly determines of pattern of ESPs we see in Figure \ref{ESplot}.
+The top panel of Figure \ref{ESplot} contains plots of ESP for $V$ and $W$ in each chain of each base samplers for $T=100$ --- we omit the $T=10$ and $T=1000$ plots for brevity, but they can be found in the supplementary materials (Appendix H). The State sampler has a low ESP for $V$ and a high ESP for $W$ when the true signal-to-noise ratio, $R^*=W^*/V^*$, is larger than one. In contrast, when $R^*<1$ the State sampler has a low ESP for $W$ and a high ESP for $V$. To summarize, the state sampler has mixing issues for whichever of $V$ or $W$ is smaller. The WSD and WSE samplers are similar to the state sampler except WSD has lower ESP for $V$ and WSE has lower ESP for $W$. The SD sampler has low ESP for both $V$ and $W$ when $R^*>1$, and it is particularly low for $W$. The SE sampler behaves almost exactly opposite ---it has low ESP for both when $R^*<1$ and in particular for $V$. We omit the results here, but as $T$ increases, in all samplers the region of the parameter space with high ESP shrinks and in the low ESP regions, ESP drops closer to zero. We summarize some of the above results for convenience in the top panel of Table \ref{tab:stnmix}. In Appendix G of the supplementary materials, we discuss how the pattern of correlations between various quantities in the posterior distribution roughly determines of pattern of ESPs we see in Figure \ref{ESplot}.
 
 \begin{figure}[!h]
 \centering
@@ -462,12 +462,16 @@ The top panel of Figure \ref{ESplot} contains plots of ESP for $V$ and $W$ in ea
 
 \begin{table}
   \centering
-  \begin{tabular}{|l|ccccc|}\hline
+  \begin{tabular}{lccccc}\hline
     Parameter & State & SD & SE & WSD & WSE \\\hline
     V & $R^* < 1$ & $R^* < 1$ & $R^* > 1$ & $R^* < 1$ & $R^* < 1$\\
-    W & $R^* > 1$ & $R^* < 1$ & $R^* > 1$ & $R^* > 1$ & $R^* > 1$ \\\hline
+    W & $R^* > 1$ & $R^* < 1$ & $R^* > 1$ & $R^* > 1$ & $R^* > 1$ \\
+      &           &          &           &           &           \\\hline
+    Parameter & State-SD        & State-SE       & SD-SE        & Triple            & CIS \\\hline
+    V         & $R^* < 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ \\
+    W         & $R^* \not\approx 1$ & $R^* > 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$\\\hline
   \end{tabular}
-  \caption{Rule of thumb for when each base algorithm has a high ESP for each variable as a function of the true signal-to-noise ratio, $R^*=W^*/V^*$. Note that as the length of the time series increases, the farther away from one $R^*$ has to be for the sampler to have a high ESP.}
+  \caption{Rule of thumb for when each sampler has a high ESP for each variable as a function of the true signal-to-noise ratio, $R^*=W^*/V^*$. Note that as the length of the time series increases, the farther away from one $R^*$ has to be for the sampler to have a high ESP.}
   \label{tab:stnmix}
 \end{table}
 
@@ -475,18 +479,7 @@ We fit the LLM to the simulated datasets using several GIS samplers and a CIS sa
 
 We showed in Section \ref{sec:Algs:CIS} that the CIS and the SD-SE GIS algorithms consist of the same steps, just rearranged. This suggests that they should perform similarly and in fact the SD-SE GIS algorithm behaves essentially identically to the CIS and Triple GIS algorithms. The second of these is somewhat surprising --- we had some hope that the Triple GIS algorithm would improve upon the SD-SE GIS algorithm somewhat by further breaking the correlation between iterations in the Markov chain.
 
-We also fit each Alt sampler that corresponds to one of the GIS samplers we fit, that is the State-SD, State-SE, SD-SE and Triple (State-SD-SE) Alt samplers. The bottom two panels of Figure \ref{ESplot} also contains the ESP of these samplers for both $V$ and $W$. There appears to be little practical difference between the two categories of algorithms --- both take advantage of the beauty and the beast nature of their underlying DAs, but apparently dependence between the two DAs prevents the GIS version of the sampler from improving on the Alt version. All of the alternating and interweaving results are summarized in Table \ref{tab:stnmix2}. We include simulations with differing sizes of $T$ using these samplers in the supplementary materials (Appendix H), but the upshot is that, like with the base samplers, increasing the length of the time series worsens ESP for both $V$ and $W$ in all samplers and in particular shrinks the area of the parameter space in which ESP is high.
-
-\begin{table}
-  \centering
-  \begin{tabular}{|l|ccccc|}\hline
-    Parameter & State-SD        & State-SE       & SD-SE        & Triple            & CIS \\\hline
-    V         & $R^* < 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ \\
-    W         & $R^* \not\approx 1$ & $R^* > 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$\\\hline
-  \end{tabular}
-  \caption{Rule of thumb for when each interweaving or alternating algorithm has a high ESP for each variable as a function of the true signal-to-noise ratio, $R^*=W^*/V^*$. Note that as the length of the time series increases, the farther away from one $R^*$ has to be for the sampler to have a high ESP.}
-  \label{tab:stnmix2}
-\end{table}
+We also fit each Alt sampler that corresponds to one of the GIS samplers we fit, that is the State-SD, State-SE, SD-SE and Triple (State-SD-SE) Alt samplers. The bottom two panels of Figure \ref{ESplot} also contains the ESP of these samplers for both $V$ and $W$. There appears to be little practical difference between the two categories of algorithms --- both take advantage of the beauty and the beast nature of their underlying DAs, but apparently dependence between the two DAs prevents the GIS version of the sampler from improving on the Alt version. All of the alternating and interweaving results are summarized in the bottom panel of Table \ref{tab:stnmix}. We include simulations with differing sizes of $T$ using these samplers in the supplementary materials (Appendix H), but the upshot is that, like with the base samplers, increasing the length of the time series worsens ESP for both $V$ and $W$ in all samplers and in particular shrinks the area of the parameter space in which ESP is high.
 
 \subsection{Computational time}\label{sec:LLM:time}
 
@@ -539,7 +532,7 @@ All supplementary materials are available in a single \verb0.zip0 file.
 \begin{itemize}
 \item[] Appendix A: Proof of lemma 1.
 \item[] Appendix B: Derivations of joint distributions and full conditional distributions for each DA in the DLM.
-\item[] Appendix C: Mixed Cholesky factorization algorithm (MCFA) for simulation smoothing.
+\item[] Appendix C: Mixed Cholesky factorization algorithm for simulation smoothing.
 \item[] Appendix D: Further augmentation for non-invertible $F_t$.
 \item[] Appendix E: Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ in the LLM.
 \item[] Appendix F: Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$ in the LLM.
