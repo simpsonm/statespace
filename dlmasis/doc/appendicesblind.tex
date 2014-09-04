@@ -45,6 +45,7 @@ Estimation of Dynamic Linear Models}
 \maketitle
 \appendix
 \renewcommand\thefigure{\thesection.\arabic{figure}}    
+
 \section{Proof of lemma 1}
 
 First the normality assumption implies
@@ -56,17 +57,20 @@ Now for $\eta$ to be a sufficient augmentation we need $D\tilde{m} + \Omega_{y,\
 \begin{align*}
   D\tilde{m} - \Omega_{y,\eta}'\Omega_\eta^{-1}\alpha_\eta + \Omega_{y,\eta}'\Omega_\eta^{-1}\eta  = b + A\eta
 \end{align*}
-where $A=\Omega_{y,\eta}'\Omega_\eta^{-1}$ and $b=D\tilde{m} - A\alpha_\eta$ must both be free of $\phi$. As a result $A\alpha_\eta = D\tilde{m} - b$.
+where $A=\Omega_{y,\eta}'\Omega_\eta^{-1}$ and $b=D\tilde{m} - A\alpha_\eta$ must both be free of $\phi$. As a result $A\alpha_\eta$ is also free of $\phi$ and thus so is $\alpha_{\eta}$.
 
 Then using the second equation, we now require $\Sigma$ free of $\phi$ where $\Sigma = \tilde{V} + \tilde{W} + \tilde{C} - A\Omega_{\eta}A'$. This ensures that $\Omega_{\eta,y}$ is not the zero matrix since $\tilde{V} + \tilde{W} + \tilde{C}$ is not free of $\phi$. Rearranging we have $A\Omega_{\eta}A' = \tilde{V} + \tilde{W} + \tilde{C} - \Sigma$. Consider $\tilde{\eta}=A\eta$, which is also a sufficient augmentation since it is just a linear transformation by a constant matrix. Then we have
 \begin{align*}
+y|\tilde{\eta},\phi & \sim N(b + A\eta, \Sigma)\\
+\tilde{\eta}|\phi & \sim N(A\alpha_\eta, A\Omega_\eta A')
+\intertext{in other words}
 y|\tilde{\eta},\phi & \sim N(b + \tilde{\eta}, \Sigma)\\
-\tilde{\eta}|\phi & \sim N(D\tilde{m} - b, \tilde{V} + \tilde{W} + \tilde{C} - \Sigma)
+\tilde{\eta}|\phi & \sim N(A\alpha_{\eta}, \tilde{V} + \tilde{W} + \tilde{C} - \Sigma).
 \end{align*}
-with $b$ and $\Sigma$ free of $\phi$. Thus the posterior density of $\phi$ given $\tilde{\eta}$ can be written as
+Thus the posterior density of $\phi$ given $\tilde{\eta}$ can be written as
 \begin{align*}
   p(\phi|\tilde{\eta}, y) &\propto p(y|\tilde{\eta},\phi)p(\tilde{\eta}|\phi)p(\phi) \propto p(\tilde{\eta}|\phi)p(\phi) \\
-&\propto |\tilde{V} + \tilde{W} + \tilde{C} - \Sigma|^{-1/2}\exp\left[-\frac{1}{2}(\tilde{\eta} - D\tilde{m} + b)'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)^{-1}(\tilde{\eta} - D\tilde{m} + b)\right]. \qed
+&\propto p(\phi)|\tilde{V} + \tilde{W} + \tilde{C} - \Sigma|^{-1/2}\exp\left[-\frac{1}{2}(\tilde{\eta} - A\alpha_{\eta})'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)^{-1}(\tilde{\eta} - A\alpha_{\eta})\right]. \qed
 \end{align*}
 
 \section{Full conditional distributions in the general DLM for various DAs}\label{sec:DLMfullcond}

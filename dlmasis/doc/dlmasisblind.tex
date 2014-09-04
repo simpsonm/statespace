@@ -242,22 +242,21 @@ Suppose $\eta$ is an SA for the DLM such that conditional on $\phi$, $\eta$ and 
 \end{align*}
 Then $\tilde{\eta}=\Omega_{y,\eta}'\Omega_{\eta}^{-1}\eta$ is also an SA and
 \[
-\tilde{\eta}|\phi \sim N(D\tilde{m},\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)
+\tilde{\eta}|\phi \sim N(A\alpha_{\eta},\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)
 \]
-where $\Sigma=\Omega_{y,\eta}'\Omega_{\eta}^{-1}\Omega_{y,\eta}$, $\tilde{V} + \tilde{W} + \tilde{C} - \Sigma$ is functionally independent of $\phi$, and conditional posterior of $\phi$ given $\tilde{\eta}$ can be written as
-\[
-p(\phi|\tilde{\eta},y) \propto |\tilde{V} + \tilde{W} + \tilde{C} - \Sigma|^{-1/2}\exp\left[-\frac{1}{2}(\tilde{\eta} - D\tilde{m} + b)'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)^{-1}(\tilde{\eta} - D\tilde{m} + b)\right].
-\]
+where $A=\Omega_{y,\eta}'\Omega_{\eta}^{-1}$, $\Sigma = \tilde{V} + \tilde{W} + \tilde{C} - A\Omega_{\eta}A'$ and $\alpha_{\eta}$ are functionally independent of $\phi$ and the conditional posterior of $\phi$ given $\tilde{\eta}$ can be written as
+\begin{align*}
+p(\phi|\tilde{\eta},y) &\propto p(\phi) |A\Omega_{\eta}A'|^{-1/2}\exp\left[-\frac{1}{2}(\tilde{\eta}-A\alpha_{\eta})'(A\Omega_{\eta}A)^{-1}(\tilde{\eta}-A\alpha_{\eta})\right]\\
+&\propto p(\phi)|\tilde{V} + \tilde{W} + \tilde{C} - \Sigma|^{-1/2}\exp\left[-\frac{1}{2}(\tilde{\eta} - A\alpha_{\eta})'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)^{-1}(\tilde{\eta} - A\alpha_{\eta})\right].
+\end{align*}
 \end{lem}
 \noindent Recall from Section \ref{sec:DLM:marg} that the the marginal model for the data in the DLM is $y\sim N_{Tk}(D\tilde{m}, \tilde{V} + \tilde{W} + \tilde{C})$. Then $\alpha_\eta$, $\Omega_\eta$ and $\Omega_{y,\eta}$ are additional parameters included to define the full joint distribution of $y$ and $\eta$.
 
-The posterior density we wish to sample from comes from equation \eqref{margmodel} and is the same as $p(\phi|\tilde{\eta},y)$ except it has $\Sigma$ equal to the zero matrix and $b$ equal to the zero vector. Using $\eta$ instead of $\tilde{\eta}$ will not result in a simpler density $p(\phi|\eta,y)$. This conditional posterior can be written as
+The posterior density we wish to sample from comes from equation \eqref{margmodel} and is the nearly the same as $p(\phi|\tilde{\eta},y)$ except it has $\Sigma$ equal to the zero matrix and $b$ equal to the zero vector with $y$ replacing $\tilde{\eta}$. Using $\eta$ instead of $\tilde{\eta}$ will not result in a simpler density $p(\phi|\eta,y)$. This conditional posterior can be written as
 \begin{align*}
-p(\phi|&\eta,y) \propto p(\phi) |\Omega_{\eta}|^{-1/2}\exp\left[-\frac{1}{2}(\eta - \alpha_{\eta})'(\Omega_{\eta})^{-1}(\eta - \alpha_{\eta})\right]\\
-\propto &\  p(\phi) |A(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A'|^{-1/2}\\
-&\times\exp\left[-\frac{1}{2}(A\eta - D\tilde{m} + b)'A[A(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A']^{-1}A'(A\eta - D\tilde{m} + b)\right]
+p(\phi|&\eta,y) \propto p(\phi) |\Omega_{\eta}|^{-1/2}\exp\left[-\frac{1}{2}(\eta - \alpha_{\eta})'\Omega_{\eta}^{-1}(\eta - \alpha_\eta)\right].
 \end{align*}
-where $A\equiv\Omega_{\eta,y}'\Omega_\eta^{-1}$, $\Sigma$ and $b$ are free of $\phi$. This density is even more complicated than $p(\phi|\tilde{\eta},y)$ unless $A$ is square and invertible, in which case they are the same density. The upshot is that once we find an SA, in order to use it we must obtain draws from a density that appears just as hard to sample from as the posterior density we are already trying to approximate.
+which is similar to one form of $p(\phi|\tilde{\eta},y)$ in the Lemma \ref{noSA}. It is unclear how $\alpha_\eta$ and $\Omega_{\eta}$ depend on $\phi$. When $A'A$ is invertible,  $\eta=(A'A)^{-1}A'\tilde{\eta}$ so that $\Omega_{\eta} = (A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}$. and $p(\phi|\eta,y)$ is clearly more complicated than $p(\phi|\tilde{\eta},y)$. The upshot is that once we find an SA, in order to use it we must obtain draws from a density that appears just as hard to sample from as the posterior density we are already trying to approximate.
 
 Lemma \ref{noSA} does not quite rule out the existence of a useful SA, but it does suggest that it will be difficult to find one. This result brings to mind \citet{van2001art}'s contention that there is an art to constructing data augmentation algorithms --- our goal is not only to find an MCMC algorithm that has nice convergence and mixing properties, but also one that is easy to implement, and this second criteria is much more difficult to quantify. The problem we run into is unlikely to be unique to the time series setting but rather seems driven by trying to find an SA for a pair of variances, one on the data level and the other on the latent data level.
 
