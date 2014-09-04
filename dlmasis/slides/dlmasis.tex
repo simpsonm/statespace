@@ -15,7 +15,7 @@ epsfig, multicol, amsthm}
 \newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
 \def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
 \newcommand\N{\mathcal{N}}
-
+\graphicspath{{../doc/plots/}}
 \title[Interweaving MCMC Strats for DLMs]{Interweaving Markov Chain Monte Carlo Strategies for Efficient
 Estimation of Dynamic Linear Models}
 %\subtitle{}
@@ -40,7 +40,7 @@ Estimation of Dynamic Linear Models}
 
 \begin{frame}
 \frametitle{Interweaving: A Motivating Example}
-Suppose:
+Adapted from \citet{yu2011center}, suppose:
 \begin{align*}
 y|\theta, \mu & \sim \N(\theta, V) \\
 \theta|\mu & \sim \N(\mu, W) 
@@ -98,7 +98,7 @@ Alternate representation:
 
 \begin{frame}
 \frametitle{Global Interweaving Strategy (GIS)}
-Target posterior distribution $p(\phi|y)$ with two DAs $\theta$ and $\gamma$ such that
+From \citet{yu2011center}: target posterior distribution $p(\phi|y)$ with two DAs $\theta$ and $\gamma$ such that
 \begin{align*}
 \int p(\theta,\phi|y) d\theta = p(\phi|y) \ \ \ \ \mbox{and}\ \ \ \int p(\gamma,\phi|y) d\gamma = p(\phi|y) 
 \end{align*}
@@ -108,7 +108,7 @@ Then:
 \end{align*}
 or more commonly:
 \begin{align*}
-[\theta|\phi,y] \to [\phi|\theta,y] \to [\gamma|\phi,\theta,y] \to [\phi|\gamma,y]
+[\theta|\phi,y] \to [\phi|\theta,y] \to {\color{blue}[\gamma|\phi,\theta,y]} \to [\phi|\gamma,y]
 \end{align*}
 \end{frame}
 
@@ -116,14 +116,40 @@ or more commonly:
 \frametitle{Ancillary-Sufficiency Interweaving Strategy (ASIS)}
 GIS where one DA is a sufficient augmentation (SA) and the other is an ancillary augmentation (AA).\\~\\
 \begin{itemize}
-\item[]$\theta$ is an SA if $p(y|\theta,\phi)=p(y|\theta)$ (AKA centered augmentation)\\~\\
-\item[]$\theta$ is an AA if $p(\theta|\phi)=p(\theta)$ (AKA non-centered augmentation)\\~\\
+\item$\theta$ is an SA if $p(y|\theta,\phi)=p(y|\theta)$ (AKA centered augmentation)\\~\\
+\item$\theta$ is an AA if $p(\theta|\phi)=p(\theta)$ (AKA non-centered augmentation)\\~\\
 \end{itemize}
 Componentwise Interweaving Strategy (CIS):\\~\\
 \begin{itemize}
-\item[]Motivation: Finding an SA--AA pair is often difficult for $\phi=(\phi_1,\phi_2)$, but not for $\phi_1$ and $\phi_2$ separately.\\~\\
-\item[]Basic idea: GIS (or ASIS) for sub-blocks of $\phi$.\\~\\
-\item[]Can use the same DA in multiple sub-blocks of $\phi$.
+\item Motivation: Finding an SA--AA pair is often difficult for $\phi=(\phi_1,\phi_2)$, but not for $\phi_1$ and $\phi_2$ separately.\\~\\
+\item Basic idea: GIS (or ASIS) for sub-blocks of $\phi$.\\~\\
+\item Can use the same DA in multiple sub-blocks of $\phi$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Why interweaving?}
+\begin{itemize}
+  \item  GIS has a geometric rate of convergence no worse than the worst of the two underlying DA algorithms, and the bound gets better the less $\theta$ and $\tilde{\theta}$ are correlated in the posterior \citep{yu2011center}.\\~\\
+  \item If the two DAs are independent in the posterior, then GIS results in {\color{blue}\textit{\textbf{IID}}} draws from the posterior \citep{yu2011center}. \\~\\
+  \item Often GIS has better convergence than the associated alternating algorithm.\\~\\
+  \item Under weak conditions the ASIS algorithm is the same as the optimal PX-DA algorithm of \citet{liu1999parameter} \citep{yu2011center}.\\~\\
+  \item The CIS sampler does at least as well (in some sense) as the Gibbs sampler that integrates out the augmented data vectors \citep{yu2011center}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Interweaving in Time Series Models}
+\begin{itemize}
+\item \citet{yu2011center} use a time series of Poisson counts to illustrate CIS.\\~
+\item \citet{kastner2013ancillarity} use ASIS to improve estimation of the stochastic volatility model. \verb0R0 package: \verb0stochvol0.\\~
+\item Lots of relevant work on reparameterization: \\~
+\begin{itemize}
+\item AR(1) plus noise: \citet{pitt1999analytic}\\~
+\item Stochastic volatility models: \citet{shephard1996statistical,fruhwirth2003bayesian,roberts2004bayesian,bos2006inference,strickland2008parameterisation,fruhwirth2008heston}\\~
+\item Poisson counts: \citet{fruhwirth2006auxiliary}\\~
+\item Dynamic regression: \citet{fruhwirth2004efficient}
+\end{itemize}
 \end{itemize}
 \end{frame}
 
@@ -199,14 +225,14 @@ Marginal model for $y$:
 
 \begin{frame}
   \frametitle{The Dynamic Linear Model} 
-Let $\phi$ denote the unknown parameter. Potentially $F_t(\phi)$ and $G_t(\phi)$, but for simplicity assume $\phi=(\theta_0,V,W)$.\\~\\
+Let $\phi$ denote the unknown parameter. Potentially $F_t(\phi)$ and $G_t(\phi)$, but for simplicity assume $\phi=(V,W)$.\\~\\
 
 Priors: independently assume \\~\\
 \begin{itemize}
 \item[]$\theta_0\sim \N_p(m_0,C_0)$, $V\sim IW(\Lambda_V,\lambda_V)$, and $W\sim IW(\Lambda_W,\lambda_W)$\\~\\
 \end{itemize}
 
-So $p(\phi|y)\propto$
+Then $p(\phi|y)\propto$
 \begin{align*}
 p(\phi)|\tilde{V} + \tilde{W} + \tilde{C}|^{-1/2}\exp\left[-\frac{1}{2}\left(y-D\tilde{m}\right)'(\tilde{V} + \tilde{W} + \tilde{C})^{-1}\left(y-D\tilde{m}\right)\right]
 \end{align*}
@@ -214,22 +240,22 @@ p(\phi)|\tilde{V} + \tilde{W} + \tilde{C}|^{-1/2}\exp\left[-\frac{1}{2}\left(y-D
 
 \begin{frame}
 \frametitle{Data Augmentations for the DLM}
-{\color{blue}Standard DA: latent states $\theta$.}
+Standard DA: states $\theta$. In terms of $\theta$, the model is:
 \begin{align*}
-y_t|\theta,V,W \stackrel{ind}{\sim} &\N_k(F_t\theta_t,V)\\
-\theta_t|\theta_{0:(t-1)},V,W \sim &\N_p(G_t\theta_{t-1},W)
+y_t|\theta,V,W \stackrel{ind}{\sim} & \N_k(F_t\theta_t,V)\\ 
+\theta_t|\theta_{0:(t-1)},V,W \sim & \N_p(G_t\theta_{t-1},W)
 \end{align*} 
 {\color{blue}$\theta$ is an SA for $W|V$ and an AA for $V|W$.}\\~\\
 
-{\color{blue}Scaled disturbances $\gamma\equiv(\gamma_0',\cdots,\gamma_T)'$: }
+Scaled disturbances $\gamma\equiv(\gamma_0',\cdots,\gamma_T)'$ \citep{fruhwirth2004efficient}.
 \begin{itemize}
 \item[]$\gamma_0=\theta_0$ and $\gamma_t=L_W^{-1}(\theta_t - G_t\theta_{t-1})=L_W^{-1}w_t$ where $L_W$ is the Cholesky decomposition of $W$.
 \end{itemize}
+Let $\theta_0(\gamma,W)=\gamma_0$ and $\theta_t(\gamma,W)=L_W\gamma_t + G_t\theta_{t-1}(\gamma,W)$. Then:
 \begin{align*}
-y_t|\gamma,V,W \stackrel{ind}{\sim} &\N_k(F_t\theta_t(\gamma,W),V)\\
-\gamma_t|V,W \stackrel{iid}{\sim} &\N_p(0,I_p)
+y_t|\gamma,V,W \stackrel{ind}{\sim} & \N_k(F_t\theta_t(\gamma,W),V) \\
+\gamma_t|V,W \stackrel{iid}{\sim} & \N_p(0,I_p)
 \end{align*} 
-where $\theta_0(\gamma,W)=\gamma_0$ and $\theta_t(\gamma,W)=L_W\gamma_t + G_t\theta_{t-1}(\gamma,W)$.\\~\\
 
 {\color{blue}$\gamma$ is an AA for $(V,W)$.}
 
@@ -237,25 +263,27 @@ where $\theta_0(\gamma,W)=\gamma_0$ and $\theta_t(\gamma,W)=L_W\gamma_t + G_t\th
 
 \begin{frame}
 \frametitle{New Data Augmentations for the DLM}
-{\color{blue}Scaled errors $\psi\equiv(\psi_0',\cdots,\psi_T')'$: }
+Scaled errors $\psi\equiv(\psi_0',\cdots,\psi_T')'$:
 \begin{itemize}
 \item[]$\psi_0=\theta_0$ and $\psi_t=L_V^{-1}(y_t - F_t\theta_t)=L_V^{-1}v_t$ where $L_V$ is the Cholesky decomposition of $V$.
 \end{itemize}
 For convenience, assume $F_t$ is square and invertible for all $t$.
  
-\ \ (So $dim(y_t)=dim(\theta_t)$.)
+\ \ (So $dim(y_t)=dim(\theta_t)$.)\\~
+
+In terms of $\psi$ the model is:
 \begin{align*}
-y_t|\psi,V,W \stackrel{ind}{\sim} &\N_p(\mu_t(\psi,V,W),F_tWF_t')\\
+y_t|\psi,V,W \stackrel{ind}{\sim} &\N_p(\mu_t(\psi,V),F_tWF_t')\\
 \psi_t|V,W \stackrel{iid}{\sim} &\N_p(0,I_p)
 \end{align*} 
-where $\mu_t(\psi,V,W)$ is complicated.\\~\\
+where $\mu_t(\psi,V)$ is complicated.\\~\\
 
 {\color{blue}$\psi$ is an AA for $(V,W)$.}
 \end{frame}
 
 \begin{frame}
 \frametitle{New Data Augmentations for the DLM}
-{\color{blue}Wrongly-scaled disturbances $\tilde{\gamma}\equiv(\tilde{\gamma}_0',\cdots,\tilde{\gamma}_T')'$:}
+Wrongly-scaled disturbances $\tilde{\gamma}\equiv(\tilde{\gamma}_0',\cdots,\tilde{\gamma}_T')'$:
 \begin{itemize}
 \item[]$\tilde{\gamma}_0=\theta_0$ and $\tilde{\gamma}_t=L_V^{-1}(\theta_t - G_t\theta_{t-1})=L_V^{-1}w_t$
 \end{itemize}
@@ -265,7 +293,7 @@ where $\mu_t(\psi,V,W)$ is complicated.\\~\\
 \end{align*}
 where $\theta_0(\tilde{\gamma},V)=\tilde{\gamma}_0$ and $\theta_t(\tilde{\gamma},V) = L_V\tilde{\gamma}_t + G_t\theta_{t-1}(\tilde{\gamma},V)$.\\~\\
 
-{\color{blue}Wrongly-scaled errors $\tilde{\psi}\equiv(\tilde{\psi}_0',\cdots,\tilde{\psi}_T')'$:}
+Wrongly-scaled errors $\tilde{\psi}\equiv(\tilde{\psi}_0',\cdots,\tilde{\psi}_T')'$:
 \begin{itemize}
 \item[]$\tilde{\psi}_0=\theta_0$ and $\tilde{\psi}_t=L_W^{-1}(y_t - F_t\theta_{t})=L_W^{-1}v_t$
 \end{itemize}
@@ -315,13 +343,13 @@ Upshot: hard to find a SA for $(V,W)$.
 
 \begin{frame}
 \frametitle{MCMC Strategies}
-The standard DA Algorithm--the state sampler: {\color{red}$[\theta|V,W,y] \to [V,W|\theta,y]$}
+The standard DA Algorithm--the state sampler: {\color{blue}$[\theta|V,W,y] \to [V,W|\theta,y]$}
 \begin{itemize}
 \item $p(\theta|V,W,y)$ is Gaussian --- draw using the mixed Cholesky factor algorithm (MCFA) \citep{mccausland2011simulation}.
 \item Conditional on $(\theta,y)$, $V$ and $W$ are independent inverse Wishart.\\~\\
 \end{itemize}
 
-Scaled disturbance sampler: {\color{red}$[\gamma|V,W,y] \to [V|W,\gamma,y] \to [W|V,\gamma,y]$}
+Scaled disturbance sampler: {\color{blue}$[\gamma|V,W,y] \to [V|W,\gamma,y] \to [W|V,\gamma,y]$}
 \begin{itemize}
 \item $p(\gamma|V,W,y)$ is Gaussian, but easier to draw $\theta$ using MCFA and transform.
 \item $p(V,W|\gamma,y)$ is complicated, but $p(V|W,\gamma,y)$ is inverse Wishart.
@@ -331,7 +359,7 @@ Scaled disturbance sampler: {\color{red}$[\gamma|V,W,y] \to [V|W,\gamma,y] \to [
 
 \begin{frame}
 \frametitle{MCMC Strategies}
-Scaled error sampler: {\color{red}$[\psi|V,W,y] \to [V|W,\psi,y] \to [W|V,\psi,y]$}
+Scaled error sampler: {\color{blue}$[\psi|V,W,y] \to [V|W,\psi,y] \to [W|V,\psi,y]$}
 \begin{itemize}
 \item $p(\psi|V,W,y)$ is Gaussian and can use MCFA directly.
 \item $p(V,W|\psi,y)$ is complicated, but $p(V|W,\psi,y)$ is less complicated. 
@@ -340,7 +368,7 @@ Scaled error sampler: {\color{red}$[\psi|V,W,y] \to [V|W,\psi,y] \to [W|V,\psi,y
 
 Wrongly-scaled samplers are analogous to their correctly-scaled counterparts.\\~\\
 
-Alternating and GIS (not ASIS) easy to construct once sampling from the difficult densities is accomplished.
+Alternating and GIS easy to construct once sampling from the difficult densities is accomplished.
 \end{frame}
 
 \begin{frame}
@@ -368,14 +396,31 @@ Steps of this sampler can be rearranged to obtain the SE-SD GIS sampler:
 
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \frametitle{Evaluating the Strategies: the Local Level Model}
-Model:
+Model: for $t=1,2,...,T$
 \begin{align*}
-    y_t|\theta  \stackrel{ind}{\sim}&\N(\theta_t,V) \qquad (\mbox{observation equation})\\
-    \theta_t|\theta_{0:(t-1)} \sim& \N(\theta_{t-1},W) \qquad (\mbox{system equation})
+    y_t|\theta  \stackrel{ind}{\sim}&\N_1(\theta_t,V) \qquad (\mbox{observation equation})\\
+    \theta_t|\theta_{0:(t-1)} \sim& \N_1(\theta_{t-1},W) \qquad (\mbox{system equation})
   \end{align*} 
-for $t=1,2,...,T$. Unknown parameter: $\phi=(V,W)$.\\~\\
+
+Then $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ have the form:
+\begin{align*}
+p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b\sqrt{x} -c/x\right], \qquad a,c,\alpha,x>0, b\in\Re
+\end{align*}
+Similarly $p(W|V,\tilde{\psi},y)$ and $p(V|W,\tilde{\gamma},y)$ have the form:
+\begin{align*}
+p(y)\propto y^{-\alpha-1}\exp\left[ -ay + b/\sqrt{y} -c/y\right], \qquad a,c,\alpha,y>0, b\in\Re
+\end{align*}
+Rejection sampling with a Cauchy proposal works for $\log(x)$ and $\log(y)$.\\~\\
+
+Often $p(x)$ is log concave $\to$ adaptive rejection sampling (\verb0R0 package \verb0ars0).
+\end{frame}
+
+\begin{frame}
+\frametitle{Evaluating the Strategies: LLM - Simulation Setup}
+
+Let $V^*$ and $W^*$ denote the true values used to simulate the time series.\\~\\
 
 Independent priors:
 \begin{itemize}
@@ -385,15 +430,62 @@ Independent priors:
 Simulation Setup:
 \begin{itemize}
 \item Simulated data: $T=10$, $T=100$ \& $T=1000$ and $V^*$, $W^*$ $=10^{i/2}$ with $i=-4,-3,\cdots,4$.
-\item Each sampler used to fit the model to each dataset using one Markov chain started at $(V^*,W^*)$.
+\item Each sampler was used to fit the model to each dataset using one Markov chain started at $(V^*,W^*)$.
 \end{itemize}
 
 \end{frame}
 
+
 \begin{frame}
-\frametitle{LLM Results}
+\frametitle{LLM Results --- ESP for T=10}
+\centering
+\includegraphics[width=0.75\textwidth]{basecisESplot10}\\
+\includegraphics[width=0.49\textwidth]{altintESplotV10}
+\includegraphics[width=0.49\textwidth]{altintESplotW10}
 \end{frame}
 
+\begin{frame}
+\frametitle{LLM Results --- ESP for T=100}
+\centering
+\includegraphics[width=0.75\textwidth]{basecisESplot100}\\
+\includegraphics[width=0.49\textwidth]{altintESplotV100}
+\includegraphics[width=0.49\textwidth]{altintESplotW100}
+\end{frame}
+
+\begin{frame}
+\frametitle{LLM Results --- ESP for T=1000}
+\centering
+\includegraphics[width=0.75\textwidth]{basecisESplot1000}\\
+\includegraphics[width=0.49\textwidth]{altintESplotV1000}
+\includegraphics[width=0.49\textwidth]{altintESplotW1000}
+\end{frame}
+
+\begin{frame}
+\frametitle{LLM Results --- ESP summarized}
+Rule of thumb for when each base algorithm has a high ESP for each variable as a function of the true signal-to-noise ratio, $R^*=W^*/V^*$. \\~\\~\\
+ \begin{center}
+  \begin{tabular}{lccccc}\hline
+    Parameter & State & SD & SE & WSD & WSE \\\hline
+    V & $R^* < 1$ & $R^* < 1$ & $R^* > 1$ & $R^* < 1$ & $R^* < 1$\\
+    W & $R^* > 1$ & $R^* < 1$ & $R^* > 1$ & $R^* > 1$ & $R^* > 1$ \\
+      &           &          &           &           &           \\\hline
+    Parameter & State-SD        & State-SE       & SD-SE        & Triple            & CIS \\\hline
+    V         & $R^* < 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ \\
+    W         & $R^* \not\approx 1$ & $R^* > 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$\\\hline
+  \end{tabular}
+\end{center}\\~\\~\\
+
+Note that as the length of the time series increases, the farther away from one $R^*$ has to be for the sampler to have a high ESP.
+
+\end{frame}
+
+\begin{frame}
+\frametitle{LLM Results - log time (minutes) per 1000 effective draws}
+\centering
+\includegraphics[width=0.75\textwidth]{basecistimeplot100}\\
+\includegraphics[width=0.49\textwidth]{altgisVtimeplot100}
+\includegraphics[width=0.49\textwidth]{altgisWtimeplot100}
+\end{frame}
 
 \begin{frame}[allowframebreaks]
         \frametitle{References}
@@ -401,21 +493,11 @@ Simulation Setup:
         \bibliography{../doc/dlmasis}
 \end{frame} 
 
+
+
 \end{document}
 
 
-
-  \begin{enumerate}
-  \item  GIS has a geometric rate of convergence no worse than the worst of the two underlying DA algorithms, and the bound gets better the less $\theta$ and $\tilde{\theta}$ are correlated in the posterior.\\~\\
-  \item Often, but not always, GIS has better convergence than the associated alternating algorithm.\\~\\
-  \item If $\theta$ and $\tilde{\theta}$ are independent in the posterior, then GIS results in \textit{\textbf{iid}} draws from the posterior. \\~\\
-  \item If $\theta$ is a SA, $\tilde{\theta}$ is an AA, $\tilde{\theta}$ (so the algorithm is ASIS) is a one-to-one transformation of $\theta$, and the priors are ``nice,'' then the GIS algorithm is the same as the optimal PX-DA algorithm of \citet{liu1999parameter}.
-  \end{enumerate}
-\end{frame}
-
-
-
-  \item \citet{yu2011center}: The CIS sampler does at least as well (in some sense) as the Gibbs sampler that integrates out the augmented data vectors.
 
 
 
