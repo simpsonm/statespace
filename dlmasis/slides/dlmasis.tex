@@ -14,6 +14,7 @@ epsfig, multicol, amsthm}
 \setbeamercovered{transparent}
 \newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
 \def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newcommand\N{\mathcal{N}}
 
 \title[Interweaving MCMC Strats for DLMs]{Interweaving Markov Chain Monte Carlo Strategies for Efficient
 Estimation of Dynamic Linear Models}
@@ -38,34 +39,103 @@ Estimation of Dynamic Linear Models}
 \end{frame}
 
 \begin{frame}
+\frametitle{Interweaving: A Motivating Example}
+Suppose:
+\begin{align*}
+y|\theta, \mu & \sim \N(\theta, V) \\
+\theta|\mu & \sim \N(\mu, W) 
+\end{align*}
+with $V$, $W$ known and $p(\mu)\propto 1$.\\~\\
+Posterior: $\mu|y \sim \N(y, V+W)$\\~\\
+DA algorithm:
+\begin{align*}
+\theta|\mu,y &\sim \N\left(\frac{V\mu + Wy}{V+W}, \frac{VW}{V+W}\right)\\
+\mu |\theta, y &\sim \N(\theta, W)
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Interweaving: A Motivating Example}
+Let $\gamma = \theta - \mu$. Then:
+\begin{align*}
+y|\theta, \gamma & \sim \N(\mu + \gamma, V) \\
+\gamma|\mu & \sim \N(0, W) 
+\end{align*}
+DA algorithm based on $\gamma$:
+\begin{align*}
+\gamma|\mu,y &\sim \N\left(\frac{W(\mu - y)}{V+W}, \frac{VW}{V+W}\right)\\
+\mu |\gamma, y &\sim \N(y-\gamma, V)
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Interweaving: A Motivating Example}
+Alternate between two DAs (alternating algorithm):
+\begin{align*}
+[\theta|\mu,y] \to [\mu|\theta,y] \to [\gamma|\mu,y] \to [\mu|\gamma,y]
+\end{align*}
+Weave two DAs together (interweaving algorithm):
+\begin{align*}
+[\theta|\mu,y] \to [\gamma|\theta,y] \to [\mu|\gamma,y]
+\end{align*}
+Alternate representation:
+\begin{align*}
+[\theta|\mu,y] \to [\mu|\theta,y] \to [\gamma|\mu,\theta,y] \to [\mu|\gamma,y]
+\end{align*}
+{\color{blue}The interweaving algorithm obtains IID draws from the posterior of $\mu$.}
+\end{frame}
+
+\begin{frame}
   \frametitle{Outline}
+  Goal: apply interweaving to DLMs\\~\\
   \begin{enumerate}
+    \item Intro to interweaving\\~\\
     \item The model\\~\\
-    \item MCMC estimation and its problems\\~\\
-    \item Solutions: reparameterization and interweaving\\~\\
-    \item Simulation results applying the solutions to the model
+    \item DAs for the model, new and old\\~\\
+    \item Simulation results in the local level model
   \end{enumerate}
 \end{frame}
 
 \begin{frame}
-  \frametitle{The Dynamic Linear Model} 
-  For $t=1,2,...,T$ let $y_t$ denote the data and $\theta_t$ denote the latent state in period $t$:
-  \begin{align}
-    y_t  =&F_t\theta_t +  v_t\label{obseq}\\
-    \theta_t =& G_t\theta_{t-1} + w_t\label{syseq}
-  \end{align} 
-  with $v_t\stackrel{ind}{\sim}N(0,V_t)$, $w_t\stackrel{ind}{\sim}N(0,W_t)$ and $\theta_0\sim N(m_0,C_0)$, all mutually independent.\\~\\
-  \begin{itemize}%
-  \item \eqref{obseq} is the observation equation; \eqref{syseq} is the system equation. \\~\\
-  \item $v_t$ is the (observation) error; $w_t$ is the (system) disturbance. \\~\\
-  \item $F_t$ is the observation matrix and $V_t$ is the observation covariance matrix. $G_t$ is the system matrix and  $W_t$ is the system covariance matrix. All four possibly depend on unkown parameter $\phi$.
-  \end{itemize}
+\frametitle{Global Interweaving Strategy (GIS)}
+Target posterior distribution $p(\phi|y)$ with two DAs $\theta$ and $\gamma$ such that
+\begin{align*}
+\int p(\theta,\phi|y) d\theta = p(\phi|y) \ \ \ \ \mbox{and}\ \ \ \int p(\gamma,\phi|y) d\gamma = p(\phi|y) 
+\end{align*}
+Then:
+\begin{align*}
+[\theta|\phi,y] \to [\gamma|\theta,y] \to [\phi|\gamma,y]
+\end{align*}
+or more commonly:
+\begin{align*}
+[\theta|\phi,y] \to [\phi|\theta,y] \to [\gamma|\phi,\theta,y] \to [\phi|\gamma,y]
+\end{align*}
 \end{frame}
 
+\begin{frame}
+\frametitle{Ancillary-Sufficiency Interweaving Strategy (ASIS)}
+GIS where one DA is a sufficient augmentation (SA) and the other is an ancillary augmentation (AA).\\~\\
+\begin{itemize}
+\item[]$\theta$ is an SA if $p(y|\theta,\phi)=p(y|\theta)$ (AKA centered augmentation)\\~\\
+\item[]$\theta$ is an AA if $p(\theta|\phi)=p(\theta)$ (AKA non-centered augmentation)\\~\\
+\end{itemize}
+Componentwise Interweaving Strategy (CIS):\\~\\
+\begin{itemize}
+\item[]Motivation: Finding an SA--AA pair is often difficult for $\phi=(\phi_1,\phi_2)$, but not for $\phi_1$ and $\phi_2$ separately.\\~\\
+\item[]Basic idea: GIS (or ASIS) for sub-blocks of $\phi$.\\~\\
+\item[]Can use the same DA in multiple sub-blocks of $\phi$.
+\end{itemize}
+\end{frame}
 
 \begin{frame}[fragile]
   \frametitle{The Dynamic Linear Model} 
-  The $\theta$'s form a markov chain. Conditional on the $\theta$'s, the $y$'s are mutually independent.\\~\\
+  For $t=1,2,...,T$
+  \begin{align*}
+    y_t  =&F_t\theta_t +  v_t  \qquad \mbox{(observation equation)}\\
+    \theta_t =& G_t\theta_{t-1} + w_t \qquad \mbox{(system equation)}
+  \end{align*} 
+  with $v_t\stackrel{ind}{\sim}\N_k(0,V)$ independent of $w_t\stackrel{ind}{\sim}\N_p(0,W)$.\\~\\
+
 \begin{figure}
   \centering
     \tikzstyle{state}=[circle, thick, minimum size=1.2cm, draw=black!80]
@@ -102,7 +172,156 @@ Estimation of Dynamic Linear Models}
     ;
   \end{tikzpicture}
   \end{figure}
+
+For convenience define $y\equiv(y_1',\cdots,y_T')'$ and $\theta\equiv(\theta_0',\cdots,\theta_T)'$.
+
 \end{frame}
+
+\begin{frame}
+  \frametitle{The Dynamic Linear Model} 
+Define 
+\begin{align*}
+H_t &= G_tG_{t-1}\cdots G_1\\ 
+K_t &= I_p + G_t + G_tG_{t-1} + \cdots + G_tG_{t-1}\cdots G_2\\ 
+D_t &= F_tG_tG_{t-1}\cdots G_1.
+\end{align*} Then let $\tilde{V}=I_T\otimes V$ and $D$ be block diagonal with elements $D_1,\ldots,D_T$, 
+\begin{align*}
+\tilde{W}_{Tk\times Tk} &= \begin{bmatrix} K_1'F_1' & K_2'F_2' & \cdots K_T'F_T' \end{bmatrix}' W \begin{bmatrix} K_1'F_1' & K_2'F_2' & \cdots K_T'F_T' \end{bmatrix}, &\\
+\tilde{C}_{Tk\times Tk} &= \begin{bmatrix} H_1'F_1' & H_2'F_2' & \cdots H_T'F_T' \end{bmatrix}' C_0 \begin{bmatrix} H_1'F_1' & H_2'F_2' & \cdots H_T'F_T' \end{bmatrix},&
+\end{align*}
+and $\tilde{m}_{Tp\times 1} = (m_0', m_0', \cdots m_0')'$\\~\\
+
+Marginal model for $y$: 
+\begin{align*}
+  y|V,W \stackrel{ind}{\sim} N_{Tk}(D\tilde{m}, \tilde{V} + \tilde{W} + \tilde{C})
+\end{align*}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Dynamic Linear Model} 
+Let $\phi$ denote the unknown parameter. Potentially $F_t(\phi)$ and $G_t(\phi)$, but for simplicity assume $\phi=(\theta_0,V,W)$.\\~\\
+
+Priors: independently assume \\~\\
+\begin{itemize}
+\item[]$\theta_0\sim \N_p(m_0,C_0)$, $V\sim IW(\Lambda_V,\lambda_V)$, and $W\sim IW(\Lambda_W,\lambda_W)$\\~\\
+\end{itemize}
+
+So $p(\phi|y)\propto$
+\begin{align*}
+p(\phi)|\tilde{V} + \tilde{W} + \tilde{C}|^{-1/2}\exp\left[-\frac{1}{2}\left(y-D\tilde{m}\right)'(\tilde{V} + \tilde{W} + \tilde{C})^{-1}\left(y-D\tilde{m}\right)\right]
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Data Augmentations for the DLM}
+{\color{blue}Standard DA: latent states $\theta$.}
+\begin{align*}
+y_t|\theta,V,W \stackrel{ind}{\sim} &\N_k(F_t\theta_t,V)\\
+\theta_t|\theta_{0:(t-1)},V,W \sim &\N_p(G_t\theta_{t-1},W)
+\end{align*} 
+{\color{blue}$\theta$ is an SA for $W|V$ and an AA for $V|W$.}\\~\\
+
+{\color{blue}Scaled disturbances $\gamma\equiv(\gamma_0',\cdots,\gamma_T)'$: }
+\begin{itemize}
+\item[]$\gamma_0=\theta_0$ and $\gamma_t=L_W^{-1}(\theta_t - G_t\theta_{t-1})=L_W^{-1}w_t$ where $L_W$ is the Cholesky decomposition of $W$.
+\end{itemize}
+\begin{align*}
+y_t|\gamma,V,W \stackrel{ind}{\sim} &\N_k(F_t\theta_t(\gamma,W),V)\\
+\gamma_t|V,W \stackrel{iid}{\sim} &\N_p(0,I_p)
+\end{align*} 
+where $\theta_0(\gamma,W)=\gamma_0$ and $\theta_t(\gamma,W)=L_W\gamma_t + G_t\theta_{t-1}(\gamma,W)$.\\~\\
+
+{\color{blue}$\gamma$ is an AA for $(V,W)$.}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{New Data Augmentations for the DLM}
+{\color{blue}Scaled errors $\psi\equiv(\psi_0',\cdots,\psi_T')'$: }
+\begin{itemize}
+\item[]$\psi_0=\theta_0$ and $\psi_t=L_V^{-1}(y_t - F_t\theta_t)=L_V^{-1}v_t$ where $L_V$ is the Cholesky decomposition of $V$.
+\end{itemize}
+For convenience, assume $F_t$ is square and invertible for all $t$.
+ 
+\ \ (So $dim(y_t)=dim(\theta_t)$.)
+\begin{align*}
+y_t|\psi,V,W \stackrel{ind}{\sim} &\N_p(\mu_t(\psi,V,W),F_tWF_t')\\
+\psi_t|V,W \stackrel{iid}{\sim} &\N_p(0,I_p)
+\end{align*} 
+where $\mu_t(\psi,V,W)$ is complicated.\\~\\
+
+{\color{blue}$\psi$ is an AA for $(V,W)$.}
+\end{frame}
+
+\begin{frame}
+\frametitle{New Data Augmentations for the DLM}
+{\color{blue}Wrongly-scaled disturbances $\tilde{\gamma}\equiv(\tilde{\gamma}_0',\cdots,\tilde{\gamma}_T')'$:}
+\begin{itemize}
+\item[]$\tilde{\gamma}_0=\theta_0$ and $\tilde{\gamma}_t=L_V^{-1}(\theta_t - G_t\theta_{t-1})=L_V^{-1}w_t$
+\end{itemize}
+\begin{align*}
+  y_t|\tilde{\gamma},V,W \stackrel{ind}{\sim} \N_p\left(F_t\theta_t(\tilde{\gamma},V), V\right), \qquad 
+  \tilde{\gamma}_t \stackrel{ind}{\sim} \N_p(0,L_V^{-1}W(L_V^{-1})')
+\end{align*}
+where $\theta_0(\tilde{\gamma},V)=\tilde{\gamma}_0$ and $\theta_t(\tilde{\gamma},V) = L_V\tilde{\gamma}_t + G_t\theta_{t-1}(\tilde{\gamma},V)$.\\~\\
+
+{\color{blue}Wrongly-scaled errors $\tilde{\psi}\equiv(\tilde{\psi}_0',\cdots,\tilde{\psi}_T')'$:}
+\begin{itemize}
+\item[]$\tilde{\psi}_0=\theta_0$ and $\tilde{\psi}_t=L_W^{-1}(y_t - F_t\theta_{t})=L_W^{-1}v_t$
+\end{itemize}
+\begin{align*}
+  y_t|V,W,\tilde{\psi},y_{1:t-1} \sim \N_p(\tilde{\mu}_t(\tilde{\gamma},W), F_tWF_t'), \qquad
+  \tilde{\psi}_t  \stackrel{iid}{\sim} \N_p(0,L_W^{-1}V(L_W^{-1})')
+\end{align*}
+where $\tilde{\mu}_t(\tilde{\gamma},W)$ is complicated.\\~\\
+
+{\color{blue} $\tilde{\gamma}$ is an SA for $W|V$ and $\tilde{\psi}$ is an SA for $V|W$.}
+\end{frame}
+
+\begin{frame}
+\frametitle{The Elusive Search for an SA}
+Suppose $\eta$ is an SA for the DLM such that
+\begin{align*}
+ \left. \begin{bmatrix}\eta \\ y \end{bmatrix}\right|\phi \sim N\left(\begin{bmatrix} \alpha_\eta \\ D\tilde{m} \end{bmatrix}, \begin{bmatrix}
+   \Omega_\eta & \Omega_{y,\eta}' \\
+   \Omega_{y,\eta} & \tilde{V} + \tilde{W} + \tilde{C} \end{bmatrix}\right).
+\end{align*}
+Then $\tilde{\eta}=\Omega_{y,\eta}'\Omega_{\eta}^{-1}\eta$ is also an SA and
+\[
+\tilde{\eta}|\phi \sim N(A\alpha_{\eta},\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)
+\]
+where $A=\Omega_{y,\eta}'\Omega_{\eta}^{-1}$, $\Sigma = \tilde{V} + \tilde{W} + \tilde{C} - \Omega_{y,\eta}\Omega_{\eta}^{-1}\Omega_{y,\eta}'$ and $\alpha_{\eta}$ are functionally independent of $\phi$ and the conditional posterior of $\phi$ given $\tilde{\eta}$ can be written as
+\begin{align*}
+&p(\phi|\tilde{\eta},y) \propto p(\phi)|\tilde{V} + \tilde{W} + \tilde{C} - \Sigma|^{-1/2}\\
+&\times \exp\left[-\frac{1}{2}(\tilde{\eta} - A\alpha_{\eta})'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)^{-1}(\tilde{\eta} - A\alpha_{\eta})\right].
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{The Elusive Search for an SA}
+The conditional posterior of $\phi$ given $\eta$ is difficult to characterize:
+\begin{align*}
+p(\phi|\eta,y) \propto  p(\phi) |\Omega_{\eta}|^{-1/2}\exp\left[-\frac{1}{2}(\eta-\alpha_{\eta})\Omega_{\eta}^{-1}(\eta-\alpha_{\eta})\right]
+\end{align*}
+When $(A'A)$ is invertible:
+\begin{align*}
+p(\phi|&\eta,y) \propto p(\phi) |(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}|^{-1/2}\\
+&\times \exp\left[-\frac{1}{2}(\eta - \alpha_{\eta})'(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}(\eta - \alpha_\eta)\right]
+\end{align*}
+\\~\\
+Upshot: hard to find a SA.
+
+\end{frame}
+
+\end{document}
+
+
+
+
+
+
+
+
 
 
 
