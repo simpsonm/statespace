@@ -1,53 +1,4 @@
-\documentclass{article}\usepackage[]{graphicx}\usepackage[]{color}
-%% maxwidth is the original width if it is less than linewidth
-%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
-\makeatletter
-\def\maxwidth{ %
-  \ifdim\Gin@nat@width>\linewidth
-    \linewidth
-  \else
-    \Gin@nat@width
-  \fi
-}
-\makeatother
-
-\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
-\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
-\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
-\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
-\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
-\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
-\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
-\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
-\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
-\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
-
-\usepackage{framed}
-\makeatletter
-\newenvironment{kframe}{%
- \def\at@end@of@kframe{}%
- \ifinner\ifhmode%
-  \def\at@end@of@kframe{\end{minipage}}%
-  \begin{minipage}{\columnwidth}%
- \fi\fi%
- \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
- \colorbox{shadecolor}{##1}\hskip-\fboxsep
-     % There is no \\@totalrightmargin, so:
-     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
- \MakeFramed {\advance\hsize-\width
-   \@totalleftmargin\z@ \linewidth\hsize
-   \@setminipage}}%
- {\par\unskip\endMakeFramed%
- \at@end@of@kframe}
-\makeatother
-
-\definecolor{shadecolor}{rgb}{.97, .97, .97}
-\definecolor{messagecolor}{rgb}{0, 0, 0}
-\definecolor{warningcolor}{rgb}{1, 0, 1}
-\definecolor{errorcolor}{rgb}{1, 0, 0}
-\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
-
-\usepackage{alltt}
+\documentclass{article}
 \usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
 epsfig, multicol, amsthm, bbm}
 \usepackage{multicol}
@@ -61,10 +12,9 @@ epsfig, multicol, amsthm, bbm}
 \newtheorem{alg}{Algorithm}
 \newtheorem{theorem}{Theorem}
 \DeclareMathOperator{\Tr}{Tr}
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\DeclareMathOperator{\vect}{vect}
+\DeclareMathOperator{\vech}{vech}
 \begin{document}
-
-
 
 
 \title{A note on priors}
@@ -304,4 +254,85 @@ Then
 I started with the $N(0,Q)$ prior on $\pm\sqrt{V}$ where $V$ is a variance parameter. This implies a $Gamma(1/2,1/(2Q))$ prior on $V$. I tried to generalize this by allowing the shape parameter of the implied Gamma distribution to be something other than 1/2. However, Another option is to pick a distribution for $\pm\sqrt{V}$ which is more general than the normal distribution, e.g. the non-standardized $t$ distribution, $t(m, Q, v)$ where $m$ is a location parameter, $Q$ is a scale parameter, and $v$ is the degrees of freedom. Using the fact that the $t$ distribution can be written as a scale mixuture of normals (if $x\sim t(m,Q,v)$ then $x|\omega \sim N(m,\omega)$ and $\omega\sim IG(v/2, vQ/2)$), we can get nice full conditional distributions for either $V$ or $\pm\sqrt{V}$ and either $W$ or $\pm\sqrt{W}$. This adds another Gibbs step to the algorithm but doesn't change much other than that, i.e. we still have GIG distributions for $V|\theta,...$ and $W|\theta,...$, but now they're also conditional on scale parameters $\omega_V$ and $\omega_W$ which now each have to be drawn in separate steps, but these will each be inverse gamma draws. The draw for $W|\gamma,...$ is still a normal draw, but again that's conditional on $\omega_W$ which also has to be drawn in a separate inverse gamma step. It would be interesting to generalize this even more - e.g. a scale mixture of signed Nakagami distributions, though this is equivalent to just putting a hyperprior on the scale parameter of the signed Nakagami distribution. In that sense, then, we're back to the problems of the previous section.
 
 Another thing that we can easily do and should mention is allow for dependence in the prior - $p(V,W)\neq p(V)p(W)$. The only sampling algorithm that draws $(V,W)$ jointly is the state sampler (and interweaving algorithms that depend on it), so it shouldn't change much elsewhere -- provided that $p(V|W)$ and $p(W|V)$ are of sufficiently nice form.
+
+\section{The conditionally conjugate prior for the general DLM}
+After choosing the priors for $\theta_0$, $V$ and $W$ we motivated the choice by appealing to conditional conjugacy and thus computation. If this is our main concern for choosing a prior,  it's worth asking what the conditional conjugate priors are under the scaled disturbances and the scaled errors. We'll look closely at the scaled disturbances, but the scaled errors are analogous. We can write the augmented data likelihood as
+\begin{align*}
+  p(y_{1:T}|\gamma_{0:T}, V, W) \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\gamma_t'\gamma_t\right]|V|^{-T/2}\exp\left[-\frac{1}{2}\left(y_t - F_t\theta_t(\gamma_{0:T},W)\right)'V^{-1}\left(y_t - F_t\theta_t(\gamma_{0:T},W)\right)\right].
+\end{align*}
+Immediately we see that the conjugate prior for $V$ is inverse Wishart, so no change on that front. For $W$ on the other hand, it's unclear until we unpack $\theta_t(\gamma_{0:T},W)$. Recall that in our definition of the scaled disturbances for $t=1,2,\cdots,T$, $\gamma_t = L_W^{-1}w_t = L_W^{-1}(\theta_t - G_t\theta_{t-1})$ where $L_WL_W' = W$ while $\gamma_0=\theta_0$. The reverse transformation is thus the recursion $\theta_t = L_W\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. This implies that for $t=0,1,\cdots,T$
+\begin{align*}
+  \theta_t = \sum_{s=1}^t\left(\prod_{r=s+1}^tG_r\right)L_W\gamma_s + \prod_{r=1}^tG_r\gamma_0
+\end{align*}
+where for $s+1>t$ we define the empty product $\prod_{r=s+1}^tG_r = I_k$ the $k\times k$ identity matrix. Now recall that $L_VL_V = V$ and let $H_{st} = \prod_{r=s+1}^tG_r$. This allows us to write the full conditional distribution of $W$, ignoring the prior, as
+\begin{align*}
+  p(W&|\gamma_{0:T},\cdots)  \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(b_t \sum_{s=1}^tB_{st}L_W\gamma_s\right)'\left(b_t - \sum_{s=1}^tB_{st}L_W\gamma_s\right)\right]
+\end{align*}
+where we define $b_t = L_V^{-1}(y_t - F_tH_{0t}\gamma_0)$ and $B_{st} = L_V^{-1}F_tH_{st}$. This does not look like it has any conjugate form for $W$, but it looks like a normal kernel for $L_W\gamma_t$. It is not immediately clear whether $L_W$ will have a normal distribution, but this turns out to be true. If we follow the approach of \cite{fruhwirth2008bayesian} and vectorize $L_W$ by stacking the nonzero elements of each column on top of each other, we will see that the conditionally conjugate prior for the nonzero elements of $L_W$ is a normal distribution.
+
+In order to show this, we first have to introduce a bit of notation. Let $A=(a_{ij})$ be a $p\times q$ matrix. First we define the vectorization of $A$, $\vect(A)$, as the $pq\times 1$ column vector obtained by stacking the columns of $A$ on top of each other. If $p=q$ then we define the half vectorization of $A$, $\vech(A)$, as the $p(p+1)/2\times 1$ column vector obtained by first deleting the elements of $A$ above the main diagonal, then stacking the remaining elements on top of each other column by column. Formally,
+\begin{align*}
+  \vect(A) & = (a_{11}, a_{21}, \cdots, a_{p1}, a_{12}, a_{22}, \cdots a_{p2}, \cdots, a_{pq})'\\
+  \vech(A) & = (a_{11}, a_{21}, \cdots, a_{p1}, a_{22}, a_{32}, \cdots a_{p2}, \cdots, a_{pp})'.
+\end{align*}
+In particular if $a$ is a column vector, $\vect(a)=a$ and $\vect(a')=\vect(a)'$. Suppose $p=q$ so that $A$ is square. Then there exists a unique $p(p+1)/2\times p^2$ matrix $S_p$ such that $\vech(A) = S_p\vect(A)$, called the elimination matrix. We list a few of the properties of $S_p$ here, but see \cite{magnus1980elimination} or \cite{magnus1988linear} for more details.
+\begin{enumerate}
+  \item $S_pS_p'=I_{p(p+1)/2}$
+  \item If $A$ is lower triangular $\vect(A) = S_p'\vech(A) = S_p'S_p\vect(A)$.
+  \item $S_p = \sum_{i\geq j}^pu_{ij}\vect(E_{ij})'$ where $E_{ij}$ is a $p\times p$ matrix of zeroes except for a one in the $ij$'th spot and $u_{ij}$ is a $p(p+1)/2\times 1$ column vector of zeroes except for a one in the $[(j-1)p + i - j(j-1)/2]$'th spot.
+\end{enumerate}
+
+Now since we can assume the Jacobian from $W\to L_W$ will be absorbed into the prior, which we are ignoring, we have
+\begin{align*}
+  p(L_{W}&|\gamma_{0:T},\cdots) \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(b_t - \sum_{s=1}^tB_{st}L_s\gamma_s\right)'\left(b_t - \sum_{s=1}^tB_{st}L_W\gamma_s\right)\right]\\
+& \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(b_t - \sum_{s=1}^tB_{st}\vect(L_W\gamma_s)\right)'\left(b_t - \sum_{s=1}^tB_{st}\vect(L_W\gamma_s)\right)\right]\\
+  & \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(b_t - \sum_{s=1}^tB_{st}(\gamma_s'\otimes I_p)\vect(L_W))\right)'\left(b_t - \sum_{s=1}^tB_{st}(\gamma_s'\otimes I_p)\vect(L_W)\right)\right]\\
+  & \propto \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(\sum_{s=1}^t\sum_{r=1}^t\vect(L_W)(\gamma_s'\otimes I_p)'B_{st}'B_{rt}(\gamma_r'\otimes I_p)\vect(L_W) - 2\sum_{s=1}^tb_t'B_{st}(\gamma_s'\otimes I_p)\vect(L_W)\right)\right]\\
+  & \propto \exp\left[-\frac{1}{2}\left(\vect(L_W)'\sum_{s=1}^T\sum_{r=1}^T(\gamma_s\gamma_r'\otimes C_{sr})\vect(L_W) - 2\sum_{s=1}^Tc_s'(\gamma_s'\otimes I_p)\vect(L_W)\right)\right]\\
+  & \propto \exp\left[-\frac{1}{2}\left(\vech(L_W)'S_p\sum_{s=1}^T\sum_{r=1}^T(\gamma_s\gamma_r'\otimes C_{sr})S_p'\vech(L_W) - 2\sum_{s=1}^Tc_s'(\gamma_s'\otimes I_p)S_p'\vech(L_W)\right)\right]
+\end{align*}
+where we define $C_{sr} = \sum_{t=r\vee s}^TB_{st}'B_{rt}$ and $c_s=\sum_{t=s}^TB_{st}'b_t$ and where $a\vee b = \max(a,b)$. Here we use two properties of the Kronecker product $\otimes$. First for any matrices $A:p\times q$ and $B:q\times r$, $\vect(AB) = (B'\otimes I_p)\vect(A)$. Second, for any $p\times 1$ vectors $a$ and $b$ and any $p\times p$ matrix $A$, $(a'\otimes I_p)'A(b' \otimes I_p) = ab'\otimes A$. 
+
+Now we have:
+\begin{align*}
+  p(\vech(L_W)&|\gamma_{0:T},\cdots)\propto \exp\left[-\frac{1}{2}\left(\vech(L_W) - \Omega^{-1}\omega\right)'\Omega\left(\vech(L_W) - \Omega^{-1}\omega\right)\right]
+\end{align*}
+where $\Omega$ is a $p(p+1)/2\times p(p+1)/2$ positive definite matrix defined by 
+\begin{align*}
+  \Omega=\sum_{s=1}^T\sum_{r=1}^TS_p(\gamma_s\gamma_r'\otimes C_{sr})S_p'
+\end{align*}
+and $\omega$ is a $p(p+1)/2\times 1$ vector defined by
+\begin{align*}
+  \omega=\sum_{s=1}^TS_p(\gamma_s\otimes I_p)c_s.
+\end{align*}
+
+So the conjugate prior on $L_W$ is a multivariate normal distribution. This seems a strange since we expect the diagonal elements of $L_W$ to be positive, but this is no problem as long as we view this prior as a clever trick for defining a prior on $W=L_WL_W'$ so that the signs of the diagonal elements do not matter. Strictly speaking we have subtly changed the definition of $L_W$ to a {\it signed} Cholesky decomposition of $W$, and thus subtly changed the defintion of the $\gamma_t$'s to take into account the signs of the diagonal elements of $L_W$. \cite{fruhwirth2008bayesian}, \cite{fruhwirth2011bayesian} and {\it CITE THE DYNAMIC PAPER SYLVIA IS WORKING ON WITH ANGELA AND THE STOCAHSTIC VOLATILITY PAPER BY SYLVIA AND GREGOR KASTNER} use this approach to choosing priors for the system (or hierarchical) variance when working with the scaled disturbances in dynamic and non-dynamic models, but only the first considers the covariance matrix case, rather than the scalar variance case, and that paper does not give the exlicit construction of the covariance matrix of $\vech(L_W)$ using the elimination matrix $S_p$.
+
+We have two covariance matrices, $W$ and $V$, and we want to put a different class of priors on each set. We can put the same sort of normal prior on $L_V$, the Cholesky decomposition of $V$. In the univariate case the conditional posterior of $V$ will come out to be a generalized inverse gaussian distribution which is a bit complicated but not awful to draw from. There is mild tension here though --  depending on how we choose to write down the model we end up with a different class of prior distributions for at least $W$. Now the reason for this difference is ultimately computation --- it is known that sometimes using the scaled disturbances improves mixing in the Markov chain --- but ideally computational concerns should not have an effect on inference. It would be nice to unite these priors two priors under a common class without sacrificing their respective computaitonal advantages under the relevant data augmentations. 
+
+For completeness, we show that the conditionally conjugate prior for $L_V$ is also a multivariate normal distribution. We have
+\begin{align*}
+  p(L_V|\psi_{0:T},\cdots)\propto & \exp\left[-\frac{1}{2}g(L_V)\right]
+\end{align*}
+where if we define $D_t=(F_t'WF_t)^{-1}$ and $H_t=F_tG_tF_{t-1}^{-1}$ we have up to an additive constant:
+\begin{align*}
+  g(L_V) = & \sum_{t=1}^T\left(y_t - (\psi_t' \otimes I_k)S_p'\vech(L_V)\right)'D_t\left(y_t - (\psi_t' \otimes I_k)S_p'\vech(L_V)\right) \\
+  & + \sum_{t=2}^T\left(y_{t-1} - (\psi_{t-1}' \otimes I_k )S_p'\vech(L_V)\right)'H_t'D_tH_t\left(y_{t-1} - (\psi_{t-1}' \otimes I_k )S_p'\vech(L_V)\right)\\
+  & + \sum_{t=2}^T\left(y_t - (\psi_t'\otimes I_k)S_p'\vech(L_V)\right)'D_tH_t\left(y_{t-1} - (\psi_{t-1}'\otimes I_k)S_p'\vech(L_V)\right) \\
+  & + \sum_{t=2}^T\left(y_{t-1} - (\psi_{t-1}'\otimes I_k)S_p'\vech(L_V)\right)'H_t'D_t\left(y_t - (\psi_t'\otimes I_k)S_p'\vech(L_V)\right)\\
+  & + 2\vech(L_V)'S_p(\psi_1'\otimes I_k)'D_1H_1\psi_0.
+\end{align*}
+This gives
+\begin{align*}
+  \Omega = & \sum_{t=1}^TS_p(\psi_t\psi_t'\otimes D_t)S_p' + \sum_{t=1}^{T-1}S_p'(\psi_t\psi_t'\otimes H_{t+1}'D_{t+1}H_{t+1})S_p' + 2\sum_{t=1}^{T-1}S_p(\psi_t\psi_{t+1}'\otimes H_{t+1}'D_{t+1})S_p'\\
+  \intertext{and}
+  \omega = & \sum_{t=1}^{T-1}S_p(\psi_t\otimes I_k)(D_t + H_{t+1}'D_{t+1}H_{t+1})y_t + \sum_{t=1}^{T-1}S_p(\psi_{t+1}\otimes I_k)D_{t+1}H_{t+1}y_t\\
+  & +\sum_{t=1}^{T-1}S_p(\psi_t\otimes I_k)H_{t+1}'D_{t+1}y_{t+1}  + S_p\left[(\psi_T\otimes I_k)D_Ty_T - (\psi_1\otimes I_k)D_1H_1\psi_0\right]
+\end{align*}
+so that if $L_V$ has a prior proportional to $1$, then $\vech(L_V)|\psi_{0:T},\cdots \sim N(\Omega^{-1}\omega, \Omega^{-1})$. 
+
+
+\bibliographystyle{plainnat}
+\bibliography{../doc/dlmasis}
+
 \end{document}
