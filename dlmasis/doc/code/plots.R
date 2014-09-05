@@ -40,8 +40,8 @@ samout$samplers[samout$sampler=="dist"] <- "SD"
 samout$samplers[samout$sampler=="state"] <- "State"
 samout$samplers[samout$sampler=="errorda"] <- "WSE"
 samout$samplers[samout$sampler=="distda"] <- "WSD"
-samlevels <- c("State", "SD", "SE", "State-SD", "State-SE", "SD-SE", 
-               "Triple", "CIS", "PartialCIS", "WSD", "WSE")
+samlevels <- c("State", "SD", "SE", "WSD", "WSE", "State-SD", "State-SE", "SD-SE", 
+               "Triple", "CIS", "PartialCIS")
 samout$samplers <- factor(samout$samplers, levels=samlevels)
 
 ## time per effective draw of V and W
