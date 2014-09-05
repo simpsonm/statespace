@@ -435,15 +435,6 @@ Simulation Setup:
 
 \end{frame}
 
-
-\begin{frame}
-\frametitle{LLM Results --- ESP for T=10}
-\centering
-\includegraphics[width=0.75\textwidth]{basecisESplot10}\\
-\includegraphics[width=0.49\textwidth]{altintESplotV10}
-\includegraphics[width=0.49\textwidth]{altintESplotW10}
-\end{frame}
-
 \begin{frame}
 \frametitle{LLM Results --- ESP for T=100}
 \centering
@@ -472,11 +463,10 @@ Rule of thumb for when each base algorithm has a high ESP for each variable as a
     Parameter & State-SD        & State-SE       & SD-SE        & Triple            & CIS \\\hline
     V         & $R^* < 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ \\
     W         & $R^* \not\approx 1$ & $R^* > 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$\\\hline
-  \end{tabular}
-\end{center}\\~\\~\\
+  \end{tabular}\\~\\~\\
+\end{center}
 
 Note that as the length of the time series increases, the farther away from one $R^*$ has to be for the sampler to have a high ESP.
-
 \end{frame}
 
 \begin{frame}
@@ -487,13 +477,47 @@ Note that as the length of the time series increases, the farther away from one 
 \includegraphics[width=0.49\textwidth]{altgisWtimeplot100}
 \end{frame}
 
+\begin{frame}
+\frametitle{Moving Forward: Computational Issues}
+Major bottleneck: drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$:
+\begin{align*}
+p(x)\propto {\color{blue}x^{-\alpha-1}}\exp[-ax + b\sqrt{x} {\color{blue}- c/x}] 
+\end{align*}
+What about when $V$ and $W$ are matrices?\\~
+
+$\to$ Need a better prior. E.g. $\pm \sqrt{V} \sim \N(0,\Lambda_V)$\\~\\
+
+Then in the LLM $p(V|W,\theta,y)=p(V|W,\psi,y)$ is GIG:
+\begin{align*}
+p(y) \propto y^{\alpha-1}\exp\left[-\frac{1}{2}(ay + b/y)\right] \qquad \alpha\in\Re; a,b,y>0
+\end{align*}
+What about when $V$ is a matrix?
+\end{frame}
+
+\begin{frame}
+\frametitle{Moving Forward: Augmenting $F_t$}
+Suppose $F_t=\begin{bmatrix}1 & x_t\end{bmatrix}$ and $G_t=1$:
+\begin{align*}
+y_t &= \begin{bmatrix}1 & x_t\end{bmatrix}\begin{bmatrix}\alpha_t \\ \beta_t\end{bmatrix} + v_t, \qquad v_t\stackrel{iid}{\sim}\N_1(0,V)\\
+\begin{bmatrix}\alpha_t \\ \beta_t\end{bmatrix} &= \begin{bmatrix}\alpha_{t-1} \\ \beta_{t-1}\end{bmatrix} + \begin{bmatrix}w_{1,t} \\ w_{2,t}\end{bmatrix}, \qquad \begin{bmatrix}w_{1,t} \\ w_{2,t}\end{bmatrix}\sim\N_2(0,W)
+\end{align*}
+Easy way to augment the model:
+\begin{align*}
+\begin{bmatrix}y_t \\ y_t^*\end{bmatrix} &= \begin{bmatrix}1 & x_t\\ 0 & 1\end{bmatrix}\begin{bmatrix}\alpha_t \\ \beta_t\end{bmatrix} + \begin{bmatrix}v_t \\ v_t^* \end{bmatrix}, \qquad \begin{bmatrix} v_t\\ v_t^* \end{bmatrix}\stackrel{iid}{\sim}\N_2\left(0,\begin{bmatrix}V & 0 \\ 0 & 1\end{bmatrix}\right)\\
+\begin{bmatrix}\alpha_t \\ \beta_t\end{bmatrix} &= \begin{bmatrix}\alpha_{t-1} \\ \beta_{t-1}\end{bmatrix} + \begin{bmatrix}w_{1,t} \\ w_{2,t}\end{bmatrix}, \qquad \begin{bmatrix}w_{1,t} \\ w_{2,t}\end{bmatrix}\sim\N_2(0,W)
+\end{align*}
+and add a step to draw $y_{1:T}^*|V,W,\alpha_{1:T},\beta_{1:T},y_{1:T}$.\\~\\
+
+But is this the best way? Or even a good way?
+\end{frame}
+
 \begin{frame}[allowframebreaks]
         \frametitle{References}
         \bibliographystyle{plainnat}
         \bibliography{../doc/dlmasis}
 \end{frame} 
 
-
+\end{document}
 
 \end{document}
 
@@ -501,41 +525,6 @@ Note that as the length of the time series increases, the farther away from one 
 
 
 
-\citet{fruhwirth2004efficient} uses the analogue of $\gamma_{0:T}$ in a dynamic regression model.
-
-
-
-
-\begin{frame}
-  \frametitle{Effective Sample Size and Effective Sample Proportion}
-  Suppose we want to estimate $\mathrm{E}[V|y_{1:T}]$ with 
-  \[
-  \bar{V}\equiv\frac{\textstyle\sum_{k=1}^KV^{(k)}}{K}
-  \]
-  If we had $K$ iid draws from the posterior, the CLT would give 
-  \[
-  \mathrm{Var}(\bar{V})=\frac{\sigma_V^2}{K}
-  \]
-where $\sigma_V^2=\mathrm{Var}(V|y_{1:T})$. For our markov chain 
-\[
-\mathrm{Var}(\bar{V})=\frac{\sigma^2_V}{ESS}
-\]
-where $ESS$ is the ``effective sample size.'' $ESS$ is estimated by fitting an $AR(p)$ model to the chain (to estimate the spectral density at 0). \\~\\
-  
-  The effective sample proportion is the effective sample size as a proportion of the actual sample size, i.e. $ESP=ESS/K$.
-\end{frame}
-
-\begin{frame}
-  \frametitle{Simulation Results for the Base Algorithms, $T=10$}
-  
-\end{frame}
-
-\begin{frame}
-    \frametitle{Simulation Results for the Base Algorithms, $T=1000$}
-
-\end{frame}
-
-\begin{frame}
   \frametitle{Takeaways from Base Algorithm Simulations}
   When the signal-to-noise ratio ($W/V$) is low ($<1$), the scaled disturbance sampler has high $ESP$ for both $V$ and $W$; when it's high ($>1$), the scaled disturbance sampler has low $ESP$ for both $V$ and $W$.\\~\\
   
@@ -545,162 +534,10 @@ where $ESS$ is the ``effective sample size.'' $ESS$ is estimated by fitting an $
   
   Despite not being an SA-AA pair, $\gamma_{0:T}$ and $\psi_{0:T}$ make a nice beauty and the beast pair.
   
-\end{frame}
 
 
-\begin{frame}
-  \frametitle{GIS and Alternating Algorithms for the Local Level Model}
-There are four possible GIS algorithms and four corresponding alternating algorithms:
-\begin{table}[h]
-  \centering
-  \scalebox{.9}{
-  \begin{tabular}{|l|cccc|}\hline
-    Alternating: & State + Dist & State + Error & Dist + Error & Triple\\
-    GIS: & State + Dist & State + Error & Dist + Error & Triple\\
-    \hline
-  \end{tabular}
-  }
-  \label{table:sams}
-\end{table}
-\pause
-
-The State-Dist interweaving sampler, for example:
-\begin{enumerate}
-  \item Draw $\theta_{0:T}$ from $p(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$ using FFBS.
-  \item Draw $(V,W)$ from $p(V,W|\theta_{0:T}, y_{1:T})$.
-  \item Update $\gamma_{0:T}$ using $\theta_{0:T}$ and $(V,W)$.
-  \item Draw $V^{(k+1)}$ from $p(V|\gamma_{0:T}, W, y_{1:T})$.
-  \item Draw $W^{(k+1)}$ from $p(W|\gamma_{0:T}, V^{(k+1)}, y_{1:T})$, i.e. the same difficult density from before.\\~\\
-\end{enumerate}
-\pause
-  The State-Dist alternating sampler would replace step 3 with a draw from $p(\gamma_{0:T}|V,W,y_{1:T})$.
-\end{frame}
-
-\begin{frame}
-    \frametitle{Simulation Results for the GIS Algorithms, $T=10$}
-    
-\end{frame}
-
-\begin{frame}
-    \frametitle{Simulation Results for the GIS Algorithms, $T=10$}
-    
-\end{frame}
-
-\begin{frame}
-    \frametitle{Simulation Results for the GIS Algorithms, $T=1000$}
-    
-\end{frame}
-
-\begin{frame}
-    \frametitle{Simulation Results for the GIS Algorithms, $T=1000$}
-    
-\end{frame}
-
-\begin{frame}
-  \frametitle{Takeaways from GIS Algorithm Simulations}
-  For $T$ large enough, alternating or interweaving doesn't make a difference for ESP (but interweaving is less computationally expensive).\\~\\
-  
-  The Dist-Error interweaving algorithm and the Triple interweaving algorithm appear to have identical ESPs.\\~\\
-\pause  
   The ``beauty and the beast'' intuition works for any given parameter, i.e. for $W$, the Dist-Error and State-Dist algorithms have the best ESP, but the State-Error algorithms has worse ESP in some regions of the parameter space.\\~\\
   
-  For the reasonable areas of the parameter space ($W/V$ not too small or large), there are still major mixing problems.
-\end{frame}
-
-\begin{frame}
-  \frametitle{Partial CIS for the Local Level Model}
-  Recall $\theta_{0:T}$ is SA for $W|V$ and both $\gamma_{0:T}$ and $\psi_{0:T}$ are AA for $(V,W)$. So all we need is a SA for $V|W$ for a CIS algorithm.\\~\\
-\pause  
-  This appears hard to find at first glance, instead we can try partial CIS, i.e. an algorithm which only interweaves in one of the Gibbs steps:
-  \begin{enumerate}
-  \item Draw $\theta_{0:T}$ from $p(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$ using FFBS.
-  \item Draw $V^{(k+1)}$ from $p(V|W^{(k)},\theta_{0:T},y_{1:T})$
-  \item Draw $W$ from $p(W|V^{(k+.5)},\theta_{0:T},y_{1:T})$
-  \item Update $\gamma_{0:T}$ where $\gamma_0=\theta_0$ and $\gamma_t=(\theta_t-\theta_{t-1})/\sqrt{W}$.
-  \item Draw $W^{(k+1)}$ from $p(W|V^{(k+1)},\gamma_{0:T},y_{1:T})$\\~\\
-  \end{enumerate}
-  Note that we have to use $\gamma_{0:T}$ in step 4, otherwise steps 5 and 3 would be identical draws because $p(W|V,\theta_{0:T},y_{1:T})=p(W|V,\psi_{0:T},y_{1:T})$.
-\end{frame}
-
-\begin{frame}
-  \frametitle{Full CIS for the Local Level Model}
-  For $t=1,2,...,T$ define
-  \begin{align*}
-    \tilde{\gamma}_t & = \frac{\sqrt{W}}{\sqrt{V}}\gamma_t = \frac{\theta_t - \theta_{t-1}}{\sqrt{V}} = \frac{w_t}{\sqrt{V}}\\
-  \end{align*}
-  with $\tilde{\gamma}_0=\gamma_0=\theta_0$.\\~\\
-  \pause
-  
-  The model written in terms of $\tilde{\gamma}_{0:T}$ is
-  \begin{align*}
-  y_t|\tilde{\gamma}_{0:T}, V, W &\stackrel{ind}{\sim} N(\tilde{\gamma}_0 + \sqrt{V}\textstyle\sum_{s=1}^{t-1}\tilde{\gamma}_s, V)\\
-  \tilde{\gamma}_t|V,W &\stackrel{iid}{\sim} N(0, W/V)
-\end{align*}
-So $\gamma_{0:T}$ \& $\tilde{\gamma}_{0:T}$ make a AA-SA pair for $W|V$
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{Full CIS for the Local Level Model}
-  For $t=1,2,...,T$ define
-  \begin{align*}
-    \tilde{\psi}_t & = \frac{\sqrt{V}}{\sqrt{W}}\psi_t = \frac{y_t - \theta_{t}}{\sqrt{W}} = \frac{v_t}{\sqrt{W}}\\
-  \end{align*}
-  with $\tilde{\psi}_0=\psi_0=\theta_0$.\\~\\
-  \pause
-  
-  The model written in terms of $\tilde{\psi}_{0:T}$ is
-  \begin{align*}
-  y_t|\tilde{\psi}_{0:T}, y_{0:t-1}, V, W & \sim N(y_{t-1} + \sqrt{W}(\tilde{\psi}_t - \tilde{\psi}_{t-1}), W)\\
-  \tilde{\psi}_t|V,W &\stackrel{iid}{\sim}N(0,V/W)
-\end{align*}
-except for $t=1$, the mean of the system equation is $\sqrt{W}\tilde{\psi}_1 - \tilde{\psi}_0$.\\~\\
-
-So $\psi_{0:T}$ \& $\tilde{\psi}_{0:T}$ make a AA-SA pair for $V|W$
-\end{frame}
-
-\begin{frame}
-    \frametitle{Full CIS for the Local Level Model}
-It turns out that
-\begin{align*}
-  p(W|\tilde{\gamma}_{0:T}, V, y_{1:T}) &= p(W|\theta_{0:T}, V, y_{1:T})\\
-  p(V|\tilde{\psi}_{0:T}, W, y_{1:T}) &= p(V|\theta_{0:T}, W, y_{1:T})
-\end{align*}
-\pause 
-which makes full CIS look like an extention of partial CIS:
-\begin{enumerate}
-  \item Draw $\theta_{0:T}$ from $p(\theta_{0:T}|V^{(k)},W^{(k)},y_{1:T})$.
-  \item Draw $V$ from $p(V|W^{(k)}, \theta_{0:T}, y_{1:T})$.
-  \item Update $\psi_{0:T}$ from $V$ and $\theta_{0:T}$.
-  \item Draw $V^{(k+1)}$ from $p(V|W^{(k)}, \psi_{0:T}, y_{1:T})$.
-  \item Update $\theta_{0:T}$ from $V^{(k+1)}$ and $\psi_{0:T}$.
-  \item Draw $W$ from $p(W|V^{(k+1)}, \theta_{0:T}, y_{1:T})$.
-  \item Update $\gamma_{0:T}$ from $W$ and $\theta_{0:T}$.
-  \item Draw $W^{(k+1)}$ from $p(W|V^{(k+1)}, \gamma_{0:T}, y_{1:T})$.
-\end{enumerate}
-\end{frame}
-
-
-\begin{frame}
-\frametitle{Simulation Results for CIS Algorithms, $T=10$}
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Simulation Results for CIS Algorithms, $T=1000$}
-
-\end{frame}
- 
-\begin{frame}
-   \frametitle{Main Takeaways from CIS Simulations}
-   Full CIS looks identical to Dist-Error GIS and Partial CIS looks identical to State-Dist GIS.\\~\\
-   
-   This suggests that another Partial CIS algorithm exists that implicitly uses $\tilde{\psi}_{0:T}$ instead of $\tilde{\gamma}_{0:T}$ and behaves identically to the State-Error GIS algorithm.\\~\\
-   \pause
-   
-   Upshot: there's no good reason to use CIS instead of GIS in the local level model since CIS requires more computation.\\~\\
-\end{frame}
-
 \begin{frame}
 \frametitle{Recommendations in the Local Level Model}
 If $T$ is small ($<100$), use the state sampler.\\~\\
@@ -711,28 +548,5 @@ If $T$ is large, use the Dist-Error GIS sampler, but spend some time obtaining e
 Possibly use metropolis steps for $(V,W)$ jointly in the Dist-Error GIS sampler --- untested, but likely has decent mixing properties and avoids the expensive sampling steps.
 \end{frame}
 
-\begin{frame}
-  \frametitle{Generalizations to other DLMS}
-Suppose $y_t$ and $\theta_t$ are now vectors and
-\begin{align*}
-  y_t|\theta_{0:T} & \stackrel{ind}{\sim} N(F_t\theta_t, V)\\
-  \theta_t|\theta_{0:t-1} & \sim N(G_t\theta_{t-1}, W)
-\end{align*}
-with $F_t$, $G_t$ known matricies for $t=1,2,...,T$ and $V$, $W$ unknown covariance matricies.\pause Then for $t=1,2,...,T$:
-\begin{align*}
-  \gamma_t & = W^{-\frac{1}{2}}(\theta_t - G_t\theta_{t-1})\\
-  \psi_t & = V^{-\frac{1}{2}}(y_t - F_t\theta_t)
-\end{align*}
-Note $dim(\gamma_t)=dim(\theta_t)$ and $dim(\psi_t)=dim(y_t)$ while in general $dim(\theta_t)\neq dim(y_t)$.\\~\\
-\pause
-Multivariate analogue of $W/V$: $|W|/|V|$? Ratio of eigenvalues?
-\end{frame}
-\begin{frame}[allowframebreaks]
-        \frametitle{References}
-        \bibliographystyle{plainnat}
-        \bibliography{../doc/dlmasis}
-\end{frame} 
 
-
-\end{document}
 
