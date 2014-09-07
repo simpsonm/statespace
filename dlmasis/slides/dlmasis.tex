@@ -20,7 +20,7 @@ epsfig, multicol, amsthm}
 Estimation of Dynamic Linear Models}
 %\subtitle{}
 \author[M. Simpson]{Matthew Simpson}
-\date{\today}
+\date{}
 \institute[Deps of Stat \& Econ, ISU]{Departments of Statistics and Economics, Iowa State University}
 
 
@@ -36,6 +36,10 @@ Estimation of Dynamic Linear Models}
 
 \begin{frame}
 \titlepage
+\begin{center}
+with Jarad Niemi and Vivekananda Roy\\~\\
+\scriptsize{Department of Statistics, Iowa State University}
+\end{center}
 \end{frame}
 
 \begin{frame}
@@ -72,17 +76,17 @@ DA algorithm based on $\gamma$:
 \frametitle{Interweaving: A Motivating Example}
 Alternate between two DAs (alternating algorithm):
 \begin{align*}
-[\theta|\mu,y] \to [\mu|\theta,y] \to [\gamma|\mu,y] \to [\mu|\gamma,y]
+{\color{blue}[\theta|\mu,y]} \to {\color{blue}[\mu|\theta,y]} \to [\gamma|\mu,y] \to [\mu|\gamma,y]
 \end{align*}
 Weave two DAs together (interweaving algorithm):
 \begin{align*}
-[\theta|\mu,y] \to [\gamma|\theta,y] \to [\mu|\gamma,y]
+{\color{blue}[\theta|\mu,y]} \to {\color{red}[\gamma|\theta,y]} \to [\mu|\gamma,y]
 \end{align*}
 Alternate representation:
 \begin{align*}
-[\theta|\mu,y] \to [\mu|\theta,y] \to [\gamma|\mu,\theta,y] \to [\mu|\gamma,y]
+{\color{blue}[\theta|\mu,y]} \to {\color{blue}[\mu|\theta,y]} \to {\color{red}[\gamma|\mu,\theta,y]} \to [\mu|\gamma,y]
 \end{align*}
-{\color{blue}The interweaving algorithm obtains IID draws from the posterior of $\mu$.}
+The interweaving algorithm obtains {\bf IID} draws from the posterior of $\mu$.
 \end{frame}
 
 \begin{frame}
@@ -225,7 +229,7 @@ Marginal model for $y$:
 
 \begin{frame}
   \frametitle{The Dynamic Linear Model} 
-Let $\phi$ denote the unknown parameter. Potentially $F_t(\phi)$ and $G_t(\phi)$, but for simplicity assume $\phi=(V,W)$.\\~\\
+Let $\phi$ denote the unknown parameter. Potentially $F_t(\phi)$ and $G_t(\phi)$, but for simplicity assume they are constant and $\phi=(V,W)$.\\~\\
 
 Priors: independently assume \\~\\
 \begin{itemize}
@@ -318,7 +322,7 @@ Then $\tilde{\eta}=\Omega_{y,\eta}'\Omega_{\eta}^{-1}\eta$ is also an SA and
 \[
 \tilde{\eta}|\phi \sim N(A\alpha_{\eta},\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)
 \]
-where $A=\Omega_{y,\eta}'\Omega_{\eta}^{-1}$, $\Sigma = \tilde{V} + \tilde{W} + \tilde{C} - \Omega_{y,\eta}\Omega_{\eta}^{-1}\Omega_{y,\eta}'$ and $\alpha_{\eta}$ are functionally independent of $\phi$ and the conditional posterior of $\phi$ given $\tilde{\eta}$ can be written as
+where $A=\Omega_{y,\eta}'\Omega_{\eta}^{-1}$, $\Sigma = \tilde{V} + \tilde{W} + \tilde{C} - A\Omega_{\eta}A'$ and $\alpha_{\eta}$ are functionally independent of $\phi$ and the conditional posterior of $\phi$ given $\tilde{\eta}$ can be written as
 \begin{align*}
 &p(\phi|\tilde{\eta},y) \propto p(\phi)|\tilde{V} + \tilde{W} + \tilde{C} - \Sigma|^{-1/2}\\
 &\times \exp\left[-\frac{1}{2}(\tilde{\eta} - A\alpha_{\eta})'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)^{-1}(\tilde{\eta} - A\alpha_{\eta})\right].
@@ -337,7 +341,7 @@ p(\phi|&\eta,y) \propto p(\phi) |(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} 
 &\times \exp\left[-\frac{1}{2}(\eta - \alpha_{\eta})'(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}(\eta - \alpha_\eta)\right]
 \end{align*}
 \\~\\
-Upshot: hard to find a SA for $(V,W)$.
+Upshot: hard to find a {\it practical} SA for $(V,W)$.
 
 \end{frame}
 
