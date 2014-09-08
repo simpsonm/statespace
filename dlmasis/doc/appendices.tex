@@ -70,8 +70,9 @@ y|\tilde{\eta},\phi & \sim N(b + \tilde{\eta}, \Sigma)\\
 Thus the posterior density of $\phi$ given $\tilde{\eta}$ can be written as
 \begin{align*}
   p(\phi|\tilde{\eta}, y) &\propto p(y|\tilde{\eta},\phi)p(\tilde{\eta}|\phi)p(\phi) \propto p(\tilde{\eta}|\phi)p(\phi) \\
-&\propto p(\phi)|\tilde{V} + \tilde{W} + \tilde{C} - \Sigma|^{-1/2}\exp\left[-\frac{1}{2}(\tilde{\eta} - A\alpha_{\eta})'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)^{-1}(\tilde{\eta} - A\alpha_{\eta})\right]. \qed
+&\propto p(\phi)|\tilde{V} + \tilde{W} + \tilde{C} - \Sigma|^{-1/2}\exp\left[-\frac{1}{2}(\tilde{\eta} - A\alpha_{\eta})'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)^{-1}(\tilde{\eta} - A\alpha_{\eta})\right].
 \end{align*}
+Now given that $A'A$ is invertible and the properties of multivariate normal distributions, the density of $p(\phi|\eta,y)$ follows from $\eta=(A'A)^{-1}A'\tilde{\eta}$.
 
 \section{Full conditional distributions in the general DLM for various DAs}\label{sec:DLMfullcond}
 
@@ -205,7 +206,7 @@ where $\mu_1 = \sqrt{V}\psi_1 + \psi_0$ and for $t=2,3,\cdots,T$, $\mu_t = \sqrt
 \begin{align*}
  p(V|W,\psi,y) \propto V^{-\alpha_V - 1}\exp\left[ -a_{\psi}V + b_{\psi}\sqrt{V} -\frac{\beta_V}{V}\right] 
 \end{align*}
-where $a_{\psi}=\sum_{t=1}^T(L\psi_t)^2/2W$ and $b_{\psi}=\sum_{t=1}^T(L\psi_tLy_t)/W$, and we define $Ly_t=y_t-y_{t-1}$ for $t=2,3,\cdots,T$, $Ly_1=y_1 - \psi_0$, $L\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ and $L\psi_1=\psi_1-0$. In other words, the form of $p(V|W,\psi,y)$ is the same as $p(W|V,\gamma,y)$. The general form of these two densities is $p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b\sqrt{x} -c/x\right]$. In Section \ref{sec:scaledraw} we show how to efficiently sample from this distribution.
+where $a_{\psi}=\sum_{t=1}^T(\mathcal{L}\psi_t)^2/2W$ and $b_{\psi}=\sum_{t=1}^T(\mathcal{L}\psi_t\mathcal{L}y_t)/W$, and we define $\mathcal{L}y_t=y_t-y_{t-1}$ for $t=2,3,\cdots,T$, $\mathcal{L}y_1=y_1 - \psi_0$, $\mathcal{L}\psi_t = \psi_t - \psi_{t-1}$ for $t=2,3,...,T$ and $\mathcal{L}\psi_1=\psi_1-0$. In other words, the form of $p(V|W,\psi,y)$ is the same as $p(W|V,\gamma,y)$. The general form of these two densities is $p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b\sqrt{x} -c/x\right]$. In Section \ref{sec:scaledraw} we show how to efficiently sample from this distribution.
 
 \subsection{The wrongly-scaled disturbances}\label{subsec:WSDs}
 
@@ -273,7 +274,7 @@ This density is a bit complicated, but in the case of the local level model with
 \begin{align*}
 p(W|V,\tilde{\psi},y) \propto& W^{-\alpha_W-1}\exp\left[ -a_{\tilde{\psi}}W + b_{\tilde{\psi}}/\sqrt{W} -c_{\tilde{\psi}}/W\right]
 \end{align*}
-where $a_{\tilde{\psi}} = \frac{1}{2V}\sum_{t=1}^T\tilde{\psi}_t^2$,  $b_{\tilde{\psi}} = \sum_{t=1}^TL\tilde{y}_tL\tilde{\psi}_t$, and $c_{\tilde{\psi}} = \beta_W + \frac{1}{2}\sum_{t=1}^TL\tilde{y}_t^2$. Here we define $Ly_t = y_t - y_{t-1}$ for $t=2,3,\cdots,T$ while $Ly_1 = y_1 - \tilde{\psi}_0$, and $L\tilde{\psi}_t = \tilde{\psi}_t - \tilde{\psi}_{t-1}$ for $t=2,3,\cdots,T$ while $L\tilde{\psi}_1 = \tilde{\psi}_1 - 0$. This is the same family of densities as $p(V|W,\tilde{\gamma},y)$, and in Section \ref{sec:wscale} we show how to efficiently obtain random draws.
+where $a_{\tilde{\psi}} = \frac{1}{2V}\sum_{t=1}^T\tilde{\psi}_t^2$,  $b_{\tilde{\psi}} = \sum_{t=1}^T\mathcal{L}\tilde{y}_t\mathcal{L}\tilde{\psi}_t$, and $c_{\tilde{\psi}} = \beta_W + \frac{1}{2}\sum_{t=1}^T\mathcal{L}\tilde{y}_t^2$. Here we define $\mathcal{L}y_t = y_t - y_{t-1}$ for $t=2,3,\cdots,T$ while $\mathcal{L}y_1 = y_1 - \tilde{\psi}_0$, and $\mathcal{L}\tilde{\psi}_t = \tilde{\psi}_t - \tilde{\psi}_{t-1}$ for $t=2,3,\cdots,T$ while $\mathcal{L}\tilde{\psi}_1 = \tilde{\psi}_1 - 0$. This is the same family of densities as $p(V|W,\tilde{\gamma},y)$, and in Section \ref{sec:wscale} we show how to efficiently obtain random draws.
 
 \section{Mixed Cholesky Factorization Algorithm (MCFA) for Simulation Smoothing}\label{sec:MCFA}
 
@@ -491,8 +492,8 @@ For the SD sampler, things are a bit more complicated. The draw of $V|W,\gamma$ 
 \end{align*}
 So the dependence between $V$ and $b_V$ determines how much the chain moves in the $V$ step, and the dependence between $W$ and $(a_\gamma , b_\gamma)$ determines how much it moves in the $W$ step. The dependence between $(V,W)$ and $\gamma$ determines how much the chain moves in the DA step, but we can view this step instead as a draw of $b_V$ in which case the dependence between $W$ and $b_V$ determines how much the chain moves in that step. So if any one of these steps has high dependence, we should expect every element of the chain, and $(V,W)$ in particular, to have high serial dependence in the chain. The SE sampler is analogous to the SD sampler except with $b_W$, $a_\psi$ and $b_\psi$ where
 \begin{align*}
-  a_\psi&=\frac{1}{2W}\sum_{t=1}^T(L\psi_t)^2&
-  b_\psi&=\frac{1}{W}\sum_{t=1}^T(L\psi_tLy_t).
+  a_\psi&=\frac{1}{2W}\sum_{t=1}^T(\mathcal{L}\psi_t)^2&
+  b_\psi&=\frac{1}{W}\sum_{t=1}^T(\mathcal{L}\psi_t\mathcal{L}y_t).
 \end{align*}
 
 \begin{figure}[!h]
