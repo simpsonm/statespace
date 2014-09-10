@@ -12,6 +12,7 @@ epsfig, multicol, amsthm}
 \usetheme{Boadilla}
 \usecolortheme[named=Red]{structure}
 \setbeamercovered{transparent}
+\beamertemplatenavigationsymbolsempty
 \newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
 \def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
 \newcommand\N{\mathcal{N}}
@@ -62,7 +63,7 @@ DA algorithm:
 \frametitle{Interweaving: A Motivating Example}
 Let $\gamma = \theta - \mu$. Then:
 \begin{align*}
-y|\theta, \gamma & \sim \N(\mu + \gamma, V) \\
+y|\gamma, \mu & \sim \N(\mu + \gamma, V) \\
 \gamma|\mu & \sim \N(0, W) 
 \end{align*}
 DA algorithm based on $\gamma$:
@@ -79,10 +80,6 @@ Alternate between two DAs (alternating algorithm):
 {\color{blue}[\theta|\mu,y]} \to {\color{blue}[\mu|\theta,y]} \to [\gamma|\mu,y] \to [\mu|\gamma,y]
 \end{align*}
 Weave two DAs together (interweaving algorithm):
-\begin{align*}
-{\color{blue}[\theta|\mu,y]} \to {\color{red}[\gamma|\theta,y]} \to [\mu|\gamma,y]
-\end{align*}
-Alternate representation:
 \begin{align*}
 {\color{blue}[\theta|\mu,y]} \to {\color{blue}[\mu|\theta,y]} \to {\color{red}[\gamma|\mu,\theta,y]} \to [\mu|\gamma,y]
 \end{align*}
@@ -133,12 +130,12 @@ Componentwise Interweaving Strategy (CIS):\\~\\
 
 \begin{frame}
 \frametitle{Why interweaving?}
+From \citet{yu2011center}:\\~\\
 \begin{itemize}
-  \item  GIS has a geometric rate of convergence no worse than the worst of the two underlying DA algorithms, and the bound gets better the less $\theta$ and $\tilde{\theta}$ are correlated in the posterior \citep{yu2011center}.\\~\\
-  \item If the two DAs are independent in the posterior, then GIS results in {\color{blue}\textit{\textbf{IID}}} draws from the posterior \citep{yu2011center}. \\~\\
+  \item  GIS has a geometric rate of convergence no worse than the worst of the two underlying DA algorithms, and the bound gets better the less $\theta$ and $\tilde{\theta}$ are correlated in the posterior.\\~\\
+  \item If the two DAs are independent in the posterior, then GIS results in {\color{blue}\textit{\textbf{IID}}} draws from the posterior. \\~\\
   \item Often GIS has better convergence than the associated alternating algorithm.\\~\\
-  \item Under weak conditions the ASIS algorithm is the same as the optimal PX-DA algorithm of \citet{liu1999parameter} \citep{yu2011center}.\\~\\
-  \item The CIS sampler does at least as well (in some sense) as the Gibbs sampler that integrates out the augmented data vectors \citep{yu2011center}.
+  \item Under some conditions the ASIS algorithm is the same as the optimal PX-DA algorithm of \citet{liu1999parameter}.
   \end{itemize}
 \end{frame}
 
@@ -164,7 +161,7 @@ Componentwise Interweaving Strategy (CIS):\\~\\
     y_t  =&F_t\theta_t +  v_t  \qquad \mbox{(observation equation)}\\
     \theta_t =& G_t\theta_{t-1} + w_t \qquad \mbox{(system equation)}
   \end{align*} 
-  with $v_t\stackrel{ind}{\sim}\N_k(0,V)$ independent of $w_t\stackrel{ind}{\sim}\N_p(0,W)$.\\~\\
+  with $v_t\stackrel{iid}{\sim}\N_k(0,V)$ independent of $w_t\stackrel{iid}{\sim}\N_p(0,W)$.\\~\\
 
 \begin{figure}
   \centering
@@ -209,26 +206,6 @@ For convenience define $y\equiv(y_1',\cdots,y_T')'$ and $\theta\equiv(\theta_0',
 
 \begin{frame}
   \frametitle{The Dynamic Linear Model} 
-Define 
-\begin{align*}
-H_t &= G_tG_{t-1}\cdots G_1\\ 
-K_t &= I_p + G_t + G_tG_{t-1} + \cdots + G_tG_{t-1}\cdots G_2\\ 
-D_t &= F_tG_tG_{t-1}\cdots G_1.
-\end{align*} Then let $\tilde{V}=I_T\otimes V$ and $D$ be block diagonal with elements $D_1,\ldots,D_T$, 
-\begin{align*}
-\tilde{W}_{Tk\times Tk} &= \begin{bmatrix} K_1'F_1' & K_2'F_2' & \cdots K_T'F_T' \end{bmatrix}' W \begin{bmatrix} K_1'F_1' & K_2'F_2' & \cdots K_T'F_T' \end{bmatrix}, &\\
-\tilde{C}_{Tk\times Tk} &= \begin{bmatrix} H_1'F_1' & H_2'F_2' & \cdots H_T'F_T' \end{bmatrix}' C_0 \begin{bmatrix} H_1'F_1' & H_2'F_2' & \cdots H_T'F_T' \end{bmatrix},&
-\end{align*}
-and $\tilde{m}_{Tp\times 1} = (m_0', m_0', \cdots m_0')'$\\~\\
-
-Marginal model for $y$: 
-\begin{align*}
-  y|V,W \stackrel{ind}{\sim} N_{Tk}(D\tilde{m}, \tilde{V} + \tilde{W} + \tilde{C})
-\end{align*}
-\end{frame}
-
-\begin{frame}
-  \frametitle{The Dynamic Linear Model} 
 Let $\phi$ denote the unknown parameter. Potentially $F_t(\phi)$ and $G_t(\phi)$, but for simplicity assume they are constant and $\phi=(V,W)$.\\~\\
 
 Priors: independently assume \\~\\
@@ -236,10 +213,18 @@ Priors: independently assume \\~\\
 \item[]$\theta_0\sim \N_p(m_0,C_0)$, $V\sim IW(\Lambda_V,\lambda_V)$, and $W\sim IW(\Lambda_W,\lambda_W)$\\~\\
 \end{itemize}
 
-Then $p(\phi|y)\propto$
+
+Marginal model for $y$: 
+\begin{align*}
+  y|V,W \stackrel{ind}{\sim} N_{Tk}(D\tilde{m}, \tilde{V} + \tilde{W} + \tilde{C})
+\end{align*}
+where $\tilde{m}=\tilde{m}_{Tp\times 1} = (m_0', m_0', \cdots m_0')'$, $\tilde{V}=I_T\otimes V$, $\tilde{W}$ depends on $W$ and $\tilde{C}$ depends on $C_0$ and where $D$, $\tilde{W}$, and $\tilde{C}$ also depend on the $F_t$'s and $G_t$'s.
+
+$p(\phi|y)\propto$
 \begin{align*}
 p(\phi)|\tilde{V} + \tilde{W} + \tilde{C}|^{-1/2}\exp\left[-\frac{1}{2}\left(y-D\tilde{m}\right)'(\tilde{V} + \tilde{W} + \tilde{C})^{-1}\left(y-D\tilde{m}\right)\right]
 \end{align*}
+
 \end{frame}
 
 \begin{frame}
@@ -311,38 +296,18 @@ where $\tilde{\mu}_t(\tilde{\gamma},W)$ is complicated.\\~\\
 \end{frame}
 
 \begin{frame}
-\frametitle{The Elusive Search for an SA}
-Suppose $\eta$ is an SA for the DLM such that
+\frametitle{The Elusive Search for a Sufficient Augmentation}
+Suppose $\eta$ is an SA for the DLM such that:\\
 \begin{align*}
  \left. \begin{bmatrix}\eta \\ y \end{bmatrix}\right|\phi \sim N\left(\begin{bmatrix} \alpha_\eta \\ D\tilde{m} \end{bmatrix}, \begin{bmatrix}
    \Omega_\eta & \Omega_{y,\eta}' \\
    \Omega_{y,\eta} & \tilde{V} + \tilde{W} + \tilde{C} \end{bmatrix}\right).
-\end{align*}
-Then $\tilde{\eta}=\Omega_{y,\eta}'\Omega_{\eta}^{-1}\eta$ is also an SA and
-\[
-\tilde{\eta}|\phi \sim N(A\alpha_{\eta},\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)
-\]
-where $A=\Omega_{y,\eta}'\Omega_{\eta}^{-1}$, $\Sigma = \tilde{V} + \tilde{W} + \tilde{C} - A\Omega_{\eta}A'$ and $\alpha_{\eta}$ are functionally independent of $\phi$ and the conditional posterior of $\phi$ given $\tilde{\eta}$ can be written as
+\end{align*}\\~\\
+Let $A=\Omega_{y,\eta}'\Omega_{\eta}^{-1}$ and $\Sigma = \tilde{V} + \tilde{W} + \tilde{C} - A\Omega_{\eta}A'$. Then $A$, $\Sigma$, and $\alpha_{\eta}$ are constants with respect to $\phi$ and if $A'A$ is invertible, then\\
 \begin{align*}
-&p(\phi|\tilde{\eta},y) \propto p(\phi)|\tilde{V} + \tilde{W} + \tilde{C} - \Sigma|^{-1/2}\\
-&\times \exp\left[-\frac{1}{2}(\tilde{\eta} - A\alpha_{\eta})'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)^{-1}(\tilde{\eta} - A\alpha_{\eta})\right].
+&p(\phi|\eta,y) \propto p(\phi)|(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}|^{-1/2}\\
+&\times \exp\left[-\frac{1}{2}(\eta - \alpha_{\eta})'[(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}]^{-1}(\eta - \alpha_{\eta})\right]
 \end{align*}
-\end{frame}
-
-\begin{frame}
-\frametitle{The Elusive Search for an SA}
-The conditional posterior of $\phi$ given $\eta$ is difficult to characterize:
-\begin{align*}
-p(\phi|\eta,y) \propto  p(\phi) |\Omega_{\eta}|^{-1/2}\exp\left[-\frac{1}{2}(\eta-\alpha_{\eta})\Omega_{\eta}^{-1}(\eta-\alpha_{\eta})\right]
-\end{align*}
-When $(A'A)$ is invertible:
-\begin{align*}
-p(\phi|&\eta,y) \propto p(\phi) |(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}|^{-1/2}\\
-&\times \exp\left[-\frac{1}{2}(\eta - \alpha_{\eta})'(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}(\eta - \alpha_\eta)\right]
-\end{align*}
-\\~\\
-Upshot: hard to find a {\it practical} SA for $(V,W)$.
-
 \end{frame}
 
 \begin{frame}
@@ -491,7 +456,7 @@ What about when $V$ and $W$ are matrices?\\~
 
 $\to$ Need a better prior. E.g. $\pm \sqrt{V} \sim \N(0,\Lambda_V)$\\~\\
 
-Then in the LLM $p(V|W,\theta,y)=p(V|W,\psi,y)$ is GIG:
+Then in the LLM $p(V|W,\theta,y)=p(V|W,\gamma,y)$ is GIG:
 \begin{align*}
 p(y) \propto y^{\alpha-1}\exp\left[-\frac{1}{2}(ay + b/y)\right] \qquad \alpha\in\Re; a,b,y>0
 \end{align*}
