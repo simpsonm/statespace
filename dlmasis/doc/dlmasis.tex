@@ -234,14 +234,14 @@ Assuming $F_t$ is invertible for all $t$ (this restriction is relaxed in Appendi
 for $t=1,2,\cdots,T$ where $I_k$ is the $k\times k$ identity matrix. Since neither $V$ nor $W$ are in the system equation, we immediately see that the scaled errors are an AA for $(V,W)$. However, both $V$ and $W$ are in the observation equation so that $\psi$ is not an SA for $V|W$ nor for $W|V$.
 
 \subsection{The ``wrongly-scaled'' DAs}
-Two other novel augmentations can be obtained by scaling the SD and SE by the ``wrong'' variance. Define $\tilde{\gamma}_t=L_V^{-1}(\theta_t - G_t\theta_{t-1})$ and $\tilde{\psi}_t=L_W^{-1}(y_t - \theta_t)$ for $t=1,2,\cdots,T$ and $\tilde{\psi}_0=\tilde{\gamma}_0=\theta_0$. Then the {\it wrongly-scaled disturbances} are $\tilde{\gamma}\equiv\tilde{\gamma}_{0:T}\equiv(\tilde{\gamma}_0',\tilde{\gamma}_1',\cdots,\tilde{\gamma}_T')'$ and the {\it wrongly-scaled errors} are $\tilde{\psi}\equiv\tilde{\psi}_{0:T}\equiv(\tilde{\psi}_0',\tilde{\psi}_1',\cdots,\tilde{\psi}_T')'$. We call the tilde versions of the scaled disturbances and the scaled errors the wrongly-scaled disturbances (WSDs) and the wrongly-scaled errors (WSEs) respectively.
+Two other novel augmentations can be obtained by scaling the SD and SE by the ``wrong'' variance so long as $V$ and $W$ have the same dimension. Define $\tilde{\gamma}_t=L_V^{-1}(\theta_t - G_t\theta_{t-1})$ and $\tilde{\psi}_t=L_W^{-1}(y_t - \theta_t)$ for $t=1,2,\cdots,T$ and $\tilde{\psi}_0=\tilde{\gamma}_0=\theta_0$. Then the {\it wrongly-scaled disturbances} are $\tilde{\gamma}\equiv\tilde{\gamma}_{0:T}\equiv(\tilde{\gamma}_0',\tilde{\gamma}_1',\cdots,\tilde{\gamma}_T')'$ and the {\it wrongly-scaled errors} are $\tilde{\psi}\equiv\tilde{\psi}_{0:T}\equiv(\tilde{\psi}_0',\tilde{\psi}_1',\cdots,\tilde{\psi}_T')'$. We call the tilde versions of the scaled disturbances and the scaled errors the wrongly-scaled disturbances (WSDs) and the wrongly-scaled errors (WSEs) respectively.
 
 We can write the model in terms of $\tilde{\gamma}$ as
 \begin{align*}
   y_t|\tilde{\gamma},V,W \stackrel{ind}{\sim} N_p\left(F_t\theta_t(\tilde{\gamma},L_V), V\right), \qquad  
   \tilde{\gamma}_t \stackrel{ind}{\sim}N_p(0,L_V^{-1}W(L_V^{-1})')
 \end{align*}
-for $t=1,2,\cdots,T$ where $\theta_t(\tilde{\gamma},L_V)$ denotes the transformation from $\tilde{\gamma}$ to $\theta$ defined by the wrongly-scaled disturbances. Since $L_V$ is the Cholesky decomposition of $V$, the observation equation does not contain $W$, so $\tilde{\gamma}$ is an SA for $W|V$. Since $W$ and $L_V$ are both in the system equation, $\tilde{\gamma}$ is not an AA for $V|W$ nor for $W|V$. %Also, notice that the transformation from $\theta$ to $\tilde{\gamma}$ does not require $F_t$ to be invertible so that the constraint dim($y_t$)=dim($\theta_t$) can be relaxed.
+for $t=1,2,\cdots,T$ where $\theta_t(\tilde{\gamma},L_V)$ denotes the transformation from $\tilde{\gamma}$ to $\theta$ defined by the wrongly-scaled disturbances. Since $L_V$ is the Cholesky decomposition of $V$, the observation equation does not contain $W$, so $\tilde{\gamma}$ is an SA for $W|V$. Since $W$ and $L_V$ are both in the system equation, $\tilde{\gamma}$ is not an AA for $V|W$ nor for $W|V$. 
 
 Similarly, we can write the model in terms of $\tilde{\psi}$ as
 \begin{align*}
