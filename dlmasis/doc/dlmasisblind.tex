@@ -398,16 +398,17 @@ In order to test these algorithms, we simulated data from the local level model 
 
 For each dataset and each sampler we obtained $n=3000$ draws and threw away the first $500$. The chains were started at the true values used to simulate the time series, so we can examine the behavior of the chains to determine how well they mix but not how quickly they converge. Define the effective sample proportion ($ESP=ESS/n$) for a scalar component of the chain as the effective sample size ($ESS$) \citep{gelman2013bayesian} of the component divided by the actual sample size $n$. When $ESP=1$ the Markov chain is behaving as if it obtains iid draws from the posterior. It is possible that $ESP>1$ if the draws are negatively correlated which occasionally happens in our simulations. When it does happen the correlation is weak and we round down to one for plotting purposes.
 
+
 \subsection{Simulation results}
 
 The top panel of Figure \ref{ESplot} contains plots of ESP for $V$ and $W$ in each chain of each base samplers for $T=100$ --- we omit the $T=10$ and $T=1000$ plots for brevity, but they can be found in the supplementary materials (Appendix H). Table \ref{tab:stnmix} summarizes the results for the base samplers in the top panel. Let $R^*=V^*/W^*$ denote the true signal to noise ratio. The State sampler tends to have a low ESP for $V$ and high ESP for $W$ when $R^*>1$ with the behavior switched when $R^*<1$. The WSD and WSE samplers are similar to the state sampler except WSD has lower ESP for $V$ and WSE has lower ESP for $W$. The SD sampler has low ESP for both $V$ and $W$ when $R^*>1$ while the SE sampler has low ESP for both when $R^*<1$ and in particular for $V$. We omit the results here, but as $T$ increases, in all samplers the region of the parameter space with high ESP shrinks and in the low ESP regions, ESP drops closer to zero. In Appendix G of the supplementary materials, we discuss how the pattern of correlations between various quantities in the posterior distribution roughly determines the pattern of ESPs we see in Figure \ref{ESplot}. 
 
 \begin{figure}[!h]
 \centering
-\includegraphics[width=0.75\textwidth]{basecisESplot100}
-\includegraphics[width=0.49\textwidth]{altintESplotV100}
-\includegraphics[width=0.49\textwidth]{altintESplotW100}
-\caption{Effective sample proportion in the posterior sampler for a time series of length $T=100$, for $V$ and $W$ in the each sampler. The top panel contains ESP for $V$ and $W$ for the base and CIS samplers, the bottom left panel contains ESP for $V$ in the Alt and GIS samplers, and the bottom right panel contains ESP for $W$ in the Alt and GIS samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high.}
+\includegraphics[width=0.59\textwidth]{basecisESplot100}
+\includegraphics[width=0.53\textwidth]{altintESplotV100}
+\includegraphics[width=0.45\textwidth]{altintESplotW100}
+\caption{Effective sample proportion in the posterior sampler for a time series of length $T=100$, for $V$ and $W$ in the each sampler. The top panel contains ESP for $V$ and $W$ for the base samplers, the bottom left panel contains ESP in the GIS and CIS samplers, and the bottom right panel contains ESP in the Alt samplers. $X$ and $Y$ axes indicate the true values of $V$ and $W$ respectively for the simulated data. Note that the signal-to-noise ratio is constant moving up any diagonal. In the upper left the signal is high, in the lower right the noise is high.}
 \label{ESplot}
 \end{figure}
 
@@ -427,7 +428,7 @@ The top panel of Figure \ref{ESplot} contains plots of ESP for $V$ and $W$ in ea
   \label{tab:stnmix}
 \end{table}
 
-We fit the LLM to the simulated datasets using several GIS samplers and a CIS sampler as well. Since the wrongly-scaled samplers behaved similarly to the state sampler and neither of the underlying DAs were a SA for $V$ and $W$ jointly, we ignored them in the construction of the GIS samplers. Instead, we constructed the State-SD, State-SE, SD-SE, and Triple (State-SD-SE) GIS samplers, as well as the CIS sampler. The bottom two panels of Figure \ref{ESplot} has plots of ESP for each of the GIS algorithms while the top panel has the plots of ESP for the CIS sampler. Table \ref{tab:stnmix} summarizes the results in the bottom panel.
+We fit the LLM to the simulated datasets using several GIS samplers and a CIS sampler as well. Since the wrongly-scaled samplers behaved similarly to the state sampler and neither of the underlying DAs were a SA for $V$ and $W$ jointly, we ignored them in the construction of the GIS samplers. Instead, we constructed the State-SD, State-SE, SD-SE, and Triple (State-SD-SE) GIS samplers, as well as the CIS sampler. The bottom left panel of Figure \ref{ESplot} has plots of ESP for each of the GIS and CIS algorithms while the bottom right panel has plots of ESP for each of the Alt algorithms. Table \ref{tab:stnmix} summarizes the results in the bottom panel.
 
 Essentially, each GIS and Alt algorithm has high ESP when at least one of the base algorithms has high ESP. For example, the State-SD GIS and Alt algorithms have high ESP for $W$ except for a narrow band where $R^*$ is near one while ESP is high for $W$ in the state sampler when $R^*>1$ and in the SD sampler when $R^*<1$. Similarly in the State-SD GIS and Alt algorithms, mixing for $V$ is identical to the State and SD samplers since neither sampler improves on the other in any region of the parameter space. Both the State-SD GIS and Alt algorithms take advantage of the fact that the state and SD DA algorithms make up a ``beauty and the beast'' pair for $W$ and thus improves mixing in the marginal chain for $W$. However, GIS does not appear to improve on Alt --- unlike in ASIS, the posterior dependence between the two DAs must be too large.
 
@@ -439,9 +440,9 @@ From a practical standpoint a more important question than how well the chain mi
 
 \begin{figure}[!h]
 \centering
-\includegraphics[width=0.75\textwidth]{basecistimeplot100}
-\includegraphics[width=0.49\textwidth]{altgisVtimeplot100}
-\includegraphics[width=0.49\textwidth]{altgisWtimeplot100}
+\includegraphics[width=0.59\textwidth]{basecistimeplot100}
+\includegraphics[width=0.53\textwidth]{altgisVtimeplot100}
+\includegraphics[width=0.45\textwidth]{altgisWtimeplot100}
 \caption{Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ in each sampler. Log times larger than three $\log \mathrm{min}$ are rounded down to three for plotting purposes.}
 \label{baseinttimeplot}
 \end{figure}

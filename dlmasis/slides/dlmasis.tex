@@ -78,11 +78,11 @@ DA algorithm based on $\gamma$:
 Alternate between two DAs (alternating algorithm):
 \begin{align*}
 {\color{blue}[\theta|\mu,y]} \to {\color{blue}[\mu|\theta,y]} \to [\gamma|\mu,y] \to [\mu|\gamma,y]
-\end{align*}
+\end{align*}\\~\\
 Weave two DAs together (interweaving algorithm):
 \begin{align*}
 {\color{blue}[\theta|\mu,y]} \to {\color{blue}[\mu|\theta,y]} \to {\color{red}[\gamma|\mu,\theta,y]} \to [\mu|\gamma,y]
-\end{align*}
+\end{align*}\\~\\\pause
 The interweaving algorithm obtains {\bf IID} draws from the posterior of $\mu$.
 \end{frame}
 
@@ -132,7 +132,7 @@ Componentwise Interweaving Strategy (CIS):\\~\\
 \frametitle{Why interweaving?}
 From \citet{yu2011center}:\\~\\
 \begin{itemize}
-  \item  GIS has a geometric rate of convergence no worse than the worst of the two underlying DA algorithms, and the bound gets better the less $\theta$ and $\tilde{\theta}$ are correlated in the posterior.\\~\\
+  \item  GIS has a geometric rate of convergence no worse than the worst of the two underlying DA algorithms, and the bound gets better the less $\theta$ and $\gamma$ are correlated in the posterior.\\~\\
   \item If the two DAs are independent in the posterior, then GIS results in {\color{blue}\textit{\textbf{IID}}} draws from the posterior. \\~\\
   \item Often GIS has better convergence than the associated alternating algorithm.\\~\\
   \item Under some conditions the ASIS algorithm is the same as the optimal PX-DA algorithm of \citet{liu1999parameter}.
@@ -220,11 +220,26 @@ Marginal model for $y$:
 \end{align*}
 where $\tilde{m}=\tilde{m}_{Tp\times 1} = (m_0', m_0', \cdots m_0')'$, $\tilde{V}=I_T\otimes V$, $\tilde{W}$ depends on $W$ and $\tilde{C}$ depends on $C_0$ and where $D$, $\tilde{W}$, and $\tilde{C}$ also depend on the $F_t$'s and $G_t$'s.
 
-$p(\phi|y)\propto$
-\begin{align*}
-p(\phi)|\tilde{V} + \tilde{W} + \tilde{C}|^{-1/2}\exp\left[-\frac{1}{2}\left(y-D\tilde{m}\right)'(\tilde{V} + \tilde{W} + \tilde{C})^{-1}\left(y-D\tilde{m}\right)\right]
-\end{align*}
+\end{frame}
 
+\begin{frame}
+\frametitle{The Elusive Search for a Sufficient Augmentation}
+Suppose $\eta$ is an SA for the DLM such that:\\
+\begin{align*}
+ \left. \begin{bmatrix}\eta \\ y \end{bmatrix}\right|\phi \sim N\left(\begin{bmatrix} \alpha_\eta \\ D\tilde{m} \end{bmatrix}, \begin{bmatrix}
+   \Omega_\eta & \Omega_{y,\eta}' \\
+   \Omega_{y,\eta} & \tilde{V} + \tilde{W} + \tilde{C} \end{bmatrix}\right).
+\end{align*}\\~\\
+Let $A=\Omega_{y,\eta}'\Omega_{\eta}^{-1}$ and $\Sigma = \tilde{V} + \tilde{W} + \tilde{C} - A\Omega_{\eta}A'$. Then $A$, $\Sigma$, and $\alpha_{\eta}$ are constants with respect to $\phi$ and if $A'A$ is invertible, then\\
+\begin{align*}
+&p(\phi|\eta,y) \propto p(\phi)|(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}|^{-1/2}\\
+&\times \exp\left[-\frac{1}{2}(\eta - \alpha_{\eta})'[(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}]^{-1}(\eta - \alpha_{\eta})\right]
+\end{align*}\\~\\
+But the target posterior is
+\begin{align*}
+p(\phi|y)&\propto(\phi)|\tilde{V} + \tilde{W} + \tilde{C}|^{-1/2}\\
+&\times\exp\left[-\frac{1}{2}\left(y-D\tilde{m}\right)'(\tilde{V} + \tilde{W} + \tilde{C})^{-1}\left(y-D\tilde{m}\right)\right]
+\end{align*}
 \end{frame}
 
 \begin{frame}
@@ -295,76 +310,6 @@ where $\tilde{\mu}_t(\tilde{\gamma},W)$ is complicated.\\~\\
 {\color{blue} $\tilde{\gamma}$ is an SA for $W|V$ and $\tilde{\psi}$ is an SA for $V|W$.}
 \end{frame}
 
-\begin{frame}
-\frametitle{The Elusive Search for a Sufficient Augmentation}
-Suppose $\eta$ is an SA for the DLM such that:\\
-\begin{align*}
- \left. \begin{bmatrix}\eta \\ y \end{bmatrix}\right|\phi \sim N\left(\begin{bmatrix} \alpha_\eta \\ D\tilde{m} \end{bmatrix}, \begin{bmatrix}
-   \Omega_\eta & \Omega_{y,\eta}' \\
-   \Omega_{y,\eta} & \tilde{V} + \tilde{W} + \tilde{C} \end{bmatrix}\right).
-\end{align*}\\~\\
-Let $A=\Omega_{y,\eta}'\Omega_{\eta}^{-1}$ and $\Sigma = \tilde{V} + \tilde{W} + \tilde{C} - A\Omega_{\eta}A'$. Then $A$, $\Sigma$, and $\alpha_{\eta}$ are constants with respect to $\phi$ and if $A'A$ is invertible, then\\
-\begin{align*}
-&p(\phi|\eta,y) \propto p(\phi)|(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}|^{-1/2}\\
-&\times \exp\left[-\frac{1}{2}(\eta - \alpha_{\eta})'[(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}]^{-1}(\eta - \alpha_{\eta})\right]
-\end{align*}
-\end{frame}
-
-\begin{frame}
-\frametitle{MCMC Strategies}
-The standard DA Algorithm--the state sampler: {\color{blue}$[\theta|V,W,y] \to [V,W|\theta,y]$}
-\begin{itemize}
-\item $p(\theta|V,W,y)$ is Gaussian --- draw using the mixed Cholesky factor algorithm (MCFA) \citep{mccausland2011simulation}.
-\item Conditional on $(\theta,y)$, $V$ and $W$ are independent inverse Wishart.\\~\\
-\end{itemize}
-
-Scaled disturbance sampler: {\color{blue}$[\gamma|V,W,y] \to [V|W,\gamma,y] \to [W|V,\gamma,y]$}
-\begin{itemize}
-\item $p(\gamma|V,W,y)$ is Gaussian, but easier to draw $\theta$ using MCFA and transform.
-\item $p(V,W|\gamma,y)$ is complicated, but $p(V|W,\gamma,y)$ is inverse Wishart.
-\item $p(W|V,\gamma,y)$ is still complicated, but less so.
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{MCMC Strategies}
-Scaled error sampler: {\color{blue}$[\psi|V,W,y] \to [V|W,\psi,y] \to [W|V,\psi,y]$}
-\begin{itemize}
-\item $p(\psi|V,W,y)$ is Gaussian and can use MCFA directly.
-\item $p(V,W|\psi,y)$ is complicated, but $p(V|W,\psi,y)$ is less complicated. 
-\item $p(W|V,\psi,y)$ is inverse Wishart.\\~\\
-\end{itemize}
-
-Wrongly-scaled samplers are analogous to their correctly-scaled counterparts.\\~\\
-
-Alternating and GIS easy to construct once sampling from the difficult densities is accomplished.
-\end{frame}
-
-\begin{frame}
-\frametitle{MCMC Strategies}
-CIS sampler: 
-\begin{itemize}
-\item $\gamma$ is an AA and $\tilde{\gamma}$ is an SA for $W|V$.
-\item $\psi$ is an AA and $\tilde{\psi}$ is an SA for $V|W$.
-\end{itemize}
-So:
-\begin{align*}
-&[\psi|V,W,y]\to[V|W,\psi,y]\to{\color{blue}[\tilde{\psi}|V,W,\psi,y]}\to[V|W,\tilde{\psi},y]\to\\
-&{\color{blue}[\tilde{\gamma}|V,W,\tilde{\psi},y]}\to[W|V,\tilde{\gamma},y]\to{\color{blue}[\gamma|V,W,\tilde{\gamma},y]}\to[W|V,\gamma,y]
-\end{align*}
-But this is equivalent to:
-\begin{align*}
-&[\psi|V,W,y]\to[V|W,\psi,y]\to{\color{blue}[\theta|V,W,\psi,y]}\to[V|W,\theta,y]\to\\
-&[W|V,\theta,y]\to{\color{blue}[\gamma|V,W,\theta,y]}\to[W|V,\gamma,y]
-\end{align*}
-Steps of this sampler can be rearranged to obtain the SE-SD GIS sampler:
-\begin{align*}
-&[\psi|V,W,y]\to[V|W,\psi,y]\to[W|V,\psi,y]\to\\
-&{\color{blue}[\gamma|V,W,\psi,y]}\to[V|W,\gamma,y]\to[W|V,\gamma,y]
-\end{align*}
-
-\end{frame}
-
 \begin{frame}[fragile]
 \frametitle{Evaluating the Strategies: the Local Level Model}
 Model: for $t=1,2,...,T$
@@ -372,22 +317,6 @@ Model: for $t=1,2,...,T$
     y_t|\theta  \stackrel{ind}{\sim}&\N_1(\theta_t,V) \qquad (\mbox{observation equation})\\
     \theta_t|\theta_{0:(t-1)} \sim& \N_1(\theta_{t-1},W) \qquad (\mbox{system equation})
   \end{align*} 
-
-Then $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ have the form:
-\begin{align*}
-p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b\sqrt{x} -c/x\right], \qquad a,c,\alpha,x>0, b\in\Re
-\end{align*}
-Similarly $p(W|V,\tilde{\psi},y)$ and $p(V|W,\tilde{\gamma},y)$ have the form:
-\begin{align*}
-p(y)\propto y^{-\alpha-1}\exp\left[ -ay + b/\sqrt{y} -c/y\right], \qquad a,c,\alpha,y>0, b\in\Re
-\end{align*}
-Rejection sampling with a Cauchy proposal works for $\log(x)$ and $\log(y)$.\\~\\
-
-Often $p(x)$ is log concave $\to$ adaptive rejection sampling (\verb0R0 package \verb0ars0).
-\end{frame}
-
-\begin{frame}
-\frametitle{Evaluating the Strategies: LLM - Simulation Setup}
 
 Let $V^*$ and $W^*$ denote the true values used to simulate the time series.\\~\\
 
@@ -402,22 +331,23 @@ Simulation Setup:
 \item Each sampler was used to fit the model to each dataset using one Markov chain started at $(V^*,W^*)$.
 \end{itemize}
 
+
 \end{frame}
 
 \begin{frame}
 \frametitle{LLM Results --- ESP for T=100}
 \centering
-\includegraphics[width=0.75\textwidth]{basecisESplot100}\\
-\includegraphics[width=0.49\textwidth]{altintESplotV100}
-\includegraphics[width=0.49\textwidth]{altintESplotW100}
+\includegraphics[width=0.59\textwidth]{basecisESplot100}\\
+\includegraphics[width=0.53\textwidth]{altintESplotV100}
+\includegraphics[width=0.45\textwidth]{altintESplotW100}
 \end{frame}
 
 \begin{frame}
 \frametitle{LLM Results --- ESP for T=1000}
 \centering
-\includegraphics[width=0.75\textwidth]{basecisESplot1000}\\
-\includegraphics[width=0.49\textwidth]{altintESplotV1000}
-\includegraphics[width=0.49\textwidth]{altintESplotW1000}
+\includegraphics[width=0.59\textwidth]{basecisESplot1000}\\
+\includegraphics[width=0.53\textwidth]{altintESplotV1000}
+\includegraphics[width=0.45\textwidth]{altintESplotW1000}
 \end{frame}
 
 \begin{frame}
@@ -441,9 +371,9 @@ Note that as the length of the time series increases, the farther away from one 
 \begin{frame}
 \frametitle{LLM Results - log time (minutes) per 1000 effective draws}
 \centering
-\includegraphics[width=0.75\textwidth]{basecistimeplot100}\\
-\includegraphics[width=0.49\textwidth]{altgisVtimeplot100}
-\includegraphics[width=0.49\textwidth]{altgisWtimeplot100}
+\includegraphics[width=0.59\textwidth]{basecistimeplot100}\\
+\includegraphics[width=0.53\textwidth]{altgisVtimeplot100}
+\includegraphics[width=0.45\textwidth]{altgisWtimeplot100}
 \end{frame}
 
 \begin{frame}
