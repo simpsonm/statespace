@@ -47,29 +47,29 @@ with Jarad Niemi and Vivekananda Roy\\~\\
 \frametitle{Interweaving: A Motivating Example}
 Adapted from \citet{yu2011center}, suppose:
 \begin{align*}
-y|\theta, \mu & \sim \N(\theta, V) \\
-\theta|\mu & \sim \N(\mu, W) 
+y|\theta, \phi & \sim \N(\theta, V) \\
+\theta|\phi & \sim \N(\phi, W) 
 \end{align*}
-with $V$, $W$ known and $p(\mu)\propto 1$.\\~\\
-Posterior: $\mu|y \sim \N(y, V+W)$\\~\\
-DA algorithm:
+with $V$, $W$ known and $p(\phi)\propto 1$.\\~\\
+
+DA algorithm based on $\theta$:
 \begin{align*}
-\theta|\mu,y &\sim \N\left(\frac{V\mu + Wy}{V+W}, \frac{VW}{V+W}\right)\\
-\mu |\theta, y &\sim \N(\theta, W)
+\theta|\phi,y &\sim \N\left(\frac{V\phi + Wy}{V+W}, \frac{VW}{V+W}\right)\\
+\phi |\theta, y &\sim \N(\theta, W)
 \end{align*}
 \end{frame}
 
 \begin{frame}
 \frametitle{Interweaving: A Motivating Example}
-Let $\gamma = \theta - \mu$. Then:
+Let $\gamma = \theta - \phi$. Then:
 \begin{align*}
-y|\gamma, \mu & \sim \N(\mu + \gamma, V) \\
-\gamma|\mu & \sim \N(0, W) 
+y|\gamma, \phi & \sim \N(\phi + \gamma, V) \\
+\gamma|\phi & \sim \N(0, W) 
 \end{align*}
 DA algorithm based on $\gamma$:
 \begin{align*}
-\gamma|\mu,y &\sim \N\left(\frac{W(\mu - y)}{V+W}, \frac{VW}{V+W}\right)\\
-\mu |\gamma, y &\sim \N(y-\gamma, V)
+\gamma|\phi,y &\sim \N\left(\frac{W(\phi - y)}{V+W}, \frac{VW}{V+W}\right)\\
+\phi |\gamma, y &\sim \N(y-\gamma, V)
 \end{align*}
 \end{frame}
 
@@ -77,24 +77,13 @@ DA algorithm based on $\gamma$:
 \frametitle{Interweaving: A Motivating Example}
 Alternate between two DAs (alternating algorithm):
 \begin{align*}
-{\color{blue}[\theta|\mu,y]} \to {\color{blue}[\mu|\theta,y]} \to [\gamma|\mu,y] \to [\mu|\gamma,y]
+{\color{blue}[\theta|\phi,y]} \to {\color{blue}[\phi|\theta,y]} \to [\gamma|\phi,y] \to [\phi|\gamma,y]
 \end{align*}\\~\\
 Weave two DAs together (interweaving algorithm):
 \begin{align*}
-{\color{blue}[\theta|\mu,y]} \to {\color{blue}[\mu|\theta,y]} \to {\color{red}[\gamma|\mu,\theta,y]} \to [\mu|\gamma,y]
+{\color{blue}[\theta|\phi,y]} \to {\color{blue}[\phi|\theta,y]} \to {\color{red}[\gamma|\phi,\theta,y]} \to [\phi|\gamma,y]
 \end{align*}\\~\\\pause
-The interweaving algorithm obtains {\bf IID} draws from the posterior of $\mu$.
-\end{frame}
-
-\begin{frame}
-  \frametitle{Outline}
-  Goal: apply interweaving to DLMs\\~\\
-  \begin{enumerate}
-    \item Intro to interweaving\\~\\
-    \item The model\\~\\
-    \item DAs for the model, new and old\\~\\
-    \item Simulation results in the local level model
-  \end{enumerate}
+The interweaving algorithm obtains {\bf IID} draws from the posterior of $\phi$.
 \end{frame}
 
 \begin{frame}
@@ -125,32 +114,6 @@ Componentwise Interweaving Strategy (CIS):\\~\\
 \item Motivation: Finding an SA--AA pair is often difficult for $\phi=(\phi_1,\phi_2)$, but not for $\phi_1$ and $\phi_2$ separately.\\~\\
 \item Basic idea: GIS (or ASIS) for sub-blocks of $\phi$.\\~\\
 \item Can use the same DA in multiple sub-blocks of $\phi$.
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Why interweaving?}
-From \citet{yu2011center}:\\~\\
-\begin{itemize}
-  \item  GIS has a geometric rate of convergence no worse than the worst of the two underlying DA algorithms, and the bound gets better the less $\theta$ and $\gamma$ are correlated in the posterior.\\~\\
-  \item If the two DAs are independent in the posterior, then GIS results in {\color{blue}\textit{\textbf{IID}}} draws from the posterior. \\~\\
-  \item Often GIS has better convergence than the associated alternating algorithm.\\~\\
-  \item Under some conditions the ASIS algorithm is the same as the optimal PX-DA algorithm of \citet{liu1999parameter}.
-  \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Interweaving in Time Series Models}
-\begin{itemize}
-\item \citet{yu2011center} use a time series of Poisson counts to illustrate CIS.\\~
-\item \citet{kastner2013ancillarity} use ASIS to improve estimation of the stochastic volatility model. \verb0R0 package: \verb0stochvol0.\\~
-\item Lots of relevant work on reparameterization: \\~
-\begin{itemize}
-\item AR(1) plus noise: \citet{pitt1999analytic}\\~
-\item Stochastic volatility models: \citet{shephard1996statistical,fruhwirth2003bayesian,roberts2004bayesian,bos2006inference,strickland2008parameterisation,fruhwirth2008heston}\\~
-\item Poisson counts: \citet{fruhwirth2006auxiliary}\\~
-\item Dynamic regression: \citet{fruhwirth2004efficient}
-\end{itemize}
 \end{itemize}
 \end{frame}
 
@@ -206,40 +169,18 @@ For convenience define $y\equiv(y_1',\cdots,y_T')'$ and $\theta\equiv(\theta_0',
 
 \begin{frame}
   \frametitle{The Dynamic Linear Model} 
-Let $\phi$ denote the unknown parameter. Potentially $F_t(\phi)$ and $G_t(\phi)$, but for simplicity assume they are constant and $\phi=(V,W)$.\\~\\
+Let $\phi$ denote the unknown parameter. Potentially $F_t(\phi)$ and $G_t(\phi)$ but assume they are constant and $\phi=(V,W)$\\~\\
 
-Priors: independently assume \\~\\
+Priors: independently \\~\\
 \begin{itemize}
 \item[]$\theta_0\sim \N_p(m_0,C_0)$, $V\sim IW(\Lambda_V,\lambda_V)$, and $W\sim IW(\Lambda_W,\lambda_W)$\\~\\
 \end{itemize}
 
+Want to apply GIS and ASIS in particular, but suppose $\eta$ is a SA and $p(y,\eta|\phi)$ is Gaussian.\\~
+\begin{itemize}
+\item[] Then under weak condtions, $p(\phi|\eta,y)$ and $p(\phi|y)$ have a similar form.
+\end{itemize}
 
-Marginal model for $y$: 
-\begin{align*}
-  y|V,W \stackrel{ind}{\sim} N_{Tk}(D\tilde{m}, \tilde{V} + \tilde{W} + \tilde{C})
-\end{align*}
-where $\tilde{m}=\tilde{m}_{Tp\times 1} = (m_0', m_0', \cdots m_0')'$, $\tilde{V}=I_T\otimes V$, $\tilde{W}$ depends on $W$ and $\tilde{C}$ depends on $C_0$ and where $D$, $\tilde{W}$, and $\tilde{C}$ also depend on the $F_t$'s and $G_t$'s.
-
-\end{frame}
-
-\begin{frame}
-\frametitle{The Elusive Search for a Sufficient Augmentation}
-Suppose $\eta$ is an SA for the DLM such that:\\
-\begin{align*}
- \left. \begin{bmatrix}\eta \\ y \end{bmatrix}\right|\phi \sim N\left(\begin{bmatrix} \alpha_\eta \\ D\tilde{m} \end{bmatrix}, \begin{bmatrix}
-   \Omega_\eta & \Omega_{y,\eta}' \\
-   \Omega_{y,\eta} & \tilde{V} + \tilde{W} + \tilde{C} \end{bmatrix}\right).
-\end{align*}\\~\\
-Let $A=\Omega_{y,\eta}'\Omega_{\eta}^{-1}$ and $\Sigma = \tilde{V} + \tilde{W} + \tilde{C} - A\Omega_{\eta}A'$. Then $A$, $\Sigma$, and $\alpha_{\eta}$ are constants with respect to $\phi$ and if $A'A$ is invertible, then\\
-\begin{align*}
-&p(\phi|\eta,y) \propto p(\phi)|(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}|^{-1/2}\\
-&\times \exp\left[-\frac{1}{2}(\eta - \alpha_{\eta})'[(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}]^{-1}(\eta - \alpha_{\eta})\right]
-\end{align*}\\~\\
-But the target posterior is
-\begin{align*}
-p(\phi|y)&\propto(\phi)|\tilde{V} + \tilde{W} + \tilde{C}|^{-1/2}\\
-&\times\exp\left[-\frac{1}{2}\left(y-D\tilde{m}\right)'(\tilde{V} + \tilde{W} + \tilde{C})^{-1}\left(y-D\tilde{m}\right)\right]
-\end{align*}
 \end{frame}
 
 \begin{frame}
@@ -255,7 +196,7 @@ Scaled disturbances $\gamma\equiv(\gamma_0',\cdots,\gamma_T)'$ \citep{fruhwirth2
 \begin{itemize}
 \item[]$\gamma_0=\theta_0$ and $\gamma_t=L_W^{-1}(\theta_t - G_t\theta_{t-1})=L_W^{-1}w_t$ where $L_W$ is the Cholesky decomposition of $W$.
 \end{itemize}
-Let $\theta_0(\gamma,W)=\gamma_0$ and $\theta_t(\gamma,W)=L_W\gamma_t + G_t\theta_{t-1}(\gamma,W)$. Then:
+Then:
 \begin{align*}
 y_t|\gamma,V,W \stackrel{ind}{\sim} & \N_k(F_t\theta_t(\gamma,W),V) \\
 \gamma_t|V,W \stackrel{iid}{\sim} & \N_p(0,I_p)
@@ -271,10 +212,8 @@ Scaled errors $\psi\equiv(\psi_0',\cdots,\psi_T')'$:
 \begin{itemize}
 \item[]$\psi_0=\theta_0$ and $\psi_t=L_V^{-1}(y_t - F_t\theta_t)=L_V^{-1}v_t$ where $L_V$ is the Cholesky decomposition of $V$.
 \end{itemize}
-For convenience, assume $F_t$ is square and invertible for all $t$.
+For convenience, assume $F_t$ is square and invertible for all $t$.\\~
  
-\ \ (So $dim(y_t)=dim(\theta_t)$.)\\~
-
 In terms of $\psi$ the model is:
 \begin{align*}
 y_t|\psi,V,W \stackrel{ind}{\sim} &\N_p(\mu_t(\psi,V),F_tWF_t')\\
@@ -287,25 +226,15 @@ where $\mu_t(\psi,V)$ is complicated.\\~\\
 
 \begin{frame}
 \frametitle{New Data Augmentations for the DLM}
-Wrongly-scaled disturbances $\tilde{\gamma}\equiv(\tilde{\gamma}_0',\cdots,\tilde{\gamma}_T')'$:
+Wrongly-scaled disturbances $\tilde{\gamma}\equiv(\tilde{\gamma}_0',\cdots,\tilde{\gamma}_T')'$:\\~\\
 \begin{itemize}
-\item[]$\tilde{\gamma}_0=\theta_0$ and $\tilde{\gamma}_t=L_V^{-1}(\theta_t - G_t\theta_{t-1})=L_V^{-1}w_t$
+\item[]$\tilde{\gamma}_0=\theta_0$ and $\tilde{\gamma}_t=L_V^{-1}(\theta_t - G_t\theta_{t-1})=L_V^{-1}w_t$\\~\\
 \end{itemize}
-\begin{align*}
-  y_t|\tilde{\gamma},V,W \stackrel{ind}{\sim} \N_p\left(F_t\theta_t(\tilde{\gamma},V), V\right), \qquad 
-  \tilde{\gamma}_t \stackrel{ind}{\sim} \N_p(0,L_V^{-1}W(L_V^{-1})')
-\end{align*}
-where $\theta_0(\tilde{\gamma},V)=\tilde{\gamma}_0$ and $\theta_t(\tilde{\gamma},V) = L_V\tilde{\gamma}_t + G_t\theta_{t-1}(\tilde{\gamma},V)$.\\~\\
 
-Wrongly-scaled errors $\tilde{\psi}\equiv(\tilde{\psi}_0',\cdots,\tilde{\psi}_T')'$:
+Wrongly-scaled errors $\tilde{\psi}\equiv(\tilde{\psi}_0',\cdots,\tilde{\psi}_T')'$:\\~\\
 \begin{itemize}
-\item[]$\tilde{\psi}_0=\theta_0$ and $\tilde{\psi}_t=L_W^{-1}(y_t - F_t\theta_{t})=L_W^{-1}v_t$
+\item[]$\tilde{\psi}_0=\theta_0$ and $\tilde{\psi}_t=L_W^{-1}(y_t - F_t\theta_{t})=L_W^{-1}v_t$\\~\\
 \end{itemize}
-\begin{align*}
-  y_t|V,W,\tilde{\psi},y_{1:t-1} \sim \N_p(\tilde{\mu}_t(\tilde{\gamma},W), F_tWF_t'), \qquad
-  \tilde{\psi}_t  \stackrel{iid}{\sim} \N_p(0,L_W^{-1}V(L_W^{-1})')
-\end{align*}
-where $\tilde{\mu}_t(\tilde{\gamma},W)$ is complicated.\\~\\
 
 {\color{blue} $\tilde{\gamma}$ is an SA for $W|V$ and $\tilde{\psi}$ is an SA for $V|W$.}
 \end{frame}
@@ -350,31 +279,23 @@ Simulation Setup:
 \includegraphics[width=0.45\textwidth]{altintESplotW1000}
 \end{frame}
 
-\begin{frame}
-\frametitle{LLM Results --- ESP summarized}
-Rule of thumb for when each base algorithm has a high ESP for each variable as a function of the true signal-to-noise ratio, $R^*=W^*/V^*$. \\~\\~\\
- \begin{center}
-  \begin{tabular}{lccccc}\hline
-    Parameter & State & SD & SE & WSD & WSE \\\hline
-    V & $R^* < 1$ & $R^* < 1$ & $R^* > 1$ & $R^* < 1$ & $R^* < 1$\\
-    W & $R^* > 1$ & $R^* < 1$ & $R^* > 1$ & $R^* > 1$ & $R^* > 1$ \\
-      &           &          &           &           &           \\\hline
-    Parameter & State-SD        & State-SE       & SD-SE        & Triple            & CIS \\\hline
-    V         & $R^* < 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ \\
-    W         & $R^* \not\approx 1$ & $R^* > 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$\\\hline
-  \end{tabular}\\~\\~\\
-\end{center}
-
-Note that as the length of the time series increases, the farther away from one $R^*$ has to be for the sampler to have a high ESP.
-\end{frame}
-
-\begin{frame}
-\frametitle{LLM Results - log time (minutes) per 1000 effective draws}
-\centering
-\includegraphics[width=0.59\textwidth]{basecistimeplot100}\\
-\includegraphics[width=0.53\textwidth]{altgisVtimeplot100}
-\includegraphics[width=0.45\textwidth]{altgisWtimeplot100}
-\end{frame}
+%\begin{frame}
+%\frametitle{LLM Results --- ESP summarized}
+%Rule of thumb for when each base algorithm has a high ESP for each variable as a function of the true signal-to-noise ratio, $R^*=W^*/V^*$. \\~\\~\\
+% \begin{center}
+%  \begin{tabular}{lccccc}\hline
+%    Parameter & State & SD & SE & WSD & WSE \\\hline
+%    V & $R^* < 1$ & $R^* < 1$ & $R^* > 1$ & $R^* < 1$ & $R^* < 1$\\
+%    W & $R^* > 1$ & $R^* < 1$ & $R^* > 1$ & $R^* > 1$ & $R^* > 1$ \\
+%      &           &          &           &           &           \\\hline
+%    Parameter & State-SD        & State-SE       & SD-SE        & Triple            & CIS \\\hline
+%    V         & $R^* < 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ \\
+%    W         & $R^* \not\approx 1$ & $R^* > 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$\\\hline
+%  \end{tabular}\\~\\~\\
+%\end{center}
+%
+%Note that as the length of the time series increases, the farther away from one $R^*$ has to be for the sampler to have a high ESP.
+%\end{frame}
 
 \begin{frame}
 \frametitle{Moving Forward: Computational Issues}
@@ -417,35 +338,3 @@ But is this the best way? Or even a good way?
 \end{frame} 
 
 \end{document}
-
-\end{document}
-
-
-
-
-
-  \frametitle{Takeaways from Base Algorithm Simulations}
-  When the signal-to-noise ratio ($W/V$) is low ($<1$), the scaled disturbance sampler has high $ESP$ for both $V$ and $W$; when it's high ($>1$), the scaled disturbance sampler has low $ESP$ for both $V$ and $W$.\\~\\
-  
-  When the signal-to-noise ratio ($W/V$) is low ($<1$), the scaled error sampler has high $ESP$ for both $V$ and $W$; when it's high ($>1$), the scaled error sampler has low $ESP$ for both $V$ and $W$.\\~\\
-  
-  The state sampler agrees with the scaled disturbance sampler about $V$ and with the scaled error sampler about $W$. It's at it's best for $(V,W)$ when the signal-to-noise ratio is near $1$.\\~\\
-  
-  Despite not being an SA-AA pair, $\gamma_{0:T}$ and $\psi_{0:T}$ make a nice beauty and the beast pair.
-  
-
-
-  The ``beauty and the beast'' intuition works for any given parameter, i.e. for $W$, the Dist-Error and State-Dist algorithms have the best ESP, but the State-Error algorithms has worse ESP in some regions of the parameter space.\\~\\
-  
-\begin{frame}
-\frametitle{Recommendations in the Local Level Model}
-If $T$ is small ($<100$), use the state sampler.\\~\\
-
-If $T$ is large, use the Dist-Error GIS sampler, but spend some time obtaining efficient draws from the complex densities --- $p(W|\gamma_{0:T},V,y_{1:T}$ and $p(V|\psi_{0:T},W,y_{1:T})$.\\~\\
-\pause
-
-Possibly use metropolis steps for $(V,W)$ jointly in the Dist-Error GIS sampler --- untested, but likely has decent mixing properties and avoids the expensive sampling steps.
-\end{frame}
-
-
-
