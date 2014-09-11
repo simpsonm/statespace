@@ -278,7 +278,7 @@ where $a_{\tilde{\psi}} = \frac{1}{2V}\sum_{t=1}^T\tilde{\psi}_t^2$,  $b_{\tilde
 
 \section{Mixed Cholesky Factorization Algorithm (MCFA) for Simulation Smoothing}\label{sec:MCFA}
 
-Traditionally in DLMs, the Kalman filter is used in order to draw from the latent states $\theta_{0:T}$ through forward filtering, backward sampling (FFBS). This requires running the Kalman filter in order to determine the marginal distribution of $\theta_T$, then drawing $\theta_t|\theta_{t+1:T}$ for $t=T-1,T-2,\cdots,1$ \cite{carter1994gibbs,fruhwirth1994data}. The mixed Cholesky factorization algorithm (MCFA) determines the joint distribution of $\theta_{0:T}$ and draws from it using the backward sampling step as in FFBS. The idea comes from \citeasnoun{rue2001fast}, which introduces a Cholesky factorization algorithm (CFA) for drawing from a Gaussian Markov random field and notes that the conditional distribution of $\theta_{0:T}$ given $y_{1:T}$ in a Gaussian linear statespace model is a special case. The algorithm exploits the fact that the full conditional distribution of $\theta_{0:T}$ is Gaussian with a block tridiagonal precision matrix in order to quickly compute its Cholesky decomposition. \citeasnoun{mccausland2011simulation} improves the idea by implicitly computing this Cholesky decomposition through a backward sampling strategy, starting with sampling from the marginal distribution of $\theta_T$. 
+Traditionally in DLMs, the Kalman filter is used in order to draw from the latent states $\theta_{0:T}$ through forward filtering, backward sampling (FFBS). This requires running the Kalman filter in order to determine the marginal distribution of $\theta_T$, then drawing $\theta_t|\theta_{t+1:T}$ for $t=T-1,T-2,\cdots,1$ \cite{carter1994gibbs,fruhwirth1994data}. The mixed Cholesky factorization algorithm (MCFA) determines the joint distribution of $\theta_{0:T}$ and draws from it using a backward sampling step as in FFBS. The idea comes from \citeasnoun{rue2001fast}, which introduces a Cholesky factorization algorithm (CFA) for drawing from a Gaussian Markov random field and notes that the conditional distribution of $\theta_{0:T}$ given $y_{1:T}$ in a Gaussian linear statespace model is a special case. The algorithm exploits the fact that the full conditional distribution of $\theta_{0:T}$ is Gaussian with a block tridiagonal precision matrix in order to quickly compute its Cholesky decomposition. \citeasnoun{mccausland2011simulation} improves the idea by implicitly computing this Cholesky decomposition through a backward sampling strategy, starting with sampling from the marginal distribution of $\theta_T$. 
 
 Suppose our model is as follows:
 \begin{align*}
@@ -300,8 +300,8 @@ However, we also have
 This means that
 \begin{align*}
   g(\theta_{0:T}&,y_{1:T}) = (\theta_0 - m_0)C_0^{-1}(\theta_0 - m_0) + K'\\
-  & \sum_{t=1}^T(y_t - F_t\theta_t)'V_t^{-1}(y_t - F_t\theta_t) + \\
-  & \sum_{t=1}^T(\theta_t - G_t\theta_{t-1})'W_t^{-1}(\theta_t - G_t\theta_{t-1}).
+  & + \sum_{t=1}^T(y_t - F_t\theta_t)'V_t^{-1}(y_t - F_t\theta_t) \\
+  & + \sum_{t=1}^T(\theta_t - G_t\theta_{t-1})'W_t^{-1}(\theta_t - G_t\theta_{t-1}).
 \end{align*}
 where $K'$ is another constant that doesn't depend on $\theta_{0:T}$.
 
