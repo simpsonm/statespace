@@ -2,6 +2,8 @@
 \usepackage{JASA_manu} %formats document like ASA wants
 \usepackage{natbib} %formats citations like ASA wants
 \usepackage{amssymb, amsmath, amsthm, graphics, graphicx, color, fullpage}
+\usepackage{psfrag,epsf}
+\usepackage{enumerate}
 \usepackage{thmtools} %to format the Algorithm environment correctly
 %\usepackage{hyperref}
 %\hypersetup{
@@ -11,6 +13,9 @@
 %  citecolor    = red      % Colour of citations
 %}
 \usepackage{nameref, cleveref} %for named references
+\usepackage[page,header]{appendix}
+\usepackage{titletoc}
+
 
 % define algorithm environment
 \declaretheoremstyle[
@@ -31,54 +36,61 @@ numbered=no]{alg*}
 \DeclareMathOperator{\vect}{vec}
 
 \graphicspath{{plots/}}
-\newcommand{\matt}[1]{{\color{red} Matt: #1}}
-\newcommand{\jarad}[1]{{\color{red} Jarad: #1}}
 
-\usepackage[page,header]{appendix}
-\usepackage{titletoc}
+\newcommand{\blind}{0} %%change the 0 to a 1 to compile blinded version
+%% Note: this affects some article text in the Discussion section.
+
+%% From jcgs template
+\addtolength{\oddsidemargin}{-.75in}%
+\addtolength{\evensidemargin}{-.75in}%
+\addtolength{\textwidth}{1.5in}%
+\addtolength{\textheight}{1.3in}%
+\addtolength{\topmargin}{-.8in}%
 
 
 \begin{document}
 
-\title{Interweaving Markov Chain Monte Carlo Strategies for Efficient
-Estimation of Dynamic Linear Models}
-%short title: Interweaving MCMC Strategies for DLMs
-\author{Matthew Simpson\textsuperscript{1}, Jarad Niemi\textsuperscript{2}, Vivekananda Roy\textsuperscript{2}}
-\date{\today}
-\maketitle
+\def\spacingset#1{\renewcommand{\baselinestretch}%
+{#1}\small\normalsize} \spacingset{1}
 
-\begin{center}
- \vspace{-.5em}
- {\small \textsuperscript{1} Iowa State University, Departments of Statistics and Economics, Ames, IA 50011-1210\\[-.3em]
- {\tt simpsonm@iastate.edu}}
- 
- \vspace{.5em}
+\if0\blind
+{
+  \title{\bf Interweaving Markov Chain Monte Carlo Strategies for Efficient
+    Estimation of Dynamic Linear Models}
+  \author{Matthew Simpson\thanks{
+    The authors thank the participants of the Economics, Finance, and Business workshop at the Bayes 250 conference for helpful comments, though all errors are our own.}\hspace{.2cm}\\
+    Departments of Statistics and Economics, Iowa State University\\~\\
+    Jarad Niemi \\
+    Department of Statistics, Iowa State University\\~\\
+    Vivekananda Roy\\
+    Department of Statistics, Iowa State University}
+  \maketitle
+} \fi
 
-{\small \textsuperscript{2} Iowa State University, Department of Statistics, Ames, IA 50011-1210\\[-.3em]
-{\tt <niemi,vroy>@iastate.edu}}
-
+\if1\blind
+{
+  \bigskip
+  \bigskip
+  \bigskip
+  \begin{center}
+    {\LARGE\bf Interweaving Markov Chain Monte Carlo Strategies for Efficient
+    Estimation of Dynamic Linear Models}
 \end{center}
+  \medskip
+} \fi
+
+\bigskip
 
 
-\newpage
-
-\mbox{}
-\vspace*{2in}
-\begin{center}
-\textbf{Author's Footnote:}
-\end{center}
-Matthew Simpson is Doctoral Candidate, Departments of Economics and Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: simpsonm@iastate.edu); Jarad Niemi is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: niemi@iastate.edu); and Vivekananda Roy is Assistant Professor, Department of Statistics, Iowa State University, Ames, IA 50011-1210 (E-mail: vroy@iastate.edu). The authors thank participants of the Economics, Finance, and Business workshop at the Bayes 250 conference for helpful comments. %The authors thank Sylvia Fr{\"u}hwirth-Schnatter for helpful comments. 
-
-\newpage
 \begin{abstract}
 In dynamic linear models (DLMs) with unknown fixed parameters, a standard Markov chain Monte Carlo (MCMC) sampling strategy is to alternate sampling of latent states conditional on fixed parameters and sampling of fixed parameters conditional on latent states. In some regions of the parameter space, this standard data augmentation (DA) algorithm can be inefficient. To improve efficiency, we seek to employ the interweaving strategies of \citet{yu2011center} that combine separate DAs by weaving them together. For this, we introduce a number of novel alternative DAs for a general class of DLMs: the scaled errors, wrongly-scaled errors, and wrongly-scaled disturbances. With the latent states and the less commonly used scaled disturbances, this yields five unique DAs to employ in MCMC algorithms. Each DA implies a unique MCMC sampling strategy and they can be combined into interweaving or alternating strategies that improve MCMC efficiency. We assess the strategies using the local level DLM and demonstrate that several strategies improve efficiency relative to the standard approach, the most efficient being either interweaving or alternating the scaled errors and scaled disturbances. Supplementary materials are available for this article online.
-
-\smallskip
-\noindent \textbf{Key Words:} Ancillary augmentation; Centered parameterization; Data augmentation; Non-centered parameterization; Reparameterization; Sufficient augmentation; Time series; State-space model
 \end{abstract}
 
 
-\newpage
+\noindent%
+{\bf Key Words:} Ancillary augmentation; Centered parameterization; Data augmentation; Non-centered parameterization; Reparameterization; Sufficient augmentation; Time series; State-space model
+
+\spacingset{2}
 
 \section{Introduction}
 
@@ -486,9 +498,8 @@ while the densities $p(W|V,\tilde{\psi},y)$ and $p(V|W,\tilde{\gamma},y)$ have t
 \[
 p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b/\sqrt{x} -c/x\right]
 \]
-where $\alpha,a,c>0$ and $b\in\Re$. When $b=0$ we have a special case of the generalized inverse Gaussian (GIG) distribution, so perhaps the methods used to speed up draws from the GIG can be used here \citep{jorgensen1982statistical,dagpunar1989easily,devroye2012random}. On the other hand, it might be worth putting effort into drawing $V$ and $W$ jointly conditional the DA. Using the scaled disturbances, the conditional distribution of $V$ given $W$ is inverse gamma in the LLM and inverse Wishart in the general DLM, so it is easy to derive the marginal density $p(W|\gamma,y)$ up to a proportionality constant. In our LLM example, this density turns out to be very difficult to sample from and in particular, it is not easy to come up with a generally good approximation for rejection sampling or for a Metropolis step. This is because the augmented data likelihood and the prior for the variance we used to scale the states combine to create a complicated full conditional for that variance. We chose inverse Wishart priors for $V$ and $W$ partially because they are standard and partially because their conditional conjugacy with the states is computationally convenient, but outside of the state sampler there may be a more convenient prior. In addition, there are well known inferential problems with the inverse Wishart prior in the hierarchical model literature, e.g. \citet{gelman2006prior} and \citet{alvarez2014cov}, though it is unclear whether this transfers over to DLMs or more generally any time series model. An alternative is to use the conditionally conjugate prior conditional on the scaled disturbances, or whichever DA we prefer. In the LLM, the conditionally conjugate prior for $\sqrt{W}$ using the scaled disturbances as the DA is a Gaussian distribution --- strictly speaking this prior is on $\pm \sqrt{W}$. If we use this prior for $\pm\sqrt{V}$ as well, the $V$ step in the scaled disturbance sampler becomes a draw from the generalized inverse Gaussian distribution. This prior has been used by \citet{fruhwirth2011bayesian} and \citet{fruhwirth2008bayesian} to speed up computation while using the scaled disturbances in hierarchical models and by \citet{fruhwirth2010stochastic} for time series models with a DA similar to the scaled disturbances. We omit the results here, but using this prior on both variances does not alter our mixing results for any of the MCMC samplers. There is a trade-off in computation time to consider --- for example when using the scaled disturbances, the draw of $W|V,\gamma,y$ is sped up by using the Gaussian prior on $\pm\sqrt{W}$ since it becomes a Gaussian draw while the $V|W,\gamma,y$ is slower since it becomes a generalized inverse Gaussian draw instead of an inverse gamma. The gains outweigh the costs, at least in the local level model. In the general DLM, however, it is unclear whether this will hold because of the additional complications stemming from $V$ and $W$ being matrices. 
+where $\alpha,a,c>0$ and $b\in\Re$. When $b=0$ we have a special case of the generalized inverse Gaussian (GIG) distribution, so perhaps the methods used to speed up draws from the GIG can be used here \citep{jorgensen1982statistical,dagpunar1989easily,devroye2012random}. On the other hand, it might be worth putting effort into drawing $V$ and $W$ jointly conditional the DA. Using the scaled disturbances, the conditional distribution of $V$ given $W$ is inverse gamma in the LLM and inverse Wishart in the general DLM, so it is easy to derive the marginal density $p(W|\gamma,y)$ up to a proportionality constant. In our LLM example, this density turns out to be very difficult to sample from and in particular, it is not easy to come up with a generally good approximation for rejection sampling or for a Metropolis step. This is because the augmented data likelihood and the prior for the variance we used to scale the states combine to create a complicated full conditional for that variance. We chose inverse Wishart priors for $V$ and $W$ partially because they are standard and partially because their conditional conjugacy with the states is computationally convenient, but outside of the state sampler there may be a more convenient prior. In addition, there are well known inferential problems with the inverse Wishart prior in the hierarchical model literature, e.g. \citet{gelman2006prior}\if0\blind and \citet{alvarez2014cov}\fi, though it is unclear whether this transfers over to DLMs or more generally any time series model. An alternative is to use the conditionally conjugate prior conditional on the scaled disturbances, or whichever DA we prefer. In the LLM, the conditionally conjugate prior for $\sqrt{W}$ using the scaled disturbances as the DA is a Gaussian distribution --- strictly speaking this prior is on $\pm \sqrt{W}$. If we use this prior for $\pm\sqrt{V}$ as well, the $V$ step in the scaled disturbance sampler becomes a draw from the generalized inverse Gaussian distribution. This prior has been used by \citet{fruhwirth2011bayesian} and \citet{fruhwirth2008bayesian} to speed up computation while using the scaled disturbances in hierarchical models and by \citet{fruhwirth2010stochastic} for time series models with a DA similar to the scaled disturbances. We omit the results here, but using this prior on both variances does not alter our mixing results for any of the MCMC samplers. There is a trade-off in computation time to consider --- for example when using the scaled disturbances, the draw of $W|V,\gamma,y$ is sped up by using the Gaussian prior on $\pm\sqrt{W}$ since it becomes a Gaussian draw while the $V|W,\gamma,y$ is slower since it becomes a generalized inverse Gaussian draw instead of an inverse gamma. The gains outweigh the costs, at least in the local level model. In the general DLM, however, it is unclear whether this will hold because of the additional complications stemming from $V$ and $W$ being matrices. 
 
-\newpage
 \section{Supplementary Materials}\label{sec:Supp}
 All supplementary materials are available in a single \verb0.zip0 file.
 \begin{description}
