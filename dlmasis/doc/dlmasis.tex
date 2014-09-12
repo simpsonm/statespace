@@ -437,7 +437,7 @@ For each dataset and each sampler we obtained $n=3000$ draws and threw away the 
 
 \subsection{Simulation results}
 
-Figure \ref{fig:ESPa} contains plots of ESP for $V$ and $W$ in each chain of each base samplers for $T=100$ --- we omit the $T=10$ and $T=1000$ plots for brevity, but they can be found in the supplementary materials (Appendix H). Table \ref{tab:stnmix} summarizes the results for the base samplers in left side. Let $R^*=V^*/W^*$ denote the true signal to noise ratio. The State sampler tends to have a low ESP for $V$ and high ESP for $W$ when $R^*>1$ with the behavior switched when $R^*<1$. The WSD and WSE samplers are similar to the state sampler except WSD has lower ESP for $V$ and WSE has lower ESP for $W$. The SD sampler has low ESP for both $V$ and $W$ when $R^*>1$ while the SE sampler has low ESP for both when $R^*<1$ and in particular for $V$. We omit the results here, but as $T$ increases, in all samplers the region of the parameter space with high ESP shrinks and in the low ESP regions, ESP drops closer to zero. In Appendix G of the supplementary materials, we discuss how the pattern of correlations between various quantities in the posterior distribution roughly determines the pattern of ESPs we see in Figure \ref{ESplot}. 
+Figure \ref{fig:ESPa} contains plots of ESP for $V$ and $W$ in each chain of each base samplers for $T=100$ --- we omit the $T=10$ and $T=1000$ plots for brevity, but they can be found in the supplementary materials (Appendix H). Table \ref{tab:stnmix} summarizes the results for the base samplers on the top. Let $R^*=V^*/W^*$ denote the true signal to noise ratio. The State sampler tends to have a low ESP for $V$ and high ESP for $W$ when $R^*>1$ with the behavior switched when $R^*<1$. The WSD and WSE samplers are similar to the state sampler except WSD has lower ESP for $V$ and WSE has lower ESP for $W$. The SD sampler has low ESP for both $V$ and $W$ when $R^*>1$ while the SE sampler has low ESP for both when $R^*<1$ and in particular for $V$. We omit the results here, but as $T$ increases, in all samplers the region of the parameter space with high ESP shrinks and in the low ESP regions, ESP drops closer to zero. In Appendix G of the supplementary materials, we discuss how the pattern of correlations between various quantities in the posterior distribution roughly determines the pattern of ESPs we see in Figure \ref{ESplot}. 
 
 
 \begin{figure}[!h]
@@ -463,16 +463,19 @@ Figure \ref{fig:ESPa} contains plots of ESP for $V$ and $W$ in each chain of eac
 
 \begin{table}
   \centering
-  \begin{tabular}{lcccccccccc}\hline
-     & State & SD & SE & WSD & WSE & State-SD        & State-SE       & SD-SE        & Triple            & CIS \\\hline
-   V & $R^* < 1$ & $R^* < 1$ & $R^* > 1$ & $R^* < 1$ & $R^* < 1$ & $R^* < 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ \\
-   W & $R^* > 1$ & $R^* < 1$ & $R^* > 1$ & $R^* > 1$ & $R^* > 1$ & $R^* \not\approx 1$ & $R^* > 1$        & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$\\\hline
+  \begin{tabular}{lccccc}\hline
+     & State           & SD                 & SE                  & WSD                 & WSE \\\hline
+   V & $R^* < 1$       & $R^* < 1$           & $R^* > 1$           & $R^* < 1$           & $R^* < 1$ \\ 
+   W & $R^* > 1$       & $R^* < 1$           & $R^* > 1$           & $R^* > 1$           & $R^* > 1$ \\ \hline
+     & State-SD        & State-SE            & SD-SE              & Triple              & CIS \\\hline
+   V & $R^* < 1$       & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ \\
+  W  &$R^* \not\approx 1$& $R^* > 1$          & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$\\\hline
   \end{tabular}
   \caption{Rule of thumb for when each sampler has a high ESP for each variable as a function of the true signal-to-noise ratio, $R^*=W^*/V^*$. Note that as the length of the time series increases, the farther away from one $R^*$ has to be for the sampler to have a high ESP.}
   \label{tab:stnmix}
 \end{table}
 
-We fit the LLM to the simulated datasets using several GIS samplers and a CIS sampler as well. Since the wrongly-scaled samplers behaved similarly to the state sampler and neither of the underlying DAs were a SA for $V$ and $W$ jointly, we ignored them in the construction of the GIS samplers. Instead, we constructed the State-SD, State-SE, SD-SE, and Triple (State-SD-SE) GIS samplers, as well as the CIS sampler. Figure \ref{fig:ESPb} has plots of ESP for each of the GIS and CIS algorithms while Figure \ref{fig:ESPc} has plots of ESP for each of the Alt algorithms. Table \ref{tab:stnmix} summarizes the results on the right.
+We fit the LLM to the simulated datasets using several GIS samplers and a CIS sampler as well. Since the wrongly-scaled samplers behaved similarly to the state sampler and neither of the underlying DAs were a SA for $V$ and $W$ jointly, we ignored them in the construction of the GIS samplers. Instead, we constructed the State-SD, State-SE, SD-SE, and Triple (State-SD-SE) GIS samplers, as well as the CIS sampler. Figure \ref{fig:ESPb} has plots of ESP for each of the GIS and CIS algorithms while Figure \ref{fig:ESPc} has plots of ESP for each of the Alt algorithms. Table \ref{tab:stnmix} summarizes the results on the bottom.
 
 Essentially, each GIS and Alt algorithm has high ESP when at least one of the base algorithms has high ESP. For example, the State-SD GIS and Alt algorithms have high ESP for $W$ except for a narrow band where $R^*$ is near one while ESP is high for $W$ in the state sampler when $R^*>1$ and in the SD sampler when $R^*<1$. Similarly in the State-SD GIS and Alt algorithms, mixing for $V$ is identical to the State and SD samplers since neither sampler improves on the other in any region of the parameter space. Both the State-SD GIS and Alt algorithms take advantage of the fact that the state and SD DA algorithms make up a ``beauty and the beast'' pair for $W$ and thus improves mixing in the marginal chain for $W$. However, GIS does not appear to improve on Alt --- unlike in ASIS, the posterior dependence between the two DAs must be too large.
 
