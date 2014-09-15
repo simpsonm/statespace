@@ -8,10 +8,10 @@ epsfig, multicol, amsthm}
 \usepackage[authoryear]{natbib}
 %\newcommand{\newblock}{}  %needed to make beamer and natbib play nice
 \usepackage{tikz}
-\usetikzlibrary{fit}					% fitting shapes to coordinates
+\usetikzlibrary{fit}  % fitting shapes to coordinates
 \usetheme{Boadilla}
 \usecolortheme[named=Red]{structure}
-\setbeamercovered{transparent}
+\setbeamercovered{transparent=0}
 \beamertemplatenavigationsymbolsempty
 \newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
 \def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
@@ -62,7 +62,7 @@ with Jarad Niemi and Vivekananda Roy\\~\\
 \frametitle{Interweaving: A Motivating Example}
 Adapted from \citet{yu2011center}, suppose:\\
 \begin{align*}
-y|\theta_1, \phi & \sim \N(\theta_1, 1) \\
+y|\theta_1, \mu & \sim \N(\theta_1, 1) \\
 \theta_1|\mu & \sim \N(\mu, \sigma^2) 
 \end{align*}\\~\\
 with $\sigma^2$ known and $p(\mu)\propto 1$.\\~\\~\\
