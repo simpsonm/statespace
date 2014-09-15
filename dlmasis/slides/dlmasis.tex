@@ -15,14 +15,16 @@ epsfig, multicol, amsthm}
 \beamertemplatenavigationsymbolsempty
 \newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
 \def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
-\newcommand\N{\mathcal{N}}
+\newcommand\N{\mathrm{N}}
 \graphicspath{{../doc/plots/}}
+
+
 \title[Interweaving MCMC Strats for DLMs]{Interweaving Markov Chain Monte Carlo Strategies for Efficient
 Estimation of Dynamic Linear Models}
 %\subtitle{}
-\author[M. Simpson]{Matthew Simpson}
-\date{}
-\institute[Deps of Stat \& Econ, ISU]{Departments of Statistics and Economics, Iowa State University}
+\author[Matt Simpson]{Matthew Simpson}
+\date{September 16, 2014}
+\institute[]{Departments of Statistics and Economics, Iowa State University}
 
 
 %\title[short title]{long title}
@@ -35,6 +37,7 @@ Estimation of Dynamic Linear Models}
 
 \begin{document}
 
+
 \begin{frame}
 \titlepage
 \begin{center}
@@ -44,77 +47,107 @@ with Jarad Niemi and Vivekananda Roy\\~\\
 \end{frame}
 
 \begin{frame}
-\frametitle{Interweaving: A Motivating Example}
-Adapted from \citet{yu2011center}, suppose:
-\begin{align*}
-y|\theta, \phi & \sim \N(\theta, V) \\
-\theta|\phi & \sim \N(\phi, W) 
-\end{align*}
-with $V$, $W$ known and $p(\phi)\propto 1$.\\~\\
+\frametitle{Outline}
+\begin{enumerate}
+\item Interweaving example\\~\\
+\item Interweaving generally (GIS, ASIS, CIS)\\~\\
+\item Dynamic linear models\\~\\
+\item Augmentations in DLMs, old and new\\~\\
+\item Local level model example\\~\\
+\item Conclusions
+\end{enumerate}
+\end{frame}
 
-DA algorithm based on $\theta$:
+\begin{frame}
+\frametitle{Interweaving: A Motivating Example}
+Adapted from \citet{yu2011center}, suppose:\\
 \begin{align*}
-\theta|\phi,y &\sim \N\left(\frac{V\phi + Wy}{V+W}, \frac{VW}{V+W}\right)\\
-\phi |\theta, y &\sim \N(\theta, W)
+y|\theta_1, \phi & \sim \N(\theta_1, 1) \\
+\theta_1|\mu & \sim \N(\mu, \sigma^2) 
+\end{align*}\\~\\
+with $\sigma^2$ known and $p(\mu)\propto 1$.\\~\\~\\
+
+Posterior of $\mu$: $\mu|y \sim \N(y,1+\sigma^2)$
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Interweaving: A Motivating Example}
+
+DA algorithm based on $\theta_1$:
+\begin{align*}
+\theta_1|\mu,y &\sim \N\left(\frac{\mu + \sigma^2y}{1+\sigma^2}, \frac{\sigma^2}{1+\sigma^2}\right)\\
+\mu |\theta_1, y &\sim \N(\theta_1, \sigma^2)
+\end{align*}\\~\\
+
+\pause Let $\theta_2 = \theta_1 - \mu$. Then DA algorithm based on $\theta_2$:
+\begin{align*}
+\theta_2|\mu,y &\sim \N\left(\frac{\sigma^2(\mu - y)}{1+\sigma^2}, \frac{\sigma^2}{1+\sigma^2}\right)\\
+\mu |\theta_2, y &\sim \N(y-\theta_2, 1)
 \end{align*}
 \end{frame}
 
 \begin{frame}
 \frametitle{Interweaving: A Motivating Example}
-Let $\gamma = \theta - \phi$. Then:
-\begin{align*}
-y|\gamma, \phi & \sim \N(\phi + \gamma, V) \\
-\gamma|\phi & \sim \N(0, W) 
-\end{align*}
-DA algorithm based on $\gamma$:
-\begin{align*}
-\gamma|\phi,y &\sim \N\left(\frac{W(\phi - y)}{V+W}, \frac{VW}{V+W}\right)\\
-\phi |\gamma, y &\sim \N(y-\gamma, V)
-\end{align*}
+$\sigma^2=\frac{1}{100}$
+\begin{center}
+\includegraphics[width=0.9\textwidth]{../../slides/trace1}\\
+\end{center}
+$\sigma^2=100$
+\begin{center}
+\includegraphics[width=0.9\textwidth]{../../slides/trace2}
+\end{center}
 \end{frame}
 
 \begin{frame}
 \frametitle{Interweaving: A Motivating Example}
 Alternate between two DAs (alternating algorithm):
 \begin{align*}
-{\color{blue}[\theta|\phi,y]} \to {\color{blue}[\phi|\theta,y]} \to [\gamma|\phi,y] \to [\phi|\gamma,y]
+{\color{blue}[\theta_1|\mu,y]} \to {\color{blue}[\mu|\theta_1,y]} \to [\theta_2|\mu,y]\phantom{\theta_1} \to [\mu|\theta_2,y]
 \end{align*}\\~\\
-Weave two DAs together (interweaving algorithm):
+\pause Weave two DAs together (interweaving algorithm):
 \begin{align*}
-{\color{blue}[\theta|\phi,y]} \to {\color{blue}[\phi|\theta,y]} \to {\color{red}[\gamma|\phi,\theta,y]} \to [\phi|\gamma,y]
+{\color{blue}[\theta_1|\mu,y]} \to {\color{blue}[\mu|\theta_1,y]} \to {\color{red}[\theta_2|\mu,\theta_1,y]} \to [\mu|\theta_2,y]
 \end{align*}\\~\\\pause
-The interweaving algorithm obtains {\bf IID} draws from the posterior of $\phi$.
+The interweaving algorithm obtains {\bf IID} draws from the posterior of $\mu$.
 \end{frame}
 
 \begin{frame}
 \frametitle{Global Interweaving Strategy (GIS)}
-From \citet{yu2011center}: target posterior distribution $p(\phi|y)$ with two DAs $\theta$ and $\gamma$ such that
+Suppose the target posterior distribution is $p(\phi|y)$ and we have two DAs $\theta_1$ and $\theta_2$. Then a GIS is: \\~
 \begin{align*}
-\int p(\theta,\phi|y) d\theta = p(\phi|y) \ \ \ \ \mbox{and}\ \ \ \int p(\gamma,\phi|y) d\gamma = p(\phi|y) 
-\end{align*}
-Then:
+[\theta_1|\phi,y] \to \hspace{1cm} [\theta_2|\theta_1,y] \hspace{1.3cm} \to [\phi|\theta_2,y]
+\end{align*}\\~\\
+\pause or for ease of implementation:\\~
 \begin{align*}
-[\theta|\phi,y] \to [\gamma|\theta,y] \to [\phi|\gamma,y]
-\end{align*}
-or more commonly:
-\begin{align*}
-[\theta|\phi,y] \to [\phi|\theta,y] \to {\color{blue}[\gamma|\phi,\theta,y]} \to [\phi|\gamma,y]
+[\theta_1|\phi,y] \to [\phi|\theta_1,y] \to {\color{blue}[\theta_2|\phi,\theta_1,y]} \to [\phi|\theta_2,y]
 \end{align*}
 \end{frame}
 
 \begin{frame}
-\frametitle{Ancillary-Sufficiency Interweaving Strategy (ASIS)}
+\frametitle{Ancillary-Sufficiency Interweaving Strategy (ASIS)} 
 GIS where one DA is a sufficient augmentation (SA) and the other is an ancillary augmentation (AA).\\~\\
 \begin{itemize}
 \item$\theta$ is an SA if $p(y|\theta,\phi)=p(y|\theta)$ (AKA centered augmentation)\\~\\
 \item$\theta$ is an AA if $p(\theta|\phi)=p(\theta)$ (AKA non-centered augmentation)\\~\\
 \end{itemize}
-Componentwise Interweaving Strategy (CIS):\\~\\
-\begin{itemize}
-\item Motivation: Finding an SA--AA pair is often difficult for $\phi=(\phi_1,\phi_2)$, but not for $\phi_1$ and $\phi_2$ separately.\\~\\
-\item Basic idea: GIS (or ASIS) for sub-blocks of $\phi$.\\~\\
-\item Can use the same DA in multiple sub-blocks of $\phi$.
-\end{itemize}
+\pause Basu's theorem suggests the form and amount of dependence between an SA and an AA will be limited.
+\end{frame}
+
+\begin{frame}
+\frametitle{Componentwise Interweaving Strategy (CIS)}
+Finding an SA--AA pair for $\phi$ is often difficult.\\~\\
+
+Solution: break $\phi=(\phi_1,\phi_2)$ into subblocks, then apply GIS or ideally ASIS separately to each block.\\~\\
+
+For example if $\theta_1$, $\theta_2$, $\gamma_1$, and $\gamma_2$ are DAs:\\
+
+\begin{align*}
+&[\theta_1|\phi_1,\phi_2,y]\phantom{\theta_2,}\hspace{.06cm} \to [\phi_1|\phi_2,\theta_1,\hspace{.05cm}y] \to {\color{blue}[\theta_2|\phi_1,\phi_2,\theta_1,y]} \to [\phi_1|\phi_2,\theta_2,y]\to\\
+&\\
+&{\color{blue}[\gamma_1|\phi_1,\phi_2,\theta_2,y]} \to [\phi_2|\phi_1,\gamma_1,y] \to {\color{blue}[\gamma_2|\phi_1,\phi_2,\gamma_1,y]} \to [\phi_2|\phi_1,\gamma_2,y]\\
+\end{align*}
+
 \end{frame}
 
 \begin{frame}[fragile]
@@ -169,16 +202,16 @@ For convenience define $y\equiv(y_1',\cdots,y_T')'$ and $\theta\equiv(\theta_0',
 
 \begin{frame}
   \frametitle{The Dynamic Linear Model} 
-Let $\phi$ denote the unknown parameter. Potentially $F_t(\phi)$ and $G_t(\phi)$ but assume they are constant and $\phi=(V,W)$\\~\\
+Let $\phi=(V,W)$ denote the unknown parameter.\\~\\
 
 Priors: independently \\~\\
 \begin{itemize}
-\item[]$\theta_0\sim \N_p(m_0,C_0)$, $V\sim IW(\Lambda_V,\lambda_V)$, and $W\sim IW(\Lambda_W,\lambda_W)$\\~\\
+\item[]$\theta_0\sim \N_p(m_0,C_0)$, $V\sim \mathrm{IW}(\Lambda_V,\lambda_V)$, and $W\sim \mathrm{IW}(\Lambda_W,\lambda_W)$\\~\\
 \end{itemize}
 
-Want to apply GIS and ASIS in particular, but suppose $\eta$ is a SA and $p(y,\eta|\phi)$ is Gaussian.\\~
+\pause Want to apply GIS and ASIS in particular, but suppose $\eta$ is a SA and $p(y,\eta|\phi)$ is Gaussian.\\~
 \begin{itemize}
-\item[] Then under weak condtions, $p(\phi|\eta,y)$ and $p(\phi|y)$ have a similar form.
+\item[] Then under weak conditions, $p(\phi|\eta,y)$ and $p(\phi|y)$ have a similar form.
 \end{itemize}
 
 \end{frame}
@@ -192,7 +225,7 @@ y_t|\theta,V,W \stackrel{ind}{\sim} & \N_k(F_t\theta_t,V)\\
 \end{align*} 
 {\color{blue}$\theta$ is an SA for $W|V$ and an AA for $V|W$.}\\~\\
 
-Scaled disturbances $\gamma\equiv(\gamma_0',\cdots,\gamma_T)'$ \citep{fruhwirth2004efficient}.
+\pause Scaled disturbances $\gamma\equiv(\gamma_0',\cdots,\gamma_T)'$ \citep{fruhwirth2004efficient}.
 \begin{itemize}
 \item[]$\gamma_0=\theta_0$ and $\gamma_t=L_W^{-1}(\theta_t - G_t\theta_{t-1})=L_W^{-1}w_t$ where $L_W$ is the Cholesky decomposition of $W$.
 \end{itemize}
@@ -208,11 +241,10 @@ y_t|\gamma,V,W \stackrel{ind}{\sim} & \N_k(F_t\theta_t(\gamma,W),V) \\
 
 \begin{frame}
 \frametitle{New Data Augmentations for the DLM}
-Scaled errors $\psi\equiv(\psi_0',\cdots,\psi_T')'$:
+Scaled errors $\psi\equiv(\psi_0',\cdots,\psi_T')'$:\\~\\
 \begin{itemize}
-\item[]$\psi_0=\theta_0$ and $\psi_t=L_V^{-1}(y_t - F_t\theta_t)=L_V^{-1}v_t$ where $L_V$ is the Cholesky decomposition of $V$.
+\item[]$\psi_0=\theta_0$ and $\psi_t=L_V^{-1}(y_t - F_t\theta_t)=L_V^{-1}v_t$ where $L_V$ is the Cholesky decomposition of $V$.\\~\\
 \end{itemize}
-For convenience, assume $F_t$ is square and invertible for all $t$.\\~
  
 In terms of $\psi$ the model is:
 \begin{align*}
@@ -243,8 +275,8 @@ Wrongly-scaled errors $\tilde{\psi}\equiv(\tilde{\psi}_0',\cdots,\tilde{\psi}_T'
 \frametitle{Evaluating the Strategies: the Local Level Model}
 Model: for $t=1,2,...,T$
 \begin{align*}
-    y_t|\theta  \stackrel{ind}{\sim}&\N_1(\theta_t,V) \qquad (\mbox{observation equation})\\
-    \theta_t|\theta_{0:(t-1)} \sim& \N_1(\theta_{t-1},W) \qquad (\mbox{system equation})
+    y_t|\theta  \stackrel{ind}{\sim}&\N(\theta_t,V) \qquad (\mbox{observation equation})\\
+    \theta_t|\theta_{0:(t-1)} \sim& \N(\theta_{t-1},W) \qquad (\mbox{system equation})
   \end{align*} 
 
 Let $V^*$ and $W^*$ denote the true values used to simulate the time series.\\~\\
@@ -272,30 +304,43 @@ Simulation Setup:
 \end{frame}
 
 \begin{frame}
-\frametitle{LLM Results --- ESP for T=1000}
-\centering
-\includegraphics[width=0.59\textwidth]{basecisESplot1000}\\
-\includegraphics[width=0.53\textwidth]{altintESplotV1000}
-\includegraphics[width=0.45\textwidth]{altintESplotW1000}
+\frametitle{Conclusions}
+\begin{itemize}
+\item Implementing ASIS is difficult in DLMs.\\~\\
+\begin{itemize}
+\item[]Also probably in hierarchical and other models with unkown variances on multiple levels.\\~\\
+\end{itemize}
+
+\item Novel DAs for DLMs: scaled errors, wrongly-scaled disturbances, and wrongly-scaled errors.\\~\\
+
+\item GIS and Alternating also have similar {\it mixing} properties...\\~\\
+
+\item ...but GIS is computationally cheaper than Alternating.\\~\\
+
+\item The mixing properties of CIS are similar to SD-SE GIS.
+
+\end{itemize}
 \end{frame}
 
-%\begin{frame}
-%\frametitle{LLM Results --- ESP summarized}
-%Rule of thumb for when each base algorithm has a high ESP for each variable as a function of the true signal-to-noise ratio, $R^*=W^*/V^*$. \\~\\~\\
-% \begin{center}
-%  \begin{tabular}{lccccc}\hline
-%    Parameter & State & SD & SE & WSD & WSE \\\hline
-%    V & $R^* < 1$ & $R^* < 1$ & $R^* > 1$ & $R^* < 1$ & $R^* < 1$\\
-%    W & $R^* > 1$ & $R^* < 1$ & $R^* > 1$ & $R^* > 1$ & $R^* > 1$ \\
-%      &           &          &           &           &           \\\hline
-%    Parameter & State-SD        & State-SE       & SD-SE        & Triple            & CIS \\\hline
-%    V         & $R^* < 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$ \\
-%    W         & $R^* \not\approx 1$ & $R^* > 1$           & $R^* \not\approx 1$ & $R^* \not\approx 1$ & $R^* \not\approx 1$\\\hline
-%  \end{tabular}\\~\\~\\
-%\end{center}
-%
-%Note that as the length of the time series increases, the farther away from one $R^*$ has to be for the sampler to have a high ESP.
-%\end{frame}
+\appendix
+\newcounter{finalframe}
+\setcounter{finalframe}{\value{framenumber}}
+
+\begin{frame}
+
+      \begin{center}
+
+        \font\endfont = cmss10 at 25.40mm
+        \color{Red}
+        \endfont 
+        \baselineskip 20.0mm
+
+        Thank you!
+
+      \end{center}    
+
+
+\end{frame}
 
 \begin{frame}
 \frametitle{Moving Forward: Computational Issues}
@@ -336,5 +381,5 @@ But is this the best way? Or even a good way?
         \bibliographystyle{plainnat}
         \bibliography{../doc/dlmasis}
 \end{frame} 
-
+\setcounter{framenumber}{\value{finalframe}}
 \end{document}
