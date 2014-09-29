@@ -246,7 +246,7 @@ In order for the computation to be effective, we need to be able to draw from th
 The significance of this distribution and its mixture representations is hopefully clear --- the matrixvariate F distribution provides a much more general class of prior distributions for both covariance and precision matrices than typically used while still allowing computation to be cheap and easily implemented. The main cost here is an additional Gibbs step where we draw from an (inverse) Wishart distribution for the scale matrix in the prior for the covariance (precision) matrix. A similar idea has been put forth by \cite{huang2013simple} with a similar cost. Their suggestion is to use an inverse Wishart prior for the covariance matrix, but force scale matrix parameter to be diagonal. Then put independent gamma hyperpriors on the diagonal elements of the scale matrix. They note that this allows for a more flexible covariance matrix prior, including marginal half-$t$ distributions for standard deviations and, if desired, marginal uniform distributions for the correlations. One advantage of our prior, like \citeauthor{huang2013simple}'s,  is that it is easy to construct an MCMC sampler using the precision matrix instead the covariance matrix due to Theorem \eqref{thm:WIW}.
 
 \bibliographystyle{plainnat}
-\bibliography{../mcmcex}
+\bibliography{../dlmasis/doc/dlmasis}
 
 
 \end{document}
