@@ -1,0 +1,270 @@
+\documentclass[xcolor=dvipsnames]{beamer}
+\makeatletter\def\Hy@xspace@end{}\makeatother 
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
+epsfig, multicol, amsthm}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[ansinew]{inputenc}
+\usepackage[authoryear]{natbib}
+%\newcommand{\newblock}{}  %needed to make beamer and natbib play nice
+\usepackage{tikz}
+\usetikzlibrary{fit}  % fitting shapes to coordinates
+\usetheme{Boadilla}
+\usecolortheme[named=Red]{structure}
+\setbeamercovered{transparent=0}
+\beamertemplatenavigationsymbolsempty
+\newcommand\ind{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+\newcommand\N{\mathrm{N}}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\B}{B}
+\DeclareMathOperator{\vech}{vech}
+\DeclareMathOperator{\vect}{vec}
+
+
+\title[Cov Mat Priors]{Covariance Matrix Priors}
+%\subtitle{}
+\author[Matt Simpson]{Matthew Simpson}
+\date{}
+\institute[]{Departments of Statistics and Economics, Iowa State University}
+
+
+%\title[short title]{long title}
+%\subtitle[short subtitle]{long subtitle}
+%\author[short name]{long name}
+%\date[short date]{long date}
+%\institution[short name]{long name}
+
+% very important to use option [fragile] for frames containing code output!
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}
+\frametitle{The Matrix-F Distribution}
+
+Suppose
+\begin{align*}
+  p(X) = \frac{\left|\Sigma\right|^{n_2/2}}{\B_p(n_1/2,n_2/2)}|X|^{(n_1 - p - 1)/2}|X + \Sigma|^{-(n_1 + n_2)/2}
+\end{align*}
+where: 
+\begin{itemize}
+\item $X$ is a $p\times p$ positive definite matrix
+\item $n_1,n_2 > p - 1$ are degrees of freedom parameters 
+\item $\Sigma$ is a $p\times p$ symmetric, positive definite scale matrix
+\item $\B_p(\alpha_1, \alpha_2) = \frac{\Gamma_p(\alpha_1)\Gamma_p(\alpha_2)}{\Gamma_p(\alpha_1 + \alpha_2)}$
+\item $\Gamma_p(\alpha) = \pi^{p(p-1)/4}\prod_{i=1}^p\Gamma(\alpha - (i-1)/2) $
+\end{itemize}
+Then we write 
+\begin{align*}
+X\sim F_p(n_1, n_2, \Sigma)
+\end{align*}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Motivation: Mixing Wisharts and Inverse-Wisharts}
+
+Suppose either 
+\begin{align*}
+X|Y \sim W_p(n_1,Y), && Y\sim IW_p(n_2,\Sigma)
+\end{align*}
+or 
+\begin{align*}
+X|Y \sim IW_p(n_2,Y), && Y\sim W_p(n_1,\Sigma)
+\end{align*}
+
+where $n_1,n_2>p-1$.\\~\\ 
+\pause 
+Then the marginal distribution of $X$ is $X\sim F_p(n_1,n_2,\Sigma)$
+\end{frame}
+
+\begin{frame}
+\frametitle{Small Degrees of Freedom}
+Interested because if $X\sim F_p(n_1, n_2 + p - 1, \Sigma)$ then the marginal distribution of $s_{ii}=\sqrt{x_{ii}}$ is the ``scale mixed Nakagami'' distribution with density
+  \[
+    p(s_{ii})\propto s_{ii}^{n_1 - 1}\left(1 + \frac{s_{ii}^2}{\sigma_{ii}}\right)^{-(n_1 + n_2)/2}
+  \]
+which is a half-$t$ distribution when $n_1=1$ with $n_2$ degrees of freedom.\\~\\
+\pause
+If $X\sim W_p(n,\Sigma)$ where $n=p,p+1,\cdots,$ then $X=Z'Z$ where $Z\sim N_{n,p}(0_{n\times p},I_n,\Sigma)$ i.e. rows of $Z$ are $\stackrel{iid}{\sim} N_p(0_{p\times 1},\Sigma)$\\~\\
+\pause
+Can define Wishart and inverse Wishart distributions for $n=1,2,\cdots,p-1$ this way.\\~\\
+\pause
+Allows for $n_1$ or $n_2$ $=1,2,\cdots,p-1$ in the Matrix-F distribution...\pause but it won't have a density.
+\end{frame}
+
+\begin{frame}
+\frametitle{I Used to Think...}
+Suppose 
+\begin{align*}
+&X|Y \sim IW_p(n_2,Y'Y),&& Y\sim N_{n_1,p}(0_{n_1\times p}, I_{n_1}, \Sigma)\\
+\intertext{ with $n_1 < p$ but $n_2 > p - 1$, or }
+&X|Y \sim W_p(n_1,(Y'Y)^{-1}),&& Y\sim N_{n_2,p}(0_{n_2\times p}, I_{n_2}, \Sigma^{-1})
+\end{align*}
+ with $n_2 < p$ but $n_1 > p - 1$. \pause Then the marginal density of $X$ is
+  \begin{align*}
+    p(X) = \frac{|\Sigma|^{n_2/2}}{\Gamma_p(n_2/2)2^{n_1\vee n_2p/2}}E[|Z'Z|^{n_1\vee n_2/2}]|X|^{(n_1 - p - 1)/2}|X + \Sigma|^{-(n_1 + n_2)/2}
+  \end{align*}
+  where $Z$ is an $n_1\wedge n_2\times p$ matrix of iid standard normally distributed random variables, $a\vee b=\max(a,b)$ and $a\wedge b=\min(a,b)$.\\~\\
+\pause
+{\color{blue}But $Z'Z$ is $p\times p$ and $rank(Z'Z)=n_1\wedge n_2 <p$, so $|Z'Z|=0$.}
+\end{frame}
+
+\begin{frame}
+\frametitle{Other Properties}
+Related to \citet{huang2013simple}'s prior: $X|Y\sim IW$, $diag(Y)\stackrel{ind}{\sim} Gam$.\\~\\
+\pause
+Self Consistency: If $X\sim F_p(n_1, n_2 + p - 1, \Sigma)$,
+\begin{align*}
+  X = \begin{bmatrix} X_{11} & X_{12} \\ X_{12} & X_{22} \end{bmatrix}, &&   \Sigma = \begin{bmatrix} \Sigma_{11} & \Sigma_{12} \\ \Sigma_{12} & \Sigma_{22} \end{bmatrix}
+\end{align*}
+where $X_{11}$ is a $q\times q$ submatrix of $X$ and $\Sigma_{11}$ is a $q\times q$ submatrix of $\Sigma$. Then $X_{11} \sim F_q(n_1, n_2 + q - 1, \Sigma_{11})$ \\~\\
+\pause
+Inverse: Suppose $X\sim F_p(n_1, n_2, \Sigma)$. Then $X^{-1}\sim F_p(n_2, n_1, \Sigma^{-1})$\\~\\
+\pause
+Standard Deviations: If $X\sim F_p(n_1, n_2 + p - 1, \Sigma)$ then the marginal distribution of $s_{ii}=\sqrt{x_{ii}}$ is the ``scale mixed Nakagami'' distribution with density
+\[
+p(s_{ii})\propto s_{ii}^{n_1 - 1}\left(1 + \frac{s_{ii}^2}{\sigma_{ii}}\right)^{-(n_1 + n_2)/2}.
+\]
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Main Issues}
+Can we get small df using some tricks?\\~\\
+\pause
+Marginal distribution for the correlations?\\~\\
+\pause
+What happens when $n_1\to \infty$? $n_2\to \infty$? $n_1=n_2\to \infty$?\\~\\
+\pause
+Moments of variance, standard deviation, and correlation parameters?\\~\\
+\pause
+Dependence between standard deviation / variance and correlation?\\~\\
+\pause
+Impact on posterior estimation (compared to other priors)?\\
+\pause
+\begin{itemize}
+\item[] Closed form posteriors in simple models
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Conditionally Conjugate Priors in the Noncentered Parameterization}
+Suppose
+\begin{align*}
+ y_t &\stackrel{iid}{\sim} N(\theta_t, V)\\
+\theta_t &\stackrel{ind}{\sim} N(\mu,W)
+\end{align*}
+\pause
+Let $\gamma_t=(\theta_t-\mu)/\sqrt{W}$. Then
+\begin{align*}
+ y_t &\stackrel{iid}{\sim} N(\mu + \sqrt{W}\gamma_t, V)\\
+\theta_t &\stackrel{ind}{\sim} N(0,1)
+\end{align*}
+Now conditionally conjugate prior for $\pm \sqrt{W}$ is $N(0,Q)$.
+\begin{itemize}
+\item[] $G(1/2, 1/(2Q))$ on $W$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Multivariate $y_t$}
+Now $\gamma_t = Chol(W)^{-1}(\theta_t - \mu)$\\~\\
+
+Conditionally conjugate prior on $Chol(W)$ is multivariate normal on the nonzero elements, e.g. in \citet{fruhwirth2008bayesian}.\\~\\
+\pause
+\cite{fruhwirth2008bayesian} provide no closed form formula for the full conditional of $Chol(W)$... \pause but I can write the full conditional distribution of $Chol(W)$ in a convenient form using the elimination matrix. \\~\\
+\pause
+If $A$ is $p\times p$, the unique $p(p+1)/2\times p^2$ matrix $S_p$ such that $\vech(A) = S_p\vect(A)$ is called the elimination matrix.\\~\\
+
+\begin{enumerate}
+  \item $S_pS_p'=I_{p(p+1)/2}$\\~
+  \item If $A$ is lower triangular $\vect(A) = S_p'\vech(A) = S_p'S_p\vect(A)$.\\
+\end{enumerate}
+\end{frame}
+
+\begin{frame}
+\frametitle{Example Elimination Matrices}
+\begin{align*}
+S_2 = \left[\begin{tabular}{cc|cc} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\\hline 0 & 0 & 0 & 1 \end{tabular}\right], && S_3 =  \left[\begin{tabular}{ccc|ccc|ccc}
+1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0  \\ 
+0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\ 
+0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\\hline
+0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+\end{tabular}\right]\\~\\
+\end{align*}
+\pause
+There also exists a duplication matrix $D_p$: for a symmetric $p\times p$ matrix $A$
+\begin{align*}
+\vect(A)=D_p\vech(A)
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{The Representation}
+Let $L_W=Chol(W)$. Then
+\begin{align*}
+  p(L_W&|\gamma_{0:T},\cdots)\propto \exp\left[-\frac{1}{2}\left(\vech(L_W) - \Omega^{-1}\omega\right)'\Omega\left(\vech(L_W) - \Omega^{-1}\omega\right)\right]\\
+&\times \mbox{prior}
+\end{align*}
+where $\Omega$ is a $p(p+1)/2\times p(p+1)/2$ positive definite matrix and $\omega$ is a $p(p+1)/2\times 1$ vector and both depend on $V$, $y_{1:T}$, $\gamma_{1:T}$ and the elimination matrix.\\~\\
+\pause
+Strictly speaking, $L_W$ allows its diagonal elements to be negative -- ``signed'' Cholesky decomposition.\\~\\
+\pause
+View it as a trick for defining a prior on $W=L_WL_W'$.
+\end{frame}
+
+\begin{frame}
+\frametitle{Example: The Dynamic Linear Model}
+Suppose
+\begin{align*}
+y_t|\theta_{0:T} \stackrel{ind}{\sim} N_k(F_t\theta_t,V), && \theta_t|\theta_{0:(t-1)}\sim N_p(G_t\theta_{t-1},W)
+\end{align*}
+and let $\gamma_0=\theta_0$, $\gamma_t=L_W^{-1}(G_t\theta_t - \theta_{t-1})$ for $t=1,2,\cdots,T$.\\~\\
+\pause
+Then
+\begin{align*}
+  \Omega=\sum_{s=1}^T\sum_{r=1}^TS_p(\gamma_s\gamma_r'\otimes C_{sr})S_p', && \omega=\sum_{s=1}^TS_p(\gamma_s\otimes I_p)c_s.
+\end{align*}
+where we define 
+\begin{align*}
+C_{sr} = \sum_{t=r\vee s}^TH_{st}'F_t'V^{-1}F_tH_{rt}, && c_s=\sum_{t=s}^TH_{st}'F_t'V^{-1}(y_t - F_tH_{0t}\gamma_0)
+\end{align*}
+ and $H_{st} = \prod_{r=s+1}^tG_r$, and where $a\vee b = \max(a,b)$.
+\end{frame}
+
+\begin{frame}
+\frametitle{Issues}
+Want to use consistent priors for $V$ and $W$. If we use this prior for $V$ as well...\\~\\
+
+Univariate case: 
+\begin{align*}
+p(V|W,\gamma_{0:T},\cdots)\propto V^{-T/2}\exp\left[-\frac{1}{2}\left(\alpha V + \beta \frac{1}{V}\right)\right]
+\end{align*}
+\pause
+Multivariate case: 
+\begin{align*}
+p(L_V&|W,\gamma_{0:T},\cdots)\propto\\
+&|L_V|^{-T}\exp\left[-\frac{1}{2}\bigg(\vech(L_V^{-1})'\Psi\vech(L_V^{-1}) + \vech(L_V)'\Phi\vech(L_V)  \bigg)\right]
+\end{align*}
+
+Need to efficiently sample from this distribution.\\~\\
+\pause
+
+Alternatively, construct a prior that can be represented as a mixture of $IW$'s on $V$ or a mixture of $N$'s on $Chol(V)$.
+\end{frame}
+
+\begin{frame}
+\Huge \ \ \ \ \ \ \ \ Thanks!
+\end{frame}
+
+\bibliographystyle{plainnat}
+\bibliography{../../dlmasis/doc/dlmasis}
+
+
+\end{document}
