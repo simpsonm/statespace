@@ -1,0 +1,255 @@
+\documentclass[graybox]{svmult}
+\usepackage{mathptmx}       % selects Times Roman as basic font
+\usepackage{helvet}         % selects Helvetica as sans-serif font
+\usepackage{courier}        % selects Courier as typewriter font
+%\usepackage{type1cm}        % activate if the above 3 fonts are
+                            % not available on your system
+%
+\usepackage{makeidx}         % allows index generation
+\usepackage{multicol}        % used for the two-column index
+\usepackage[bottom]{footmisc}% places footnotes at page bottom
+\usepackage{amssymb, amsmath, graphics, graphicx, color, fullpage}
+\usepackage{natbib} 
+\makeindex             % used for the subject index
+                       % please use the style svind.ist with
+                       % your makeindex program
+
+\begin{document}
+
+\title*{Application of Interweaving in DLMs to an Exchange and Specialization Experiment}
+\titlerunning{Application of Interweaving in DLMs}
+% Use \titlerunning{Short Title} for an abbreviated version of
+% your contribution title if the original one is too long
+\author{Matthew Simpson}
+% Use \authorrunning{Short Title} for an abbreviated version of
+% your contribution title if the original one is too long
+\institute{Matthew Simpson \at Department of Economics, Iowa State University, Ames, IA 50011, \email{themattsimpson@gmail.com}}
+%
+% Use the package "url.sty" to avoid
+% problems with special characters
+% used in your e-mail or web address
+%
+\maketitle
+
+\abstract*{Each chapter should be preceded by an abstract (10--15 lines long) that summarizes the content. The abstract will appear \textit{online} at \url{www.SpringerLink.com} and be available with unrestricted access. This allows unregistered users to read the abstract as a teaser for the complete chapter. As a general rule the abstracts will not appear in the printed version of your book unless it is the style of your particular book or that of the series to which your book belongs.
+Please use the 'starred' version of the new Springer \texttt{abstract} command for typesetting the text of the online abstracts (cf. source file of this chapter template \texttt{abstract}) and include them with the source files of your manuscript. Use the plain \texttt{abstract} command if the abstract is also to appear in the printed version of the book.}
+
+\abstract{Each chapter should be preceded by an abstract (10--15 lines long) that summarizes the content. The abstract will appear \textit{online} at \url{www.SpringerLink.com} and be available with unrestricted access. This allows unregistered users to read the abstract as a teaser for the complete chapter. As a general rule the abstracts will not appear in the printed version of your book unless it is the style of your particular book or that of the series to which your book belongs.\newline\indent
+Please use the 'starred' version of the new Springer \texttt{abstract} command for typesetting the text of the online abstracts (cf. source file of this chapter template \texttt{abstract}) and include them with the source files of your manuscript. Use the plain \texttt{abstract} command if the abstract is also to appear in the printed version of the book.}
+
+
+\section{Introduction}\label{sec:intro}
+\cite{simpson2014interweaving} \cite{crockett2009exchange} \cite{kimbrough2010exchange}
+\section{Data}
+
+\section{Model}
+We only consider one treatment of the experiment, but each replication in the experiment. Let $j=1,2,\cdots,J$ denote replication $j$ of the treatment and $t=1,2,\cdots,T$ denote period $t$. Then let $y_{jt}$ denote the observed efficiency of the $j$'th replication in the $t$'th period. First, consider the local level model for a single replication
+\begin{align*}
+y_{j,t}|\theta_{j,0:T}&\stackrel{ind}{\sim}N(\theta_{j,t},V_j)\\
+\theta_{j,t}|\theta_{j,0:(t-1)}&\sim N(\theta_{j,t-1},W_j)
+\end{align*}
+for $t=1,2,\cdots,T$ where $\theta_{j,0:t}=(\theta_{j,0},\cdots,\theta_{j,t})'$. The question is how to combine each replication into a single model so that we can borrow information across replications. There are two basic intuitions that we want to capture in our model. The first intuition is that each replication should borrow strength from the other replications in a hierarchical structure --- i.e. each replication's latent state in period $t$ should be shrunk towards a treatment wide latent state. Second, each replication should still be allowed to evolve somewhat independently of the other replications so that they can potentially have drastically different trajectories.
+
+These intuitions motivate the following hierarchical DLM.
+\begin{align*}
+y_{j,t}|\theta_{j,0:T},\mu_{0:T}&\stackrel{ind}{\sim}N(\theta_{j,t},V_j)&&\mbox{(observation equation)}\\
+\theta_{j,t}|\theta_{j,0:(t-1)},\mu_{0:T}&\sim N(\mu_{t} + \beta_j\theta_{j,t-1},W_j)&&\mbox{(replication equation)}\\
+\mu_t|\mu_{0:(t-1)} &\sim N(\mu_{t-1},U)&&\mbox{(treatment equation)}\\
+\end{align*}
+for replication $j=1,2,\cdots,J$. Here we assume that the observation errors and the replication disturbances are not correlated across replications because it will complicate the MCMC later --- essentially, it will force us to obtain a random draw from a complicated matrix-variate distribution. We avoid the difficulty generated by this complication, though the model would probably be improved by it. So there are $3J + 1$ unknown parameters, the $\beta_j$'s, $V_j$'s, $W_j$'s, and U, along with $(J+1)(T+1)$ uknown elements of the data augmentations, the $\mu_t$'s and $\theta_{j,t}$'s. The persistence in replication $j$'s evolution is represented by $\beta_j$ while the $W_j$ represents how much replication $j$ can evolve in a given period and $V_j$ represents how close the observed efficiency of replication $j$ in a given period, is to the latent efficiency of replication $j$. Here, $\theta_{j,t}$ represents the latent efficiency of replication $j$ in period $t$ while $y_{j,t}$ is the corresponding observed efficiency.
+
+To complete the model, we need priors on the $\beta_j$'s, $W_j$'s, $V_j$'s, $U$, the $\theta_{j,0}$'s, and $\mu_0$. First, we will suppose that $p(\theta_{1,0},\cdots,\theta_{J,0},\mu_0)=\prod_{j=1}^Jp(\theta_{j,0}|\mu_0)p(\mu_0)$ where $\mu_0\sim N(0,100)$ and $\theta_{j,0}|\mu_0\sim N(\mu_0, 100)$. Next, we will suppose $p(\beta_1,\cdots,\beta_J,V_1,\cdots,V_J,W_1,\cdots,W_J,U|\mu_0,\theta_0)=\prod_{j=1}^Jp(\beta_j)p(V_j)p(W_j)p(U)$ for simplicity with $\beta_j\sim N(0,100)$, $V_j\sim IG(5,40)$, $W_j\sim IG(5,40)$, and $U\sim IG(5,40)$. These priors are relatively straightforward and, while not ideal, do make computation easy which is the focus of this article. In particular, hierarchical priors for the $\beta_j$'s, $V_j$'s, and $W_j$'s seem appropriate, but we prefer to avoid these complications in this simple example.
+
+\section{Markov chain Monte Carlo}\label{sec:MCMC}
+We construct two separate MCMC samplers for this model. One is a naive Gibbs sampler and the other takes advantage of the interweaving technology of \citet{yu2011center}, particularly the developments of \citet{simpson2014interweaving} for DLMs. There are two major departures in our model from the class of models discussed in \citet{simpson2014interweaving}. The first is the hierarchical structure adding a third equation to the model. Under a reparameterization the model can be coerced into the form of a DLM, but we ignore this complication. The observation and replication equations can be thought of as a DLM for each replication while the treatment equation adds a hierarchical structure. However, the replication level DLM still departs from the class of models discussed in \citet{simpson2014interweaving} in another way --- the replication disturbance, called the system disturbance in \citet{simpson2014interweaving}, is no longer mean zero. Instead, it has time dependent mean $\mu_t$. Neither of these complications prevent us from using the ideas in \citet{simpson2014interweaving}, though the differences may be exploitable to construct even better MCMC algorithms.
+
+\subsection{Full Conditionals}\label{sec:fullconds}
+
+Both the naive algorithm and the interweaving algorithm are fundamentally Gibbs samplers, so we need the full conditional distributions in order to construct both algorithms. We list these here. First, the full posterior distribution is 
+\begin{align*}
+p(\beta_{1:J}&,V_{1:J},W_{1:J},U,\mu_{0:T},\theta_{1:J,0:T}|y_{1:T}) \propto \prod_{j=1}^JV_j^{-T/2}\exp\left[-\frac{1}{2V_j}\sum_{t=1}^T(y_{j,t} - \theta_{j,t})^2\right]\times \\
+&\prod_{j=1}^JW_j^{-T/2}\exp\left[-\frac{1}{2W_j}\sum_{t=1}^T(\theta_{j,t} - \mu_t - \theta_{j,t-1}\beta_j)^2\right]\times U^{-T/2}\exp\left[-\frac{1}{2U}\sum_{t=1}^T(\mu_t - \mu_{t-1})^2\right]\times \\
+&\prod_{j=1}^JV_j^{-a_{V_j} - 1}\exp\left[-\frac{1}{V_j}b_{V_j}\right]W_j^{-a_{W_j} - 1}\exp\left[-\frac{1}{W_j}b_{W_j}\right]\times \exp\left[-\frac{1}{2B}\sum_{j=1}^J(\beta_j-\beta_0)^2\right]U^{-a_U-1}\exp\left[-\frac{1}{U}b_U\right]\times\\
+&\prod_{j=1}^J\exp\left[-\frac{1}{2W_{j,0}}(\theta_{j,0}-\mu_0)^2\right]\times \exp\left[-\frac{1}{2U_0}(\mu_0-m_0)\right].
+\end{align*}
+Here $a_{V_j}=a_{W_j}=a_U=5$, $b_{V_j}=b_{W_j}=b_U=40$, $\beta_0=m_0=0$, and $W_{j,0}=U_0=B=100$ for $j=1,2,\cdots,J$ from our prior specification, but we will use the general form of these priors throughout this section.
+
+Conditional on the parameters in the treatment equation, we have a DLM for each replication. The full conditional distribution of the latent replication efficiencies is given as follows.
+\begin{align*}
+p(\theta_{j,0:T}|\cdots)&\propto \exp\left[-\frac{1}{2}g(\theta_{j,0:T})\right]
+\end{align*}
+where
+\begin{align*}
+g(\theta_{j,0:T}) &= \frac{(\theta_{j,0} - \mu_0)^2}{W_{j,0}} + \sum_{t=1}^T\frac{(y_{j,t} - \theta_{j,t-1})^2}{V_j} + \sum_{t=1}^T\frac{(\theta_{j,t} - \mu_t - \theta_{j,t-1}\beta_j)^2}{W_j}. 
+\end{align*}
+Methods that draw from this distribution are often called simulation smoothers in the literature. As a function of $\theta_{j,0:T}$, $g(\theta_{j,0:T}) = \theta_{j,0:T}'\Omega_{\theta_j}\theta_{j,0:T} - 2\omega_{\theta_j}'\theta_{j,0:T}$ where $\Omega_{\theta_j}$ is a $T+1\times T+1$ positive definite matrix and $\omega_j$ is a $T+1\times 1$ column vector. We can see that $\Omega_j$ is tridiagonal with elements on and just off the diagonal defined as follows:
+\begin{align*}
+\Omega_{\theta_j,0,0}=&\frac{1}{W_{j,0}} + \frac{\beta_j^2}{W_j}&&\\
+\Omega_{\theta_j,t,t}=&\frac{1}{V_{j}} + \frac{1 + \beta_j^2}{W_j}&&\mbox{for } t=1,2,\cdots,T-1\\
+\Omega_{\theta_j,T,T}=&\frac{1}{V_{j}} + \frac{1}{W_j}&&\\
+\Omega_{j\theta_,t,t-1}=&\Omega_{\theta_j,t-1,t}=-\frac{\beta_j}{W_j}&&\mbox{for } t=1,2,\cdots,T.
+\end{align*}
+Similarly the elements of $\omega_{\theta_j}$ are defined as
+\begin{align*}
+\omega_{\theta_j,0} &= \frac{\mu_0}{W_{j,0}} + \frac{\mu_1\beta_j}{W_j}&&\\
+\omega_{\theta_j,t} &= \frac{y_{j,t}}{V_j} + \frac{\mu_t + \mu_{t+1}\beta_j}{W_j}&&\mbox{for } t=1,2,\cdots,T-1\\
+\omega_{\theta_j,T} &= \frac{y_{j,t}}{V_j} + \frac{\mu_t}{W_j}.&&
+\end{align*}
+So $\theta_{j,0:T}|\cdots\sim N(\Omega_{\theta_j}^{-1}\omega_{\theta_j},\Omega_{\theta_j}^{-1})$. In order to draw from this distribution, we need to invert $\Omega_{\theta_j}$. The Cholesky factor algorithm (CFA) for doing this comes from \citet{rue2001fast} and takes advantage of the tridiagonal structure of $\Omega_j$ to quickly compute its Cholesky factorization. This method is improved by \citet{mccausland2011simulation} in some cases by using a backward sampling approach that implicitly uses the technology of \citet{rue2001fast}. Hence \citet{simpson2014interweaving} calls this the mixed Cholesky factorization algorithm (MCFA). This algorithm requires the following intermediate quantities --- let $\Sigma_{\theta_j,0} = \Omega_{\theta_j,0,0}^{-1}$, $\Sigma_{\theta_j,t} = (\Omega_{\theta_j,t,t} - \Omega_{\theta_j,t,t-1}\Sigma_{\theta_j,t-1}\Omega_{\theta_j,t-1,t})^{-1}$ for $t=1,2,\cdots,T$, $\bar{\theta}_{j,0} = \Sigma_{\theta_j,0}\omega_{\theta_j,0}$, and $\bar{\theta}_{j,t} = \Sigma_{\theta_j,t}(\omega_{j,t} - \Omega_{\theta_j,t,t-1}\bar{\theta}_{j,t-1})$ for $t=1,2,\cdots,T$. Then the draws of $\theta_{j,0:T}$ from their joint full conditional can be accomplished sequentially in reverse order.
+\begin{align*}
+\theta_{j,T} \sim & N(\bar{\theta}_{j,T}, \Sigma_{\theta_j,T}) &&\\
+\theta_{j,t}|\theta_{j,(t+1):T} \sim & N(\bar{\theta}_{j,t} - \Sigma_{\theta_j,t}\Omega_{\theta_j,t,t+1}\theta_{j,t+1}, \Sigma_{\theta_j,t}) && \mbox{for } t=T-1,T-2,\cdots,0.
+\end{align*}
+\citet{mccausland2011simulation} find that this method is often faster than simply doing the Cholesky factorization and both Cholesky factorization methods are typically much faster than methods based on the Kalman filter.
+
+The full conditional distribution of $\mu_{0:T}$ is similar and draws from it can be obtained using the same MCFA method. Here we have
+\begin{align*}
+g(\mu_{0:T}) = \frac{(\mu_0 - m_0)^2}{U_0} + \sum_{j=1}^J\frac{(\theta_{j,0}-\mu_0)^2}{W_{j,0}} + \sum_{j=1}^J\sum_{t=1}^T\frac{(\theta_{j,t} - \mu_t - \theta_{j,t-1}\beta_j)^2}{W_j} + \sum_{t=1}^T\frac{(\mu_t - \mu_{t-1})^2}{U}
+\end{align*}
+so that
+\begin{align*}
+\Omega_{\mu,0,0}=&\frac{1}{U_0} + \sum_{j=1}^J\frac{1}{W_{j,0}} + \frac{1}{U}&&\\
+\Omega_{\mu,t,t}=& \sum_{j=1}^J\frac{1}{W_{j}} + \frac{2}{U} &&\mbox{for } t=1,2,\cdots,T-1\\
+\Omega_{\mu,T,T}=&\sum_{j=1}^J\frac{1}{W_{j}} + \frac{1}{U}&&\\
+\Omega_{\mu,t,t-1}=&\Omega_{\mu,t-1,t}=-\frac{1}{U}&&\mbox{for } t=1,2,\cdots,T
+\intertext{and}
+\omega_{\mu,0} =& \frac{m_0}{U_0} + \sum_{j=1}^J\frac{\theta_{j,0}}{W_{j,0}}&&\\
+\omega_{\mu,t} =& \sum_{j=1}^J\frac{\theta_{j,t} - \theta_{j,t-1}\beta_j}{W_j}&&\mbox{for } t=1,2,\cdots,T.
+\end{align*}
+Then to complete the algorithm, the $\Sigma_{\mu,t}$'s and $\bar{\mu}_t$'s are defined analogously to the MCFA for the $\theta_{j,t}$'s.
+
+The the full conditional of $\beta_{1:J}$ is
+\begin{align*}
+p(\beta_{1:J}|\cdots) &\propto \prod_{j=1}^Tp(\beta_j|\cdots) \propto \exp\left[-\frac{1}{2W_j}\sum_{t=1}^T(\theta_{j,t} - \mu_t - \theta_{j,t-1}\beta_j)^2\right]\exp\left[-\frac{1}{2B}(\beta_j - \beta_0)^2\right].
+\end{align*}
+So $\beta|\cdots \stackrel{ind}{\sim} N(\Omega_{\beta_j}^{-1}\omega_{\beta_j},\Omega_{\beta_j}^{-1})$ where
+\begin{align*}
+\Omega_{\beta_j}=\frac{\sum_{t=1}^T\theta_{j,t-1}^2}{W_j} + \frac{1}{B},&&\omega_{\beta_j}=\frac{\sum_{t=1}^T(\theta_{j,t} - \mu_t)\theta_{j,t-1}}{W_j} + \frac{\beta_0}{B}.
+\end{align*}
+ 
+The full condtional of $U$ is
+\begin{align*}
+U^{-a_U - T/2 - 1}\exp\left[-\frac{1}{U}\left(b_U + \frac{\sum_{t=1}^T(\mu_t - \mu_{t-1})^2}{2}\right)\right]
+\end{align*}
+so that $U|\cdots \sim IG(\tilde{a}_U, \tilde{b}_U)$
+where
+\begin{align*}
+\tilde{a}_U = a_U + \frac{T}{2},&& \tilde{b}_U = b_U + \frac{\sum_{t=1}^T(\mu_t - \mu_{t-1})^2}{2}.
+\end{align*}
+
+Finally, the full conditional of $(V_{1:J},W_{1:J})$ is
+\begin{align*}
+p(V_{1:T},W_{1:T}|\cdots)&\propto \prod_{j=1}^Jp(V_j|\cdots)p(W_j|\cdots)\\
+\end{align*}
+where
+\begin{align*}
+p(V_j|\cdots) &\propto V_j^{-a_{V_j}-T/2-1}\exp\left[-\frac{1}{V_j}\left(b_{V_j} + \frac{\sum_{t=1}^T(y_{j,t} - \theta_{j,t})^2}{2}\right)\right]\\
+p(W_j|\cdots) &\propto W_j^{-a_{W_j}-T/2-1}\exp\left[-\frac{1}{W_j}\left(b_{W_j} + \frac{\sum_{t=1}^T(\theta_{j,t} - \mu_t - \theta_{j,t-1}\beta_j)^2}{2}\right)\right]
+\end{align*}
+so that $(V_{1:J},W_{1:J}|\cdots)$ are independent with $V_j|\cdots \sim IG(\tilde{a}_{V_j},\tilde{b}_{V_j})$ and $W_j|\cdots \sim IG(\tilde{a}_{W_j},\tilde{b}_{W_j})$ where
+\begin{align*}
+\tilde{a}_{V_j} = a_{V_j} + \frac{T}{2},&&& \tilde{b}_{V_j} = b_{V_j} + \frac{\sum_{t=1}^T(y_{j,t} - \theta_{j,t})^2}{2},\\
+\tilde{a}_{W_j}=a_{W_j} + \frac{T}{2},&&& \tilde{b}_{W_j} = b_{W_j} + \frac{\sum_{t=1}^T(\theta_{j,t} - \mu_t - \theta_{j,t-1}\beta_j)^2}{2}.
+\end{align*}
+
+\subsection{Naive Gibbs and Interweaving}\label{sec:Gibbs}
+Using the conditionals constructed in Section \ref{sec:fullconds}, we can construct a naive Gibbs sampler as follows:
+\begin{enumerate}
+\item Draw $\mu_{0:T} \sim N(\Omega_{\mu}^{-1}\omega_{\mu},\Omega_{\mu}^{-1})$ using the MCFA.
+\item Draw $U\sim IG(\tilde{a}_U,\tilde{b}_U)$.
+\item For $j=1,2,\cdots,J$, draw $\beta_{j} \sim N(\Omega_{\beta_j}^{-1}\omega_{\beta_j},\Omega_{\beta_j}^{-1})$.
+\item For $j=1,2,\cdots,J$, draw $\theta_{j,0:T}\sim N(\Omega_{\theta_j}^{-1}\omega_{\theta_j},\Omega_{\theta_j}^{-1})$ using the MCFA.
+\item For $j=1,2,\cdots,J$, draw $V_j$ and $W_j$ independently from $V_j\sim IG(\tilde{a}_{V_j}, \tilde{b}_{V_j})$ and $W_j\sim IG(\tilde{a}_{W_j}, \tilde{b}_{W_j})$.
+\end{enumerate}
+Steps 3--5 can each be parallelized since the draws in each substep are independent of the other substeps. In fact, step $5.j$ only depends on steps $3.j$ and $4.j$ so steps $3.j--5.j$ can be obtained sequentially for each $j$ or parallelized. Steps 4 and 5 can be viewed as independent instantiations of what \citet{simpson2014interweaving} calls the state sampler for a DLM -- recall that conditional on $\beta_{1:J}$ and $\mu_{0:T}$, we have $J$ independent DLMs for each of the $J$ replications.
+
+Steps 4 and 5, then, are where we can apply the interweaving results of \citet{simpson2014interweaving} in a general class of DLMs, based on the ideas of \citet{yu2011center}. First, for $j=1,2,\cdots,J$ define $\gamma_{j,0}=\theta_{j,0}$ and $\gamma_{j,t}=(\theta_{j,t} - \mu_t - \theta_{j,t-1})/\sqrt{W_j}$ for $t=1,2,\cdots,T$. Then $\gamma_{j,0:T}$ is called the scaled disturbances. Similarly, for $j=1,2\cdots,J$ define $\psi_{j,0}=\theta_{j,0}$ and $\psi_{j,t}=(y_{j,t} - \theta_{j,t})/\sqrt{V_j}$ for $t=1,2,\cdots,T$. Then $\psi_{j,0:T}$ is called the scaled errors. An alternating algorithm using these two data augmentations for the replication level DLM consists of four steps:
+\begin{align*}
+[\gamma_{j,0:T}|V_j,W_j,y_{j,1:T}] \to [V_j,W_j|\gamma_{j,0:T},y_{j,1:T}] \to [\psi_{j,0:T}|V_j,W_j,y_{j,1:T}] \to [V_j,W_j|\psi_{j,0:T},y_{j,1:T}].
+\end{align*}
+Here we implicitly condition on $\mu_{0:T}$ and $\beta_j$ as well. The first two steps are basically steps 4 and 5 of the naive Gibbs sampler except with $\gamma_{j,0:T}$ taking the role of $\theta_{j,0:T}$. The second two are similar, except with $\psi_{j,0:T}$ in place of $\theta_{j,0:T}$. An interweaving algorithm using these two augmentations is very similar:
+\begin{align*}
+[\gamma_{j,0:T}|V_j,W_j,y_{j,1:T}] \to [V_j,W_j|\gamma_{j,0:T},y_{j,1:T}] \to [\psi_{j,0:T}|V_j,W_j,\gamma_{j,0:T},y_{j,1:T}] \to [V_j,W_j|\psi_{j,0:T},y_{j,1:T}].
+\end{align*}
+The only difference is that in step 3, we condition of $\gamma_{j,0:T}$ as well as $V_j$, $W_j$, and $y_{j,1:T}$. Strictly speaking, this is a transformation using the definition of $\gamma_{j,0:T}$ and $\psi_{j,0:T}$, and not a random draw. This reduces the computational cost relative to the alternating algorithm and, depending on the properties of the data augmentations used, can also drastically improve the behavior of the resulting Markov chain.
+
+We have three available DAs --- $\theta_{j,0:T}$, $\gamma_{j,0:T}$, and $\psi_{j,0:T}$. It turns out that using the pair $\gamma_{j,0:T}$ and $\psi_{j,0:T}$ yields the best mixing in the local level model whether in an alternating or interweaving framework \citep{simpson2014interweaving}. We will use them both in an interweaving framework in order to take advantage of the slightly cheaper computational cost of interweaving relative to alternating. In order to construct the algorithm, we now need the additional full conditionals of $\gamma_{j,0:T}$ or $\psi_{j,0:T}$, and of $(V_j,W_j)$ given $\gamma_{j,0:T}$ and $(V_j,W_j)$ given $\psi_{j,0:T}$. The MCFA can be used to draw $\psi_{j,0:T}$ in a similar fashion to $\theta_{j,0:T}$ -- it is easy to see that $\psi_{j,0:T}$ has a normal distribution with a tridiagonal prececision matrix. The precision matrix of $\gamma_{j,0:T}$ is fully parameterized, however, so the easiest way to draw $\gamma_{j,0:T}$ from its full conditional is to draw $\theta_{j,0:T}$ using the MCFA then transform using the definition of $\gamma_{j,0:T}$. Since only the first augmentation used in the interweaving steps requires a draw from its full conditional, and since we can directly apply the MCFA to $\psi_{j,0:T}$, its cheaper to use $\psi_{j,0:T}$ first. 
+
+In order to characterize $\psi_{j,0:T}$'s full conditional, we will work through the transformation. Conditional on $\beta_j$, $\mu_{0:T}$, $V_j$, and $W_j$ the model is $y_{j,t}|\theta_{j,0:T}\sim N(\theta_{j,t},V_j)$ and $\theta_{j,t}|\theta_{j,0:(t-1)}\sim N(\mu_t + \theta_{j,t-1}\beta_j,W_j)$. Then the conditional augmented data likelihood can be written as
+\begin{align*}
+L(V_j,W_j,\theta_{j,0:T}|y_{j,1:T}) \propto V_j^{-T/2}\exp\left[-\frac{\sum_{t=1}^T(y_{j,t}-\theta_{j,t})^2}{2V_j}\right] W_j^{-T/2}\exp\left[-\frac{\sum_{t=1}^T(\theta_{j,t}-\mu_t-\theta_{j,t-1}\beta_j)^2}{2W_j}\right].
+\end{align*}
+Since $\theta_{j,t}=y_{j,t} + \sqrt{V_j}\psi_{j,t}$ for $t=1,2,\cdots,T$ and $\theta_{j,0}=\psi_{j,0}$, the Jacobian matrix for the transformation from $\psi_{j,0:T}$ to $\theta_{j,0:T}$ is diagonal with a 1 and $T$ copies of $\sqrt{V_j}$ along the diagonal. So this likelihood can be written in terms of $\psi_{j,0:T}$ as
+\begin{align*}
+L(V_j,W_j,\psi_{j,0:T}|y_{j,1:T}) \propto \exp\left[-\sum_{t=1}^T\psi_{j,t}^2\right] W_j^{-T/2}\exp\left[-h(\psi_{j,0:T})\right].
+\end{align*}
+where
+\begin{align*}
+h(\psi_{j,0:T}) = \frac{(y_{j,1} + \sqrt{V_j}\psi_{j,1} - \mu_1 - \beta_j\psi_{j,0})^2 +  \sum_{t=2}^T(y_{j,t} + \sqrt{V_j}\psi_{j,t}-\mu_t-\beta_j(y_{j,t-1} + \sqrt{V_j}\psi_{j,t-1}))^2}{2W_j}
+\end{align*}
+From this and the prior on $\theta_{j,0}=\psi_{j,0}$, the full conditional distribution of $\psi_{j,0:T}$ is
+\begin{align*}
+p(\psi_{j,0:T}|\cdots)&\propto \exp\left[-\frac{1}{2}g(\psi_{j,0:T})\right]
+\end{align*}
+where
+\begin{align*}
+g(&\psi_{j,0:T}) = \frac{(\psi_{j,0} - \mu_0)^2}{W_{j,0}} + \sum_{t=1}^T\psi_{j,t}^2 + \frac{(y_{j,1} - \mu_1 + \sqrt{V_j}\psi_{j,1} - \beta_j\psi_{j,0})^2}{W_j}\\  
+&+ \sum_{t=2}^T\frac{(y_{j,t} - \beta_jy_{j,t-1} - \mu_t + \sqrt{V_j}(\psi_{j,t} - \beta_j\psi_{j,t-1}))^2}{W_j}.
+\end{align*}
+Then $\psi_{j,0:T}\sim N(\Omega_{\psi_K}^{-1},\omega_{\psi_j},\Omega_{\psi_j}^{-1})$ where
+\begin{align*}
+\Omega_{\psi_j,0,0}&=\frac{1}{W_{j,0}} + \frac{\beta_j^2}{W_j}&&\\
+\Omega_{\psi_j,t,t}&=1 + \frac{V_j}{W_j} + \frac{V_j\beta_j^2}{W_j}&&\mbox{for } t=1,2,\cdots,T-1\\
+\Omega_{\psi_j,T,T}&=1 + \frac{V_j}{W_j}&&\\
+\Omega_{\psi_j,1,0}&=\Omega_{\psi_j,0,1}=-\frac{\sqrt{V_j}\beta_j}{W_j}&&\\
+\Omega_{\psi_j,t,t-1}&=\Omega_{\psi_j,t-1,t}=-\frac{V_j\beta_j}{W_j}&&\mbox{for } t=2,3,\cdots,T
+\end{align*}
+and
+\begin{align*}
+\omega_{\psi_j,0}&=\frac{\mu_0}{W_{j,0}} + \frac{(y_{j,1} - \mu_1)\beta_j}{W_j}&&\\
+\omega_{\psi_j,1}&=\frac{\sqrt{V_j}}{W_j}\left[y_{j,1} - \mu_1 + \beta_j(y_{j,2} - \beta_jy_{j,1} - \mu_2)\right]&&\\
+\omega_{\psi_j,t}&=\frac{\sqrt{V_j}}{W_j}\left[y_{j,t} - \beta_jy_{j,t-1} - \mu_t + \beta_j(y_{j,t+1} - \beta_jy_{j,t} - \mu_{t+1})\right]&&\mbox{for } t=2,3,\cdots,T-1\\
+\omega_{\psi_j,T}&=\frac{\sqrt{V_j}}{W_j}\left[y_{j,T} - \beta_jy_{j,T-1} - \mu_T\right].&&
+\end{align*}
+Then $\Sigma_{\psi_j,t}$ and $\bar{\psi}_{j,t}$ can be defined analogously for the MCFA.
+
+The full condtional distribution of the $(V_j,W_j)$'s is also change because of the Jacobian term:
+\begin{align*}
+p(V_j,W_j&|\psi_{j,0:T},\cdots) \propto V_j^{-a_{V_j}-1}\exp\left[-\frac{1}{V_j}b_{V_j}\right]W_j^{-a_{W_j}-T/2-1}\exp\left[-\frac{1}{W_j}b_{W_j}\right]\\
+&\times\exp\left[-\frac{(y_{j,1} + \sqrt{V_j}\psi_{j,1} - \mu_1 - \beta_j\psi_{j,0})^2 +  \sum_{t=2}^T(y_{j,t} + \sqrt{V_j}\psi_{j,t}-\mu_t-\beta_j(y_{j,t-1} + \sqrt{V_j}\psi_{j,t-1}))^2}{2W_j}\right].
+\end{align*}
+This density is fairly complicated and difficult to sampler from. The conditional density of $W_j$ is inverse gamma, so it is possible to derive the marginal density of $V_j$, but this is still hard to sample from efficiently. We will use the approach of \citet{simpson2014interweaving} and instead sample from the full conditionals of $V_j$ and $W_j$ instead of drawing them jointly. It is easy to show that $p(W_j|\psi_{j,0:T}\cdots)=p(W_j|\theta_{j,0:T})$ so that $W_j|\psi_{j,0:T},\cdots \sim IG(\tilde{a}_{W_j},\tilde{b}_{W_j})$. The full conditional density of $V_j$ is more complicated:
+\begin{align*}
+p(V_j|\psi_{j,0:T},\cdots) \propto V_j^{-a_{V_i}-1}\exp\left[-\frac{1}{V_j}b_{V_j} + \sqrt{V_j}c_{V_j} - V_jd_{V_j}\right]
+\end{align*}
+where
+\begin{align*}
+c_{V_j}&=\frac{\psi_{j,1}(y_{j,1} - \mu_1 - \beta_j\psi_{j,0}) + \sum_{t=2}^T(\psi_{j,t} - \beta_j\psi_{j,t-1})(y_{j,t} - \mu_t - \beta_jy_{j,t-1})}{W_j} \in \Re\\
+d_{V_j}&=\frac{\psi_{j,1}^2 + \sum_{t=2}^T(\psi_{j,t} - \beta_j\psi_{j,t-1})^2}{2W_j} > 0.
+\end{align*}
+This density is also difficult to sample from, but it can be accomplished rather efficiently. We will return to this issue after characterizing the full conditionals given $\gamma_{j,0:T}$ in the conditional DLM.
+
+In order to complete the algorithm, we need one more piece --- the full conditional distribution of $(V_j,W_j)$ given $\gamma_{j,0:T}$. The Jacobian of the transforation from $\theta_{j,0:T}$ to $\gamma_{j,0:T}$ is triangular with a 1 and $T$ copies of $\sqrt{W}_j$ along the diagonal, so the conditional augmented data likelihood based on $\gamma_{j,0:T}$ becomes
+\begin{align*}
+L(V_j,W_j,\gamma_{j,0:T}|y_{j,1:T}) \propto \exp\left[-\sum_{t=1}^T\gamma_{j,0:T}\right] V_j^{-T/2}\exp\left[-\frac{1}{2V_j}\sum_{t=1}^T(y_{j,t} - \theta_{j,t})\right]
+\end{align*}
+where, recursively, $\theta_{j,t} =\sqrt{W_j}\gamma_{j,t} + \mu_t + \theta_{j,t-1}\beta_j$ for $t=1,2,\cdots,T$ and $\theta_{j,0}=\gamma_{j,0}$ so that for $t>0$, $\theta_{j,t} = \sqrt{W_j}\sum_{s=1}^t\beta_j^{t-s}\gamma_{j,s} + \sum_{s=1}^t\beta_j^{t-s}\mu_s + \beta_j^t\gamma_{j,0}$. Then the full conditional distribution of $(V_j,W_j)$ given $\gamma_{j,0:T}$ is
+\begin{align*}
+p(V_j,&W_j|\gamma_{j,0:T},\cdots) \propto W_j^{-a_{V_j}-1}\exp\left[-\frac{1}{W_j}b_{W_j}\right]V_j^{-a_{V_j}-T/2-1}\exp\left[-\frac{1}{V_j}b_{V_j}\right]\\
+&\times\exp\left[-\frac{1}{2V_j}\sum_{t=1}^T\left(y_{j,t} - \sqrt{W_j}\sum_{s=1}^t\beta_j^{t-s}\gamma_{j,s} -\sum_{s=1}^t\beta_j^{t-s}\mu_s - \beta_j^t\gamma_{j,0}\right)^2\right].
+\end{align*} 
+
+Once again, this density is difficult to sample from so we will draw from the full conditionals of $V_j$ and $W_j$ instead of drawning them jointly. The full conditional of $V_j$ given $\gamma_{j,0:T}$ is $IG(\tilde{a}_{V_j},\tilde{b}_{V_j})$, so that draw is easy. The full conditional of $W_j$ given $\gamma_{j,0:T}$ is
+\begin{align*}
+p(W_j|\gamma_{j,0:T},\cdots)\propto&W_j^{-a_{V_j}-1}\exp\left[-\frac{1}{W_j}b_{W_j} + \sqrt{W_j}c_{W_j} - W_jd_{W_j}\right]
+\end{align*}
+where
+\begin{align*}
+c_{W_i}=&\frac{\sum_{t=1}^T\left(y_{j,t} - \sum_{s=1}^t\beta_j^{t-s}\mu_s - \beta_j^t\gamma_{j,0}\right)\sum_{s=1}^t\beta_j^{t-s}\gamma_{j,s}}{V_j}\in \Re\\
+d_{W_i}=&\frac{\sum_{t=1}^T\left(\sum_{s=1}^t\beta_j^{t-s}\gamma_{j,s}\right)^2}{2V_j}>0.
+\end{align*}
+This density has the same form as $p(V_j|\gamma_{j,0:T},\cdots)$. \citet{simpson2014interweaving} suggest using an adaptive rejection sampling \citep{gilks1992adaptive} approach the density is log concave and a Cauchy approximation to the density of $\log(V_j)$ or $\log(W_j)$ when log concavity fails. See the appendix of \citet{simpson2014interweaving} for more details.
+\clearpage
+\bibliographystyle{apalike}
+\bibliography{baysm.bib}
+\end{document}
