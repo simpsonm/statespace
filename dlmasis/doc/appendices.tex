@@ -235,7 +235,7 @@ The full conditional distribution of $V$ is more complicated:
 \end{align*}
 with $\mu_t$ a function of $V$, defined above. In the local level model with an $IG(\alpha_V,\beta_V)$ prior on $V$, this density is simpler:
 \begin{align*}
- p(V&|W,\psi,y) \propto V^{-alpha_V - 1}\exp\left[-\frac{\beta_V}{V} + \frac{1}{W}\sum_{t=1}^T(y_t - \mu_t)'(y_t-\mu_t)\right]
+ p(V&|W,\psi,y) \propto V^{-\alpha_V - 1}\exp\left[-\frac{\beta_V}{V} + \frac{1}{W}\sum_{t=1}^T(y_t - \mu_t)'(y_t-\mu_t)\right]
 \end{align*}
 where $\mu_1 = \sqrt{V}\psi_1 + \psi_0$ and for $t=2,3,\cdots,T$, $\mu_t = \sqrt{V}(\psi_t - \psi_{t-1}) + y_{t-1}$. Thus
 \begin{align*}
