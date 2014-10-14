@@ -92,7 +92,7 @@ Methods that draw from this distribution are often called simulation smoothers i
 Similarly the elements of $\omega_{\theta_j}$ are defined as
 \begin{align*}
 \omega_{\theta_j,0} &= \frac{\mu_0}{W_{j,0}} + \frac{\mu_1\beta_j}{W_j}&&\\
-\omega_{\theta_j,t} &= \frac{y_{j,t}}{V_j} + \frac{\mu_t + \mu_{t+1}\beta_j}{W_j}&&\mbox{for } t=1,2,\cdots,T-1\\
+\omega_{\theta_j,t} &= \frac{y_{j,t}}{V_j} + \frac{\mu_t - \mu_{t+1}\beta_j}{W_j}&&\mbox{for } t=1,2,\cdots,T-1\\
 \omega_{\theta_j,T} &= \frac{y_{j,t}}{V_j} + \frac{\mu_t}{W_j}.&&
 \end{align*}
 So $\theta_{j,0:T}|\cdots\sim N(\Omega_{\theta_j}^{-1}\omega_{\theta_j},\Omega_{\theta_j}^{-1})$. In order to draw from this distribution, we need to invert $\Omega_{\theta_j}$. The Cholesky factor algorithm (CFA) for doing this comes from \citet{rue2001fast} and takes advantage of the tridiagonal structure of $\Omega_j$ to quickly compute its Cholesky factorization. This method is improved by \citet{mccausland2011simulation} in some cases by using a backward sampling approach that implicitly uses the technology of \citet{rue2001fast}. Hence \citet{simpson2014interweaving} calls this the mixed Cholesky factorization algorithm (MCFA). This algorithm requires the following intermediate quantities --- let $\Sigma_{\theta_j,0} = \Omega_{\theta_j,0,0}^{-1}$, $\Sigma_{\theta_j,t} = (\Omega_{\theta_j,t,t} - \Omega_{\theta_j,t,t-1}\Sigma_{\theta_j,t-1}\Omega_{\theta_j,t-1,t})^{-1}$ for $t=1,2,\cdots,T$, $\bar{\theta}_{j,0} = \Sigma_{\theta_j,0}\omega_{\theta_j,0}$, and $\bar{\theta}_{j,t} = \Sigma_{\theta_j,t}(\omega_{j,t} - \Omega_{\theta_j,t,t-1}\bar{\theta}_{j,t-1})$ for $t=1,2,\cdots,T$. Then the draws of $\theta_{j,0:T}$ from their joint full conditional can be accomplished sequentially in reverse order.
@@ -199,7 +199,7 @@ g(&\psi_{j,0:T}) = \frac{(\psi_{j,0} - \mu_0)^2}{W_{j,0}} + \sum_{t=1}^T\psi_{j,
 Then $\psi_{j,0:T}\sim N(\Omega_{\psi_K}^{-1},\omega_{\psi_j},\Omega_{\psi_j}^{-1})$ where
 \begin{align*}
 \Omega_{\psi_j,0,0}&=\frac{1}{W_{j,0}} + \frac{\beta_j^2}{W_j}&&\\
-\Omega_{\psi_j,t,t}&=1 + \frac{V_j}{W_j} + \frac{V_j\beta_j^2}{W_j}&&\mbox{for } t=1,2,\cdots,T-1\\
+\Omega_{\psi_j,t,t}&=1 + \frac{V_j}{W_j}(1 + \beta_j^2)&&\mbox{for } t=1,2,\cdots,T-1\\
 \Omega_{\psi_j,T,T}&=1 + \frac{V_j}{W_j}&&\\
 \Omega_{\psi_j,1,0}&=\Omega_{\psi_j,0,1}=-\frac{\sqrt{V_j}\beta_j}{W_j}&&\\
 \Omega_{\psi_j,t,t-1}&=\Omega_{\psi_j,t-1,t}=-\frac{V_j\beta_j}{W_j}&&\mbox{for } t=2,3,\cdots,T
@@ -207,9 +207,9 @@ Then $\psi_{j,0:T}\sim N(\Omega_{\psi_K}^{-1},\omega_{\psi_j},\Omega_{\psi_j}^{-
 and
 \begin{align*}
 \omega_{\psi_j,0}&=\frac{\mu_0}{W_{j,0}} + \frac{(y_{j,1} - \mu_1)\beta_j}{W_j}&&\\
-\omega_{\psi_j,1}&=\frac{\sqrt{V_j}}{W_j}\left[y_{j,1} - \mu_1 + \beta_j(y_{j,2} - \beta_jy_{j,1} - \mu_2)\right]&&\\
-\omega_{\psi_j,t}&=\frac{\sqrt{V_j}}{W_j}\left[y_{j,t} - \beta_jy_{j,t-1} - \mu_t + \beta_j(y_{j,t+1} - \beta_jy_{j,t} - \mu_{t+1})\right]&&\mbox{for } t=2,3,\cdots,T-1\\
-\omega_{\psi_j,T}&=\frac{\sqrt{V_j}}{W_j}\left[y_{j,T} - \beta_jy_{j,T-1} - \mu_T\right].&&
+\omega_{\psi_j,1}&=\frac{\sqrt{V_j}}{W_j}\left[\mu_1 - y_{j,1} + \beta_j(y_{j,2} - \beta_jy_{j,1} - \mu_2)\right]&&\\
+\omega_{\psi_j,t}&=\frac{\sqrt{V_j}}{W_j}\left[\mu_t + \beta_jy_{j,t-1} - y_{j,t} + \beta_j(y_{j,t+1} - \beta_jy_{j,t} - \mu_{t+1})\right]&&\mbox{for } t=2,3,\cdots,T-1\\
+\omega_{\psi_j,T}&=\frac{\sqrt{V_j}}{W_j}\left[\mu_T + \beta_jy_{j,T-1} - y_{j,T}\right].&&
 \end{align*}
 Then $\Sigma_{\psi_j,t}$ and $\bar{\psi}_{j,t}$ can be defined analogously for the MCFA.
 
