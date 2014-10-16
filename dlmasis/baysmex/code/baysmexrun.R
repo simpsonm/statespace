@@ -14,7 +14,7 @@ N <- ncol(KStealdat)
 
 
 C <- 5 ## number of chains
-n <- 100 ## number of sims per chain
+n <- 20000 ## number of sims per chain
 
 start <- matrix(0, nrow=C, ncol=2*J+1)
 start[1,] <- 1
