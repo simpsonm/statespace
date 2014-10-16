@@ -111,3 +111,34 @@ for(r in 1:R){
   plot(ts(cumsum(gl[[r]][,j])/1:n),ylab=colnames(gl[[r]])[j],col="red")
 }
 
+
+
+library(plyr)
+library(reshape2)
+effdat <- read.csv("Efficiency.csv")[,-1]
+effmelt <- melt(effdat, id=c("period", "rep", "trt", "id"))
+KStealdat <- dcast(effmelt, formula=period~rep, subset=.(trt=="KSteal"))[,-1]
+
+
+
+###################################
+## For looking at the chains
+
+par(mfrow=c(2,1))
+j <- 2
+for(k in 1:1){
+  traceplot(gibbs[[j]][,k],ylim=c(0,1), ylab="gibbs")
+  traceplot(inter[[j]][,k],ylim=c(0,1), ylab="inter")
+}
+
+par(mfrow=c(2,1))
+j <- 2
+for(k in 1:1){
+  traceplot(gibbs[,k,drop=FALSE],ylim=c(0,1), ylab="gibbs")
+  traceplot(inter[,k,drop=FALSE],ylim=c(0,1), ylab="inter")
+}
+
+
+effectiveSize(gibbs[,1:13,drop=FALSE])/sum(gibbstime[,3])
+effectiveSize(inter[,1:13,drop=FALSE])/sum(intertime[,3])
+
