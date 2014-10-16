@@ -1,91 +1,113 @@
 source("baysmexfun.R")
-hllmsim <- function(N,J,U,V,W,beta){
-  theta <- matrix(0,nrow=N+1,ncol=J)
-  dat <- matrix(0,nrow=N,ncol=J)
+hllmsim <- function(N,J,U,V,W){
+  dat <- matrix(0,nrow=J, ncol=N)
   u <- rnorm(N,0,sqrt(U))
   mu <- cumsum(c(0,u))
-  for(t in 1:N){
-    theta[t+1,] <- mu[t+1] + beta*theta[t,] + rnorm(J)*sqrt(W)
-    dat[t,] <- theta[t+1,] + rnorm(J)*sqrt(V)
+  for(j in 1:J){
+    theta <- cumsum(c(0,rnorm(N, 0, sqrt(W[j]))))
+    dat[j,] <- theta[-1] + mu[-1] + rnorm(N,0,sqrt(V[j]))
   }
   return(dat)
 }
 
-N <- 40
-J <- 4
+
+N <- 20
+J <- 2
 U <- 1
-V <- rep(1,J)
-W <- rep(10,J)
-beta <- rep(.2,J)
-testdat <- hllmsim(N,J,U,V,W,beta)
+V <- rep(10,J)
+W <- rep(100,J)
+testdat <- hllmsim(N,J,U,V,W)
 
-
-start <- c(U,V,W,beta,rep(0,N+1),rep(0,(N+1)*J))
+start <- c(V,U,W)
 au <- 5
 av <- rep(5,J)
 aw <- rep(5,J)
 bu <- (au-1)*U
 bv <- (av-1)*V
 bw <- (aw-1)*W
-V0 <- rep(100,J)
-W0 <- rep(100,J)
-m0 <- 0
-U0 <- 100
-beta0 <- 0
-B <- 100
-n <- 10000
+m0 <- rep(0,J+1)
+C0 <- diag(100,J+1)
+n <- 1000
 
-testout <- naivegibbs(n, start, testdat, au, bu, av, bv, aw, bw, V0, W0, m0, U0, beta0, B)
-
-Uout <- testout[,1]
-Vout <- testout[,2:(J+1)]
-Wout <- testout[,(J+2):(2*J+1)]
-betaout <- testout[,(2*J+2):(3*J+1)]
-muout <- testout[,(3*J+2):(3*J+2+N)]
-thetaout <- matrix(testout[,(3*J+2+N+1):(3*J + (J+1)*(N+1)+1)], byrow=FALSE, ncol=J)
-
-
-
-
-
-plot(ts(Uout))
-
-par(mfrow=c(2,2))
+par(mfrow=c(J,1))
 for(j in 1:J){
-  plot(ts(Vout[,j]))
-}
-
-par(mfrow=c(2,2))
-for(j in 1:J){
-  plot(ts(Wout[,j]))
-}
-
-par(mfrow=c(2,2))
-for(j in 1:J){
-  plot(ts(betaout[,j]),ylim=c(-2,2))
+  plot(ts(testdat[j,]))
 }
 
 
 
 
+##gibbsout <- naivegibbs(n, start, testdat, au, bu, av, bv, aw, bw, m0, C0)
+##interout <- disterrorinter(n, start, testdat, au, bu, av, bv, aw, bw, m0, C0)
+
+
+R <- 20
+gl <- list()
+il <- list()
+system.time(
+    for(r in 1:R){
+      testdat <- hllmsim(N,J,U,V,W)
+      newstart <- start*exp(rnorm(length(start)))
+      gibbsout <- naivegibbs(n, newstart, testdat, au, bu, av, bv, aw, bw, m0, C0)
+      gl[[r]] <- gibbsout[,1:(2*J+2)]
+      interout <- disterrorinter(n, newstart, testdat, au, bu, av, bv, aw, bw, m0, C0)
+      il[[r]] <- interout[,1:(2*J+2)]
+    }
+    )
 
 
 
-plot(ts(cumsum(Uout)/1:n))
+m <- 1
+ll <- c(rep(0,2*J+1),-5)
+ul <- c(c(V,U,W)*10,5)
 
-par(mfrow=c(2,2))
-for(j in 1:J){
-  plot(ts(cumsum(Vout[,j])/(1:n)))
+par(mfrow=c(J+1,2))
+for(j in 1:(2*J + 2)){
+  plot(ts(cumsum(gl[[1]][-c(1:m),j])/1:(n-m)), ylab=colnames(gl[[1]])[j], ylim=c(ll[j],ul[j]))
+  lines(1:(n-m), cumsum(il[[1]][-c(1:m),j])/1:(n-m), col="red")
+  for(r in 2:R){
+    lines(1:(n-m), cumsum(gl[[r]][-c(1:m),j])/1:(n-m))
+    lines(1:(n-m), cumsum(il[[r]][-c(1:m),j])/1:(n-m), col="red")
+  }
 }
 
-par(mfrow=c(2,2))
-for(j in 1:J){
-  plot(ts(cumsum(Wout[,j])/(1:n)))
+r <- 3
+par(mfrow=c(2*J+1,2))
+for(j in 1:(2*J + 1)){
+  plot(ts(il[[r]][,j]),ylab=colnames(il[[r]])[j])
+  plot(ts(gl[[r]][,j]),ylab=colnames(gl[[r]])[j],col="red")
 }
 
-par(mfrow=c(2,2))
-for(j in 1:J){
-  plot(ts(cumsum(betaout[,j])/(1:n)), ylim=c(-3,3))
+r <- 1
+par(mfrow=c(2*J+1,2))
+for(j in 1:(2*J + 1)){
+  plot(ts(cumsum(il[[r]][,j])/1:n),ylab=colnames(il[[r]])[j])
+  plot(ts(cumsum(gl[[r]][,j])/1:n),ylab=colnames(gl[[r]])[j],col="red")
 }
 
+
+
+r <- 3
+par(mfrow=c(4,2))
+j <- 1
+plot(ts(il[[1]][,j]),ylab=colnames(il[[r]])[j])
+plot(ts(gl[[1]][,j]),ylab=colnames(gl[[r]])[j],col="red")
+j <- j+J+1
+plot(ts(il[[1]][,j]),ylab=colnames(il[[r]])[j])
+plot(ts(gl[[1]][,j]),ylab=colnames(gl[[r]])[j],col="red")
+j <- 2
+plot(ts(il[[1]][,j]),ylab=colnames(il[[r]])[j])
+plot(ts(gl[[1]][,j]),ylab=colnames(gl[[r]])[j],col="red")
+j <- j+J+1
+plot(ts(il[[1]][,j]),ylab=colnames(il[[r]])[j])
+plot(ts(gl[[1]][,j]),ylab=colnames(gl[[r]])[j],col="red")
+
+
+
+j <- 2
+par(mfrow=c(R,2))
+for(r in 1:R){
+  plot(ts(cumsum(il[[r]][,j])/1:n),ylab=colnames(il[[r]])[j])
+  plot(ts(cumsum(gl[[r]][,j])/1:n),ylab=colnames(gl[[r]])[j],col="red")
+}
 
