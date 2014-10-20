@@ -22,7 +22,12 @@ naivegibbs <- function(n, start, dat, au, bu, av, bv, aw, bw, m0, C0){
   bvt <- bv
   bwt <- bw
   for(i in 1:n){
-    V <- diag(Vs)
+    if(J>1){
+      V <- diag(Vs)
+    }
+    if(J==1){
+      V <- Vs
+    }
     W <- diag(Ws)
     phi <- mcfaphi(dat, V, W, m0, C0, F, N, J)
     mu <- phi[1,]
@@ -36,7 +41,7 @@ naivegibbs <- function(n, start, dat, au, bu, av, bv, aw, bw, m0, C0){
     }
     but <- bu + sum(diff(mu)^2)/2
     Ws[1] <- 1/rgamma(1, shape=aut, rate=but)
-    out[i,] <- c(Vs,Ws,phi)
+    out[i,] <- c(Vs,Ws,t(phi))
   }
   return(out)
 }
@@ -89,7 +94,7 @@ disterrorinter <- function(n, start, dat, au, bu, av, bv, aw, bw, m0, C0){
     }
     but <- bu + sum(diff(mu)^2)/2
     Ws[1] <- 1/rgamma(1, shape=aut, rate=but)
-    out[i,] <- c(Vs,Ws,phi)
+    out[i,] <- c(Vs,Ws,t(phi))
   }
   return(out)
 }

@@ -4,8 +4,8 @@ mcfaphi <- function(y, V, W, m0, C0, F, N, J){
   Winv <- solve(W)
   tF <- t(F)
   O0 <- C0inv + Winv
-  Ot <- tF%*%Vinv%*%F + 2*Winv
   OT <- tF%*%Vinv%*%F + Winv
+  Ot <- OT + Winv
   Ott1 <- -Winv
   o <- matrix(0, nrow=(J+1), ncol=(N+1))
   m <- o
