@@ -46,91 +46,96 @@ epsfig, multicol, amsthm}
 \frametitle{Motivation}
 Consider the model
 \begin{align*}
- y_t &\stackrel{iid}{\sim} N(\theta_t, V)\\
-\theta_t &\stackrel{ind}{\sim} N(\mu,W)
+ y_t &\stackrel{ind}{\sim} N(\theta_t, V), &\theta_t &\stackrel{iid}{\sim} N(\mu,W)
 \end{align*}
-\pause
-Priors for $V$ and $W$:
-\begin{itemize}
-\item Conditionally conjugate: inverse gamma
-\item Fr{\"u}wirth-Schnatter: normal on $\pm\sqrt{V}$ and $\pm\sqrt{W}$
-\item Gelman: half-$t$ on $\sqrt{V}$ and $\sqrt{W}$
-\end{itemize}
 \pause
 Let $\gamma_t=(\theta_t-\mu)/\sqrt{W}$. Then
 \begin{align*}
- y_t &\stackrel{iid}{\sim} N(\mu + \sqrt{W}\gamma_t, V)\\
-\theta_t &\stackrel{ind}{\sim} N(0,1)
+ y_t &\stackrel{ind}{\sim} N(\mu + \sqrt{W}\gamma_t, V), & \theta_t &\stackrel{iid}{\sim} N(0,1)
 \end{align*}
-\pause
-Now conditionally conjugate prior for $\pm \sqrt{W}$ is $N(0,Q)$.
+$\gamma_{1:T}$ are called the scaled disturbances or noncentered disturbances.\\~\\
+
+\pause Priors for $V$ and $W$:
 \begin{itemize}
-\item[] $G(1/2, Q/2)$ on $W$ (under the shape-scale parameterization).
+\item Conditionally conjugate:
+\begin{itemize}
+\item under $\theta_{1:T}$: $IG(\alpha,\beta)$ on both $V$ and $W$.
+\item under $\gamma_{1:T}$: $IG(\alpha,\beta)$  on $V$ and $N(0,Q)$ on $\pm\sqrt{W}$
+\end{itemize}
+\item Fr{\"u}wirth-Schnatter: $N(0,Q)$ on both $\pm\sqrt{V}$ and $\pm\sqrt{W}$
+\item Gelman: half-$t$ on $\sqrt{V}$ and $\sqrt{W}$
 \end{itemize}
 \end{frame}
 
 \begin{frame}
 \frametitle{Motivation}
+Consider the scaled disturbance / noncentered parameterization:
 \begin{align*}
- y_t &\stackrel{iid}{\sim} N(\mu + \sqrt{W}\gamma_t, V)\\
-\gamma_t &\stackrel{ind}{\sim} N(0,1)
+ y_t &\stackrel{iid}{\sim} N(\mu + \sqrt{W}\gamma_t, V), &\gamma_t &\stackrel{ind}{\sim} N(0,1)
 \end{align*}
-Suppose we put normal priors on $\pm\sqrt{V}$ and $\pm\sqrt{W}$.
+Suppose we put $N(0,Q)$ priors on $\pm\sqrt{V}$ and $\pm\sqrt{W}$.
+\begin{itemize}
+\item[]( Equivalent to $G(1/2, Q/2)$ on $V$ and $W$ under the shape-scale parameterization)
+\end{itemize}
+
 \pause
 Full conditionals:
-\begin{itemize}
-\item $\pm\sqrt{W}\sim N(.,.)$
-\item $V\sim GIG(.,.,.)$, i.e. 
+\begin{align*}
+&\pm\sqrt{W}\sim N(\hat{\mu},\hat{\Sigma}), &&V\sim GIG(\hat{\alpha},\hat{\beta},\hat{\gamma})
+\end{align*}
+i.e. 
 \[
-p(V|\cdots)\propto V^{\alpha -1}\exp\left[-\frac{1}{2}\left(\beta V + \frac{\gamma}{V}\right)\right]
+p(V|\cdots)\propto V^{\hat{\alpha} -1}\exp\left[-\frac{1}{2}\left(\hat{\beta} V + \frac{\hat{\gamma}}{V}\right)\right]
 \]
-\end{itemize}
-\pause
-Now suppose we put $t$ priors on $\pm\sqrt{V}$ and $\pm\sqrt{W}$. Full conditionals?
 \end{frame}
+
+%where 
+%\begin{align*}
+%&\hat{\mu}_W=\hat{\Sigma}_W\frac{\sum_{t=1}^T(y_t-\mu)\gamma_t}{V}, &&\hat{\Sigma}_W=\left(\frac{\sum_{t=1}^T\gamma_t^2}{V} + \frac{1}{Q_W}\right)^{-1}
+%\end{align*}
+%\begin{align*}
+%&\hat{\alpha}_V=-T/2 + 1, &&\hat{\beta}_V=1/Q_V, &&&\hat{\gamma}_V=\sum_{t=1}^T(y_t - \mu - \sqrt{W}\gamma_t)^2
+%\end{align*}
+
 
 \begin{frame}
 \frametitle{Motivation -- useful facts}
-Using the shape-scale parameterization the gamma distribution:
+How does the half$-t$ prior relate to the others? Suppose
 \[
-p(X|a,b) \propto X^{a-1}\exp\left[-\frac{X}{b}\right]
-\]
-Suppose 
-\[
-X\sim G(a,Qk) \mbox{ and } Q\sim IG(\alpha,\beta)
+W\sim G(a,Qk) \mbox{ and } Q\sim IG(\alpha,\beta)
 \]
 or
 \[
-X\sim IG(\alpha, Q) \mbox{ and } Q\sim G(a,\beta k)
+W\sim IG(\alpha, B) \mbox{ and } B\sim G(a,\beta k)
 \]
 where $k$ is a known constant. \pause Then
 \[
-p(X) \propto X^{a-1}(x + \beta k)^{-(a + \alpha)}
+p(W) \propto W^{a-1}(W + \beta k)^{-(a + \alpha)}
 \]
 \pause
-and for $S=\sqrt{X}$
+and for $S=\pm\sqrt{W}$
 \[
-p(S) \propto X^{2a-1}\left(1 + \frac{S}{\beta k}\right)^{-(a + \alpha)}
+p(S) \propto S^{2a-1}\left(1 + \frac{S}{\beta k}\right)^{-(a + \alpha)}
 \]
-$a=1/2 \implies $ $S\sim $half$-t$ and $\pm S \sim t$.
+$a=1/2 \implies $ $S\sim t$ and $|S| \sim$ half-$t$. 
 \end{frame}
 
 \begin{frame}
 \frametitle{Motivation -- useful facts}
-Also
+In particular the following result in equivalent marginal distributions for $W$:
+\begin{align*}
+W|Q &\sim G(1/2,Q/2), &&Q\sim IG(n/2,\beta)\\
+W|B &\sim IG(n/2,B), &&B\sim G(1/2,\beta/2)\\
+\pm\sqrt{W} &\sim t_n(0,2\beta/n) &&\\
+\sqrt{W} &\sim \mbox{half-}t_n(0,2\beta/n)&&\\
+\pm\sqrt{W}|Q &\sim N(0,Q), && Q\sim IG(n/2,\beta)&&\\
+\sqrt{W} &\sim \mbox{half-}N(0,Q), && Q\sim IG(n/2,\beta)&&
+\end{align*}
+since
 \[
-X|Q\sim G(1/2,Q/2) \iff \pm \sqrt{X}|Q \sim N(0,Q)
+W|Q\sim G(1/2,Q/2) \iff \pm \sqrt{W}|Q \sim N(0,Q)
 \]
-\pause
-So if $Q\sim IG(\alpha,\beta)$ then
-\[
-p(X) \propto X^{1/2-1}(X + 2\beta )^{-(\alpha + 1/2)}
-\]
-and 
-\[
-p(S) \propto \left(1 + \frac{S}{2\beta}\right)^{-(\alpha + 1/2)}
-\]
-\pause So priors for a variance $W$:
+\pause So priors for a variances $V$ and $W$:
 \begin{itemize}
 \item Conjugate prior under $\theta_t$: inverse gamma
 \item Fr{\"u}wirth-Schnatter: gamma (conjugate normal for $\pm\sqrt{W}$ under $\gamma_t$)
@@ -139,64 +144,108 @@ p(S) \propto \left(1 + \frac{S}{2\beta}\right)^{-(\alpha + 1/2)}
 \end{frame}
 
 \begin{frame}
-\frametitle{Motivation -- back to the model}
+\frametitle{Motivation -- useful facts}
+Using the scaled disturbances:
 \begin{align*}
- y_t &\stackrel{iid}{\sim} N(\mu + S_W\gamma_t, V) &&\gamma_t \stackrel{ind}{\sim} N(0,1)
+ y_t &\stackrel{ind}{\sim} N(\mu + \sqrt{W}\gamma_t, V), & \theta_t &\stackrel{iid}{\sim} N(0,1)
 \end{align*}
-$t_n(0,\beta n/2)$ priors on $S_V\pm\sqrt{V}$ and $S_W\pm\sqrt{W}$. Full conditionals?\pause\\~\\
-$p(V,X_V|\cdots)\propto$
-\begin{align*}
-V^{-(n_V + T)/2-1}\exp\left[-\frac{1}{V}\left(X_V + \hat{b}_V\right)\right]X_V^{(n_V+1)/2 - 1}\exp\left[-\frac{X}{2\beta_V}\right]
-\end{align*}
-where
-\[
-\hat{b}_V=\frac{1}{2}\sum_{t=1}^T\left(y_t - \gamma_tS_W - \mu\right)^2
-\]
-\pause $p(S_W,X_W|\cdots)\propto $
-\begin{align*}
-X_W^{-(n_W + 1)/2 - 1}\exp\left[-\frac{S_W^2 + \beta_W}{X_W}\right]\exp\left[-\frac{1}{2}\sum_{t=1}^T(y_t - \mu - S_W\gamma_t)^2\right]
-\end{align*}
+Suppose we put $t$ priors on $S_V=\pm\sqrt{V}$ and $S_W=\pm\sqrt{W}$. Full conditionals?\\~ \pause
 
-\end{frame}
-
-\begin{frame}
-\frametitle{Motivation - interweaving}
+Complicated, but if we use the auxillary variables $Q_W$ and $B_V$:
 \begin{align*}
-\mbox{Model:}&& y_t &\stackrel{iid}{\sim} N(\theta_t, V), & \theta_t& \stackrel{ind}{\sim} N(\mu,W)\\
-\mbox{or}&& y_t &\stackrel{iid}{\sim} N(\mu + S_W\gamma_t, V), &\gamma_t& \stackrel{ind}{\sim} N(0,1)
+p(S_W|\cdots ) &\propto \exp\left[-\frac{1}{2}\left(\sum_{t=1}^T\frac{(y_t - \mu - S_W\gamma_t)^2}{V} + \frac{S^2_W}{Q_W}\right)\right]\\
+p(Q_W|\cdots ) &\propto Q_W^{-\frac{n_W}{2} - 1}\exp\left[-\frac{1}{Q_W}\left(\frac{S_W^2}{2} + \beta_W\right)\right]\\
+p(V|\cdots ) & \propto V^{-\frac{T + n_V}{2} - 1}\exp\left[-\frac{1}{V}\left(\frac{\sum_{t=1}^T(y_t - \mu - S_W\gamma_t)^2}{2} + B_V\right)\right]\\
+p(B_V|\cdots ) & \propto B_V^{-\frac{1}{2}}\exp\left[-B_V\left(\frac{1}{V} + \frac{2}{\beta_V}\right)\right]
 \end{align*}
-The standard DA algorithm with $\theta=\theta_{1:T}$, $\mu$ known:
-\[
-[\theta|V,W]\to [V,W|\theta]
-\]
-\pause Alternating with $\theta$ and $\gamma=\gamma_{1:T}$:
-\begin{align*}
-&[\theta|V,W]\to [V,W|\theta]\to [\gamma|V,W]\phantom{,\theta} \to [V|W,\gamma] \to [W|V,\gamma]\pause
-\end{align*}
-\pause Interweaving with $\theta$ and $\gamma$:
-\begin{align*}
-&{[\theta|V,W]\to [V,W|\theta]\to \textcolor{blue}{[\gamma|V,W,\theta]} \to [V|W,\gamma] \to [W|V,\gamma]}
-\end{align*}
-\pause Want easy draws for $V|W,\gamma$, $W|V,\gamma$, and $V,W|\theta$; even better $V,W|\gamma$.
 \end{frame}
 
 \begin{frame}
 \frametitle{Multivariate $y_t$}
-Now $V$ and $W$ are covariance matrices. How do things generalize?\\
+Now $V$ and $W$ are covariance matrices. How do things generalize?
 \begin{enumerate}
-\item Conjugate: inverse Wishart\\
-\item Fr{\"u}wirth-Schnatter: Let $\gamma_t = (L_W)^{-1}(\theta_t - \mu)$ where $Chol(W)=L_W$ and $L_W'B_W=W$. $N(0,Q)$ on $\vech(L_W)$.\\
-\item Gelman: something with half-$t$'s on the standard deviations.\\
+\item Conjugate: inverse Wishart
+\item Fr{\"u}wirth-Schnatter: Let $\gamma_t = (L_W)^{-1}(\theta_t - \mu)$ where $Chol(W)=L_W$ and $L_W'L_W=W$. $N(0,Q)$ on $\pm\vech(L_W)$
+\item Gelman: something with half-$t$'s on the standard deviations.
 \end{enumerate}
-~\\
+\[
+\mbox{$\vech()$ is the half-vectorization:  }\vech\left(\begin{bmatrix} a & b \\ c & d \end{bmatrix}\right) = \begin{bmatrix}a\\c\\d\end{bmatrix}
+\]
 \pause Possible generalizations:\\
 \begin{enumerate}
-\item Wishart mixture of inverse Wisharts.\\
-\item Multivariate $t$ on $\vech(L_W)$.
+\item Wishart mixture of inverse Wisharts (or vice versa)
+\item inverse Wishart mixture of normals on $\pm\vech(L_W)$, i.e. Multivariate $t$.
 \end{enumerate}
-~\\
-These two are not the same! 
+\pause These two are not the same! 
 \end{frame}
+
+\begin{frame}
+\frametitle{Mixing Wisharts and inverse Wisharts}
+Suppose either 
+\begin{align*}
+X|Y \sim W_p(n_1,Y), &&Y\sim IW_p(n_2,\Sigma)
+\end{align*}
+or
+\begin{align*}
+X|Y \sim IW_p(n_2,Y), &&Y\sim W_p(n_1,\Sigma)
+\end{align*}
+where $n_1,n_2>p-1$ and $\Sigma$ is $p\times p$ and positive definite.\\~\\
+\pause 
+Then the marginal distribution of $X$ is $X\sim F_p(n_1,n_2,\Sigma)$ where
+\begin{align*}
+ p(X|\Sigma) = \frac{\left|\Sigma\right|^{n_2/2}}{\B_p(n_1/2,n_2/2)}|X|^{(n_1 - p - 1)/2}|X + \Sigma|^{-(n_1 + n_2)/2}
+\end{align*}
+Called the matrix-$F$ and generalized matrix-variate beta distribution of the second kind.
+\end{frame}
+
+\begin{frame}
+\frametitle{Multivariate beta function}
+\begin{align*}
+  p(X|\Sigma) = \frac{\left|\Sigma\right|^{n_2/2}}{\B_p(n_1/2,n_2/2)}|X|^{(n_1 - p - 1)/2}|X + \Sigma|^{-(n_1 + n_2)/2}
+\end{align*}
+\pause
+\begin{align*}
+\B_p(\alpha_1, \alpha_2) &= \int_{X>0}|X|^{\alpha_1 - (p + 1)/2}|X + I|^{-(\alpha_1 + \alpha_2)}dX\\
+&= \int_{0<X<I}|X|^{\alpha_1 - (p + 1)/2}|I-X|^{\alpha_2 - (p + 1)/2}dX\\
+&=\frac{\Gamma_p(\alpha_1)\Gamma_p(\alpha_2)}{\Gamma_p(\alpha_1 + \alpha_2)}
+\end{align*}
+\pause where
+\begin{align*}
+\Gamma_p(\alpha) &= \int_{X>0}|X|^{\alpha - (p+1)/2}\exp\left[-\tr(X)\right]dX\\
+&=\pi^{p(p-1)/4}\prod_{i=1}^p\Gamma(\alpha - (i-1)/2)
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Bartlett decomposition}
+Suppose $W\sim W_p(n, I_{p\times p})$ and $L_W=Chol(W)=[\ell_{ij}]$.\\~\\
+
+Jacobian: 
+\[
+dW = 2^p\prod_{j=1}^p\ell_{jj}^{p+1-j} dL_W
+\]
+
+Then the nonzero $\ell_{ij}$ are independent with 
+\begin{align*}
+\ell_{ij}\sim N(0,1)\mbox{ for }i<j&&\mbox{ and }&& \ell_{ii}^2\sim\chi^2_{n-i+1} = G((n-i+1)/2, 2)
+\end{align*}
+\pause But recall 
+\[
+\pm \sqrt{\ell}|Q \sim N(0,Q) \iff \ell|Q\sim G(1/2,Q/2)
+\]
+\pause So a Wishart mixture of inverse Wisharts / inverse Wishart mixture of Wisharts on $W$ is not equivalent to a Wishart mixture of normals on $\pm\vech(L_W)$.
+\end{frame}
+
+\begin{frame}
+\frametitle{Open Possibilities}
+Ideally we want a prior distribution on covariance matrix $W$, $p(W)$ such that:\\~\\
+\begin{itemize}
+\item Conditional on an auxillary variable $X$, $W|X \sim IW(.,.)$ and the full conditional of $X$ is easy to sample from.\\~\\
+\item Conditional on an auxillary variable $Y$, $\vech(L_w)|Y \sim N(.,.)$ and the full conditional of $Y$ is easy to sample from.\\~\\
+\end{itemize}
+\pause Could substitute any matrix $B_W$ such that $B_W'B_W=W$ for $L_W$, e.g. symmetric square root matrix.
+\end{frame}
+
 
 \bibliographystyle{plainnat}
 \bibliography{../../dlmasis/doc/dlmasis}
@@ -207,14 +256,14 @@ These two are not the same!
 
 Suppose
 \begin{align*}
-  p(X) = \frac{\left|\Sigma\right|^{n_2/2}}{\B_p(n_1/2,n_2/2)}|X|^{(n_1 - p - 1)/2}|X + \Sigma|^{-(n_1 + n_2)/2}
+  p(X|) = \frac{\left|\Sigma\right|^{n_2/2}}{\B_p(n_1/2,n_2/2)}|X|^{(n_1 - p - 1)/2}|X + \Sigma|^{-(n_1 + n_2)/2}
 \end{align*}
 where: 
 \begin{itemize}
 \item $X$ is a $p\times p$ positive definite matrix
 \item $n_1,n_2 > p - 1$ are degrees of freedom parameters 
 \item $\Sigma$ is a $p\times p$ symmetric, positive definite scale matrix
-\item $\B_p(\alpha_1, \alpha_2) = \frac{\Gamma_p(\alpha_1)\Gamma_p(\alpha_2)}{\Gamma_p(\alpha_1 + \alpha_2)}$
+\item $\B_p(\alpha_1, \alpha_2) = \frac{\Gamma_p(\alpha_1)\Gamma_p(\alpha_2)}{\Gamma_p(\alpha_1 + \alpha_2)}$p
 \item $\Gamma_p(\alpha) = \pi^{p(p-1)/4}\prod_{i=1}^p\Gamma(\alpha - (i-1)/2) $
 \end{itemize}
 Then we write 
