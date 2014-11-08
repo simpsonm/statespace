@@ -20,7 +20,7 @@ for(j in 1:2){
   }
   mu <- 0
   for(i in 1:n){
-    thmn <- sig2*(mu - y)/(1 + sig2)
+    thmn <- sig2*(y - mu)/(1 + sig2)
     thsd <- sqrt(sig2 / (1 + sig2))
     theta2 <- rnorm(1, thmn, thsd)
     mu <- rnorm(1,y-theta2, 1)
