@@ -1,11 +1,13 @@
 \documentclass[xcolor=dvipsnames]{beamer}
 \makeatletter\def\Hy@xspace@end{}\makeatother 
-\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, graphics,
-epsfig, multicol, amsthm, bbm}
+\usepackage{graphicx, color, amssymb, amsmath, bm, rotating, 
+graphics, epsfig, multicol, amsthm, bbm}
 \usepackage[english]{babel}
 \usepackage[T1]{fontenc}
 \usepackage[ansinew]{inputenc}
 \usepackage[authoryear]{natbib}
+\usepackage{bibentry}
+\nobibliography*
 %\newcommand{\newblock}{}  %needed to make beamer and natbib play nice
 \usepackage{tikz}
 \usetikzlibrary{positioning,shapes.geometric}
@@ -44,7 +46,20 @@ epsfig, multicol, amsthm, bbm}
 \end{frame}
 
 \begin{frame}
-\frametitle{Interweaving in DLMs -- A Motivating Example}
+\frametitle{Outline}
+Three papers:\\~\\
+\begin{itemize}
+\item Interweaving in Dynamic Linear Models \\~\\
+\begin{itemize}
+\item Submitted to JCGS with Jarad Niemi and Vivekananda Roy\\~\\
+\end{itemize}
+\item Computationally conveninent covariance matrix priors under model multiple parameterizations\\~\\
+\item Evaluating the national school lunch program using Bayesian partial identification
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Interweaving in DLMs: A motivating example}
 Adapted from \citet{yu2011center}, suppose:\\
 \begin{align*}
 y|\theta_1, \mu & \sim N(\theta_1, 1) \\
@@ -57,7 +72,7 @@ with $\sigma^2$ known and $p(\mu)\propto 1$.\\~\\~\\
 \end{frame}
 
 \begin{frame}
-\frametitle{Interweaving in DLMs -- A Motivating Example}
+\frametitle{Interweaving in DLMs: A motivating example}
 
 DA algorithm based on $\theta_1$:
 \begin{align*}
@@ -67,50 +82,38 @@ DA algorithm based on $\theta_1$:
 
 \pause Let $\theta_2 = \theta_1 - \mu$. Then DA algorithm based on $\theta_2$:
 \begin{align*}
-\theta_2|\mu,y &\sim N\left(\frac{\sigma^2(\mu - y)}{1+\sigma^2}, \frac{\sigma^2}{1+\sigma^2}\right)\\
+\theta_2|\mu,y &\sim N\left(\frac{\sigma^2(y - \mu)}{1+\sigma^2}, \frac{\sigma^2}{1+\sigma^2}\right)\\
 \mu |\theta_2, y &\sim N(y-\theta_2, 1)
 \end{align*}
 \end{frame}
 
 \begin{frame}
-\frametitle{Interweaving in DLMs -- A Motivating Example}
-$\sigma^2=\frac{1}{100}$
+\frametitle{Interweaving in DLMs: A motivating example}
+$\sigma=\frac{1}{\sqrt{1000}}$
 \begin{center}
-\includegraphics[width=0.9\textwidth]{../dlmasis/slides/trace1}\\
+\includegraphics[width=0.9\textwidth]{trace1}\\
 \end{center}
-$\sigma^2=100$
+$\sigma=\sqrt{1000}$
 \begin{center}
-\includegraphics[width=0.9\textwidth]{../dlmasis/slides/trace2}
+\includegraphics[width=0.9\textwidth]{trace2}
 \end{center}
 \end{frame}
 
 \begin{frame}
-\frametitle{Interweaving in DLMs -- A Motivating Example}
+\frametitle{Interweaving in DLMs: The basic idea}
 Alternate between two DAs (alternating algorithm):
 \begin{align*}
 {\color{blue}[\theta_1|\mu,y]} \to {\color{blue}[\mu|\theta_1,y]} \to [\theta_2|\mu,y]\phantom{\theta_1} \to [\mu|\theta_2,y]
 \end{align*}\\~\\
-\pause Weave two DAs together (interweaving algorithm):
+\pause Weave two DAs together (global interweaving strategy (GIS)):
 \begin{align*}
 {\color{blue}[\theta_1|\mu,y]} \to {\color{blue}[\mu|\theta_1,y]} \to {\color{red}[\theta_2|\mu,\theta_1,y]} \to [\mu|\theta_2,y]
 \end{align*}\\~\\\pause
-The interweaving algorithm obtains {\bf IID} draws from the posterior of $\mu$.
+The GIS algorithm obtains {\bf IID} draws from the posterior of $\mu$.
 \end{frame}
 
 \begin{frame}
-\frametitle{Interweaving in DLMs -- Global Interweaving Strategy (GIS)}
-Suppose the target posterior distribution is $p(\phi|y)$ and we have two DAs $\theta_1$ and $\theta_2$. Then a GIS is: \\~
-\begin{align*}
-[\theta_1|\phi,y] \to \hspace{1cm} [\theta_2|\theta_1,y] \hspace{1.3cm} \to [\phi|\theta_2,y]
-\end{align*}\\~\\
-\pause or for ease of implementation:\\~
-\begin{align*}
-[\theta_1|\phi,y] \to [\phi|\theta_1,y] \to {\color{blue}[\theta_2|\phi,\theta_1,y]} \to [\phi|\theta_2,y]
-\end{align*}
-\end{frame}
-
-\begin{frame}
-\frametitle{Interweaving in DLMs -- Ancillary-Sufficiency Interweaving Strategy (ASIS)} 
+\frametitle{Interweaving in DLMs: Ancillary--sufficiency interweaving strategy (ASIS)}
 GIS where one DA is a sufficient augmentation (SA) and the other is an ancillary augmentation (AA).\\~\\
 \begin{itemize}
 \item$\theta$ is an SA if $p(y|\theta,\phi)=p(y|\theta)$ (AKA centered augmentation)\\~\\
@@ -119,24 +122,8 @@ GIS where one DA is a sufficient augmentation (SA) and the other is an ancillary
 \pause Basu's theorem suggests the form and amount of dependence between an SA and an AA will be limited.
 \end{frame}
 
-\begin{frame}
-\frametitle{Interweaving in DLMs -- Componentwise Interweaving Strategy (CIS)}
-Finding an SA--AA pair for $\phi$ is often difficult.\\~\\
-
-Solution: break $\phi=(\phi_1,\phi_2)$ into subblocks, then apply GIS or ideally ASIS separately to each block.\\~\\
-
-For example if $\theta_1$, $\theta_2$, $\gamma_1$, and $\gamma_2$ are DAs:\\
-
-\begin{align*}
-&[\theta_1|\phi_1,\phi_2,y]\phantom{\theta_2,}\hspace{.06cm} \to [\phi_1|\phi_2,\theta_1,\hspace{.05cm}y] \to {\color{blue}[\theta_2|\phi_1,\phi_2,\theta_1,y]} \to [\phi_1|\phi_2,\theta_2,y]\to\\
-&\\
-&{\color{blue}[\gamma_1|\phi_1,\phi_2,\theta_2,y]} \to [\phi_2|\phi_1,\gamma_1,y] \to {\color{blue}[\gamma_2|\phi_1,\phi_2,\gamma_1,y]} \to [\phi_2|\phi_1,\gamma_2,y]\\
-\end{align*}
-
-\end{frame}
-
 \begin{frame}[fragile]
-  \frametitle{Interweaving in DLMs -- The Dynamic Linear Model} 
+  \frametitle{Interweaving in DLMs: The dynamic linear model} 
   For $t=1,2,...,T$
   \begin{align*}
     y_t  =&F_t\theta_t +  v_t  \qquad \mbox{(observation equation)}\\
@@ -186,7 +173,7 @@ For convenience define $y\equiv(y_1',\cdots,y_T')'$ and $\theta\equiv(\theta_0',
 \end{frame}
 
 \begin{frame}
-  \frametitle{Interweaving in DLMs -- The Dynamic Linear Model} 
+  \frametitle{Interweaving in DLMs: The dynamic linear model} 
 Let $\phi=(V,W)$ denote the unknown parameter.\\~\\
 
 Priors: independently \\~\\
@@ -196,13 +183,14 @@ Priors: independently \\~\\
 
 \pause Want to apply GIS and ASIS in particular, but suppose $\eta$ is a SA and $p(y,\eta|\phi)$ is Gaussian.\\~
 \begin{itemize}
-\item[] Then under weak conditions, $p(\phi|\eta,y)$ and $p(\phi|y)$ have a similar form.
+\item[] Then under weak conditions, $p(\phi|\eta,y)$ and $p(\phi|y)$ have a similar form.\\~\\
+\pause\item[] $\implies$ ASIS requires sampling from a density just as difficult as the posterior.
 \end{itemize}
 
 \end{frame}
 
 \begin{frame}
-\frametitle{Interweaving in DLMs -- Data Augmentations for the DLM}
+\frametitle{Interweaving in DLMs: Data augmentations for the DLM}
 Standard DA: states $\theta$. In terms of $\theta$, the model is:
 \begin{align*}
 y_t|\theta,V,W \stackrel{ind}{\sim} & N_k(F_t\theta_t,V)\\ 
@@ -225,7 +213,7 @@ y_t|\gamma,V,W \stackrel{ind}{\sim} & N_k(F_t\theta_t(\gamma,W),V) \\
 \end{frame}
 
 \begin{frame}
-\frametitle{Interweaving in DLMs -- New DAs for the DLM}
+\frametitle{Interweaving in DLMs:  New DAs for the DLM}
 Scaled errors $\psi\equiv(\psi_0',\cdots,\psi_T')'$:\\~\\
 \begin{itemize}
 \item[]$\psi_0=\theta_0$ and $\psi_t=L_V^{-1}(y_t - F_t\theta_t)=L_V^{-1}v_t$ where $L_V$ is the Cholesky decomposition of $V$.\\~\\
@@ -242,7 +230,7 @@ where $\mu_t(\psi,V)$ is complicated.\\~\\
 \end{frame}
 
 \begin{frame}
-\frametitle{Interweaving in DLMs -- New DAs for the DLM}
+\frametitle{Interweaving in DLMs: New DAs for the DLM}
 Wrongly-scaled disturbances $\tilde{\gamma}\equiv(\tilde{\gamma}_0',\cdots,\tilde{\gamma}_T')'$:\\~\\
 \begin{itemize}
 \item[]$\tilde{\gamma}_0=\theta_0$ and $\tilde{\gamma}_t=L_V^{-1}(\theta_t - G_t\theta_{t-1})=L_V^{-1}w_t$\\~\\
@@ -257,7 +245,7 @@ Wrongly-scaled errors $\tilde{\psi}\equiv(\tilde{\psi}_0',\cdots,\tilde{\psi}_T'
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Interweaving in DLMs -- Evaluating the Strategies in the Local Level Model}
+\frametitle{Interweaving in DLMs: Evaluating the strategies}
 Model: for $t=1,2,...,T$
 \begin{align*}
     y_t|\theta  \stackrel{ind}{\sim}&N(\theta_t,V) \qquad (\mbox{observation equation})\\
@@ -281,7 +269,7 @@ Simulation Setup:
 \end{frame}
 
 \begin{frame}
-\frametitle{Interweaving in DLMs -- LLM Results: ESP for $T=100$}
+\frametitle{Interweaving in DLMs: LLM Results -- ESP for $T=100$}
 \centering
 \includegraphics[width=0.59\textwidth]{../dlmasis/doc/plots/basecisESplot100}\\
 \includegraphics[width=0.53\textwidth]{../dlmasis/doc/plots/altintESplotV100}
@@ -289,31 +277,31 @@ Simulation Setup:
 \end{frame}
 
 \begin{frame}
-\frametitle{Interweaving in DLMs -- Conclusions}
-\begin{itemize}
-\item Implementing ASIS is difficult in DLMs.\\~\\
-\begin{itemize}
-\item[]Also probably in hierarchical and other models with unkown variances on multiple levels.\\~\\
-\end{itemize}
+\frametitle{Interweaving in DLMs: Proceedings paper}
 
-\item Novel DAs for DLMs: scaled errors, wrongly-scaled disturbances, and wrongly-scaled errors.\\~\\
+Presented at the proceedings of the Second Bayesian young statisticians meeting in Vienna, Austria, September 18-19, 2014.\\~\\
 
-\item GIS and Alternating also have similar {\it mixing} properties...\\~\\
+Submitted proceedings paper: example using interweaving in a DLM for one treatment of an economic experiment.\\~\\
 
-\item ...but GIS is computationally cheaper than Alternating.\\~\\
+\pause Model:
+\begin{align*}
+y_{j,t} =& \mu_t + \theta_{j,t} + v_{j,t}&&\mbox{(observation equation)} \nonumber\\
+\theta_{j,t}=&\theta_{j,t-1} + w_{j,t}&&\mbox{(replication level system equation)}\nonumber\\
+\mu_t=&\mu_{t-1} + u_t&&\mbox{(treatment level system equation)}
+\end{align*}
+with
+\begin{align*}
+v_{j,t}\sim N(0,V_j), && w_{j,t}\sim N(0,W_j), && u_t\sim N(0,U)
+\end{align*}
+independently.
 
-\item The mixing properties of CIS are similar to SD-SE GIS.\\~\\
-
-\item Computation cost could be drastically cut with a more intelligent choice of priors.
-
-\end{itemize}
 \end{frame}
 
 
 
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Motivation}
+\frametitle{Covariance matrix priors: Motivation}
 Consider the model
 \begin{align*}
  y_t &\stackrel{ind}{\sim} N(\theta_t, V), &\theta_t &\stackrel{iid}{\sim} N(\mu,W)
@@ -338,8 +326,8 @@ $\gamma_{1:T}$ are called the scaled disturbances or noncentered disturbances.\\
 \end{frame}
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Parameterizations}
-Consider the scaled disturbance / noncentered parameterization:
+\frametitle{Covariance matrix priors: Motivation -- DAs}
+Consider the scaled disturbances:
 \begin{align*}
  y_t &\stackrel{iid}{\sim} N(\mu + \sqrt{W}\gamma_t, V), &\gamma_t &\stackrel{ind}{\sim} N(0,1)
 \end{align*}
@@ -372,7 +360,7 @@ p(V|\cdots)\propto V^{\hat{\alpha} -1}\exp\left[-\frac{1}{2}\left(\hat{\beta} V 
 
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Useful Facts}
+\frametitle{Covariance matrix priors: Motivation -- Mixing gammas}
 How does the half$-t$ prior relate to the others? Suppose
 \[
 W\sim G(a,Qk) \mbox{ and } Q\sim IG(\alpha,\beta)
@@ -396,7 +384,7 @@ $a=1/2 \implies $ $S\sim t$ and $|S| \sim$ half-$t$.\\~
 \end{frame}
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Useful Facts}
+\frametitle{Covariance matrix priors: Motivation -- Equivalent priors}
 In particular the following result in equivalent marginal distributions for $W$:
 \begin{align*}
 W|B &\sim IG(n/2,B), &&B\sim G(1/2,\beta/2)\\
@@ -409,17 +397,16 @@ with marginal distribution
 \pm\sqrt{W} &\sim t_n(0,2\beta/n) &\mbox{and}&& \sqrt{W} \sim \mbox{half-}t_n(0,2\beta/n)
 \end{align*}
 
-\pause So priors for variances $V$ and $W$:
+\pause Various priors for variances $V$ and $W$ are united:
 \begin{itemize}
 \item Conjugate prior under $\theta_t$: inverse gamma
-
-\item \citet{fruhwirth2008bayesian}: gamma (conjugate normal for $\pm\sqrt{W}$ under $\gamma_t$)
+\item \citet{fruhwirth2008bayesian}: gamma (normal for $\pm$ $SD$'s)
 \item \citet{gelman2006prior,huang2013simple}: gamma mixture of inverse gammas OR inverse gamma mixture of gammas
 \end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Full Conditionals}
+\frametitle{Covariance matrix priors: Motivation -- full conditionals}
 Using the scaled disturbances:
 \begin{align*}
  y_t &\stackrel{ind}{\sim} N(\mu + \sqrt{W}\gamma_t, V), & \theta_t &\stackrel{iid}{\sim} N(0,1)
@@ -428,19 +415,23 @@ Suppose we put $t$ priors on $S_V=\pm\sqrt{V}$ and $S_W=\pm\sqrt{W}$. Full condi
 
 Complicated, but if we use the auxillary variables $Q_W$ and $B_V$:
 \begin{align*}
-S_W|\cdots  &\sim N(.,.),  &Q_W|\cdots  &\sim IG(.,.) \\%\propto \exp\left[-\frac{1}{2}\left(\sum_{t=1}^T\frac{(y_t - \mu - S_W\gamma_t)^2}{V} + \frac{S^2_W}{Q_W}\right)\right]\\ %\propto Q_W^{-\frac{n_W}{2} - 1}\exp\left[-\frac{1}{Q_W}\left(\frac{S_W^2}{2} + \beta_W\right)\right]\\
+V|\cdots  &\sim IG(.,.), & B_V|\cdots  & \sim G(.,.) &&\mbox{\citep{huang2013simple}}\\% \propto V^{-\frac{T + n_V}{2} - 1}\exp\left[-\frac{1}{V}\left(\frac{\sum_{t=1}^T(y_t - \mu - S_W\gamma_t)^2}{2} + B_V\right)\right]\\ %\propto B_V^{-\frac{1}{2}}\exp\left[-B_V\left(\frac{1}{V} + \frac{2}{\beta_V}\right)\right]
 \intertext{and}
-V|\cdots  &\sim IG(.,.), & B_V|\cdots  & \sim G(.,.) \\% \propto V^{-\frac{T + n_V}{2} - 1}\exp\left[-\frac{1}{V}\left(\frac{\sum_{t=1}^T(y_t - \mu - S_W\gamma_t)^2}{2} + B_V\right)\right]\\ %\propto B_V^{-\frac{1}{2}}\exp\left[-B_V\left(\frac{1}{V} + \frac{2}{\beta_V}\right)\right]
+S_W|\cdots  &\sim N(.,.),  &Q_W|\cdots  &\sim IG(.,.) &&\mbox{[Unknown in literature]}%\propto \exp\left[-\frac{1}{2}\left(\sum_{t=1}^T\frac{(y_t - \mu - S_W\gamma_t)^2}{V} + \frac{S^2_W}{Q_W}\right)\right]\\ %\propto Q_W^{-\frac{n_W}{2} - 1}\exp\left[-\frac{1}{Q_W}\left(\frac{S_W^2}{2} + \beta_W\right)\right]\\
 \end{align*}
+\pause $\implies$ The $t$ prior is computationally convenient for either DA.
 \end{frame}
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Multivariate Case}
-Now $V$ and $W$ are covariance matrices. How do things generalize?
-\begin{enumerate}
+\frametitle{Covariance matrix priors: Multivariate case}
+Now $V$ and $W$ are covariance matrices -- want to generalize.
+\pause \begin{enumerate}
 \item Conjugate under $\theta_t$: inverse Wishart
+\item \citet{alvarez2014cov}: IW extremely informative for correlations.
 \item \citet{fruhwirth2008bayesian}: $\pm\vech(Chol(W))\sim N(0,Q)$\\
-Conditionally conjugate for $Chol(W)$ under $\gamma_t= Chol(W)^{-1}(\theta_t - \mu)$.
+\begin{itemize}
+\item[] Conditionally conjugate under $\gamma_t= Chol(W)^{-1}(\theta_t - \mu)$
+\end{itemize}
 \item \citet{gelman2006prior}: something with half-$t$'s on the standard deviations.
 \item \citet{huang2013simple}: inverse Wishart with scale matrix $\Sigma$, then independent gammas on $\sigma_{ii}$'s.
 \end{enumerate}
@@ -452,31 +443,31 @@ Conditionally conjugate for $Chol(W)$ under $\gamma_t= Chol(W)^{-1}(\theta_t - \
 \item Wishart mixture of inverse Wisharts (or vice versa)
 \item inverse Wishart mixture of normals on $\pm\vech(Chol(W))$, i.e. Multivariate $t$.
 \end{enumerate}
-\pause These two are not the same! 
+\pause These two are not the same by the Bartlett decomposition! 
 \end{frame}
 
+% \begin{frame}
+% \frametitle{Covariance Matrix Priors -- Bartlett decomposition}
+% Suppose $W\sim W_p(n, I_{p\times p})$ and $Chol(W)=[s_{ij}]$.\\~\\
+
+% Jacobian: 
+% \[
+% dW = 2^p\prod_{j=1}^ps_{jj}^{p+1-j} dChol(W)
+% \]
+
+% Then the nonzero $s_{ij}$ are independent with 
+% \begin{align*}
+% s_{ij}\sim N(0,1)\mbox{ for }i<j&&\mbox{ and }&& s_{ii}^2\sim\chi^2_{n-i+1} = G((n-i+1)/2, 2)
+% \end{align*}
+
+% \pause But \ \ $\pm \sqrt{s}|Q \sim N(0,Q) \iff s|Q\sim G(1/2,Q/2)$.\\~
+
+% In general if $W\sim W_p(n,\Sigma)$ or $W\sim IW_p(n,\Sigma)$ and $n$ is an integer, then $W$'s distribution depends on $n\times p$ scalar normal random variables.\\~
+
+% \end{frame}
+
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Bartlett decomposition}
-Suppose $W\sim W_p(n, I_{p\times p})$ and $Chol(W)=[s_{ij}]$.\\~\\
-
-Jacobian: 
-\[
-dW = 2^p\prod_{j=1}^ps_{jj}^{p+1-j} dChol(W)
-\]
-
-Then the nonzero $s_{ij}$ are independent with 
-\begin{align*}
-s_{ij}\sim N(0,1)\mbox{ for }i<j&&\mbox{ and }&& s_{ii}^2\sim\chi^2_{n-i+1} = G((n-i+1)/2, 2)
-\end{align*}
-
-\pause But \ \ $\pm \sqrt{s}|Q \sim N(0,Q) \iff s|Q\sim G(1/2,Q/2)$.\\~
-
-In general if $W\sim W_p(n,\Sigma)$ or $W\sim IW_p(n,\Sigma)$ and $n$ is an integer, then $W$'s distribution depends on $n\times p$ scalar normal random variables.\\~
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Covariance Matrix Priors -- Mixing Wisharts and inverse Wisharts}
+  \frametitle{Covariance matrix priors: Mixing Wisharts}
 Suppose either 
 \begin{align*}
 X|Y \sim W_p(n_1,Y), &&Y\sim IW_p(n_2,\Sigma)
@@ -494,48 +485,48 @@ Then the marginal distribution of $X$ is $X\sim F_p(n_1,n_2,\Sigma)$ where
 Called the matrix-$F$ and generalized matrix-variate beta distribution of the second kind.
 \end{frame}
 
-\begin{frame}
-\frametitle{Covariance Matrix Priors -- Multivariate beta function}
-\begin{align*}
-  p(X|\Sigma) = \frac{\left|\Sigma\right|^{n_2/2}}{\B_p(n_1/2,n_2/2)}|X|^{(n_1 - p - 1)/2}|X + \Sigma|^{-(n_1 + n_2)/2}
-\end{align*}
-\pause
-\begin{align*}
-\B_p(\alpha_1, \alpha_2) &= \int_{X>0}|X|^{\alpha_1 - (p + 1)/2}|X + I|^{-(\alpha_1 + \alpha_2)}dX\\
-&= \int_{0<X<I}|X|^{\alpha_1 - (p + 1)/2}|I-X|^{\alpha_2 - (p + 1)/2}dX\\
-&=\frac{\Gamma_p(\alpha_1)\Gamma_p(\alpha_2)}{\Gamma_p(\alpha_1 + \alpha_2)}
-\end{align*}
-\pause where
-\begin{align*}
-\Gamma_p(\alpha) &= \int_{X>0}|X|^{\alpha - (p+1)/2}\exp\left[-\tr(X)\right]dX\\
-&=\pi^{p(p-1)/4}\prod_{i=1}^p\Gamma(\alpha - (i-1)/2)
-\end{align*}
-\end{frame}
+% \begin{frame}
+% \frametitle{Covariance Matrix Priors -- Multivariate beta function}
+% \begin{align*}
+%   p(X|\Sigma) = \frac{\left|\Sigma\right|^{n_2/2}}{\B_p(n_1/2,n_2/2)}|X|^{(n_1 - p - 1)/2}|X + \Sigma|^{-(n_1 + n_2)/2}
+% \end{align*}
+% \pause
+% \begin{align*}
+% \B_p(\alpha_1, \alpha_2) &= \int_{X>0}|X|^{\alpha_1 - (p + 1)/2}|X + I|^{-(\alpha_1 + \alpha_2)}dX\\
+% &= \int_{0<X<I}|X|^{\alpha_1 - (p + 1)/2}|I-X|^{\alpha_2 - (p + 1)/2}dX\\
+% &=\frac{\Gamma_p(\alpha_1)\Gamma_p(\alpha_2)}{\Gamma_p(\alpha_1 + \alpha_2)}
+% \end{align*}
+% \pause where
+% \begin{align*}
+% \Gamma_p(\alpha) &= \int_{X>0}|X|^{\alpha - (p+1)/2}\exp\left[-\tr(X)\right]dX\\
+% &=\pi^{p(p-1)/4}\prod_{i=1}^p\Gamma(\alpha - (i-1)/2)
+% \end{align*}
+% \end{frame}
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Marginal SD Priors}
+\frametitle{Covariance matrix priors: Marginal SD priors}
 If $X\sim W_p(n_1,\Sigma)$ then the marginal distribution of $s_{ii}=\sqrt{x_{ii}}$ is the Nakagami distribution with density:
 \[
-p(s_{ii})\propto s_{ii}^{n_1-1}\exp\left[-\frac{s_{ii}^2}{2\sigma_{ii}}\right].
+p(s_{ii})\propto s_{ii}^{n_1-1}\exp\left[-\frac{s_{ii}^2}{2\sigma_{ii}}\right]
 \]
 
 \pause If $X\sim F_p(n_1, n_2 + p - 1, \Sigma)$ then the marginal distribution of $s_{ii}=\sqrt{x_{ii}}$ is the ``scale mixed Nakagami'' distribution with density:
 \[
-p(s_{ii})\propto s_{ii}^{n_1 - 1}\left(1 + \frac{s_{ii}^2}{\sigma_{ii}}\right)^{-(n_1 + n_2)/2}.
+p(s_{ii})\propto s_{ii}^{n_1 - 1}\left(1 + \frac{s_{ii}^2}{\sigma_{ii}}\right)^{-(n_1 + n_2)/2}
 \]
 
 \pause {\it The degrees of freedom problem}: in both cases $n_1 > p - 1$ for the covariance matrix to be almost surely positive definite, but $n_1=1$ results in marginal half-normals or half-$t$'s.
 \end{frame}
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Other Problems}
-Using $\vech(Chol(V))\sim N(0,Q)$ the full conditional for $V$ is complicated.\\~\\
+\frametitle{Covariance matrix priors: Multivariate full conditionals}
+Using the normal priors, the full conditional for $V$ is always complicated.\\~\\
 
 \pause\citet{huang2013simple}: $W|\Sigma\sim W_p(n,\Sigma)$, $\sigma_{ii}\stackrel{ind}{\sim} G(\alpha_i,\beta_i)$. \\
 
 Under $\theta_t$ this yields:
 \begin{enumerate}
-\item Marginal half-$t$ distributions for the standard deviations, solving the {\it df} problem.
+\item Marginal half-$t$ distributions for the SDs.
 \item Easy full conditional draws for $W$ and $\Sigma$.\\~
 \end{enumerate}
 
@@ -546,16 +537,16 @@ Under $\theta_t$ this yields:
 \item Conditional on an auxillary variable $X$, $W|X \sim IW(.,.)$ and the full conditional of $X$ is easy to sample from.
 \item Conditional on an auxillary variable $Y$, $\vech(Chol(W))|Y \sim N(.,.)$ and the full conditional of $Y$ is easy to sample from.
 \end{itemize}
-\pause Could substitute any matrix $S_W$ such that $S_W'S_W=W$ for $Chol(W)$, e.g. symmetric square root matrix.
+\pause Instead of $Chol(W)$, could use any matrix $S_W$ such that $S_W'S_W=W$.
 \end{frame}
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Full Conditional of $W$ Under $\gamma_t$}
+\frametitle{Covariance matrix priors: Full conditional of $W$ under $\gamma_t$}
 \begin{align*}
   p(W&|\gamma_{0:T},\cdots)\propto \exp\left[-\frac{1}{2}(S_W\delta - \eta)'\Omega(S_W\delta - \eta)\right]\times \mbox{prior}
 \end{align*}
-where  $\delta$ and $\eta$ are $p\times 1$, $\Omega$ is $p\times p$  and positive definite, $S_WS_W'=W$. This is a normal kernel for the unique, random elements of $S_W$. \\~\\
-\pause\cite{fruhwirth2008bayesian} provide no closed form formula for the full conditional of $S_W$ but it is easy to show...\\~\\
+where  $\delta$ and $\eta$ are $p\times 1$, $\Omega$ is $p\times p$  and positive definite, $S_WS_W'=W$. \\~\\
+\pause\cite{fruhwirth2008bayesian}: normal kernel... \pause but they provide no closed form formula for parameters.\\~\\
 
 \pause If $S_W=Chol(W)$ then $S_W\delta = (\delta' \otimes I_p)L_p'\vech(S_W)$.
 \begin{itemize}
@@ -568,7 +559,7 @@ where  $\delta$ and $\eta$ are $p\times 1$, $\Omega$ is $p\times p$  and positiv
 \end{frame}
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Elimination Matrix}
+\frametitle{Covariance matrix priors: Elimination matrix}
 Elimination Matrix: $\vect(A)=L_p'\vech(A)$ for any lower triangular $p\times p$ matrix $A$.
 \begin{itemize}
 \item $L_p$ has full row rank $p(p+1)/2$.
@@ -590,7 +581,7 @@ L_2 = \left[\begin{tabular}{cc|cc} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\\hline 0 & 0
 
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- Duplication Matrix}
+\frametitle{Covariance matrix priors: Duplication matrix}
 Duplication Matrix: $\vect(A)=D_p\vech(A)$ for any symmetric $p\times p$ matrix $A$.
 \begin{itemize}
 \item $D_p$ has full column rank $p(p+1)/2$.
@@ -613,26 +604,18 @@ D_2 = \left[\begin{tabular}{cc|c} 1 & 0 & 0 \\ 0 & 1 &  0 \\\hline 0 & 1 & 0\\ 0
 \end{frame}
 
 \begin{frame}
-\frametitle{Covariance Matrix Priors -- My Contribution}
-Already have:
+\frametitle{Covariance matrix priors: Goals and related work}
+Goal: find a covariance matrix prior $p(W)$ with two mixture representations:\\~
+\begin{enumerate}
+\item $p(W|B)p(B)$ where $p(W|\theta_{0:T},\cdots)$ is inverse Wishart and $p(B|\theta_{0:T},\cdots)\propto p(B)p(W|B)$ is easy to sample from.\\~
+\item $p(S_W|Q)p(Q)$ where $S_WS_W'=W$, $p(S_W|\gamma_{0:T},\cdots)$ is Normal and $p(Q|\gamma_{0:T},\cdots)\propto p(Q)p(S_W|Q)$ is easy to sample from.\\~
+\end{enumerate}
+\pause More generally: find a prior that...
 \begin{itemize}
-\item Use the $G|IG$ representation of the half-$t$ prior with the scaled disturbances.
-\item The Matrix-$F$ covariance matrix prior as possibly worth exploring.
-\item Analytic representation of $p(\vech(S_W)|\gamma_{0:T},...)$ where $S_WS_W'=W$.\\~\\
+\item yields easy full conditionals under $\theta_t$ and $\gamma_t$.
+\item is not highly informative for either the correlations or the SDs.\\~
 \end{itemize}
-Open threads:
-\begin{itemize}
-\item Find any covariance matrix prior $p(W)$ with two mixture representations:
-\begin{itemize}
-\item $p(W|B)p(B)$ where $p(W|\theta_{0:T},\cdots)$ is inverse Wishart and $p(B|\theta_{0:T},\cdots)\propto p(B)p(W|B)$ is easy to sample from.
-\item $p(S_W|Q)p(Q)$ where $S_WS_W'=W$, $p(S_W|\gamma_{0:T},\cdots)$ is Normal and $p(Q|\gamma_{0:T},\cdots)\propto p(Q)p(S_W|Q)$ is easy to sample from.
-\end{itemize}
-\item Just use the normal prior on $S_W=Chol(W)$ and find an efficient way to sample from this density:
-\begin{align*}
-&|S_W|^{-T}\exp\left[-\frac{1}{2}\bigg(\vech(S_W^{-1})'\Psi\vech(S_W^{-1}) + \vech(S_W)'\Phi\vech(S_W)  \bigg)\right]
-\end{align*}
 
-\end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -643,29 +626,15 @@ Housholds which are under 130\% of the poverty line receive free school lunches 
 
 NSLP $\to$ better health outcomes for children? Mixed evidence --- missing counterfactual problem and underreporting of participation.\\~\\
 
-\citet{gundersen2012impact} attempts to deal with both of these issues.\\~\\
+\citet{gundersen2012impact} attempts to deal with both of these issues.
 
 \end{frame}
 
 \begin{frame}
-\frametitle{Evaluating the NSLP -- Data}
+\frametitle{Evaluating the NSLP: Data}
 Source: 2001--2004 National Health and Nutrition Examination Survey (NHANES), conducted by the National Center for Health Statistics, Centers for Disease Constrol (NCHS/CDC).\\~\\
 
-The NHANES uses surveys and physical examinations on a sample of about 5000 people per year, half of which are children.\\~\\
-
-Vulnerable groups are oversampled. \\~\\
-
 Detailed measures on a variety of health related outcomes are included in the NHANES.\\~\\
-
-\end{frame}
-    
-\begin{frame}
-  \frametitle{Evaluating the NSLP -- Data}
-For now, we restrict our attention to 2693 children in the sample who appear to be eligible to receive free or reduced price lunches through the NSLP.
-
-\begin{itemize}
-\item Includes children ages 6 to 17 who reside in households with income less than 185\% of the federal poverty line and are reported to be attending schools with the NSLP.\\~\\
-\end{itemize}
 
 \pause Focus on one outcome: food security.
 
@@ -674,11 +643,12 @@ For now, we restrict our attention to 2693 children in the sample who appear to 
 \item The household is considered to be food insecure if the respondent answers affirmatively to three or more of these questions.
 \item $y_i=1$ denotes that household $i$ is food secure; $y_i=0$ denotes that household $i$ is not food secure.
 \end{itemize}
-
 \end{frame}
-
+    
 \begin{frame}[fragile]
-  \frametitle{Evaluating the NSLP -- Data: Summary}
+\frametitle{Evaluating the NSLP: Data summary}
+
+Includes 2693 children ages 6 to 17 who reside in households with income less than 185\% of the federal poverty line and are reported to be attending schools with the NSLP.\\~\\
   
 % latex table generated in R 2.15.2 by xtable 1.7-1 package
 % Fri Nov 15 15:26:21 2013
@@ -709,7 +679,7 @@ Age in years & 11.88 & 11.41 & 13.47 \\
 \end{frame}
 
 \begin{frame}
-  \frametitle{Evaluating the NSLP -- Base Model}
+  \frametitle{Evaluating the NSLP: Base model}
   For household $i=1,2,...,n$:\\~\\
 \begin{itemize}
   \item $y_i$ is the food security indicator for household $i$. 
@@ -723,7 +693,7 @@ Age in years & 11.88 & 11.41 & 13.47 \\
 
 
 \begin{frame}
-  \frametitle{Evaluating the NSLP -- Base Model}
+  \frametitle{Evaluating the NSLP: Base model}
 Assume the household's treatment decisions are independent:
     \[
     z_i \stackrel{iid}{\sim}Ber(p_z)
@@ -745,7 +715,7 @@ Assume the household's treatment decisions are independent:
 \end{frame}
 
 \begin{frame}
-  \frametitle{Evaluating the NSLP -- Base Model: Identification}
+  \frametitle{Evaluating the NSLP: Base model - Identification}
 $p_z$ is the only identified parameter in the model.\\~\\
  Some functions of the parameters are identified: \\~\\
     \begin{itemize}
@@ -762,7 +732,7 @@ E[ATE|y] &= E[y_{new}(1) - y_{new}(0)|y,z] \\
 \end{frame}
 
 \begin{frame}
-\frametitle{Evaluating the NSLP -- Partial Identification}
+\frametitle{Evaluating the NSLP -- Partial identification}
 Imagine we put every household on the NSLP. \\
 \ \ \ Probably $P(\mbox{food secure})$ higher for those who chose not to participate.\\~
 
@@ -787,7 +757,7 @@ for $k=0,1$.\\~\\
 
 \begin{frame}
 \frametitle{Evaluating the NSLP -- Bayesian ``Partial Identification''}
-Suppose $p(y|\phi,\theta)=p(y|\theta)$ so that $\phi$ is unidentified.\\~
+Suppose $L(\phi,\theta|y)=p(y|\phi,\theta)=p(y|\theta)$ so that $\phi$ is unidentified.\\~
 
 Further suppose we have a prior $p(\theta,\phi)=p(\phi|\theta)p(\theta)$. \pause We can still learn about $\phi$ despite it being unidentified:
     \begin{align*}
@@ -799,7 +769,7 @@ Further suppose we have a prior $p(\theta,\phi)=p(\phi|\theta)p(\theta)$. \pause
   \end{align*}
 Since $\phi$ and $\theta$ are dependent a priori, the marginal prior and posterior are not the same \citep{poirier1998revising}.\\~
 
-\pause However, we cannot learn about the dependence between $\phi$ and $\theta$.
+\pause Cannot learn about the dependence between $\phi$ and $\theta$: $p(\phi|\theta,y)=p(\phi|\theta)$.
 
 \end{frame}
 
