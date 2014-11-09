@@ -45,7 +45,7 @@ for(i in 1:C){
   print(intertime)
 }
 
-save(gibbs, file="gibbs.R")
-save(inter, file="inter.R")
-save(gibbstime, file="gibbstime.R")
-save(intertime, file="intertime.R")
+save(gibbs, file="gibbs.Rout")
+save(inter, file="inter.Rout")
+save(gibbstime, file="gibbstime.Rout")
+save(intertime, file="intertime.Rout")
