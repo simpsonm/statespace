@@ -53,7 +53,7 @@ Three papers:\\~\\
 \begin{itemize}
 \item Submitted to JCGS with Jarad Niemi and Vivekananda Roy\\~\\
 \end{itemize}
-\item Computationally conveninent covariance matrix priors under model multiple parameterizations\\~\\
+\item Computationally conveninent covariance matrix priors under multiple parameterizations\\~\\
 \item Evaluating the national school lunch program using Bayesian partial identification
 \end{itemize}
 \end{frame}
@@ -101,11 +101,11 @@ $\sigma=\sqrt{1000}$
 
 \begin{frame}
 \frametitle{Interweaving in DLMs: The basic idea}
-Alternate between two DAs (alternating algorithm):
+Alternate between two DAs -- alternating algorithm:
 \begin{align*}
 {\color{blue}[\theta_1|\mu,y]} \to {\color{blue}[\mu|\theta_1,y]} \to [\theta_2|\mu,y]\phantom{\theta_1} \to [\mu|\theta_2,y]
 \end{align*}\\~\\
-\pause Weave two DAs together (global interweaving strategy (GIS)):
+\pause Weave two DAs together -- global interweaving strategy (GIS):
 \begin{align*}
 {\color{blue}[\theta_1|\mu,y]} \to {\color{blue}[\mu|\theta_1,y]} \to {\color{red}[\theta_2|\mu,\theta_1,y]} \to [\mu|\theta_2,y]
 \end{align*}\\~\\\pause
@@ -202,31 +202,14 @@ y_t|\theta,V,W \stackrel{ind}{\sim} & N_k(F_t\theta_t,V)\\
 \begin{itemize}
 \item[]$\gamma_0=\theta_0$ and $\gamma_t=L_W^{-1}(\theta_t - G_t\theta_{t-1})=L_W^{-1}w_t$ where $L_W$ is the Cholesky decomposition of $W$.
 \end{itemize}
-Then:
-\begin{align*}
-y_t|\gamma,V,W \stackrel{ind}{\sim} & N_k(F_t\theta_t(\gamma,W),V) \\
-\gamma_t|V,W \stackrel{iid}{\sim} & N_p(0,I_p)
-\end{align*} 
+\pause Then {\color{blue}$\gamma$ is an AA for $(V,W)$.}\\~\\
 
-{\color{blue}$\gamma$ is an AA for $(V,W)$.}
 
-\end{frame}
-
-\begin{frame}
-\frametitle{Interweaving in DLMs:  New DAs for the DLM}
-Scaled errors $\psi\equiv(\psi_0',\cdots,\psi_T')'$:\\~\\
+\pause Scaled errors $\psi\equiv(\psi_0',\cdots,\psi_T')'$:
 \begin{itemize}
-\item[]$\psi_0=\theta_0$ and $\psi_t=L_V^{-1}(y_t - F_t\theta_t)=L_V^{-1}v_t$ where $L_V$ is the Cholesky decomposition of $V$.\\~\\
+\item[]$\psi_0=\theta_0$ and $\psi_t=L_V^{-1}(y_t - F_t\theta_t)=L_V^{-1}v_t$ where $L_V$ is the Cholesky decomposition of $V$.
 \end{itemize}
- 
-In terms of $\psi$ the model is:
-\begin{align*}
-y_t|\psi,V,W \stackrel{ind}{\sim} &N_p(\mu_t(\psi,V),F_tWF_t')\\
-\psi_t|V,W \stackrel{iid}{\sim} &N_p(0,I_p)
-\end{align*} 
-where $\mu_t(\psi,V)$ is complicated.\\~\\
-
-{\color{blue}$\psi$ is an AA for $(V,W)$.}
+\pause Then {\color{blue}$\psi$ is an AA for $(V,W)$.}
 \end{frame}
 
 \begin{frame}
@@ -339,11 +322,11 @@ Suppose we put $N(0,Q)$ priors on $\pm\sqrt{V}$ and $\pm\sqrt{W}$.
 \pause
 Full conditionals:
 \begin{align*}
-&\pm\sqrt{W}\sim N(\hat{\mu},\hat{\Sigma}), &&V\sim GIG(\hat{\alpha},\hat{\beta},\hat{\gamma})
+&\pm\sqrt{W}\sim N(.,.), &&V\sim GIG(.,.,.)
 \end{align*}
 i.e. 
 \[
-p(V|\cdots)\propto V^{\hat{\alpha} -1}\exp\left[-\frac{1}{2}\left(\hat{\beta} V + \frac{\hat{\gamma}}{V}\right)\right].
+p(V|\cdots)\propto V^{p-1}\exp\left[-\frac{1}{2}\left(a V + \frac{b}{V}\right)\right].
 \]
  So the full conditionals are relatively easy to sample from, but the $GIG$ draw is costly.
 \end{frame}
@@ -432,12 +415,13 @@ Now $V$ and $W$ are covariance matrices -- want to generalize.
 \begin{itemize}
 \item[] Conditionally conjugate under $\gamma_t= Chol(W)^{-1}(\theta_t - \mu)$
 \end{itemize}
-\item \citet{gelman2006prior}: something with half-$t$'s on the standard deviations.
-\item \citet{huang2013simple}: inverse Wishart with scale matrix $\Sigma$, then independent gammas on $\sigma_{ii}$'s.
-\end{enumerate}
 \[
 \mbox{$\vech()$ is the half-vectorization:  }\vech\left(\begin{bmatrix} a & b \\ c & d \end{bmatrix}\right) = \begin{bmatrix}a\\c\\d\end{bmatrix}
 \]
+
+\item \citet{gelman2006prior}: something with half-$t$'s on the standard deviations.
+\item \citet{huang2013simple}: inverse Wishart with scale matrix $\Sigma$, then independent gammas on $\sigma_{ii}$'s.
+\end{enumerate}
 \pause Possible generalizations:\\
 \begin{enumerate}
 \item Wishart mixture of inverse Wisharts (or vice versa)
@@ -559,6 +543,286 @@ where  $\delta$ and $\eta$ are $p\times 1$, $\Omega$ is $p\times p$  and positiv
 \end{frame}
 
 \begin{frame}
+\frametitle{Covariance matrix priors: Elimination and duplication}
+\begin{align*}
+L_2 = \left[\begin{tabular}{cc|cc} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\\hline 0 & 0 & 0 & 1 \end{tabular}\right], && L_3 =  \left[\begin{tabular}{ccc|ccc|ccc}
+1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0  \\ 
+0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\ 
+0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\\hline
+0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\\hline
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+\end{tabular}\right]
+\end{align*}
+
+\pause\begin{align*}
+D_2 = \left[\begin{tabular}{cc|c} 1 & 0 & 0 \\ 0 & 1 &  0 \\\hline 0 & 1 & 0\\ 0 & 0 & 1 \end{tabular}\right], && D_3 =  \left[\begin{tabular}{ccc|cc|c}
+1 & 0 & 0 & 0 & 0 & 0 \\ 
+0 & 1 & 0 & 0 & 0 & 0 \\ 
+0 & 0 & 1 & 0 & 0 & 0 \\\hline
+0 & 1 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 0 & 1 & 0 \\\hline
+0 & 0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 1 & 0 \\
+0 & 0 & 0 & 0 & 0 & 1
+\end{tabular}\right]
+\end{align*}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Covariance matrix priors: Goals and related work}
+Goal: find a covariance matrix prior $p(W)$ with two mixture representations:\\~
+\begin{enumerate}
+\item $p(W|B)p(B)$ where $p(W|\theta_{0:T},\cdots)$ is inverse Wishart and $p(B|\theta_{0:T},\cdots)\propto p(B)p(W|B)$ is easy to sample from.\\~
+\item $p(S_W|Q)p(Q)$ where $S_WS_W'=W$, $p(S_W|\gamma_{0:T},\cdots)$ is Normal and $p(Q|\gamma_{0:T},\cdots)\propto p(Q)p(S_W|Q)$ is easy to sample from.\\~
+\end{enumerate}
+\pause More generally: find a prior that...
+\begin{itemize}
+\item yields easy full conditionals under $\theta_t$ and $\gamma_t$.
+\item is not highly informative for either the correlations or the SDs.\\~
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Evaluating the National School Lunch Progam (NSLP)}
+The NSLP gave free or reduced price lunches to over 31 million U.S. children each school day in 2012 at a cost of about \$11.6 billion for fiscal year 2012.\\~\\
+
+Housholds which are under 130\% of the poverty line receive free school lunches for their children, while households between 130\% and 185\% of the poverty line pay a small price --- 40 cents in 2001--2004, the period our data comes from.\\~\\
+
+NSLP $\to$ better health outcomes for children? Mixed evidence --- missing counterfactual problem and underreporting of participation.\\~\\
+
+\citet{gundersen2012impact} attempts to deal with both of these issues.
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Evaluating the NSLP: Data}
+Source: 2001--2004 National Health and Nutrition Examination Survey (NHANES), conducted by the National Center for Health Statistics, Centers for Disease Constrol (NCHS/CDC).\\~\\
+
+Detailed measures on a variety of health related outcomes are included in the NHANES.\\~\\
+
+\pause Focus on one outcome: food security.
+
+\begin{itemize}
+\item Measured with a series of 18 questions about food-related needs and resources in the household, e.g. ``I worried whether our food would run out before we got money to buy more.'' 
+\item The household is considered to be food insecure if the respondent answers affirmatively to three or more of these questions.
+\item $y_i=1$ denotes that household $i$ is food secure; $y_i=0$ denotes that household $i$ is not food secure.
+\end{itemize}
+\end{frame}
+    
+\begin{frame}
+  \frametitle{Evaluating the NSLP: Base model}
+  For household $i=1,2,...,n$:\\~\\
+\begin{itemize}
+  \item $y_i$ is the food security indicator for household $i$. 
+  \item $z_i$ is treatment status indicator for household $i$.\pause\\~
+  \item $y_i(0)$ is what the food security indicator for $i$ would be if they had chose not to participate in the NSLP.
+  \item $y_i(1)$ is what the food security indicator for $i$ would be if they had chose not to participate in the NSLP.\pause\\~
+  \item Thus $y_i = y_i(z_i)$ is observed and $y_i(1-z_i)$ is unobserved. 
+  \item We call them both ``counterfactual outcomes'' or ``potential outcomes.''
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Evaluating the NSLP: Base model}
+Assume the household's treatment decisions are independent:
+    \[
+    z_i \stackrel{iid}{\sim}Ber(p_z)
+    \]
+    where $p_z=P(z_i=1)$.\\~\\
+\pause Presumably household $i$'s two outcomes are correlated, conditional on their treatment choice. 
+    \begin{itemize}
+      \item Let $  p_{ab|c} = P(y_i(0)=a, y_i(1)=b|z_i=c)$.
+      \item Define 
+        \begin{align*}
+          &p_0\equiv (p_{00|0}, p_{10|0}, p_{01|0}, p_{11|0}), &&p_1\equiv (p_{00|1}, p_{10|1}, p_{01|1}, p_{11|1}).
+        \end{align*}
+      \item Now define $y_i^*=\indicator{y_i(0)=1} + 2\indicator{y_i(1)=1}$. \\~
+      \end{itemize}
+\pause Then assume:
+    \[
+    y_i^*|z_i=t \stackrel{ind}{\sim}Multinomial(1,p_t)
+    \]
+\end{frame}
+
+\begin{frame}
+  \frametitle{Evaluating the NSLP: Base model -- identification}
+$p_z$ is the only identified parameter in the model.\\~\\
+ Some functions of the parameters are identified: \\~\\
+    \begin{itemize}
+      \item $P(y_i(1)=1|z_i=1) = p_{11|1} + p_{01|1}$\\~\\  
+      \item $P(y_i(0)=1|z_i=0) =p_{11|0} + p_{10|0}$\\~\\
+      \item $P(y_i(1)=0|z_i=1) =p_{10|1} + p_{00|1}$\\~\\ 
+      \item $P(y_i(0)=0|z_i=0) =p_{01|0} + p_{00|0}$\\~\\
+      \end{itemize}
+But treatment effects parameters are not, e.g.
+\begin{align*}
+E[ATE|y] &= E[y_{new}(1) - y_{new}(0)|y,z] \\
+&=E[(p_{01|1} - p_{10|1})p_z + (p_{01|0} - p_{10|0})(1-p_z)|y,z] 
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Evaluating the NSLP: Partial identification}
+Imagine every household has the same treatment condition.\\
+\ \ \ Probably $P(\mbox{food secure})$ higher for those who chose not to participate.\\~
+
+\pause Monotone treatment selection (MTS): the treatment variable ($z_i$) is a monotone instrumental variable (MIV), i.e.
+\[
+P[y_i(k)=1|z_i=0] > P[y_i(k)=1|z_i=1]
+\]
+for $k=0,1$.\\~\\
+
+``Households choose to participate the NSLP for good reason, on average.''\\~\\
+
+\pause In terms of the model parameters:
+\begin{align*}
+  p_{10|0} + p_{11|0} > p_{10|1} + p_{11|1} &&\mbox{and}&&  p_{01|0} + p_{11|0} > p_{01|1} + p_{11|1}.
+\end{align*}
+\pause Then estimate the model subject to these constraints.
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Evaluating the NSLP: ``Bayesian partial identification''}
+Suppose the likelihood function is $p(y|\phi,\theta)=p(y|\theta)$ so that $\phi$ is unidentified.\\~
+
+Further suppose we have a prior $p(\theta,\phi)=p(\phi|\theta)p(\theta)$. \pause We can still learn about $\phi$ despite it being unidentified:
+    \begin{align*}
+    p(\theta,\phi|y) &\propto p(y|\theta)p(\theta)p(\phi|\theta) \propto p(\phi|\theta)p(\theta|y).
+  \end{align*}
+\pause Then the marginal prior and marginal posterior of $\phi$ are:
+    \begin{align*}
+    p(\phi) = \int p(\phi|\theta)p(\theta)d\theta  &&\mbox{and}&& p(\phi|y) = \int p(\phi|\theta)p(\theta|y)d\theta.
+  \end{align*}
+Since $\phi$ and $\theta$ are dependent a priori, the marginal prior and posterior are not the same \citep{poirier1998revising}.\\~
+
+\pause Cannot learn about the dependence between $\phi$ and $\theta$: $p(\phi|\theta,y)=p(\phi|\theta)$.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Evaluating the NSLP: Classification error}
+There are ``impossible'' households in the data --- need to allow for misclassification.\\~
+
+\pause Assume we observe $x_i$ which is a signal of $z_i$:
+\begin{align*}
+  x_i|z_i=0 \sim Ber(\alpha),&&  x_i|z_i=1 \sim Ber(1-\beta)
+\end{align*}
+\pause Now we observe $(x_i,y_i(z_i))$, but not $z_i$.\\
+\ \ $\implies$Every structural parameter in the base model is now unidentified. \\~
+
+\pause Solution: more partial identification.
+\pause \begin{itemize}
+\item[] Following \cite{bollinger2009bayesian} we'll assume $\alpha + \beta <1$.\\
+\ \ \ $\implies$ $Cov(x_i,z_i)>0$ so that $x_i$ tells us something useful about $z_i$.\\~\\
+\end{itemize}
+
+
+\pause Assume a uniform prior for $\alpha$, $\beta$, $p_0$, $p_1$, and $p_z$ subject to the imposed constraints.
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Evaluation the NSLP: Computation}
+One approach: data augmentation (DA) \citep{tanner1987calculation}.\\~\\
+
+Missing data:
+\begin{itemize}
+\item Basic model: $y_i(1-z_i)$ for $i=1,2,\cdots,I$
+\item Classification error model: $(y_i(0), y_i(1), z_i)$ for $i=1,2, \cdots,I$.\\~
+\end{itemize}
+
+\pause Side effect: we obtain the posterior distribution of each potential outcome for each household in the sample.\\~
+
+\pause Potentially major issue: unidentified parameters mix very poorly. \\~\\
+\ \ \ Another option: MCMC for identified $\theta$, then draw unidentified $\phi$ from
+\[
+p(\phi|\theta,y)=p(\phi|\theta).
+\]
+\end{frame}
+
+
+\begin{frame}
+    \frametitle{Evaluating the NSLP: Posterior predictive TEs}
+Define $TE_{new}=y_{new}(1) - y_{new}(0)$ as the {\it outcome gain} or {\it treatment effect} of an as yet unobserved household.\\~\\
+
+\cite{poirier2003predictive}:
+\begin{itemize}
+\item[] Average treatment effect ($ATE$) distribution: 
+  \[
+  p(TE_{new}|y) = \int p(TE_{new}|\theta)p(\theta|y)d\theta
+  \]
+\item[] Average treatment on the treated ($ATT$) distribution: 
+  \[
+  p(TE_{new}|y,z_{new}=1) = \int p(TE_{new}|\theta, z_{new}=1)p(\theta|y)d\theta
+  \]
+\end{itemize}
+Both are discrete distributions on $\{-1,0,1\}$.
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{Evaluating the NSLP: Results for TE parameters}
+  
+% latex table generated in R 2.15.2 by xtable 1.7-1 package
+% Fri Nov 15 14:38:44 2013
+\begin{table}[ht]
+\centering
+{\footnotesize
+\begin{tabular}{|r|rrr|rrr|}
+  \hline
+ & Mean & SD & NSE & P(TE=-1) & P(TE=0) & P(TE=1) \\ 
+  \hline
+Prior ATE & -0.0058 & 0.6633 & 6.63E-03 & 0.223 & 0.560 & 0.217 \\ 
+  Posterior ATE & 0.0434 & 0.5904 & 4.64E-03 & 0.153 & 0.650 & 0.197 \\ 
+  Prior ATT & 0.0101 & 0.6652 & 6.65E-03 & 0.216 & 0.557 & 0.226 \\ 
+  Posterior ATT & 0.0106 & 0.5978 & 3.00E-03 & 0.173 & 0.643 & 0.184 \\ 
+   \hline
+\end{tabular}
+}
+\end{table}
+{\footnotesize Prior and posterior predictive means, standard deviations, and 95\% credible intervals for various treatment effect parameters of the classification error model. NSE is an estimate of the numerical (Monte Carlo) standard error associated with estimating the posterior mean that attempts to take into account the dependence in the Markov chain.}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+\frametitle{Evaluating the NSLP: Further work}
+  \begin{enumerate}
+\item Better priors, e.g. for $\alpha$ and $\beta$.
+\item Covariates, particularly income. GLM with potentially unknown link function.
+\item Households above but near the income threshold likely similar to households below but near the threshold -- can help identification.
+\item Possible measurement error on income.
+\item Once income is in the model: policy simulation. What happens when income eligibility threshold changes?
+\item Separate out free and reduced lunches.
+\item Take into account the sample weights in the TE distributions and elsewhere.
+\item Impact of NSLP on other health outcomes.\\~\\
+  \end{enumerate}
+  
+\end{frame}
+
+
+
+\bibliographystyle{plainnat}
+\bibliography{../dlmasis/doc/dlmasis}
+
+
+\end{document}
+
+
+
+
+
+
+
+\begin{frame}
 \frametitle{Covariance matrix priors: Elimination matrix}
 Elimination Matrix: $\vect(A)=L_p'\vech(A)$ for any lower triangular $p\times p$ matrix $A$.
 \begin{itemize}
@@ -603,48 +867,6 @@ D_2 = \left[\begin{tabular}{cc|c} 1 & 0 & 0 \\ 0 & 1 &  0 \\\hline 0 & 1 & 0\\ 0
 \end{align*}
 \end{frame}
 
-\begin{frame}
-\frametitle{Covariance matrix priors: Goals and related work}
-Goal: find a covariance matrix prior $p(W)$ with two mixture representations:\\~
-\begin{enumerate}
-\item $p(W|B)p(B)$ where $p(W|\theta_{0:T},\cdots)$ is inverse Wishart and $p(B|\theta_{0:T},\cdots)\propto p(B)p(W|B)$ is easy to sample from.\\~
-\item $p(S_W|Q)p(Q)$ where $S_WS_W'=W$, $p(S_W|\gamma_{0:T},\cdots)$ is Normal and $p(Q|\gamma_{0:T},\cdots)\propto p(Q)p(S_W|Q)$ is easy to sample from.\\~
-\end{enumerate}
-\pause More generally: find a prior that...
-\begin{itemize}
-\item yields easy full conditionals under $\theta_t$ and $\gamma_t$.
-\item is not highly informative for either the correlations or the SDs.\\~
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}
-  \frametitle{Evaluating the National School Lunch Progam (NSLP)}
-The NSLP gave free or reduced price lunches to over 31 million U.S. children each school day in 2012 at a cost of about \$11.6 billion for fiscal year 2012.\\~\\
-
-Housholds which are under 130\% of the poverty line receive free school lunches for their children, while households between 130\% and 185\% of the poverty line pay a small price --- 40 cents in 2001--2004, the period our data comes from.\\~\\
-
-NSLP $\to$ better health outcomes for children? Mixed evidence --- missing counterfactual problem and underreporting of participation.\\~\\
-
-\citet{gundersen2012impact} attempts to deal with both of these issues.
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Evaluating the NSLP: Data}
-Source: 2001--2004 National Health and Nutrition Examination Survey (NHANES), conducted by the National Center for Health Statistics, Centers for Disease Constrol (NCHS/CDC).\\~\\
-
-Detailed measures on a variety of health related outcomes are included in the NHANES.\\~\\
-
-\pause Focus on one outcome: food security.
-
-\begin{itemize}
-\item Measured with a series of 18 questions about food-related needs and resources in the household, e.g. ``I worried whether our food would run out before we got money to buy more.'' 
-\item The household is considered to be food insecure if the respondent answers affirmatively to three or more of these questions.
-\item $y_i=1$ denotes that household $i$ is food secure; $y_i=0$ denotes that household $i$ is not food secure.
-\end{itemize}
-\end{frame}
-    
 \begin{frame}[fragile]
 \frametitle{Evaluating the NSLP: Data summary}
 
@@ -673,254 +895,8 @@ Age in years & 11.88 & 11.41 & 13.47 \\
 \caption{Summary of key variables by National School Lunch Program participation. Note that these statistics do not take into account the sample weights.} 
 \label{dattab}
 \end{table}
-
-
-
 \end{frame}
 
-\begin{frame}
-  \frametitle{Evaluating the NSLP: Base model}
-  For household $i=1,2,...,n$:\\~\\
-\begin{itemize}
-  \item $y_i$ is the food security indicator for household $i$. 
-  \item $z_i$ is treatment status indicator for household $i$.\pause\\~
-  \item $y_i(0)$ is what the food security indicator for $i$ would be if they had chose not to participate in the NSLP.
-  \item $y_i(1)$ is what the food security indicator for $i$ would be if they had chose not to participate in the NSLP.\pause\\~
-  \item Thus $y_i = y_i(z_i)$ is observed and $y_i(1-z_i)$ is unobserved. 
-  \item We call them both ``counterfactual outcomes'' or ``potential outcomes.''
-\end{itemize}
-\end{frame}
-
-
-\begin{frame}
-  \frametitle{Evaluating the NSLP: Base model}
-Assume the household's treatment decisions are independent:
-    \[
-    z_i \stackrel{iid}{\sim}Ber(p_z)
-    \]
-    where $p_z=P(z_i=1)$.\\~\\
-\pause Presumably household $i$'s two outcomes are correlated, conditional on their treatment choice. 
-    \begin{itemize}
-      \item Let $  p_{ab|c} = P(y_i(0)=a, y_i(1)=b|z_i=c)$.
-      \item Define 
-        \begin{align*}
-          &p_0\equiv (p_{00|0}, p_{10|0}, p_{01|0}, p_{11|0}), &&p_1\equiv (p_{00|1}, p_{10|1}, p_{01|1}, p_{11|1}).
-        \end{align*}
-      \item Now define $y_i^*=I(y_i(0)=1) + 2I(y_i(1)=1)$. \\~
-      \end{itemize}
-\pause Then assume:
-    \[
-    y_i^*|z_i=t \stackrel{ind}{\sim}Multinomial(1,p_t)
-    \]
-\end{frame}
-
-\begin{frame}
-  \frametitle{Evaluating the NSLP: Base model - Identification}
-$p_z$ is the only identified parameter in the model.\\~\\
- Some functions of the parameters are identified: \\~\\
-    \begin{itemize}
-      \item $P(y_i(1)=1|z_i=1) = p_{11|1} + p_{01|1}$\\~\\  
-      \item $P(y_i(0)=1|z_i=0) =p_{11|0} + p_{10|0}$\\~\\
-      \item $P(y_i(1)=0|z_i=1) =p_{10|1} + p_{00|1}$\\~\\ 
-      \item $P(y_i(0)=0|z_i=0) =p_{01|0} + p_{00|0}$\\~\\
-      \end{itemize}
-But treatment effects parameters are not, e.g.
-\begin{align*}
-E[ATE|y] &= E[y_{new}(1) - y_{new}(0)|y,z] \\
-&=E[(p_{01|1} - p_{10|1})p_z + (p_{01|0} - p_{10|0})(1-p_z)|y,z] 
-\end{align*}
-\end{frame}
-
-\begin{frame}
-\frametitle{Evaluating the NSLP -- Partial identification}
-Imagine we put every household on the NSLP. \\
-\ \ \ Probably $P(\mbox{food secure})$ higher for those who chose not to participate.\\~
-
-\pause Imagine we forced every household off the NSLP. \\
-\ \ \ Probably $P(\mbox{food secure})$ higher for those who chose not to participate.\\~
-
-
-\pause Monotone treatment selection (MTS): the treatment variable ($z_i$) is a monotone instrumental variable (MIV), i.e.
-\[
-P[y_i(k)=1|z_i=0] > P[y_i(k)=1|z_i=1]
-\]
-for $k=0,1$.\\~\\
-
-``Households choose to participate the NSLP for good reason, on average.''\\~\\
-
-\pause In terms of the model parameters:
-\begin{align*}
-  p_{10|0} + p_{11|0} > p_{10|1} + p_{11|1} &&\mbox{and}&&  p_{01|0} + p_{11|0} > p_{01|1} + p_{11|1}.
-\end{align*}
-\end{frame}
-
-
-\begin{frame}
-\frametitle{Evaluating the NSLP -- Bayesian ``Partial Identification''}
-Suppose $L(\phi,\theta|y)=p(y|\phi,\theta)=p(y|\theta)$ so that $\phi$ is unidentified.\\~
-
-Further suppose we have a prior $p(\theta,\phi)=p(\phi|\theta)p(\theta)$. \pause We can still learn about $\phi$ despite it being unidentified:
-    \begin{align*}
-    p(\theta,\phi|y) &\propto p(y|\theta)p(\theta)p(\phi|\theta) \propto p(\phi|\theta)p(\theta|y).
-  \end{align*}
-\pause Then the marginal prior and marginal posterior of $\phi$ are:
-    \begin{align*}
-    p(\phi) = \int p(\phi|\theta)p(\theta)d\theta  &&\mbox{and}&& p(\phi|y) = \int p(\phi|\theta)p(\theta|y)d\theta.
-  \end{align*}
-Since $\phi$ and $\theta$ are dependent a priori, the marginal prior and posterior are not the same \citep{poirier1998revising}.\\~
-
-\pause Cannot learn about the dependence between $\phi$ and $\theta$: $p(\phi|\theta,y)=p(\phi|\theta)$.
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Evaluating the NSLP -- Prior Selection}
-Recall that
-\begin{align*}
-p_0 \equiv (p_{00|0}, p_{10|0}, p_{01|0}, p_{11|0}) &&\mbox{and}&&p_1 \equiv (p_{00|1}, p_{10|1}, p_{01|1}, p_{11|1}).
-\end{align*}
-For simplicity, suppose: 
-\begin{itemize}
-\item $p_0$ and $p_1$ have uniform priors over their space subject to the previous constraints and the sum-to-one constraints. 
-\item $p_Z$ has a uniform prior on $(0,1)$.\\~
-\end{itemize}
-
-\pause More generally we can use truncated Dirichlet and beta priors, and MCMC is still simple, though convergence is always slow for the unidentified parameters.
-\end{frame}
-
-\begin{frame}
-  \frametitle{Evaluating the NSLP -- Classification Error}
-In the data, there are households with income higher than the program threshold, yet they are still on the program --- need to allow for misclassification.\\~
-
-\pause Assume we observe $x_i$ which is a signal of $z_i$:
-\begin{align*}
-  P(x_i=1|z_i=0)=\alpha, &&  P(x_i=0|z_i=1)=\beta
-\end{align*}
-\pause So we add the following to our model:
-\begin{align*}
-  x_i|z_i=0 \sim Ber(\alpha),&&  x_i|z_i=1 \sim Ber(1-\beta)
-\end{align*}
-\pause Now we observe $(x_i,y_i(z_i))$, but we no longer know which counterfactual the response comes from.\\ 
-\ \ $\implies$Every structural parameter in the base model is now unidentified. 
-\end{frame}
-
-\begin{frame}
-  \frametitle{Evaluating the NSLP -- More Partial Identification}
-Solution: more Bayesian partial identification. \\~\\
-
-\pause Following \cite{bollinger2009bayesian} we'll assume $\alpha + \beta <1$.\\~\\
-
-\ \ \ $\implies$ $Cov(x_i,z_i)>0$ so that $x_i$ tells us something useful about $z_i$.\\~\\
-
-\pause Assume a uniform prior for $\alpha$ and $\beta$ over the space $0<\alpha$, $0<\beta$, $\alpha + \beta < 1$.\\~
-
-\pause More generally, a truncated Dirichlet prior works again.
-\end{frame}
-
-\begin{frame}
-  \frametitle{Evaluation the NSLP -- Full Classification Error Model}
-Treatment status 
-\[
-z_i\stackrel{iid}{\sim}Ber(p_z)
-\]
- Observed treatment status 
-\begin{align*}
-x_i|z_i=0\sim Ber(\alpha),&&x_i|z_i=1\sim Ber(1-\beta)
-\end{align*}
- Counterfactual outcomes $y_i(0)$ and $y_i(1)$ with 
-\[
-y_i^*=I(y_i(0)=1) + 2I(y_i(1)=1)
-\]
-Then
-\begin{align*}
-  y_i^*|z_i=0\sim Multinomial(1,p_0),&& y_i^*|z_i=1\sim Multinomial(1,p_1)
-\end{align*}
-where
-\begin{align*}
-  p_0 = (p_{00|0},p_{10|0},p_{01|0},p_{11|0})', &&  p_1 &= (p_{00|1},p_{10|1},p_{01|1},p_{11|1})'
-\end{align*}
- with a uniform prior over the parameter space.
-\end{frame}
-
-\begin{frame}
-\frametitle{Evaluation the NSLP -- Computation}
-One approach: data augmentation (DA) \citep{tanner1987calculation}.\\~\\
-
-Missing data:
-\begin{itemize}
-\item Basic model: $y_i(1-z_i)$ for $i=1,2,\cdots,I$
-\item Classification error model: $(y_i(0), y_i(1), z_i)$ for $i=1,2, \cdots,I$.\\~
-\end{itemize}
-
-\pause Side effect: we obtain the posterior distribution of each potential outcome for each household in the sample.\\~
-
-\pause Potentially major issue: unidentified parameters mix very poorly. \\~\\
-\ \ \ Another option: MCMC for identified $\theta$, then draw unidentified $\phi$ from
-\[
-p(\phi|\theta,y)=p(\phi|\theta).
-\]
-\end{frame}
-
-
-\begin{frame}
-    \frametitle{Evaluating the NSLP -- Posterior Predictive TEs}
-Define $TE_{new}=y_{new}(1) - y_{new}(0)$ as the {\it outcome gain} or {\it treatment effect} of an as yet unobserved household.\\~\\
-
-\cite{poirier2003predictive}:
-\begin{itemize}
-\item[] Average treatment effect ($ATE$) distribution: 
-  \[
-  p(TE_{new}|y) = \int p(TE_{new}|\theta)p(\theta|y)d\theta
-  \]
-\item[] Average treatment on the treated ($ATT$) distribution: 
-  \[
-  p(TE_{new}|y,z_{new}=1) = \int p(TE_{new}|\theta, z_{new}=1)p(\theta|y)d\theta
-  \]
-\end{itemize}
-Both are discrete distributions on $\{-1,0,1\}$.
-\end{frame}
-
-
-
-\begin{frame}[fragile]
-\frametitle{Evaluating the NSLP -- Results for TE Parameters}
-  
-% latex table generated in R 2.15.2 by xtable 1.7-1 package
-% Fri Nov 15 14:38:44 2013
-\begin{table}[ht]
-\centering
-{\footnotesize
-\begin{tabular}{|r|rrr|rrr|}
-  \hline
- & Mean & SD & NSE & P(TE=-1) & P(TE=0) & P(TE=1) \\ 
-  \hline
-Prior ATE & -0.0058 & 0.6633 & 6.63E-03 & 0.223 & 0.560 & 0.217 \\ 
-  Posterior ATE & 0.0434 & 0.5904 & 4.64E-03 & 0.153 & 0.650 & 0.197 \\ 
-  Prior ATT & 0.0101 & 0.6652 & 6.65E-03 & 0.216 & 0.557 & 0.226 \\ 
-  Posterior ATT & 0.0106 & 0.5978 & 3.00E-03 & 0.173 & 0.643 & 0.184 \\ 
-   \hline
-\end{tabular}
-}
-\end{table}
-{\footnotesize Prior and posterior predictive means, standard deviations, and 95\% credible intervals for various treatment effect parameters of the classification error model. NSE is an estimate of the numerical (Monte Carlo) standard error associated with estimating the posterior mean that attempts to take into account the dependence in the Markov chain.}
-\end{frame}
-
-
-
-\begin{frame}[fragile]
-\frametitle{Evaluating the NSLP -- Further Work}
-  \begin{enumerate}
-\item Better priors, e.g. for $\alpha$ and $\beta$.
-\item Covariates, particularly income. GLM with potentially unknown link function.
-\item Households above but near the income threshold likely similar to households below but near the threshold -- can help identification.
-\item Possible measurement error on income.
-\item Once income is in the model: policy simulation. What happens when income eligibility threshold changes?
-\item Separate out free and reduced lunches.
-\item Take into account the sample weights in the TE distributions and elsewhere.
-\item Impact of NSLP on other health outcomes.\\~\\
-  \end{enumerate}
-  
-\end{frame}
 
 \begin{frame}
 \frametitle{Evaluating the NSLP -- Sketch of a Larger Model}
@@ -1106,10 +1082,4 @@ then we can learn about both $\sigma_x^2$ and $\sigma_{\tilde{x}}^2$. \\~\\
 \item Still need to take into account the survey weights.
 \end{enumerate}
 \end{frame}
-
-\bibliographystyle{plainnat}
-\bibliography{../dlmasis/doc/dlmasis}
-
-
-\end{document}
 
