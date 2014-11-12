@@ -1,3 +1,4 @@
+%\documentclass[xcolor=dvipsnames, handout]{beamer}
 \documentclass[xcolor=dvipsnames]{beamer}
 \makeatletter\def\Hy@xspace@end{}\makeatother 
 \usepackage{graphicx, color, amssymb, amsmath, bm, rotating, 
@@ -178,7 +179,7 @@ Let $\phi=(V,W)$ denote the unknown parameter.\\~\\
 
 Priors: independently \\~\\
 \begin{itemize}
-\item[]$\theta_0\sim N_p(m_0,C_0)$, $V\sim IW_p(\Lambda_V,\lambda_V)$, and $W\sim IW_p(\Lambda_W,\lambda_W)$\\~\\
+\item[]$\theta_0\sim N_p(m_0,C_0)$, $V\sim IW_k(\Lambda_V,\lambda_V)$, and $W\sim IW_p(\Lambda_W,\lambda_W)$\\~\\
 \end{itemize}
 
 \pause Want to apply GIS and ASIS in particular, but suppose $\eta$ is a SA and $p(y,\eta|\phi)$ is Gaussian.\\~
@@ -262,7 +263,7 @@ Simulation Setup:
 \begin{frame}
 \frametitle{Interweaving in DLMs: Proceedings paper}
 
-Presented at the proceedings of the Second Bayesian young statisticians meeting in Vienna, Austria, September 18-19, 2014.\\~\\
+Presented at the second Bayesian young statisticians meeting in Vienna, Austria, September 18-19, 2014.\\~\\
 
 Submitted proceedings paper: example using interweaving in a DLM for one treatment of an economic experiment.\\~\\
 
@@ -380,12 +381,7 @@ with marginal distribution
 \pm\sqrt{W} &\sim t_n(0,2\beta/n) &\mbox{and}&& \sqrt{W} \sim \mbox{half-}t_n(0,2\beta/n)
 \end{align*}
 
-\pause Various priors for variances $V$ and $W$ are united:
-\begin{itemize}
-\item Conjugate prior under $\theta_t$: inverse gamma
-\item \citet{fruhwirth2008bayesian}: gamma (normal for $\pm$ $SD$'s)
-\item \citet{gelman2006prior,huang2013simple}: gamma mixture of inverse gammas OR inverse gamma mixture of gammas
-\end{itemize}
+\pause Unites the many of the available priors for variance parameters under a mixture distribution.
 \end{frame}
 
 \begin{frame}
@@ -407,14 +403,12 @@ S_W|\cdots  &\sim N(.,.),  &Q_W|\cdots  &\sim IG(.,.) &&\mbox{[Unknown in litera
 
 \begin{frame}
 \frametitle{Covariance matrix priors: Multivariate case}
-Now $V$ and $W$ are covariance matrices -- want to generalize.
-\pause \begin{enumerate}
-\item Conjugate under $\theta_t$: inverse Wishart
+Now $V$ and $W$ are covariance matrices -- want to generalize.\\
+Let $\gamma_t= Chol(W)^{-1}(\theta_t - \mu)$. \pause Under $\gamma_{1:T}$:
+\begin{enumerate}
+\item Conditionally conjugate for $V$: inverse Wishart.
 \item \citet{alvarez2014cov}: IW extremely informative for correlations.
-\item \citet{fruhwirth2008bayesian}: $\pm\vech(Chol(W))\sim N(0,Q)$\\
-\begin{itemize}
-\item[] Conditionally conjugate under $\gamma_t= Chol(W)^{-1}(\theta_t - \mu)$
-\end{itemize}
+\item Conditionally conjugate for $W$: $\pm\vech(Chol(W))\sim N(0,Q)$ \citep{fruhwirth2008bayesian}.\\
 \[
 \mbox{$\vech()$ is the half-vectorization:  }\vech\left(\begin{bmatrix} a & b \\ c & d \end{bmatrix}\right) = \begin{bmatrix}a\\c\\d\end{bmatrix}
 \]
@@ -425,7 +419,7 @@ Now $V$ and $W$ are covariance matrices -- want to generalize.
 \pause Possible generalizations:\\
 \begin{enumerate}
 \item Wishart mixture of inverse Wisharts (or vice versa)
-\item inverse Wishart mixture of normals on $\pm\vech(Chol(W))$, i.e. Multivariate $t$.
+\item inverse Wishart mixture of normals on $\pm\vech(Chol(W))$, i.e. $t$.
 \end{enumerate}
 \pause These two are not the same by the Bartlett decomposition! 
 \end{frame}
@@ -504,35 +498,31 @@ p(s_{ii})\propto s_{ii}^{n_1 - 1}\left(1 + \frac{s_{ii}^2}{\sigma_{ii}}\right)^{
 
 \begin{frame}
 \frametitle{Covariance matrix priors: Multivariate full conditionals}
-Using the normal priors, the full conditional for $V$ is always complicated.\\~\\
-
-\pause\citet{huang2013simple}: $W|\Sigma\sim W_p(n,\Sigma)$, $\sigma_{ii}\stackrel{ind}{\sim} G(\alpha_i,\beta_i)$. \\
-
-Under $\theta_t$ this yields:
+\citet{huang2013simple}: $W|\Sigma\sim W_p(n,\Sigma)$, $\sigma_{ii}\stackrel{ind}{\sim} G(\alpha_i,\beta_i)$. \\
+This yields:
 \begin{enumerate}
 \item Marginal half-$t$ distributions for the SDs.
-\item Easy full conditional draws for $W$ and $\Sigma$.\\~
+\item Easy full conditional draws for $V$.\\
 \end{enumerate}
+\pause The full conditonals for $W$ are more complicated. \\~
 
-\pause Under $\gamma_t$ the full conditionals are more complicated for $W$.  Solution?\\~\\
+\pause Using the normal priors on $\pm\vech(Chol(W))$ and $\pm\vech(Chol(V))$, the full conditional for $V$ is complicated.\\
 
-\pause Ideally we want a prior on covariance matrix $W$ such that:
-\begin{itemize}
-\item Conditional on an auxillary variable $X$, $W|X \sim IW(.,.)$ and the full conditional of $X$ is easy to sample from.
-\item Conditional on an auxillary variable $Y$, $\vech(Chol(W))|Y \sim N(.,.)$ and the full conditional of $Y$ is easy to sample from.
-\end{itemize}
-\pause Instead of $Chol(W)$, could use any matrix $S_W$ such that $S_W'S_W=W$.
-\end{frame}
-
-\begin{frame}
-\frametitle{Covariance matrix priors: Full conditional of $W$ under $\gamma_t$}
+\pause Instead of $Chol(W)$, could use any matrix $S_W$ such that $S_WS_W'=W$ with $\gamma_t=S_W^{-1}(\theta_t - \mu)$:
 \begin{align*}
   p(W&|\gamma_{0:T},\cdots)\propto \exp\left[-\frac{1}{2}(S_W\delta - \eta)'\Omega(S_W\delta - \eta)\right]\times \mbox{prior}
 \end{align*}
-where  $\delta$ and $\eta$ are $p\times 1$, $\Omega$ is $p\times p$  and positive definite, $S_WS_W'=W$. \\~\\
-\pause\cite{fruhwirth2008bayesian}: normal kernel... \pause but they provide no closed form formula for parameters.\\~\\
+where  $\delta$ and $\eta$ are $p\times 1$, $\Omega$ is $p\times p$  and positive definite.\\
+\cite{fruhwirth2008bayesian}: normal kernel...
+\begin{itemize}
+\item[] but their method for computing the parameters is complicated.
+\end{itemize}
+\end{frame}
 
-\pause If $S_W=Chol(W)$ then $S_W\delta = (\delta' \otimes I_p)L_p'\vech(S_W)$.
+\begin{frame}
+\frametitle{Covariance matrix priors: Elimination and duplication}
+
+ If $S_W=Chol(W)$ then $S_W\delta = (\delta' \otimes I_p)L_p'\vech(S_W)$.
 \begin{itemize}
 \item $L_p$ is the elimination matrix, the unique $p(p+1)/2\times p^2$ matrix such that $\vect(A)=L_p'\vech(A)$ for all $p\times p$ lower triangular $A$.\\~\\
 \end{itemize}
@@ -540,47 +530,23 @@ where  $\delta$ and $\eta$ are $p\times 1$, $\Omega$ is $p\times p$  and positiv
 \begin{itemize}
 \item $D_p$ is the duplication matrix, the unique $p^2\times p(p+1)/2$ matrix such that $\vect(A)=D_p\vech(A)$ for all $p\times p$ symmetric $A$.
 \end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Covariance matrix priors: Elimination and duplication}
-\begin{align*}
-L_2 = \left[\begin{tabular}{cc|cc} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\\hline 0 & 0 & 0 & 1 \end{tabular}\right], && L_3 =  \left[\begin{tabular}{ccc|ccc|ccc}
-1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0  \\ 
-0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\ 
-0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 \\\hline
-0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 \\\hline
-0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
-\end{tabular}\right]
-\end{align*}
 
 \pause\begin{align*}
-D_2 = \left[\begin{tabular}{cc|c} 1 & 0 & 0 \\ 0 & 1 &  0 \\\hline 0 & 1 & 0\\ 0 & 0 & 1 \end{tabular}\right], && D_3 =  \left[\begin{tabular}{ccc|cc|c}
-1 & 0 & 0 & 0 & 0 & 0 \\ 
-0 & 1 & 0 & 0 & 0 & 0 \\ 
-0 & 0 & 1 & 0 & 0 & 0 \\\hline
-0 & 1 & 0 & 0 & 0 & 0 \\
-0 & 0 & 0 & 1 & 0 & 0 \\
-0 & 0 & 0 & 0 & 1 & 0 \\\hline
-0 & 0 & 1 & 0 & 0 & 0 \\
-0 & 0 & 0 & 0 & 1 & 0 \\
-0 & 0 & 0 & 0 & 0 & 1
-\end{tabular}\right]
+L_2 = \left[\begin{tabular}{cc|cc} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\\hline 0 & 0 & 0 & 1 \end{tabular}\right], && D_2 = \left[\begin{tabular}{cc|c} 1 & 0 & 0 \\ 0 & 1 &  0 \\\hline 0 & 1 & 0\\ 0 & 0 & 1 \end{tabular}\right]
 \end{align*}
+
 \end{frame}
 
-
 \begin{frame}
-\frametitle{Covariance matrix priors: Goals and related work}
+\frametitle{Covariance matrix priors: Goals}
 Goal: find a covariance matrix prior $p(W)$ with two mixture representations:\\~
 \begin{enumerate}
-\item $p(W|B)p(B)$ where $p(W|\theta_{0:T},\cdots)$ is inverse Wishart and $p(B|\theta_{0:T},\cdots)\propto p(B)p(W|B)$ is easy to sample from.\\~
+\item $p(V|B)p(B)$ where $p(V|\gamma_{0:T},\cdots)$ is inverse Wishart and $p(B|\gamma_{0:T},\cdots)\propto p(B)p(V|B)$ is easy to sample from.\\~
 \item $p(S_W|Q)p(Q)$ where $S_WS_W'=W$, $p(S_W|\gamma_{0:T},\cdots)$ is Normal and $p(Q|\gamma_{0:T},\cdots)\propto p(Q)p(S_W|Q)$ is easy to sample from.\\~
 \end{enumerate}
 \pause More generally: find a prior that...
 \begin{itemize}
-\item yields easy full conditionals under $\theta_t$ and $\gamma_t$.
+\item yields easy full conditionals for both $V$ and $W$ under $\gamma_t$.
 \item is not highly informative for either the correlations or the SDs.\\~
 \end{itemize}
 
@@ -619,8 +585,8 @@ Detailed measures on a variety of health related outcomes are included in the NH
 \begin{itemize}
   \item $y_i$ is the food security indicator for household $i$. 
   \item $z_i$ is treatment status indicator for household $i$.\pause\\~
-  \item $y_i(0)$ is what the food security indicator for $i$ would be if they had chose not to participate in the NSLP.
-  \item $y_i(1)$ is what the food security indicator for $i$ would be if they had chose not to participate in the NSLP.\pause\\~
+  \item $y_i(0)$ is what the food security indicator for $i$ would be if they were not participating in the NSLP.
+  \item $y_i(1)$ is what the food security indicator for $i$ would be if they were participating in the NSLP.\pause\\~
   \item Thus $y_i = y_i(z_i)$ is observed and $y_i(1-z_i)$ is unobserved. 
   \item We call them both ``counterfactual outcomes'' or ``potential outcomes.''
 \end{itemize}
@@ -661,8 +627,8 @@ $p_z$ is the only identified parameter in the model.\\~\\
       \end{itemize}
 But treatment effects parameters are not, e.g.
 \begin{align*}
-E[ATE|y] &= E[y_{new}(1) - y_{new}(0)|y,z] \\
-&=E[(p_{01|1} - p_{10|1})p_z + (p_{01|0} - p_{10|0})(1-p_z)|y,z] 
+E[ATE|y] &= E[y_{new}(1) - y_{new}(0)|y] \\
+&=E[(p_{01|1} - p_{10|1})p_z + (p_{01|0} - p_{10|0})(1-p_z)|y] 
 \end{align*}
 \end{frame}
 
@@ -803,7 +769,8 @@ Prior ATE & -0.0058 & 0.6633 & 6.63E-03 & 0.223 & 0.560 & 0.217 \\
 \item Once income is in the model: policy simulation. What happens when income eligibility threshold changes?
 \item Separate out free and reduced lunches.
 \item Take into account the sample weights in the TE distributions and elsewhere.
-\item Impact of NSLP on other health outcomes.\\~\\
+\item Impact of NSLP on other health outcomes.
+\item Interactions between NSLP and other major programs.
   \end{enumerate}
   
 \end{frame}
