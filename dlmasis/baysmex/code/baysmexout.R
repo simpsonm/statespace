@@ -15,10 +15,10 @@ J <- nrow(KStealdat)
 N <- ncol(KStealdat)
 
 
-load("gibbs.R")
-load("gibbstime.R")
-load("inter.R")
-load("intertime.R")
+load("gibbs.Rout")
+load("gibbstime.Rout")
+load("inter.Rout")
+load("intertime.Rout")
 
 
 gelman.plot(gibbs[,1:13,drop=FALSE], ask=TRUE)
@@ -68,7 +68,9 @@ thetcis <- data.frame(period=rep(0:35,6), rep=rep(1:6,each=36), ll=c(statell[,-1
 
 
 
-phiplot <- ggplot(data=thetmeds, aes(x=period, y=phi)) + geom_line(aes(size="phi")) + facet_wrap(~rep, ncol=2) + geom_line(data=kstealdatf, aes(x=period, y=leff, size="data")) + geom_line(data=mumeds, aes(x=period, y=mu, size="mu"), lty=2) + scale_size_manual(values=c(0.25, 0.5, 0.5), labels=c(expression(y[j][,][t]), expression(mu[t]), expression(phi[j][,][t])), guide=guide_legend(title=NULL, override.aes=list(size=c(0.1,0.5,0.5), linetype=c(1,2,1)))) + ylab("logit efficiency")
+##phiplot <- ggplot(data=thetmeds, aes(x=period, y=phi)) + geom_line(aes(size="phi")) + facet_wrap(~rep, ncol=2) + geom_line(data=kstealdatf, aes(x=period, y=leff, size="data")) + geom_line(data=mumeds, aes(x=period, y=mu, size="mu"), lty=2) + scale_size_manual(values=c(0.25, 0.5, 0.5), labels=c(expression(y[j][,][t]), expression(mu[t]), expression(phi[j][,][t])), guide=guide_legend(title=NULL, override.aes=list(size=c(0.1,0.5,0.5), linetype=c(1,2,1)))) + ylab("logit efficiency")
+
+phiplot <- ggplot(data=thetmeds, aes(x=period, y=phi)) + geom_line(aes(color="phi"), lwd=.75) + facet_wrap(~rep, ncol=2) + geom_line(data=kstealdatf, aes(x=period, y=leff, color="data"), lwd=.75) + geom_line(data=mumeds, aes(x=period, y=mu, color="mu"), lwd=.75) + ylab("logit efficiency") + scale_color_manual(values=c("black","red","blue"), labels=c(expression(y[j][,][t]), expression(mu[t]), expression(phi[j][,][t])), guide=guide_legend(title=NULL))
 
 mudatplot <- qplot(period, mu, data=mumeds, geom="line", lwd=I(1)) + geom_line(data=kstealdatf, aes(x=period, y=leff, lty=rep),lwd=0.25)
 muphiplot <- qplot(period, mu, data=mumeds, geom="line", lwd=I(1)) + geom_line(data=thetmeds, aes(x=period, y=phi, lty=rep),lwd=0.25)
