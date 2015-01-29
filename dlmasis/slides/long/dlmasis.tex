@@ -50,8 +50,8 @@ with Jarad Niemi and Vivekananda Roy\\~\\
 \begin{frame}
 \frametitle{Outline}
 \begin{enumerate}
+\item Preliminaries\\~\\
 \item Motivating example\\~\\
-\item Markov chain preliminaries\\~\\
 \item Interweaving (GIS, ASIS, CIS)\\~\\
 \item Dynamic linear models\\~\\
 \item Augmentations in DLMs, old and new\\~\\
@@ -59,6 +59,174 @@ with Jarad Niemi and Vivekananda Roy\\~\\
 \item Conclusions
 \end{enumerate}
 \end{frame}
+
+\begin{frame}
+\frametitle{Preliminaries: The Basic Problem}
+Bayesian statistics in a nutshell:\\~\\
+\begin{enumerate}
+\item Model data $y$ with a family of probability densities indexed by parameter $\phi\in\Phi$:
+\begin{align*}
+p(y|\phi) && \mbox{"likelihood"}
+\end{align*}\\~
+
+\pause \item Want to estimate $\phi$ -- put a probability distribution on it:
+\begin{align*}
+p(\phi) && \mbox{"prior"}
+\end{align*}\\~
+
+\pause \item Now apply Bayes' rule:
+\begin{align*}
+p(\phi|y) = \frac{p(y|\phi)p(\phi)}{\int_{\Phi}p(y|\phi)p(\phi)d\phi} && \mbox{"posterior"}
+\end{align*}
+\end{enumerate}
+\end{frame}
+
+\begin{frame}
+\frametitle{Preliminaries: Inference and the Posterior}
+Use the posterior for...
+
+\begin{itemize}
+\item Point estimates: 
+\begin{align*}
+\mbox{Posterior mean: } && E[\phi|y]=\int_{\Phi}\phi p(\phi|y) d\phi
+\end{align*}
+\pause \item Interval estimates:
+\begin{align*}
+\mbox{95\% credible interval: } && L,\ U\ : P(L<\phi < U) = \int_{L}^{U}p(\phi|y)d\phi
+\end{align*}
+\pause \item Uncertainty quantification:
+\begin{align*}
+\mbox{Posterior probabilities: } && P(\phi \in A|y) = \int 1(\phi\in A) p(\phi|y)d\phi
+\end{align*}
+\pause \item Decision theory:
+\begin{align*}
+\mbox{Optimal Bayes decision rule: } && d^{Bayes} = \arg\max_{d\in\mathcal{D}}E[U(d,\phi)|y]
+\end{align*}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Preliminaries: The problem}
+\begin{align*}
+p(\phi|y) = \frac{p(y|\phi)p(\phi)}{\int_{\Phi}p(y|\phi)p(\phi)d\phi}
+\end{align*}
+How do you compute the denominator?\\~\\
+
+\pause 
+\begin{itemize}
+\item Numerical integration\\~\\
+\pause \item Monte Carlo integration\\~\\
+\pause \item Markov chain Monte Carlo integration (MCMC)
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Preliminaries: MCMC in a Nutshell}
+Suppose we have some target density {\color{blue} $\pi(\phi)$} on $\Phi$ and we wish to estimate quantities of the form 
+\begin{align*}
+E_{\color{blue}\pi} h(\phi) = \int_{\Phi} h(\phi){\color{blue}\pi(\phi)}d\phi
+\end{align*}
+for some know function $h:\Phi\to\Re$.\\~\\
+
+\pause Markov chain Monte Carlo: Simulate a Markov chain $\{\phi_n\}_{n\geq 0}$ with Markov transition density $k(\phi'|\phi)$ on $\Phi$ with invariant probability measure ${\color{blue}\pi}$.\\~\\
+
+\[
+\int_{\Phi}k(\phi'|\phi){\color{blue}\pi(\phi)}d\phi = {\color{blue}\pi(\phi')}
+\]
+
+
+\pause Then use the estimator
+\begin{align*}
+\hat{h}_k=\frac{1}{n}\sum_{i=0}^{n-1}h(\phi_i).
+\end{align*}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Preliminaries: Example Markov Chain}
+Suppose $\phi=(\phi_1,\phi_2)\in\Re^2$.\\~\\
+
+The Gibbs sampler -- obtain $(\phi_1^{(t+1)},\phi_2^{(t+1)})$ from $(\phi_1^{(t)},\phi_2^{(t)})$ by:\\~\\
+\begin{enumerate}
+\item Simulate:
+\[
+\phi_1^{(t + 1)} \sim \pi(\phi_1|\phi_2=\phi_2^{(t)})
+\]
+\\~\\
+\item Simulate:
+\[
+\phi_2^{(t + 1)} \sim \pi(\phi_2|\phi_1=\phi_1^{(t+1)})
+\]\\~\\
+\end{enumerate}
+Iterate until convergence and Monte Carlo error estimating $\hat{h}_k$ is small.
+\end{frame}
+
+\begin{frame}
+\frametitle{Preliminaries: Some Markov Chain Theory}
+$\{\phi_n\}_{n\geq 0}$ satisfies the usual regularity conditions (URCs) if it's irreducible, aperiodic, and Harris recurrent. \\~\\
+
+\pause URCs $\implies$ $\hat{h}_k \stackrel{a.s.}{\to} E_{\color{blue}\pi}h(\phi)$ for all $h\in L^1({\color{blue}\pi})$.\\~\\
+URCs + geometric ergodicity $\implies$ 
+\[
+\sqrt{n}\left(\frac{\hat{h}_k - E_{\color{blue}\pi}h(\phi)}{\sqrt{v(h,k)}}\right) \to \mbox{N}(0,1)
+\]
+for $h\in L^2({\color{blue}\pi})$ where $v(h,K)$ denotes the asymptotic variance of $\hat{h}_K$ under the Mtd $k(\phi'|\phi)$.\\~\\
+
+\pause Two problems: convergence and mixing.
+\begin{itemize}
+\item[] Convergence: how long until $p(\phi^{(t)})$ and ${\color{blue}\pi(\phi)}$ are close?
+\item[] Mixing: how much does the chain move around the space?
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Preliminaries: Data Augmentation}
+Suppose it's difficult to construct a useful Markov chain with invariant density ${\color{blue}\pi(\phi)}$.\\~\\
+
+Suppose further that there exists a density $\pi(\phi,\theta):\Phi\times\Theta\to [0,\infty)$ such that
+\[
+\int_{\Theta}\pi(\phi,\theta)d\theta = {\color{blue}\pi(\phi)}.
+\]
+\\~
+
+\pause Data augmentation algorithm \citep{tanner1987calculation} based on $\theta$:
+\[
+k(\phi'|\phi)=\int_{\Theta}\pi(\phi'|\theta)\pi(\theta|\phi)d\theta
+\]
+with steps:
+\[
+[\theta|\phi]\to[\phi'|\theta]
+\]
+\end{frame}
+
+\begin{frame}
+\frametitle{Preliminaries: Data Augmentation -- Examples}
+
+Often there exists natural missing data for the problem:
+\begin{itemize}
+\item Discrete choice models: latent unobserved continuous variable.\\
+e.g. for 
+\begin{align*}
+y_i^*&\sim N(x_i'\beta,1); &y_i=1(y_i^*>0)
+\end{align*}
+the missing data is $y_{1:I}^*$.
+\pause\item Hierarchical models: random effects.\\
+e.g. for
+\begin{align*}
+y_{ij}|\alpha_j&\sim N(\alpha_j + x_{ij}'\beta, \sigma^2); &\alpha_j\sim N(\alpha_0,\tau^2)
+\end{align*}
+the missing data is $\alpha_{1:J}$.
+\pause\item Statespace models: latent states.\\
+e.g. for
+\begin{align*}
+y_t|\theta_t&\sim N(\theta_t,V); &\theta_t|\theta_{t-1}\sim N(\theta_{t-1},W)
+\end{align*}
+the missing data is $\theta_{0:T}$.
+\end{itemize}
+\end{frame}
+
 
 
 \begin{frame}
@@ -115,133 +283,13 @@ Alternate between two DAs (alternating algorithm):
 The interweaving algorithm obtains {\bf IID} draws from the posterior of $\mu$.
 \end{frame}
 
-\begin{frame}
-\frametitle{Preliminaries: Some Markov Chain Theory}
-Suppose we have some target distribution {\color{blue} $\pi$} on $\Phi$ with density {\color{blue} $f(x)$} and we wish to estimate quantities of the form 
-\begin{align*}
-E_{\color{blue}\pi} h(\phi) = \int_{\Phi} h(\phi){\color{blue}f(\phi)}d\phi
-\end{align*}
-for some know function $h:\Phi\to\Re$.\\~\\
-
-\pause Markov chain Monte Carlo (MCMC): Simulate a Markov chain $\{\phi_n\}_{n\geq 0}$ with Mtf $K(\phi,d\phi')$ with density $k(\phi'|\phi)$ on $\Phi$ with invariant probability measure ${\color{blue}\pi}$ and use the estimator
-\begin{align*}
-\hat{h}_K=n^{-1}\sum_{i=0}^{n-1}h(\phi_i).
-\end{align*}
-\end{frame}
-
-\begin{frame}
-\frametitle{Preliminaries: Some Markov Chain Theory}
-$\{\phi_n\}_{n\geq 0}$ satisfies the usual regularity conditions (URCs) if it's irreducibile, aperiodic, and Harris recurrent. \\~\\
-
-\pause URCs $\implies$ $\hat{h}_K \stackrel{a.s.}{\to} E_{\color{blue}\pi}h(\phi)$ for all $h\in L^1({\color{blue}\pi})$.\\~\\
-URCs + geometric ergodicity $\implies$ CLT for $h\in L^2({\color{blue}\pi})$. Let $v(h,K)$ denote the asymptotic variance of $\hat{h}_K$ under the Mtf $K(.,.)$.\\~\\
-
-\pause Define the operator $K$ on $L^2({\color{blue}\pi})$ as 
-\[
-(Kh)(\phi)=\int_{\Phi}h(\phi')K(\phi,d\phi')=E[h(\phi_{n+1})|\phi_n=\phi].
-\]
-Then the operator norm is defined as
-\begin{align*}
-||K||=\sup_{h\in L^2_0({\color{blue}\pi}),\; ||h||_2=1}||Kh||_2 \leq 1 && \mbox{ where } && ||h||_2=\left(\int_{\Phi}h^2(\phi){\color{blue}\pi}(d\phi)\right)^{1/2}.
-\end{align*}
-\end{frame}
-
-\begin{frame}
-\frametitle{Preliminaries: Some Markov Chain Theory}
-Two problems: convergence and efficiency. Let $K_1$ and $K_2$ be the Mtf's for two different Markov chains on $\Phi$.\\~\\
-
-\pause Define the spectral radius of $K$ as $\rho(K) = \lim_{t\to\infty}||K^t||^{1/t}$ and note $\rho(K)\leq ||K||$ for all $K$.\\~\\
-
-\pause If $\rho(K_1) < \rho(K_2)$ then $K_1$ converges to ${\color{blue}\pi}$ faster than $K_2$\\~\\
-
-\pause If $v(h,K_1) < v(h,K_2)$ then $K_1$ is more efficient for estimating $E_{\color{blue}\pi}h(\phi)$ than $K_2$.\\~\\
-
-\pause Related to efficiency: mixing, or how fast the chain moves around the space. \\~\\
-
-\pause Typically convergence and mixing/efficiency improve together.
-\end{frame}
-
-\begin{frame}
-\frametitle{Data Augmentation}
-Suppose it's difficult to construct a useful Markov chain with stationary density ${\color{blue}f(\phi)}$.\\~\\
-
-Suppose further that there exists a density $f(\phi,\theta):\Phi\times\Theta\to [0,\infty)$ such that
-\[
-\int_{\Theta}f(\phi,\theta)d\theta = {\color{blue}f(\phi)}.
-\]
-\\~
-
-\pause Data augmentation algorithm \citep{tanner1987calculation} based on $\theta$:
-\[
-k(\phi'|\phi)=\int_{\Theta}f_{\phi|\theta}(\phi'|\theta)f_{\theta|\phi}(\theta|\phi)d\theta
-\]
-with steps:
-\[
-[\theta|\phi]\to[\phi'|\theta]
-\]
-\end{frame}
-
-\begin{frame}
-\frametitle{Data Augmentation: Examples}
-
-Often there exists natural missing data for the problem:
-\begin{itemize}
-\item Discrete choice models: latent unobserved continuous variable.\\
-e.g. for 
-\begin{align*}
-y_i^*&\sim N(x_i'\beta,1); &y_i=1(y_i^*>0)
-\end{align*}
-the missing data is $y_{1:I}^*$.
-\pause\item Hierarchical models: random effects.\\
-e.g. for
-\begin{align*}
-y_{ij}|\alpha_j&\sim N(\alpha_j + x_{ij}'\beta, \sigma^2); &\alpha_j\sim N(\alpha_0,\tau^2)
-\end{align*}
-the missing data is $\alpha_{1:J}$.
-\pause\item Statespace models: latent states.\\
-e.g. for
-\begin{align*}
-y_t|\theta_t&\sim N(\theta_t,V); &\theta_t|\theta_{t-1}\sim N(\theta_{t-1},W)
-\end{align*}
-the missing data is $\theta_{0:T}$.
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Data Augmentation: The Problem}
-$\sigma^2=\frac{1}{1000}$
-\begin{center}
-\includegraphics[width=0.9\textwidth]{trace1}\\
-\end{center}
-$\sigma^2=1000$
-\begin{center}
-\includegraphics[width=0.9\textwidth]{trace2}
-\end{center}
-\end{frame}
-
-\begin{frame}
-\frametitle{Alternating: A Simple Solution}
-Suppose we now have two data augmentations $\theta_1\in\Theta_1$ and $\theta_2\in\Theta_2$ with the joint density $f_{\phi,\theta_i}(\phi,\theta_i)$ defined for $i=1,2$ such that 
-\begin{align*}
-\int_{\Theta_i}f_{\phi,\theta_i}(\phi,\theta_i)d\theta_i = {\color{blue}f(\phi)}.
-\end{align*}
-The Alternating Mtf $K_A$ has the density
-\begin{align*}
-&k_A(\phi''|\phi) = \\
-&\int_{\Theta_2}\int_{\Phi}\int_{\Theta_1}f_{\phi|\theta_2}(\phi''|\theta_2)f_{\theta_2|\phi}(\theta_2|\phi')f_{\phi|\theta_1}(\phi'|\theta_1)f_{\theta_1|\phi}(\theta_1|\phi)d\theta_1d\phi'd\theta_2
-\end{align*}
-with the steps
-\begin{align*}
-[\theta_1|\phi] \to [\phi|\theta_1] \to {\color{red}[\theta_2|\phi] \to [\phi|\theta_2]}
-\end{align*}
-\end{frame}
 
 \begin{frame}
 \frametitle{Global Interweaving Strategy (GIS)}
 
-The Global Interweaving Strategy (GIS) Mtf $K_G$ has the density
+The Global Interweaving Strategy (GIS) has the Mtd
 \begin{align*}
-k_G(\phi'|\phi) = \int_{\Theta_2}\int_{\Theta_1}f_{\phi|\theta_2}(\phi'|\theta_2)f_{\theta_2|\theta_1}(\theta_2|\theta_1)f_{\theta_1|\phi}(\theta_1|\phi)d\theta_1d\theta_2
+k_G(\phi'|\phi) = \int_{\Theta_2}\int_{\Theta_1}\pi(\phi'|\theta_2)\pi(\theta_2|\theta_1)\pi(\theta_1|\phi)d\theta_1d\theta_2
 \end{align*}
 with the steps
 \begin{align*}
@@ -256,11 +304,11 @@ with the steps
 \begin{frame}
 \frametitle{Properties of GIS}
 \begin{theorem}[\citet{yu2011center}]
-Suppose that we have two DA schemes $\theta_1$ and $\theta_2$ with Mtf's $K_1$ and $K_2$ respectively such that $f_{\phi,\theta_1,\theta_2}(\phi,\theta_1,\theta_2)$ is well defined. Then
+Suppose that we have two DA schemes $\theta_1$ and $\theta_2$ such that the probability distribution $P(\phi,\theta_1,\theta_2)$ is well defined. Then
 \begin{align*}
-\rho(K_G)\leq \mathcal{R}(\theta_1,\theta_2)\sqrt{\rho(K_1)\rho(K_2)}
+r_{G}\leq \mathcal{R}(\theta_1,\theta_2)\sqrt{r_1r_2}
 \end{align*}
-where 
+where
 \begin{align*}
 \mathcal{R}(\theta_1,\theta_2) = \sup_{h\in L_0^2(f_{\theta_1}),\ g\in L_0^2(f_{\theta_2})} \corr(h(\theta_1),g(\theta_2)).
 \end{align*}
@@ -275,17 +323,20 @@ where
 \begin{frame}
 \frametitle{GIS and the Sandwich Kernel}
 
-When $\Theta_1=\Theta_2$ and $f_{\phi|\theta_1}(\phi|\theta)=f_{\phi|\theta_2}(\phi|\theta)$ the GIS kernel is a sandwich kernel \citep{hobert2008theoretical,hobert2011comment}.\\~\\
+When $\Theta_1=\Theta_2$ and $\pi(\phi|\theta)=\pi(\phi|\theta)$ the GIS kernel is a sandwich kernel \citep{hobert2008theoretical,hobert2011comment}.\\~\\
+\begin{itemize}
+\item[] The middle step is a single move of a Markov chain on $\Theta$
+\end{itemize}
 
 \begin{theorem}[\citet{hobert2008theoretical}]
-Suppose $R$ and $S$ are Mtf's on $\Theta$ with $f_\theta(\theta)=\int_\Phi f(\phi,\theta)d\phi$ as an invariant density and assume that for all $h\in L^2_0(f_\Theta)$
+Suppose $R$ and $S$ are Mtd's on $\Theta$ with $\pi(\theta)=\int_\Phi \pi(\phi,\theta)d\phi$ as an invariant density. Let $k_R$ denote the Mtd of the sandwhich kernel based on $R$ and similarly for $S$ and assume that for all $h\in L^2_0(f_\Theta)$
 \begin{align*}
-\int_{\Theta}(Rh)(\theta)h(\theta)f_\theta(\theta)d\theta \leq \int_{\Theta}(Sh)(\theta)h(\theta)f_\theta(\theta)d\theta.
+\corr_{k_R}(h(\phi'),h(\phi)) < \corr_{k_S}(h(\phi'),h(\phi))
 \end{align*}
-Then under URCs on $K_R$ ($k_R$) and $K_S$ ($k_S$) if both are reversible wrt ${\color{blue}f(\phi)}$ 
+Then under URCs on the $k_R$ and $k_S$ if both are reversible wrt ${\color{blue}\pi(\phi)}$ 
 \begin{enumerate}
-\item $v(h,K_R)\leq v(h,K_S)$ for all $h\in L^2({\color{blue}f(x)})$.
-\item In addition if $k_R$ and $k_S$ are both DA algorithms, then $||K_R||\leq ||K_S||$.
+\item $v(h,k_R)\leq v(h,k_S)$ for all $h\in L^2({\color{blue}\pi(x)})$.
+\item In addition if $k_R$ and $k_S$ are both DA algorithms, then $r_R\leq r_S$.
 \end{enumerate}
 \end{theorem}
 
@@ -297,7 +348,7 @@ Then under URCs on $K_R$ ($k_R$) and $K_S$ ($k_S$) if both are reversible wrt ${
 
 Control $\mathcal{R}(\theta_1,\theta_2)$ in GIS by requiring that one DA is a sufficient augmentation (SA) and the other is an ancillary augmentation (AA).\\~\\
 
-Suppose we have data $y$ with the probability model $p(y|\theta,\phi)$. Then:\\~
+Suppose we have data $y$ with the probability model $p(y,\theta|\phi)$. Then:\\~
 \begin{itemize}
 \item$\theta$ is an SA if $p(y|\theta,\phi)=p(y|\theta)$ (AKA centered augmentation)\\~\\
 \item$\theta$ is an AA if $p(\theta|\phi)=p(\theta)$ (AKA non-centered augmentation)\\~\\
@@ -326,7 +377,7 @@ Then ASIS is identical to the optimal PX-DA algorithm.
 \frametitle{Componentwise Interweaving Strategy (CIS)}
 Finding an SA--AA pair for $\phi$ is often difficult.\\~\\
 
-Solution: break $\phi=(\phi_1,\phi_2)$ into subblocks, then apply GIS or ideally ASIS separately to each block.\\~\\
+Solution: break $\phi=(\phi_1,\phi_2)$ into sub-blocks, then apply GIS or ideally ASIS separately to each block.\\~\\
 
 For example if $\theta_1$, $\theta_2$, $\gamma_1$, and $\gamma_2$ are DAs:\\
 
@@ -527,7 +578,7 @@ Simulation Setup:
 \begin{itemize}
 \item Fully implementing ASIS is difficult in DLMs.\\~\\
 \begin{itemize}
-\item[]Also probably in hierarchical and other models with unkown variances on multiple levels.\\~\\
+\item[]Also probably in hierarchical and other models with unknown variances on multiple levels.\\~\\
 \end{itemize}
 
 \item Novel DAs for DLMs: scaled errors, wrongly-scaled disturbances, and wrongly-scaled errors.\\~\\

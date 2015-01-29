@@ -1,0 +1,120 @@
+\begin{frame}
+\frametitle{Preliminaries: Some Markov Chain Theory}
+Suppose we have some target distribution {\color{blue} $\pi$} on $\Phi$ with density {\color{blue} $f(\phi)$} and we wish to estimate quantities of the form 
+\begin{align*}
+E_{\color{blue}\pi} h(\phi) = \int_{\Phi} h(\phi){\color{blue}f(\phi)}d\phi
+\end{align*}
+for some know function $h:\Phi\to\Re$.\\~\\
+
+\pause Markov chain Monte Carlo (MCMC): Simulate a Markov chain $\{\phi_n\}_{n\geq 0}$ with Mtf $K(\phi,d\phi')$ with density $k(\phi'|\phi)$ on $\Phi$ with invariant probability measure ${\color{blue}\pi}$ and use the estimator
+\begin{align*}
+\hat{h}_K=n^{-1}\sum_{i=0}^{n-1}h(\phi_i).
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Preliminaries: Some Markov Chain Theory}
+$\{\phi_n\}_{n\geq 0}$ satisfies the usual regularity conditions (URCs) if it's irreducibile, aperiodic, and Harris recurrent. \\~\\
+
+\pause URCs $\implies$ $\hat{h}_K \stackrel{a.s.}{\to} E_{\color{blue}\pi}h(\phi)$ for all $h\in L^1({\color{blue}\pi})$.\\~\\
+URCs + geometric ergodicity $\implies$ CLT for $h\in L^2({\color{blue}\pi})$. Let $v(h,K)$ denote the asymptotic variance of $\hat{h}_K$ under the Mtf $K(.,.)$.\\~\\
+
+\pause Define the operator $K$ on $L^2({\color{blue}\pi})$ as 
+\[
+(Kh)(\phi)=\int_{\Phi}h(\phi')K(\phi,d\phi')=E[h(\phi_{n+1})|\phi_n=\phi].
+\]
+Then the operator norm is defined as
+\begin{align*}
+||K||=\sup_{h\in L^2_0({\color{blue}\pi}),\; ||h||_2=1}||Kh||_2 \leq 1 && \mbox{ where } && ||h||_2=\left(\int_{\Phi}h^2(\phi){\color{blue}\pi}(d\phi)\right)^{1/2}.
+\end{align*}
+\end{frame}
+
+\begin{frame}
+\frametitle{Preliminaries: Some Markov Chain Theory}
+Two problems: convergence and efficiency. Let $K_1$ and $K_2$ be the Mtf's for two different Markov chains on $\Phi$.\\~\\
+
+\pause Define the spectral radius of $K$ as $\rho(K) = \lim_{t\to\infty}||K^t||^{1/t}$ and note $\rho(K)\leq ||K||$ for all $K$.\\~\\
+
+\pause If $\rho(K_1) < \rho(K_2)$ then $K_1$ converges to ${\color{blue}\pi}$ faster than $K_2$\\~\\
+
+\pause If $v(h,K_1) < v(h,K_2)$ then $K_1$ is more efficient for estimating $E_{\color{blue}\pi}h(\phi)$ than $K_2$.\\~\\
+
+\pause Related to efficiency: mixing, or how fast the chain moves around the space. \\~\\
+
+\pause Typically convergence and mixing/efficiency improve together.
+\end{frame}
+
+\begin{frame}
+\frametitle{Data Augmentation}
+Suppose it's difficult to construct a useful Markov chain with stationary density ${\color{blue}f(\phi)}$.\\~\\
+
+Suppose further that there exists a density $f(\phi,\theta):\Phi\times\Theta\to [0,\infty)$ such that
+\[
+\int_{\Theta}f(\phi,\theta)d\theta = {\color{blue}f(\phi)}.
+\]
+\\~
+
+\pause Data augmentation algorithm \citep{tanner1987calculation} based on $\theta$:
+\[
+k(\phi'|\phi)=\int_{\Theta}f_{\phi|\theta}(\phi'|\theta)f_{\theta|\phi}(\theta|\phi)d\theta
+\]
+with steps:
+\[
+[\theta|\phi]\to[\phi'|\theta]
+\]
+\end{frame}
+
+\begin{frame}
+\frametitle{Data Augmentation: Examples}
+
+Often there exists natural missing data for the problem:
+\begin{itemize}
+\item Discrete choice models: latent unobserved continuous variable.\\
+e.g. for 
+\begin{align*}
+y_i^*&\sim N(x_i'\beta,1); &y_i=1(y_i^*>0)
+\end{align*}
+the missing data is $y_{1:I}^*$.
+\pause\item Hierarchical models: random effects.\\
+e.g. for
+\begin{align*}
+y_{ij}|\alpha_j&\sim N(\alpha_j + x_{ij}'\beta, \sigma^2); &\alpha_j\sim N(\alpha_0,\tau^2)
+\end{align*}
+the missing data is $\alpha_{1:J}$.
+\pause\item Statespace models: latent states.\\
+e.g. for
+\begin{align*}
+y_t|\theta_t&\sim N(\theta_t,V); &\theta_t|\theta_{t-1}\sim N(\theta_{t-1},W)
+\end{align*}
+the missing data is $\theta_{0:T}$.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Data Augmentation: The Problem}
+$\sigma^2=\frac{1}{1000}$
+\begin{center}
+\includegraphics[width=0.9\textwidth]{trace1}\\
+\end{center}
+$\sigma^2=1000$
+\begin{center}
+\includegraphics[width=0.9\textwidth]{trace2}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Alternating: A Simple Solution}
+Suppose we now have two data augmentations $\theta_1\in\Theta_1$ and $\theta_2\in\Theta_2$ with the joint density $f_{\phi,\theta_i}(\phi,\theta_i)$ defined for $i=1,2$ such that 
+\begin{align*}
+\int_{\Theta_i}f_{\phi,\theta_i}(\phi,\theta_i)d\theta_i = {\color{blue}f(\phi)}.
+\end{align*}
+The Alternating Mtf $K_A$ has the density
+\begin{align*}
+&k_A(\phi''|\phi) = \\
+&\int_{\Theta_2}\int_{\Phi}\int_{\Theta_1}f_{\phi|\theta_2}(\phi''|\theta_2)f_{\theta_2|\phi}(\theta_2|\phi')f_{\phi|\theta_1}(\phi'|\theta_1)f_{\theta_1|\phi}(\theta_1|\phi)d\theta_1d\phi'd\theta_2
+\end{align*}
+with the steps
+\begin{align*}
+[\theta_1|\phi] \to [\phi|\theta_1] \to {\color{red}[\theta_2|\phi] \to [\phi|\theta_2]}
+\end{align*}
+\end{frame}
