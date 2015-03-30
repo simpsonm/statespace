@@ -1,19 +1,20 @@
-## code for running the simulations from the paper.
-## WARNING: THIS WILL TAKE ON THE ORDER OF WEEKS TO COMPLETE ON A UNIVERSITY CLUSTER
+## code for estimating the amount of time to run the simulations in the paper
+## runs a few small simulations and estimates a simple linear regression
+
 source("dlmasisfun.R")
 set.seed(152893627) ## needed to replicate my dataset
 ## set the time series lengths and the true values of V and W
 T <- c(10, 100, 1000)
-V <- 10^(c(0:10) / 2 - 2)
+V <- 10^(c(0:10)/2-2)
 W <- V
 ## create all simulated datasets
-simgrid <- expand.grid(V.T = V, W.T = W, T.T = T)
-simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0 = 0, C0 = 1)
+simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
+simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
 ## add hyperparameters to datasets
 simdata$av <- 5
 simdata$aw <- 5
-simdata$bv <- (simdata$av -  1) * simdata$V.T
-simdata$bw <- (simdata$aw - 1) * simdata$W.T
+simdata$bv <- (simdata$av-1)*simdata$V.T
+simdata$bw <- (simdata$aw-1)*simdata$W.T
 simdata$m0 <- 0
 simdata$C0 <- 10^7
 ## list of samplers to use to sample each posterior
@@ -21,23 +22,28 @@ sams <- c("state", "dist", "error", "sdint", "seint", "deint", "triint",
           "sdalt", "sealt", "dealt", "trialt", "wdist", "werror", "fullcis")
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
-n <- 3000
-burn <- 500
+ns <- c(10, 25, 50, 100)
+burn <- 5 ## burn < n
 ## If doParallel package is installed, attempt to use 8 threads for parallel processing
 ## Must use doParallel and 8 threads to replicate my posterior draws
 parallel <- require(doParallel, quietly=TRUE) 
 if(parallel){
   cl <- makeCluster(8, "FORK") ## Requires Unix system
   registerDoParallel(cl)
-  clusterSetRNGStream(cl, iseed = 32511) ## Alter seed for posterior simulations here
+  clusterSetRNGStream(cl, iseed = 32511) ## Alter seed here
   ## Sets up L'Ecuyer RNG on the clusters
 }
 
 ## run the samplers
-system.time(samout <- fullsim(samplers, simdata, n, burn, parallel))
-## When parallel = TRUE this will throw a bunch of warnings of this form:
-## "4: <anonymous>: ... may be used in an incorrect context: ‘.fun(piece, ...)’"
-## This is due to a bug in plyr and should hopefully be fixed shortly
-
-save(samout, file="samout.RData")
+for(i in 1:length(ns)){
+  n <- ns[i]
+  outtime <- system.time(samout <- fullsim(samplers, simdata, n, burn, parallel))[3]
+}
 stopCluster(cl)
+
+regdat <- data.frame(n=ns, time=outtime)
+o <- lm(time~n, data=regdat)
+o
+predict(o, newdata=list(n=c(3500, 5500, 7500, 1500)))/60/60
+
+

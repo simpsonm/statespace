@@ -1,6 +1,5 @@
 ## A set of functions for simulating from and fitting local level models
 
-library(dlm)
 library(coda)
 library(MCMCpack)
 library(ars)
@@ -224,7 +223,6 @@ samsummary <- function(sam, dat, burn, sampler){
   W.AC <- corfun(W)
   V.ES <- effectiveSize(V)
   W.ES <- effectiveSize(W)
-  
   out <- cbind(init, V.AC, W.AC, theta0.AC,
                theta1.AC, thetaT4.AC, thetaT2.AC, theta3T4.AC,
                thetaT.AC, theta.ACmax,theta.ACavg,
@@ -318,7 +316,7 @@ samwrap <- function(par, n, samp){
 ## av, aw, bv, bw: hyperparameters for the independent IG priors for V, W
 ## m0, C0: hyperparmaeters for Gaussian prior on theta_0
 ## inter: if TRUE interweave, else alternate
-## samp: number indicating desired sample: SD=1, SE=2, DE=3 and Triple=4.
+## samp: number indicating desired sampler: SD=1, SE=2, DE=3 and Triple=4.
 samwrapper <- function(n, start, dat, av, aw, bv, bw, m0, C0, inter, samp){
   if(samp==1){
     out <- statedistinter(n, start, dat, av, aw, bv, bw, m0, C0, inter)
@@ -542,7 +540,7 @@ stateerrorinter <- function(n, start, dat, av, aw, bv, bw, m0, C0, inter=TRUE){
 ## av, aw, bv, bw: hyperparameters for independent IG priors on V and W
 ## m0, C0: hperparameters for Gaussian prior on theta_0=gamma_0=psi_0
 ## inter: TRUE if interweaving, FALSE if alternating
-disterrorinter <- function(n, start, dat, av, aw, bv, bw, m0, C0=, inter=TRUE){
+disterrorinter <- function(n, start, dat, av, aw, bv, bw, m0, C0, inter=TRUE){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
