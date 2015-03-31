@@ -133,7 +133,7 @@ werrorsam <- function(n, start, dat, av=0, aw=0, bv=0, bw=0, m0=0, C0=10^7){
                      "V", "W", paste("theta",0:T,sep=""))
   for(i in 1:n){
     ptma <- proc.time()
-    psi <- awolpssmooth(dat, V, W, m0, C0)
+    psi <- mcfapssmooth(dat, V, W, m0, C0)
     psi <- c(psi[1], psi[-1]*sqrt(V/W))
     ptmb <- proc.time()
     smoothtime <- ptmb[3]-ptma[3]
@@ -160,7 +160,7 @@ wdistsam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
                      "V", "W", paste("theta",0:T,sep=""))
   for(i in 1:n){
     ptma <- proc.time()
-    theta <- awolthsmooth(dat, V, W, m0, C0)
+    theta <- mcfathsmooth(dat, V, W, m0, C0)
     gamt <- (theta[-1] - theta[-(T+1)])/sqrt(V)
     gam <- c(theta[1], gamt)
     ptmb <- proc.time()
