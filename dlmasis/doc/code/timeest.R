@@ -3,13 +3,16 @@
 
 source("dlmasisfun.R")
 set.seed(152893627) ## needed to replicate my dataset
+
 ## set the time series lengths and the true values of V and W
 T <- c(10, 100, 1000)
 V <- 10^(c(0:10)/2-2)
 W <- V
+
 ## create all simulated datasets
 simgrid <- expand.grid(V.T=V, W.T=W, T.T=T)
 simdata <- ddply(simgrid, .(V.T, W.T, T.T), lldsim, m0=0, C0=1)
+
 ## add hyperparameters to datasets
 simdata$av <- 5
 simdata$aw <- 5
@@ -17,6 +20,7 @@ simdata$bv <- (simdata$av-1)*simdata$V.T
 simdata$bw <- (simdata$aw-1)*simdata$W.T
 simdata$m0 <- 0
 simdata$C0 <- 10^7
+
 ## list of samplers to use to sample each posterior
 sams <- c("state", "dist", "error", "sdint", "seint", "deint", "triint",
           "sdalt", "sealt", "dealt", "trialt", "wdist", "werror", "fullcis")
@@ -24,6 +28,7 @@ samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
 ns <- c(10, 25, 50, 100)
 burn <- 5 ## burn < n
+
 ## If doParallel package is installed, attempt to use 8 threads for parallel processing
 ## Must use doParallel and 8 threads to replicate my posterior draws
 parallel <- require(doParallel, quietly=TRUE) 
@@ -41,9 +46,15 @@ for(i in 1:length(ns)){
 }
 stopCluster(cl)
 
+## fit the regression
 regdat <- data.frame(n=ns, time=outtime)
 o <- lm(time~n, data=regdat)
-o
-predict(o, newdata=list(n=c(3500, 5500, 7500, 1500)))/60/60
+o ## prints the regression outputs
+
+## predicts time, in hours, to run all samplers w/ sample sizes of
+## 3500, 5500, 7500, and 10500 (including burn in)
+## then prints these estimates.
+predict(o, newdata=list(n=c(3500, 5500, 7500, 10500)))/3600
+
 
 

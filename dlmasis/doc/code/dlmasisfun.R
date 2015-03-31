@@ -1,5 +1,4 @@
 ## A set of functions for simulating from and fitting local level models
-
 library(coda)
 library(MCMCpack)
 library(ars)
@@ -75,9 +74,9 @@ postcor <- function(sam, dat, burn){
   psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
   colnames(psis) <- paste("psi", 1:T.T, sep="")
   ## compute correlations between V, W, and various quantities
-  VWcor <- cor(V,W)
-  Vth0cor <- cor(V,theta0)
-  Wth0cor <- cor(W,theta0)
+  VWcor <- cor(V, W)
+  Vth0cor <- cor(V, theta0)
+  Wth0cor <- cor(W, theta0)
   Vthcors <- cor(V, thetas)
   Wthcors <- cor(W, thetas)
   Vgacors <- cor(V, gammas)
@@ -915,7 +914,7 @@ Vpsiiter <- function(dat, psi, W, av, bv){
 ## samples W conditional on V, psi from its IG full conditional
 ## dat: time series
 ## psi: scaled errors, including psi_0
-## aw, bw: hperparameters of W's IG prior
+## aw, bw: hyperparameters of W's IG prior
 Wpsiiter <- function(dat, psi, V,  aw, bw){
   T <- length(dat)
   theta <- thetapsitrans(dat, psi, V)
