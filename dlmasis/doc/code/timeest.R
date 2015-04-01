@@ -27,6 +27,7 @@ sams <- c("state", "dist", "error", "sdint", "seint", "deint", "triint",
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
 ns <- c(10, 25, 50, 100)
+outtime <- rep(0,length(ns))
 burn <- 5 ## burn < n
 
 ## If doParallel package is installed, attempt to use 8 threads for parallel processing
@@ -42,7 +43,7 @@ if(parallel){
 ## run the samplers
 for(i in 1:length(ns)){
   n <- ns[i]
-  outtime <- system.time(samout <- fullsim(samplers, simdata, n, burn, parallel))[3]
+  outtime[i] <- system.time(samout <- fullsim(samplers, simdata, n, burn, parallel))[3]
 }
 stopCluster(cl)
 
