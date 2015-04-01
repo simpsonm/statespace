@@ -50,12 +50,16 @@ stopCluster(cl)
 ## fit the regression
 regdat <- data.frame(n=ns, time=outtime)
 o <- lm(time~n, data=regdat)
+regdat ## print the data
 o ## prints the regression outputs
 
 ## predicts time, in hours, to run all samplers w/ sample sizes of
 ## 3500, 5500, 7500, and 10500 (including burn in)
 ## then prints these estimates.
-predict(o, newdata=list(n=c(3500, 5500, 7500, 10500)))/3600
+predict(o, newdata=list(n=c(3500, 5500, 7500, 10500, 20500)))/3600
 
+o2 <- lm(time~n + I(n^2), data=regdat)
+o2
+predict(o2, newdata=list(n=c(3500, 5500, 7500, 10500, 20500)))/3600
 
 
