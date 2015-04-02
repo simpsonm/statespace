@@ -21,7 +21,7 @@ sams <- c("state", "dist", "error", "sdint", "seint", "deint", "triint",
           "sdalt", "sealt", "dealt", "trialt", "wdist", "werror", "fullcis")
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
-n <- 3000
+n <- 20500
 burn <- 500
 ## If doParallel package is installed, attempt to use 8 threads for parallel processing
 ## Must use doParallel and 8 threads to replicate my posterior draws
