@@ -26,14 +26,14 @@ sams <- c("state", "dist", "error", "sdint", "seint", "deint", "triint",
           "sdalt", "sealt", "dealt", "trialt", "wdist", "werror", "fullcis")
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
-n <- 10
-burn <- 5
+n <- 6500
+burn <- 500
 
 ## If doParallel package is installed, attempt to use 8 threads for parallel processing
-## Must use doParallel and 8 threads to replicate my posterior draws
+## Must use doParallel and 4 threads to replicate my posterior draws
 parallel <- require(doParallel, quietly=TRUE) 
 if(parallel){
-  cl <- makeCluster(8, "FORK") ## Requires Unix system
+  cl <- makeCluster(4, "FORK") ## Requires Unix system
   registerDoParallel(cl)
   clusterSetRNGStream(cl, iseed = 32511) ## Alter seed for posterior simulations here
   ## Sets up L'Ecuyer RNG on the clusters
