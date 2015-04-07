@@ -11,7 +11,7 @@ source("wscalerej.R") ## code for wrongly scaled samplers
 ## simdata: data frame containing data and hyperparameters
 ## n: posterior sample size
 ## burn: burn in size
-## parallel: if TRUE, will use DOMC to parallelize sampling
+## parallel: if TRUE, will use DoParallel to parallelize sampling
 ## returns a dataframe of summary infor for all samplers
 fullsim <- function(samplers, simdata, n, burn, parallel){
   out <- ddply(samplers, .(sampler), samsim, simdata=simdata, n=n,
