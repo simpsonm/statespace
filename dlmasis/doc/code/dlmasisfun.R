@@ -152,8 +152,7 @@ samsummary <- function(sam, dat, burn, sampler){
 ###  thetas <- theta0s[,-1]
 ###  theta0 <- theta0s[,1]
   data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
-  ## time per 1000 iterations
-  time <- sam$time[1] #/length(sam$time)*1000
+  time <- sam$time[1] 
   ## tracks when relevant densities are log concave and when
   ## adaptive rejection sampling is used
   logconV <- mean(sam$logconV, na.rm=TRUE)
