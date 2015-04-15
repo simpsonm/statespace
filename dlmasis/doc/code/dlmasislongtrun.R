@@ -22,8 +22,7 @@ simdata$m0 <- 0
 simdata$C0 <- 10^7
 
 ## list of samplers to use to sample each posterior
-sams <- c("state", "dist", "error", "sdint", "seint", "deint", "triint",
-          "sdalt", "sealt", "dealt", "trialt", "wdist", "werror", "fullcis")
+sams <- c("deint", "dealt")
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
 n <- 6500
