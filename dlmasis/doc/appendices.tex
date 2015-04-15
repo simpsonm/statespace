@@ -109,6 +109,32 @@ Thus the posterior density of $\phi$ given $\tilde{\eta}$ can be written as
 \end{align*}
 Now given that $A'A$ is invertible and the properties of multivariate normal distributions, the density of $p(\phi|\eta,y)$ follows from $\eta=(A'A)^{-1}A'\tilde{\eta}$.
 
+\section{Construction of the wrongly-scaled DA algorithms}\label{sec:W-DA}
+
+The wrongly-scaled DA algorithms are close analogues to their correctly scaled cousins. Starting with the {\it wrongly-scaled disturbance sampler} (Algorithm \nameref{alg:DLMwdist}), the simulation smoothing step to draw from $p(\tilde{\gamma}|V,W,y)$ is similar to that of the scaled disturbance sampler --- the density is Gaussian, but the precision matrix is not tridiagonal, so we draw $\theta$ using the MCFA and transform to obtain a draw of $\tilde{\gamma}$. The density of $V,W|\tilde{\gamma},y$ is too complicated to draw from directly, as was the case when we used the scaled disturbances. In this case, the full conditional distribution of $W$ is the same as its distribution when we condition on the states while the density of $V|\tilde{\gamma},y$ is once again difficult to draw from. The density of $V|W,\tilde{\gamma},y$ is easier to work with, at least in the local level model example in Section 6. 
+\begin{alg*}[WSD]Wrongly-Scaled Disturbance Sampler\label{alg:DLMwdist}
+\begin{enumerate}
+\item Use MCFA to draw $\theta \sim p(\theta|V,W,y)$.
+\item Transform $\theta$ to $\tilde{\gamma}$.
+\item Draw $V \sim p(V|W,\tilde{\gamma},y)$.
+\item Draw $W \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$.
+\end{enumerate}
+\end{alg*}\noindent
+Now the third step is difficult and we demonstrate how to accomplish it in the local level model in Appendix F. We could switch the order in which $V$ and $W$ are drawn in this algorithm so that we can draw $W$ before transforming $\theta$ to $\tilde{\gamma}$. This would make each iteration slightly cheaper and probably would not affect the mixing and convergence properties of the algorithm, however we are more interested in comparing the mixing and convergence properties of the various samplers, so we always sample $V$ before $W$ when we cannot sample them jointly.
+
+The {\it wrongly-scaled error sampler} (Algorithm \nameref{alg:DLMwerror}) is closely related to both the wrongly-scaled disturbance sampler and the scaled error sampler. The density of $\tilde{\psi}|V,W,y$ is Gaussian with a tridiagonal precision matrix, so the simulation smoothing step can be accomplished using the MCFA. The density $p(V,W|\tilde{\psi},y)$ is from the same class as $p(W,V|\tilde{\gamma},y)$ so that $V$ and $W$ essentially switch places when we condition on $\tilde{\psi}$ instead of $\tilde{\gamma}$. In particular, $V|W,\tilde{\psi},y$ has an inverse Wishart density and the density of $W|V,\tilde{\psi},y$ is from the same class as that of $V|W,\tilde{\gamma},y$.
+\begin{alg*}[WSE]Wrongly-Scaled Error Sampler\label{alg:DLMwerror}
+\begin{enumerate}
+\item Use MCFA to draw $\tilde{\psi} \sim p(\theta|V,W,y)$.
+\item Draw $V \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)$.
+\item Draw $W \sim p(W|V,\tilde{\psi},y)$
+\end{enumerate}
+\end{alg*}
+
+
+The constructions of Algorithms \nameref{alg:DLMwdist} and \nameref{alg:DLMwerror} in the local level model example from Section 6 require $p(W|V,\tilde{\psi},y)$ and $p(V|W,\tilde{\gamma},y)$ respectively. Both densities have the form $p(x)\propto x^{-\alpha-1}\exp\left[ -ax + b/\sqrt{x} -c/x\right]$, which is closely related to the difficult density from the correctly scaled samplers.  For $p(V|W,\tilde{\gamma},y)$ we show in Appendix C that $\alpha=\alpha_V$, $a = a_{\tilde{\gamma}}\equiv\frac{1}{2W}\sum_{t=1}^T\tilde{\gamma}_t^2$, $b =b_{\tilde{\gamma}}\equiv \sum_{t=1}^T(y_t - \tilde{\gamma}_0)\sum_{s=1}^t\tilde{\gamma}_s$, and $c =c_{\tilde{\gamma}}\equiv \beta_V + \frac{1}{2}\sum_{t=1}^T(y_t - \tilde{\gamma}_0)^2$ while for $p(W|V,\tilde{\psi},y)$ we show that $\alpha=\alpha_W$,   $a =a_{\tilde{\psi}}\equiv \frac{1}{2V}\sum_{t=1}^T\tilde{\psi}_t^2$,  $b =b_{\tilde{\psi}}\equiv \sum_{t=1}^T\mathcal{L}\tilde{y}_t\mathcal{L}\tilde{\psi}_t$, and $c =c_{\tilde{\psi}}\equiv \beta_W + \frac{1}{2}\sum_{t=1}^T\mathcal{L}\tilde{y}_t^2$. This density is harder to sample from because adaptive rejection sampling does not work very well, so we construct a rejection sampler on the log scale using a $t$ approximation in Appendix G.
+
+
 \section{Full conditional distributions in the general DLM for various DAs}\label{sec:DLMfullcond}
 
 The class of DLMs we consider is defined as follows:
@@ -419,11 +445,52 @@ Now in order to construct a sampler that uses $\psi$, we simply add a new step t
 Step 8 is particularly tricky since $V$ is a component of $V^*$, and $V^*$ has the same density $p(V|W,\psi,y)$ that shows up in the usual case of the scaled disturbances, except now the lower right diagonal element is set to one. So while we can write down the various algorithms in the noninvertible $F$ case, the density $p(V|W,\psi,y^*)$ is tricky to work with. In step 8 $V$ is drawn conditional on $y^*$, but another option is to draw $V$ conditional on $y$ but not on $z$. This would require integrating $z$ out of the likelihood, equation \eqref{Fpsilike}. It is not clear which of these is easier, or faster though it is likely that the changing the prior for $V$ and $W$ will have an impact.
 
 \section{Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ in the LLM}\label{sec:scaledraw}
-Both of these two densities are of the form
+From Appendix \ref{subsec:SDs}, the full conditonal distribution of $W$ given $\gamma$ is
+ \begin{align*}
+  p(W&|V,\gamma,y) \propto  p(V,W,\gamma,y) \propto |W|^{-(\lambda_W + p + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_WW^{-1}\right)\right]\\
+&\times  \exp\left[-\frac{1}{2}\left(\sum_{t=1}^T\left[y_t-F_t\sum_{s=0}^{t}\tilde{G}_{s,t}L_W\gamma_{t-s} - F_t\tilde{G}_{t,t}\gamma_0\right]'V^{-1}\left[y_t-F_t\sum_{s=0}^{t-1}\tilde{G}_{s,t}L_W\gamma_{t-s} - F_t\tilde{G}_{t,t}\gamma_0\right]\right)\right]
+ \end{align*}
+where $L_W$ is the Cholesky factor of $W$ defined so that $L_WL_W'=W$. We can write this density as
+\begin{align*}
+p(W|V,\gamma,y)\propto& |W|^{-(\lambda_W + p + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_WW^{-1}\right)\right]\\
+&\times  \exp\left[-\frac{1}{2}\left(\vect(L_W)'A_W\vect(L_W) - 2B_W\vect(L_W)\frac{}{}\right)\right]
+\end{align*}
+where
+\begin{align*}
+A_W &= \sum_{t=1}^T\sum_{s=0}^t\left(\gamma_{t-s}\gamma_{t-s}'\otimes \tilde{G}_{s,t}'F_t'V^{-1}F_t\tilde{G}_{s,t}\right)\\
+\intertext{and}
+B_W &= \sum_{t=1}^T\sum_{s=0}^t\left(\gamma_{t-s}'\otimes (y_t - F_t\tilde{G}_{t,t}\gamma_0)'V^{-1}F_t\tilde{G}_{s,t}\right)
+\end{align*}
+can be found using the properties of the $\vect$ and $\tr$ operators.
+
+Similarly from Appendix \ref{subsec:SEs}, the full conditional distribution of $V$ given $\psi$ is
+\begin{align*}
+ p(V&|W,\psi,y) \propto p(V,W,\psi,y) \propto |V|^{-(\lambda_V + p + 2)/2}\exp\left[-\frac{1}{2}\left(\tr\left(\Lambda_VV^{-1}\right) + \sum_{t=1}^T(y_t - \mu_t)'(F_tWF_t')^{-1}(y_t - \mu_t)\right)\right]
+\end{align*}
+where $\mu_1 = L_V\psi_1 + F_1G_1\psi_0$ and for $t=2,3,\cdots,T$, $\mu_t =L_V\psi_t + F_tG_tF_{t-1}^{-1}(y_{t-1} - L_{V}\psi_{t-1})$. This density can be written in a familiar form:
+\begin{align*}
+ p(V&|W,\psi,y) \propto p(V,W,\psi,y) \propto |V|^{-(\lambda_V + p + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_VV^{-1}\right)\right]\\
+&\times\exp\left[-\frac{1}{2}\left(\vect(L_V)'A_V\vect(L_V) - 2B_V\vect(L_V)\frac{}{}\right)\right]
+\end{align*}
+where
+\begin{align*}
+A_V =& \sum_{t=1}^T\psi_t\psi_t'\otimes (F_tWF_t')^{-1} + \sum_{t=2}^T\psi_{t-1}\psi_{t-1}' \otimes (G_tF_{t-1}^{-1})'W^{-1}G_tF_{t-1}^{-1}\\
+& - \sum_{t=2}^T\psi_t\psi_{t-1}'\otimes (WF_t')^{-1}G_tF_{t-1}^{-1} - \sum_{t=2}^T\psi_{t-1}\psi_{t}'\otimes (G_tF_{t-1}^{-1})'(F_tW)^{-1}\\
+\intertext{and}
+B_V =& \psi_1'\otimes (y_1 + F_1G_1\psi_0)'(F_1WF_1')^{-1} + \sum_{t=2}^T \psi_t'\otimes (y_t-F_tG_tF_{t-1}^{-1}y_{t-1})'(F_tWF_t')^{-1}\\
+& - \sum_{t=2}^T\psi_{t-1}'\otimes (y_t-F_tG_tF_{t-1}^{-1}y_{t-1})'(WF_t')^{-1}G_tF_{t-1}^{-1}
+\end{align*}
+can again be found using the properties of the $\vect$ and $\tr$ operators. Both of these densities are of the form
+\begin{align*}
+p(X) \propto |X|^{-(\lambda + p + 2)/2}\exp\left[-\frac{1}{2}\left(\tr(\Lambda X^{-1}) + \vect(L_X)'A\vect(L_X) - 2B\vect(L_X)\frac{}{}\right)\right]
+\end{align*}
+where $X$ is a $p\times p$ symmetric and positive definite random matrix, $L_X$ is the Cholesky factor of $X$ so that $L_XL_X'=X$, $\lambda>0$, $\Lambda$ is a $p\times p$ symmetric and positive definite matrix, $A$ is a $p^2\times p^2$ matrix, and $B$ is a $1\times p^2$ matrix. 
+
+The complexity of this density is caused by the interaction between the inverse Wishart prior and the augmented data likelihood in terms of the scaled disturbances for $W$ or for the scaled errors for $V$. In the local level model, the density still is not a known form and is difficult to sample from, but sampling from it is possible. In this case the log density is
 \begin{align*}
 \log p(x) =  & - (\alpha + 1)\log x -ax + b\sqrt{x}  -c/x + C 
 \end{align*}
-for $x>0$ where $C$ is some constant, $\alpha>0$ and $c>0$ are the hyperparameters for $x$, and $a>0$ and $b\in \Re$ are parameters that depend on the data, $y$, the relevant data augmentation ($\psi$ or $\gamma$), and the other variable ($W$ or $V$). This density is not a known form and is difficult to sample from. We provide two different rejection sampling strategies below that work well under different circumstances, and combine them into a single strategy.
+for $x>0$ where $C$ is some constant, $\alpha>0$ and $c>0$ are the hyperparameters for $x$, and $a>0$ and $b\in \Re$ are parameters that depend on the data, $y$, the relevant data augmentation ($\psi$ or $\gamma$), and the other variable ($W$ or $V$). We provide two different rejection sampling strategies below that work well under different circumstances, and combine them into a single strategy.
 
 \subsection{Adaptive rejection sampling}
 One nice strategy is to use adaptive rejection sampling, e.g. \citeasnoun{gilks1992adaptive}. This requires $\log p(x)$ to be concave, which is easy enough to check. The second derivative of $\log p(x)$ is:
