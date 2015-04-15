@@ -147,13 +147,13 @@ samsummary <- function(sam, dat, burn, sampler){
   T.T <- sam$T.T[1]
   V <- sam$V[-c(1:burn)]
   W <- sam$W[-c(1:burn)]
-  theta0s <- sam[-c(1:burn),grep("theta", colnames(sam))]
-  theta0s <- theta0s[,1:(T.T + 1)]
-  thetas <- theta0s[,-1]
-  theta0 <- theta0s[,1]
+###  theta0s <- sam[-c(1:burn),grep("theta", colnames(sam))]
+###  theta0s <- theta0s[,1:(T.T + 1)]
+###  thetas <- theta0s[,-1]
+###  theta0 <- theta0s[,1]
   data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
   ## time per 1000 iterations
-  time <- sam$time[1]/length(sam$time)*1000
+  time <- sam$time[1] #/length(sam$time)*1000
   ## tracks when relevant densities are log concave and when
   ## adaptive rejection sampling is used
   logconV <- mean(sam$logconV, na.rm=TRUE)
@@ -163,79 +163,80 @@ samsummary <- function(sam, dat, burn, sampler){
   init <- data.frame(time=time,
                      logconV=logconV,     adrejV=adrejV,
                      logconW=logconW,     adrejW=adrejW)
-  gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
-  colnames(gammas) <- paste("gamma", 1:T.T, sep="")
-  psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
-  colnames(psis) <- paste("psi", 1:T.T, sep="")
+###  gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
+###  colnames(gammas) <- paste("gamma", 1:T.T, sep="")
+###  psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
+###  colnames(psis) <- paste("psi", 1:T.T, sep="")
   ## Find autocorrelation and effective sample size for various quantities
-  thetaAC <- apply(thetas, 2, corfun)
-  gammaAC <- apply(gammas, 2, corfun)
-  psiAC <- apply(psis, 2, corfun)
-  thetaES <- apply(thetas, 2, effectiveSize)
-  gammaES <- apply(gammas, 2, effectiveSize)
-  psiES <- apply(psis, 2, effectiveSize)
-  theta0.AC <- corfun(theta0)
-  theta1.AC <- thetaAC[1]
-  thetaT4.AC <- thetaAC[ceiling(T.T/4)]
-  thetaT2.AC <- thetaAC[T.T/2]
-  theta3T4.AC <- thetaAC[floor(3*T.T/4)]
-  thetaT.AC <- thetaAC[T.T]
-  gamma1.AC <- gammaAC[1]
-  gammaT4.AC <- gammaAC[ceiling(T.T/4)]
-  gammaT2.AC <- gammaAC[T.T/2]
-  gamma3T4.AC <- gammaAC[floor(3*T.T/4)]
-  gammaT.AC <- gammaAC[T.T]
-  psi1.AC <- psiAC[1]
-  psiT4.AC <- psiAC[ceiling(T.T/4)]
-  psiT2.AC <- psiAC[T.T/2]
-  psi3T4.AC <- psiAC[floor(3*T.T/4)]
-  psiT.AC <- psiAC[T.T]
-  theta.ACmax <- thetaAC[which.max(abs(thetaAC))]
-  gamma.ACmax <- gammaAC[which.max(abs(gammaAC))]
-  psi.ACmax <- psiAC[which.max(abs(psiAC))]
-  theta.ACavg <- mean(abs(thetaAC))
-  gamma.ACavg <- mean(abs(gammaAC))
-  psi.ACavg <- mean(abs(psiAC))
-  theta0.ES <- effectiveSize(theta0)
-  theta1.ES <- thetaES[1]
-  thetaT4.ES <- thetaES[ceiling(T.T/4)]
-  thetaT2.ES <- thetaES[T.T/2]
-  theta3T4.ES <- thetaES[floor(3*T.T/4)]
-  thetaT.ES <- thetaES[T.T]
-  gamma1.ES <- gammaES[1]
-  gammaT4.ES <- gammaES[ceiling(T.T/4)]
-  gammaT2.ES <- gammaES[T.T/2]
-  gamma3T4.ES <- gammaES[floor(3*T.T/4)]
-  gammaT.ES <- gammaES[T.T]
-  psi1.ES <- psiES[1]
-  psiT4.ES <- psiES[ceiling(T.T/4)]
-  psiT2.ES <- psiES[T.T/2]
-  psi3T4.ES <- psiES[floor(3*T.T/4)]
-  psiT.ES <- psiES[T.T]
-  theta.ESmin <- thetaES[which.min(thetaES)]
-  gamma.ESmin <- gammaES[which.min(gammaES)]
-  psi.ESmin <- psiES[which.min(psiES)]
-  theta.ESavg <- mean(thetaES)
-  gamma.ESavg <- mean(gammaES)
-  psi.ESavg <- mean(psiES)
+###  thetaAC <- apply(thetas, 2, corfun)
+###  gammaAC <- apply(gammas, 2, corfun)
+###  psiAC <- apply(psis, 2, corfun)
+###  thetaES <- apply(thetas, 2, effectiveSize)
+###  gammaES <- apply(gammas, 2, effectiveSize)
+###  psiES <- apply(psis, 2, effectiveSize)
+###  theta0.AC <- corfun(theta0)
+###  theta1.AC <- thetaAC[1]
+###  thetaT4.AC <- thetaAC[ceiling(T.T/4)]
+###  thetaT2.AC <- thetaAC[T.T/2]
+###  theta3T4.AC <- thetaAC[floor(3*T.T/4)]
+###  thetaT.AC <- thetaAC[T.T]
+###  gamma1.AC <- gammaAC[1]
+###  gammaT4.AC <- gammaAC[ceiling(T.T/4)]
+###  gammaT2.AC <- gammaAC[T.T/2]
+###  gamma3T4.AC <- gammaAC[floor(3*T.T/4)]
+###  gammaT.AC <- gammaAC[T.T]
+###  psi1.AC <- psiAC[1]
+###  psiT4.AC <- psiAC[ceiling(T.T/4)]
+###  psiT2.AC <- psiAC[T.T/2]
+###  psi3T4.AC <- psiAC[floor(3*T.T/4)]
+###  psiT.AC <- psiAC[T.T]
+###  theta.ACmax <- thetaAC[which.max(abs(thetaAC))]
+###  gamma.ACmax <- gammaAC[which.max(abs(gammaAC))]
+###  psi.ACmax <- psiAC[which.max(abs(psiAC))]
+###  theta.ACavg <- mean(abs(thetaAC))
+###  gamma.ACavg <- mean(abs(gammaAC))
+###  psi.ACavg <- mean(abs(psiAC))
+###  theta0.ES <- effectiveSize(theta0)
+###  theta1.ES <- thetaES[1]
+###  thetaT4.ES <- thetaES[ceiling(T.T/4)]
+###  thetaT2.ES <- thetaES[T.T/2]
+###  theta3T4.ES <- thetaES[floor(3*T.T/4)]
+###  thetaT.ES <- thetaES[T.T]
+###  gamma1.ES <- gammaES[1]
+###  gammaT4.ES <- gammaES[ceiling(T.T/4)]
+###  gammaT2.ES <- gammaES[T.T/2]
+###  gamma3T4.ES <- gammaES[floor(3*T.T/4)]
+###  gammaT.ES <- gammaES[T.T]
+###  psi1.ES <- psiES[1]
+###  psiT4.ES <- psiES[ceiling(T.T/4)]
+###  psiT2.ES <- psiES[T.T/2]
+###  psi3T4.ES <- psiES[floor(3*T.T/4)]
+###  psiT.ES <- psiES[T.T]
+###  theta.ESmin <- thetaES[which.min(thetaES)]
+###  gamma.ESmin <- gammaES[which.min(gammaES)]
+###  psi.ESmin <- psiES[which.min(psiES)]
+###  theta.ESavg <- mean(thetaES)
+###  gamma.ESavg <- mean(gammaES)
+###  psi.ESavg <- mean(psiES)
   V.AC <- corfun(V)
   W.AC <- corfun(W)
   V.ES <- effectiveSize(V)
   W.ES <- effectiveSize(W)
-  out <- cbind(init, V.AC, W.AC, theta0.AC,
-               theta1.AC, thetaT4.AC, thetaT2.AC, theta3T4.AC,
-               thetaT.AC, theta.ACmax,theta.ACavg,
-               gamma1.AC, gammaT4.AC, gammaT2.AC, gamma3T4.AC,
-               gammaT.AC, gamma.ACmax, gamma.ACavg,
-               psi1.AC, psiT4.AC, psiT2.AC, psi3T4.AC, psiT.AC,
-               psi.ACmax, psi.ACavg,
-               V.ES, W.ES, theta0.ES,
-               theta1.ES, thetaT4.ES, thetaT2.ES, theta3T4.ES,
-               thetaT.ES, theta.ESmin, theta.ESavg,
-               gamma1.ES, gammaT4.ES, gammaT2.ES, gamma3T4.ES,
-               gammaT.ES, gamma.ESmin, gamma.ESavg,
-               psi1.ES, psiT4.ES, psiT2.ES, psi3T4.ES,
-               psiT.ES, psi.ESmin, psi.ESavg)
+###  out <- cbind(init, V.AC, W.AC, theta0.AC,
+###               theta1.AC, thetaT4.AC, thetaT2.AC, theta3T4.AC,
+###               thetaT.AC, theta.ACmax,theta.ACavg,
+###               gamma1.AC, gammaT4.AC, gammaT2.AC, gamma3T4.AC,
+###               gammaT.AC, gamma.ACmax, gamma.ACavg,
+###               psi1.AC, psiT4.AC, psiT2.AC, psi3T4.AC, psiT.AC,
+###               psi.ACmax, psi.ACavg,
+###               V.ES, W.ES, theta0.ES,
+###               theta1.ES, thetaT4.ES, thetaT2.ES, theta3T4.ES,
+###               thetaT.ES, theta.ESmin, theta.ESavg,
+###               gamma1.ES, gammaT4.ES, gammaT2.ES, gamma3T4.ES,
+###               gammaT.ES, gamma.ESmin, gamma.ESavg,
+###               psi1.ES, psiT4.ES, psiT2.ES, psi3T4.ES,
+###               psiT.ES, psi.ESmin, psi.ESavg)
+  out <- cbind(init, V.AC, W.AC, V.ES, W.ES)
   rownames(out) <- ""
   return(out)
 }
@@ -298,7 +299,7 @@ samwrap <- function(par, n, samp){
     time <- system.time(out <- werrorsam(n, start, dat, av, aw, bv, bw, m0, C0))
 
   outdat <- data.frame(out)
-  outdat$time <- time[1]
+  outdat$time <- time[3]
   cols <- ncol(outdat)
   outdat <- outdat[,c( cols, 1:(cols-1) )]
   print(paste(c(samp, " T=", T, " V=", start[1], " W=", start[2], " FINISHED"), collapse=""))
