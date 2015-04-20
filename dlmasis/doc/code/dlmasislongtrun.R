@@ -1,7 +1,7 @@
 ## code for running the simulations from the paper.
 ## WARNING: THIS WILL TAKE ON THE ORDER OF WEEKS TO COMPLETE ON A UNIVERSITY CLUSTER
 
-source("dlmasisfun.R")
+source("dlmasislongfun.R")
 set.seed(9098710) ## needed to replicate my dataset
 
 ## set the time series lengths and the true values of V and W
@@ -44,5 +44,5 @@ system.time(samout <- fullsim(samplers, simdata, n, burn, parallel))
 ## "4: <anonymous>: ... may be used in an incorrect context: ‘.fun(piece, ...)’"
 ## This is due to a bug in plyr and should hopefully be fixed shortly
 
-save(samout, file="samout.RData")
+save(samout, file="samoutlong.RData")
 stopCluster(cl)
