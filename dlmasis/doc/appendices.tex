@@ -35,6 +35,8 @@ numbered=no]{alg*}
 
 \graphicspath{{plots/}}
 
+%\newcommand{\blind}{0}
+% uncomment for compiling separately
 
 \begin{document}
 
@@ -73,7 +75,7 @@ numbered=no]{alg*}
 \appendix
 \renewcommand\thefigure{\thesection.\arabic{figure}}   
 
-\section{Marginal Model of the DLM}
+\section{Marginal model of the DLM}
 
 The class of DLMs we consider is
 \begin{align}
@@ -331,7 +333,7 @@ Now from equation \eqref{dlmWSDjoint}, we can write the full conditional density
 p(\tilde{\gamma}|V,W,y) \propto & \exp\left[-\frac{1}{2}(\tilde{\gamma}_0-m_0)'C_0^{-1}(\tilde{\gamma}_0-m_0)\right]  \exp\left[-\frac{1}{2}\sum_{t=1}^T\tilde{\gamma}_t'(L_V^{-1}W(L_V^{-1})')^{-1}\tilde{\gamma}_t\right]\\
    &\times  \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(y_t - F_t\theta_t(\tilde{\gamma},L_V)\right)'V^{-1}\left(y_t - F_t\theta_t(\tilde{\gamma},L_V)\right)\right].
 \end{align*}
-This density is gaussian but difficult to draw from, so we use the MCFA to draw $\theta|V,W,y$ instead, then transform from $\theta$ to $\tilde{\gamma}$.
+This density is Gaussian but difficult to draw from, so we use the MCFA to draw $\theta|V,W,y$ instead, then transform from $\theta$ to $\tilde{\gamma}$.
 
 Then full conditional density of $(V,W)$ is complicated, but their separate full conditionals are easier to work with. The full conditional density of $W$ is
 \begin{align*}
@@ -391,7 +393,7 @@ p(W|V,\tilde{\psi},y) \propto& W^{-\alpha_W-1}\exp\left[ -a_{\tilde{\psi}}W + b_
 \end{align*}
 where $a_{\tilde{\psi}} = \frac{1}{2V}\sum_{t=1}^T\tilde{\psi}_t^2$,  $b_{\tilde{\psi}} = \sum_{t=1}^T\mathcal{L}\tilde{y}_t\mathcal{L}\tilde{\psi}_t$, and $c_{\tilde{\psi}} = \beta_W + \frac{1}{2}\sum_{t=1}^T\mathcal{L}\tilde{y}_t^2$. Here we define $\mathcal{L}y_t = y_t - y_{t-1}$ for $t=2,3,\cdots,T$ while $\mathcal{L}y_1 = y_1 - \tilde{\psi}_0$, and $\mathcal{L}\tilde{\psi}_t = \tilde{\psi}_t - \tilde{\psi}_{t-1}$ for $t=2,3,\cdots,T$ while $\mathcal{L}\tilde{\psi}_1 = \tilde{\psi}_1 - 0$. This is the same family of densities as $p(V|W,\tilde{\gamma},y)$, and in Section \ref{sec:wscale} we show how to efficiently obtain random draws.
 
-\section{Mixed Cholesky Factorization Algorithm (MCFA) for Simulation Smoothing}\label{sec:MCFA}
+\section{Mixed Cholesky Factorization Algorithm (MCFA) for simulation smoothing}\label{sec:MCFA}
 
 Traditionally in DLMs, forward filtering, backward sampling (FFBS) is used in order to draw from the latent states $\theta_{0:T}$. This requires running the Kalman filter in order to determine the marginal distribution of $\theta_T$, then drawing $\theta_t|\theta_{t+1:T}$ for $t=T-1,T-2,\cdots,1$ \cite{carter1994gibbs,fruhwirth1994data}. The mixed Cholesky factorization algorithm (MCFA) determines the joint distribution of $\theta_{0:T}$ and draws from it using a backward sampling step as in FFBS. The idea comes from \citeasnoun{rue2001fast}, which introduces a Cholesky factorization algorithm (CFA) for drawing from a Gaussian Markov random field and notes that the conditional distribution of $\theta_{0:T}$ given $y_{1:T}$ in a Gaussian linear statespace model is a special case. The algorithm exploits the fact that the full conditional distribution of $\theta_{0:T}$ is Gaussian with a block tridiagonal precision matrix in order to quickly compute its Cholesky decomposition. \citeasnoun{mccausland2011simulation} improves the idea by implicitly computing this Cholesky decomposition through a backward sampling strategy, starting with sampling from the marginal distribution of $\theta_T$. 
 
@@ -400,7 +402,7 @@ Suppose our model is as follows:
   y_t &= F_t\theta_t + v_t\\
   \theta_t & = G_t\theta_{t-1} + w_t
 \end{align*}
-with $v_t\stackrel{ind}{\sim} N(0,V_t)$ independent of $w_t\stackrel{ind}{\sim}N(0,W_t)$ for $t=1,2,\cdots,T$ and $\theta_0\sim N(m_0,C_0)$. This is the usual DLM except now we allow for time dependent variances for illustrative pruposes. Then $(y_{1:T},\theta_{0:T})$ is joint Gaussian conditional on $(V_{1:T},W_{1:T})$ (in this section, everything is conditonal on $V_{1:T}$ and $W_{1:T}$, so we will not make this conditioning explicit). So we can write $p(\theta_{0:T}|y_{1:T})$ as
+with $v_t\stackrel{ind}{\sim} N(0,V_t)$ independent of $w_t\stackrel{ind}{\sim}N(0,W_t)$ for $t=1,2,\cdots,T$ and $\theta_0\sim N(m_0,C_0)$. This is the usual DLM except now we allow for time dependent variances for illustrative purposes. Then $(y_{1:T},\theta_{0:T})$ is joint Gaussian conditional on $(V_{1:T},W_{1:T})$ (in this section, everything is conditional on $V_{1:T}$ and $W_{1:T}$, so we will not make this conditioning explicit). So we can write $p(\theta_{0:T}|y_{1:T})$ as
 \begin{align*}
   \log p(\theta_{0:T}|y_{1:T}) = -\frac{1}{2}g(\theta_{0:T},y_{1:T}) + K
 \end{align*}
@@ -476,7 +478,7 @@ p(y,z,\theta|V,W) \propto& |V^*|^{-T/2}\exp\left[-\frac{1}{2}\sum_{t=1}^T(y_t^* 
 \propto & V^{-T/2}\exp\left[-\frac{1}{2V}\sum_{t=1}^T(y_t - \alpha_t - x_t\beta_t)^2\right]\exp\left[-\frac{1}{2}\sum_{t=1}^t(z_t - \beta_t)^2\right]\\
  &\times |W|^{-T/2}\exp\left[-\frac{1}{2}\sum_{t=1}^T(\theta_t - \theta_{t-1})'W^{-1}(\theta_t - \theta_{t-1})\right]
 \end{align*}
-Then by transforming to $\psi$, the back transformation is $\theta_t = (F_t^*)^{-1}(y_t^* - L_{V^*}\psi_t)$ so the Jacobian is block diagonal with $T$ copies of $(F_t^*)^{-1}L_{V^*}$ along with a single copy of the identity matrix along the diagonal. So the deterimant of the Jacobian is $|J| = |V^*|^{T/2}$ and the likelihood can be written in terms of $\psi$ as
+Then by transforming to $\psi$, the back transformation is $\theta_t = (F_t^*)^{-1}(y_t^* - L_{V^*}\psi_t)$ so the Jacobian is block diagonal with $T$ copies of $(F_t^*)^{-1}L_{V^*}$ along with a single copy of the identity matrix along the diagonal. So the determinant of the Jacobian is $|J| = |V^*|^{T/2}$ and the likelihood can be written in terms of $\psi$ as
 \begin{align}
 p(y,z,\theta|V,W) \propto& \exp\left[-\frac{1}{2}\sum_{t=1}^T\psi_t'\psi_t\right] |W|^{-T/2}\exp\left[-\frac{1}{2}\sum_{t=1}^T(y_t^* - \mu_t)'(F_t^*W (F_t^*)')^{-1}(y^*_t - \mu_t)\right] \label{Fpsilike}.
 \end{align}
@@ -496,10 +498,10 @@ Now in order to construct a sampler that uses $\psi$, we simply add a new step t
 \item Sample $W \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$.
 \end{enumerate}
 \end{alg*}\noindent
-Step 8 is particularly tricky since $V$ is a component of $V^*$, and $V^*$ has the same density $p(V|W,\psi,y)$ that shows up in the usual case of the scaled disturbances, except now the lower right diagonal element is set to one. So while we can write down the various algorithms in the noninvertible $F$ case, the density $p(V|W,\psi,y^*)$ is tricky to work with. In step 8 $V$ is drawn conditional on $y^*$, but another option is to draw $V$ conditional on $y$ but not on $z$. This would require integrating $z$ out of the likelihood, equation \eqref{Fpsilike}. It is not clear which of these is easier or faster, though it is likely that the changing the prior for $V$ and $W$ will have an impact.
+Step 8 is particularly tricky since $V$ is a component of $V^*$, and $V^*$ has the same density $p(V|W,\psi,y)$ that shows up in the usual case of the scaled disturbances, except now the lower right diagonal element is set to one. So while we can write down the various algorithms in the non-invertible $F$ case, the density $p(V|W,\psi,y^*)$ is tricky to work with. In step 8 $V$ is drawn conditional on $y^*$, but another option is to draw $V$ conditional on $y$ but not on $z$. This would require integrating $z$ out of the likelihood, equation \eqref{Fpsilike}. It is not clear which of these is easier or faster, though it is likely that the changing the prior for $V$ and $W$ will have an impact.
 
 \section{Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ in the LLM}\label{sec:scaledraw}
-From Appendix \ref{subsec:SDs}, the full conditonal distribution of $W$ given $\gamma$ is
+From Appendix \ref{subsec:SDs}, the full conditional distribution of $W$ given $\gamma$ is
  \begin{align*}
   p(W&|V,\gamma,y) \propto  p(V,W,\gamma,y) \propto |W|^{-(\lambda_W + p + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_WW^{-1}\right)\right]\\
 &\times  \exp\left[-\frac{1}{2}\left(\sum_{t=1}^T\left[y_t-F_t\sum_{s=0}^{t}\tilde{G}_{s,t}L_W\gamma_{t-s} - F_t\tilde{G}_{t,t}\gamma_0\right]'V^{-1}\left[y_t-F_t\sum_{s=0}^{t-1}\tilde{G}_{s,t}L_W\gamma_{t-s} - F_t\tilde{G}_{t,t}\gamma_0\right]\right)\right]
@@ -647,13 +649,17 @@ Next $V$'s conditional density is the same whether we condition on $\theta$ or $
 \end{align*}
 This is actually a SE-SD GIS algorithm, so the CIS sampler we started with is equivalent to SE-SD GIS. Since we do not expect the order in which the DAs appear in a GIS algorithm to matter, CIS should have the same mixing and convergence properties as the SD-SE GIS algorithm we constructed.
 
-\section{Partial CIS Algorithms}
+\section{Partial CIS algorithms in the DLM}
 
-In addition to the GIS and CIS algorithms discussed in the main body of the article, \citeasnoun{yu2011center} also introduce {\it partial CIS} algorithms. While a CIS algorithm interweaves in separate Gibbs steps for each subvector of the parameter, a partial CIS algorithm has a usual Gibbs step for at least one of the parameter vectors. For example, suppose that the model parameter is $\phi=(\phi_1,\phi_2)$, and $\gamma_1$, $\gamma_2$, and $\theta$ are available DAs. Then a partial CIS algorithm using these DAs is
-\begin{align*}
-&[\gamma_1|\phi_1^{(k)},\phi_2^{(k)}]\to [\phi_1^{(k+0.5)}|\phi_2^{(k)},\gamma_1]\to[\gamma_2|\phi_1^{(k+0.5)},\phi_2^{(k)},\gamma_1]\to[\phi_1^{(k+1)}|\phi_2^{(k)},\gamma_2]\to\\
-&[\theta|\phi_1^{(k+1)},\phi_2^{(k)},\gamma_2] \to [\phi_2^{(k+1)}|\phi_1^{(k+1)},\theta].
-\end{align*}
+In addition to the GIS and CIS algorithms discussed in the main body of the article, \citeasnoun{yu2011center} also introduce {\it partial CIS} algorithms. While a CIS algorithm interweaves in separate Gibbs steps for each sub-vector of the parameter, a partial CIS algorithm has a usual Gibbs step for at least one of the parameter vectors. For example, suppose that the model parameter is $\phi=(\phi_1,\phi_2)$, and $\gamma_1$, $\gamma_2$, and $\theta$ are available DAs. Then a partial CIS algorithm using these DAs is
+\begin{alg*}[partial CIS]Partial Componentwise Interweaving Strategy\label{alg:pCIS}
+\begin{center}
+\begin{tabular}{llllllll}
+$[\gamma_1|\phi_1^{(k)},\phi_2^{(k)}]$ &$\to$& $[\phi_1^{(k+0.5)}|\phi_2^{(k)},\gamma_1]$ & $\to$ & $[\gamma_2|\phi_1^{(k+0.5)},\phi_2^{(k)},\gamma_1]$ & $\to$ & $[\phi_1^{(k+1)}|\phi_2^{(k)},\gamma_2]$ &$\to$\\
+$[\theta|\phi_1^{(k+1)},\phi_2^{(k)},\gamma_2]$ & $\to$ & $[\phi_2^{(k+1)}|\phi_1^{(k+1)},\theta]$. &&&&&
+\end{tabular}
+\end{center}
+\end{alg*}\noindent
 The first line is an interweaving step for $\phi_1$ while the second line is a standard Gibbs step for $\phi_2$. Partial CIS algorithms are easier to construct than full CIS algorithms at the cost of slower convergence \cite{yu2011center}.
 
 In the DLM we can construct two partial CIS algorithms using the wrongly-scaled DAs in much the same way they were used to construct the full CIS algorithm. The first algorithm interweaves for $W$ using the scaled disturbances, $\gamma$, and the wrongly-scaled disturbances, $\tilde{\gamma}$:
@@ -685,7 +691,7 @@ So we can view $(b_V,b_W)$ as the data augmentation instead of $\theta$ and thus
 \end{align*}
 Thus the dependence between $(V,W)$ and $(b_V,b_W)$ in the posterior will determine how much the state sampler moves in a given iteration and, in particular, it is possible that $V$ and $W$ have very different serial dependence from each other since we are drawing them jointly. When the dependence between $V$ and $b_V$ is high, the $(V,W)$ step will hardly move $V$ even if it drastically moves $W$ since $V$ and $W$ are independent. However, the $(b_V,b_W)$ step may move both elements a moderate amount since they both depend on $(V,W)$.
 
-In Figure \ref{corplot} we see that the posterior correlation between $V$ and $b_V$ is high in magnitude and positive when $R^*>1$ while the posterior correlation between $V$ and $b_W$ is moderate to low and negative. When $R^*$ is large enough though, the posterior correlation between $V$ and $b_W$ evaporates. Similarly when $R^*<1$ the posterior correlation between $W$ and $b_W$ is high and positive and the posterior correlation between $W$ and $b_V$ is high and negative. Again as $R^*$ becomes large enough the correlation between $W$ and $b_V$ goes to zero. So when $R^*>1$, the draw of $(b_V, b_W)$ is unlikely to move $b_V$ much since $b_V$ is so highly correlated with $V$ and essentially uncorrelated with $b_W$, but $b_W$ is essentially uncorrelated with $W$ and negatively correlated with $V$ so $b_W$ is likely to move a fair amount. Furthermore the draw of $V$ is highly correlated with $b_V$ while the draw of $W$ is essentially independent of $b_W$ (and the draws of $V$ and $W$ are independent conditional on $b_V$ and $b_W$). Thus when $R^*>1$ we should expect high serial dependence for $V$ and low serial dependence for $W$, and so low ESP for $V$ and high ESP for $W$, which is exactly what we see in Figure \ref{ESplot100}. By similar reasoning when $R^*<1$, we should expect low serial dependence for $V$ and high serial dependece for $W$ and thus high ESP for $V$ and low ESP for $W$, which can also be seen in Figure \ref{ESplot100}.
+In Figure \ref{corplot} we see that the posterior correlation between $V$ and $b_V$ is high in magnitude and positive when $R^*>1$ while the posterior correlation between $V$ and $b_W$ is moderate to low and negative. When $R^*$ is large enough though, the posterior correlation between $V$ and $b_W$ evaporates. Similarly when $R^*<1$ the posterior correlation between $W$ and $b_W$ is high and positive and the posterior correlation between $W$ and $b_V$ is high and negative. Again as $R^*$ becomes large enough the correlation between $W$ and $b_V$ goes to zero. So when $R^*>1$, the draw of $(b_V, b_W)$ is unlikely to move $b_V$ much since $b_V$ is so highly correlated with $V$ and essentially uncorrelated with $b_W$, but $b_W$ is essentially uncorrelated with $W$ and negatively correlated with $V$ so $b_W$ is likely to move a fair amount. Furthermore the draw of $V$ is highly correlated with $b_V$ while the draw of $W$ is essentially independent of $b_W$ (and the draws of $V$ and $W$ are independent conditional on $b_V$ and $b_W$). Thus when $R^*>1$ we should expect high serial dependence for $V$ and low serial dependence for $W$, and so low ESP for $V$ and high ESP for $W$, which is exactly what we see in Figure \ref{ESplot100}. By similar reasoning when $R^*<1$, we should expect low serial dependence for $V$ and high serial dependence for $W$ and thus high ESP for $V$ and low ESP for $W$, which can also be seen in Figure \ref{ESplot100}.
 
 For the SD sampler, things are a bit more complicated. The draw of $V|W,\gamma$ still depends on $b_V$ since it is the same inverse gamma draw as in the state sampler, but the draw of $W|V,\gamma$ now depends on $a_\gamma$ and $b_\gamma$ defined in Section \ref{subsec:SDs} as
 \begin{align*}
@@ -714,10 +720,11 @@ So the dependence between $V$ and $b_V$ determines how much the chain moves in t
 
 In order to analyze the SD sampler, first suppose $R^*>1$. Then from Figure \ref{corplot} $b_V$ has high correlation with $V$ and low correlation with $W$, so the draw of $b_V$ should not move the chain much. Next, the draw of $V$ should again not move the chain much because of the high correlation between $V$ and $b_V$. Finally the draw of $W$ has a fair chance to move the chain because it has low correlation with both $a_\gamma$ and $b_\gamma$. But this has little impact on $b_V$ and thus the entire chain since $b_V$ is so highly correlated with $V$ but hardly correlated with $W$. So when $R^*>1$, we should expect high serial dependence and low ESP for $V$. We should also expect similar behavior for $W$ since the entire chain is hardly moving so $W$'s hyperparameters are hardly moving. This is roughly what we see in Figure \ref{ESplot100}, though this reasoning does not allow us to predict which of $V$ and $W$ will have lower ESP. When $R^*<1$ the posterior correlation in each of the steps is broken, though in the $W$ step the correlation between $W$ and both $a_\gamma$ and $b_\gamma$ becomes negative and somewhat high in magnitude. Here we should not expect less serial dependence in $V$ or $W$, but we should perhaps expect higher ESP's since negatively correlated draws decrease Monte Carlo standard error. Indeed, we see ESP's near one for both variances in Figure \ref{ESplot100}. The SE sampler is analogous to the SD sampler and a similar analysis applies --- the posterior correlations between $V$ or $W$ and $b_W$, $a_\psi$ or $b_\psi$ in Figure \ref{corplot} roughly predict the ESP of the SE sampler in Figure \ref{ESplot100}. When one or more of the correlations are high, ESPs for $V$ and $W$ are low while when all of the correlations are low, both ESPs are high. We omit a similar analysis of the wrongly-scaled samplers for brevity, but note that their behavior will allows us to predict the behavior of the CIS sampler.
 
+\clearpage
 
 \section{Plots for all values of $T$}\label{sec:plots}
 
-\begin{figure}[!h]
+\begin{figure}[!thb]
 \centering
 \begin{subfigure}[b]{0.59\textwidth}%
 \includegraphics[width=\textwidth]{basecisESplot10}
@@ -738,7 +745,7 @@ In order to analyze the SD sampler, first suppose $R^*>1$. Then from Figure \ref
 \label{ESplot10}
 \end{figure}
 
-\begin{figure}[!h]
+\begin{figure}[!thb]
 \centering
 \begin{subfigure}[b]{0.59\textwidth}%
 \includegraphics[width=\textwidth]{basecisESplot100}
@@ -759,7 +766,7 @@ In order to analyze the SD sampler, first suppose $R^*>1$. Then from Figure \ref
 \label{ESplot100}
 \end{figure}
 
-\begin{figure}[!h]
+\begin{figure}[!thb]
 \centering
 \begin{subfigure}[b]{0.59\textwidth}%
 \includegraphics[width=\textwidth]{basecisESplot1000}
@@ -780,7 +787,7 @@ In order to analyze the SD sampler, first suppose $R^*>1$. Then from Figure \ref
 \label{ESplot1000}
 \end{figure}
 
-\begin{figure}[!h]
+\begin{figure}[!thb]
 \centering
 \begin{subfigure}[b]{0.59\textwidth}
 \includegraphics[width=\textwidth]{basecistimeplot10}
@@ -801,7 +808,7 @@ In order to analyze the SD sampler, first suppose $R^*>1$. Then from Figure \ref
 \label{baseinttimeplot10}
 \end{figure}
 
-\begin{figure}[!h]
+\begin{figure}[!thb]
 \centering
 \begin{subfigure}[b]{0.59\textwidth}
 \includegraphics[width=\textwidth]{basecistimeplot100}
@@ -822,7 +829,7 @@ In order to analyze the SD sampler, first suppose $R^*>1$. Then from Figure \ref
 \label{baseinttimeplot100}
 \end{figure}
 
-\begin{figure}[!h]
+\begin{figure}[!thb]
 \centering
 \begin{subfigure}[b]{0.59\textwidth}
 \includegraphics[width=\textwidth]{basecistimeplot1000}
@@ -842,6 +849,10 @@ In order to analyze the SD sampler, first suppose $R^*>1$. Then from Figure \ref
 \caption{Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=1000$ in each sampler. Figure \ref{fig:timea1000} contains the base samplers, Figure \ref{fig:timeb1000} contains the GIS and CIS samplers, while Figure \ref{fig:timec1000} contains the Alt samplers. Log times larger than three $\log \mathrm{min}$ are rounded down to three for plotting purposes.}
 \label{baseinttimeplot1000}
 \end{figure}
+
+\clearpage
+\section{GIS vs. Alt in very long time series}
+(To be completed -- waiting on simulations)
 
 \clearpage
 \bibliographystyle{MWS_jasa}  % proper bibliography style for ASA
