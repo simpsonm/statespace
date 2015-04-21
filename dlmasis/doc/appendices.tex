@@ -34,15 +34,6 @@ numbered=no]{alg*}
 \DeclareMathOperator{\vect}{vec}
 
 \graphicspath{{plots/}}
-\newcommand{\blind}{0} %%change the 0 to a 1 to compile blinded version
-
-
-% \addtolength{\oddsidemargin}{-.75in}%
-% \addtolength{\evensidemargin}{-.75in}%
-% \addtolength{\textwidth}{1.5in}%
-% \addtolength{\textheight}{1.3in}%
-% \addtolength{\topmargin}{-.8in}%
-
 
 
 \begin{document}
@@ -80,7 +71,50 @@ numbered=no]{alg*}
 \spacingset{2}
 
 \appendix
-\renewcommand\thefigure{\thesection.\arabic{figure}}    
+\renewcommand\thefigure{\thesection.\arabic{figure}}   
+
+\section{Marginal Model of the DLM}
+
+The class of DLMs we consider is
+\begin{align}
+  y_t|\theta,V,W \stackrel{ind}{\sim} & N_k(F_t\theta_t,V) &
+  \theta_t|\theta_{0:t-1},V,W  \sim & N_p(G_t\theta_{t-1},W) \label{dlmbotheqs}
+\end{align}
+for $t=1,2,\cdots T$ where $V$ and $W$ are unknown covariance matrices. Define $v_t=y_t - F_t\theta_t$ and $w_t = \theta_t - G_t\theta_{t-1}$. Then we can rewrite the model by recursive substitution:
+\begin{align*}
+  y_t &= v_t + F_t\left(w_t + G_tw_{t-1} + G_tG_{t-1}w_{t-2} + ... + G_tG_{t-1}\cdots G_{2}w_1 + G_tG_{t-1}\cdots G_1\theta_0\right).
+\end{align*}
+Then conditional on $\phi=(V,W)$ each $y_t$ is a linear combination of normal random variables. After marginalizing out $\theta$, $y=(y_1',y_2',\dots,y_T')$ has a normal distribution such that $\mathrm{E}[y_t|\phi] =  F_tH_tm_0$,
+\begin{align*}
+  \mathrm{Var}[y_t|\phi] =  V + F_t(K_tWK_t' + H_tC_0H_t')F_t' ,\quad \mathrm{and} \quad
+  \mathrm{Cov}[y_s,y_t|\phi] = F_s(K_sWK_t' + H_sC_0H_t')F_t',
+\end{align*}
+where $H_t = G_tG_{t-1}\cdots G_1$ and $K_t = I_p + G_t + G_tG_{t-1} + \cdots + G_tG_{t-1}\cdots G_2$. Next define $D_t = F_tG_tG_{t-1}\cdots G_1$. Then let $\tilde{V}=I_T\otimes V$ and $D$ be block diagonal with elements $D_1,\ldots,D_T$, 
+%\begin{align*}
+%\tilde{V}_{Tk\times Tk} & = \begin{bmatrix}
+%V & 0 & \cdots & 0\\
+%0 & V & \cdots & 0\\
+%\vdots & \vdots & \ddots & \vdots\\
+%0 & 0 & \cdots & V
+%\end{bmatrix}, &
+%D_{Tp\times Tk} &= \begin{bmatrix}
+%D_1 & 0 & \cdots & 0\\
+%0 & D_2 & \cdots & 0\\
+%\vdots & \vdots & \ddots & \vdots\\
+%0 & 0 & \cdots & D_T
+%\end{bmatrix},
+%\end{align*}
+\begin{align*}
+\tilde{W}_{Tk\times Tk} &= \begin{bmatrix} K_1'F_1' & K_2'F_2' & \cdots K_T'F_T' \end{bmatrix}' W \begin{bmatrix} K_1'F_1' & K_2'F_2' & \cdots K_T'F_T' \end{bmatrix}, &\\
+\tilde{C}_{Tk\times Tk} &= \begin{bmatrix} H_1'F_1' & H_2'F_2' & \cdots H_T'F_T' \end{bmatrix}' C_0 \begin{bmatrix} H_1'F_1' & H_2'F_2' & \cdots H_T'F_T' \end{bmatrix},&
+\end{align*}
+and $\tilde{m}_{Tp\times 1} = (m_0', m_0', \cdots m_0')'$. Now we have the data model for $y$ without any data augmentation:
+\begin{align}
+  y|V,W \stackrel{ind}{\sim} N_{Tk}(D\tilde{m}, \tilde{V} + \tilde{W} + \tilde{C}). \label{margmodel}
+\end{align}
+
+
+ 
 \section{Proof of lemma 1}
 
 First the normality assumption implies
@@ -175,6 +209,12 @@ In other words, $V$ and $W$ are conditionally independent given $y$ and $\theta$
 \end{align*}
 where $v_t = y_t - F_t\theta_t$ and $w_t = \theta_t - G_t\theta_{t-1}$.
 
+In the local level model, the priors on $V$ and $W$ become $V\sim IG(\alpha_V,\beta_V)$ and $W\sim IG(\alpha_W,\beta_W)$. The full conditionals then become
+\begin{align*}
+V|\theta,y & \sim IG\left(\alpha_V + T/2, \beta_V + \sum_{t=1}^T(y_t - \theta_t)^2/2\right), &
+W|\theta,y & \sim IG\left(\alpha_W + T/2, \beta_W + \sum_{t=1}^T(\theta_t - \theta_{t-1})^2/2\right).
+\end{align*}
+
 \subsection{Scaled disturbances}\label{subsec:SDs}
 
 Let $L_W$ denote the Cholesky decomposition of $W$, i.e. the lower triangle matrix $L_W$ such that $L_WL_W' =W$. Then the scaled disturbances are $\gamma=\gamma_{0:T}=(\gamma_0',\gamma_1',\cdots,\gamma_T')'$ defined by $\gamma_0=\theta_0$ and $\gamma_t = L_W^{-1}(\theta_t-G_t\theta_{t-1})$ for $t=1,2,\cdots,T$. The reverse transformation is defined recursively by $\theta_0=\gamma_0$ and $\theta_t=L_W\gamma_t + G_t\theta_{t-1}$ for $t=1,2,\cdots,T$. Then the Jacobian is block lower triangular with the identity matrix and $T$ copies of $L_W$ along the diagonal blocks, so $|J| = |L_W|^T=|W|^{T/2}$. From equation \eqref{dlmjoint} we can write the full joint distribution of $(V,W,\gamma,y)$ as
@@ -215,14 +255,18 @@ where $v_t = y_t - F_t\sum_{s=0}^{t}\tilde{G}_{s,t}L_W\gamma_{t-s} - F_t\tilde{G
 \begin{align*}
   V|W,\gamma,y &\sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t',\lambda_V + T\right)
 \end{align*}
-which is the same distribution as for $V|\theta,y$. 
+which is the same distribution as for $V|\theta,y$. In the local level model this reduces to
+\begin{align*}
+  V|W,\gamma,y \sim IG\left(\alpha_V + T/2, \beta_V + \sum_{t=1}^T(y_t - \theta_t(\gamma))^2/2\right)
+\end{align*}
+which is again the same density if we conditioned on $\theta$. 
 
 The full conditional density of $W$ is more complicated:
  \begin{align*}
   p(W&|V,\gamma,y) \propto  p(V,W,\gamma,y) \propto |W|^{-(\lambda_W + p + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_WW^{-1}\right)\right]\\
 &\times  \exp\left[-\frac{1}{2}\left(\sum_{t=1}^T\left[y_t-F_t\sum_{s=0}^{t}\tilde{G}_{s,t}L_W\gamma_{t-s} - F_t\tilde{G}_{t,t}\gamma_0\right]'V^{-1}\left[y_t-F_t\sum_{s=0}^{t-1}\tilde{G}_{s,t}L_W\gamma_{t-s} - F_t\tilde{G}_{t,t}\gamma_0\right]\right)\right]. 
  \end{align*}
-In the local level model, the density is even simpler. The local level model assumes that $y_t$ and $\theta_t$ are univariate for all $t$ and that $F_t=G_t=1$. In addition, the prior on $W$ reduces to an inverse gamma prior, $IG(\alpha_W,\beta_W)$. In this case, the full conditional density of $W$ becomes
+In the local level model, the density is even simpler: 
 \begin{align*}
   p(W&|V,\gamma,y) \propto W^{-\alpha_W   - 1}\exp\left[-\frac{1}{W}\beta_W  \right]  \exp\left[-\frac{1}{2}\left(\sum_{t=1}^T\left[y_t-\sum_{s=0}^{t}\gamma_{t-s}\sqrt{W}\right]'V^{-1}\left[y_t-\sum_{s=0}^{t-1}\gamma_{t-s}\sqrt{W}\right]\right)\right]\\
 &\propto W^{-\alpha_W - 1}\exp\left[-a_\gamma W + b_\gamma \sqrt{W} -\frac{\beta_W}{W}\right]. 
@@ -253,7 +297,10 @@ in other words
 \begin{align*}
   W|V,\psi,y &\sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right) 
 \end{align*}
-where $w_t = F_t^{-1}(y_t - \mu_t) = \theta_t - G_t\theta_{t-1}$.
+where $w_t = F_t^{-1}(y_t - \mu_t) = \theta_t - G_t\theta_{t-1}$. In the local level model, this becomes
+\begin{align*}
+W|V,\psi,y &\sim IG\left(\alpha_W + T/2, \beta_W + \sum_{t=1}^T(\theta_t(\psi) - \theta_{t-1}(\psi))^2/2\right).
+\end{align*}
 
 The full conditional distribution of $V$ is more complicated:
 \begin{align*}
@@ -294,7 +341,11 @@ i.e.
 \begin{align*}
 W|V,\tilde{\gamma},y \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t', \lambda_W + T\right)
 \end{align*}
-where $w_t = L_V\tilde{\gamma}_t = \theta_t - G_t\theta_{t-1}$. The full conditional density of $V$ is more complicated, from equation \eqref{dlmWSDjoint}:
+where $w_t = L_V\tilde{\gamma}_t = \theta_t - G_t\theta_{t-1}$. In the local level model, this density becomes 
+\begin{align*}
+W|V,\tilde{\gamma},y \sim IG\left(\alpha_W + T/2, \beta_W + \sum_{t=1}^T(\theta_t(\tilde{\gamma}) - \theta_{t-1}(\tilde{\gamma}))^2/2\right).
+\end{align*}
+The full conditional density of $V$ is more complicated, from equation \eqref{dlmWSDjoint}:
 \begin{align*}
   p(V|W,\tilde{\gamma},y) \propto &  |V|^{-(\lambda_V + p + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_VV^{-1}\right)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T\tilde{\gamma}_t'(L_V^{-1}W(L_V^{-1})')^{-1}\tilde{\gamma}_t\right]\\
   &\times  \exp\left[-\frac{1}{2}\sum_{t=1}^T\left(y_t - F_t\theta_t(\tilde{\gamma},L_V)\right)'V^{-1}\left(y_t - F_t\theta_t(\tilde{\gamma},L_V)\right)\right].
@@ -324,14 +375,17 @@ This density is again Gaussian and it can be shown that the precision matrix is 
 \begin{align*}
     p(V|W,\tilde{\psi},y) \propto& |V|^{-(\lambda_V + p + T + 2)/2}\exp\left[-\frac{1}{2}\tr\left(\Lambda_VV^{-1}\right)\right] \exp\left[-\frac{1}{2}\sum_{t=1}^T\tilde{\psi}_t'(L_W^{-1}V(L_W^{-1})')^{-1}\tilde{\psi}_t\right]. 
  \end{align*}
-So $V|W,\tilde{\psi},y \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t', \lambda_V + T\right)$ where $v_t = L_W\tilde{\psi}_t = y_t - F_t\theta_t$.
+So $V|W,\tilde{\psi},y \sim IW\left(\Lambda_V + \sum_{t=1}^Tv_tv_t', \lambda_V + T\right)$ where $v_t = L_W\tilde{\psi}_t = y_t - F_t\theta_t$. In the local level model, this becomes
+\begin{align*}
+V|W,\tilde{\psi},y &\sim IG\left(\alpha_V + T/2, \beta_V + \sum_{t=1}^T(y_t - \theta_t(\tilde{\psi}))^2/2\right).
+\end{align*}
 
 The full conditional density of $W$ is more complicated, but has the same form as the full conditional density of $V$ given $\tilde{\gamma}$:
 \begin{align*}
   p(W|V,\tilde{\psi},y) \propto& |W|^{-(\lambda_W + p + 2)/2}\exp\left[-\frac{1}{2}\sum_{t=1}^T\tilde{\psi}_t'(L_W^{-1}V(L_W^{-1})')^{-1}\tilde{\psi}_t\right] \\
   & \times \exp\left[-\frac{1}{2}\tr\left(\Lambda_WW^{-1}\right)\right]\exp\left[-\frac{1}{2}\sum_{t=1}^T(y_t - \tilde{\mu}_t)'(F_tWF_t')^{-1}(y_t-\tilde{\mu}_t)\right].
 \end{align*}
-This density is a bit complicated, but in the case of the local level model with a $IG(\alpha_W,\beta_W)$ prior on $W$, it simplifies to
+In the case of the local level model with a $IG(\alpha_W,\beta_W)$ prior on $W$, this density simplifies to
 \begin{align*}
 p(W|V,\tilde{\psi},y) \propto& W^{-\alpha_W-1}\exp\left[ -a_{\tilde{\psi}}W + b_{\tilde{\psi}}/\sqrt{W} -c_{\tilde{\psi}}/W\right]
 \end{align*}
@@ -339,7 +393,7 @@ where $a_{\tilde{\psi}} = \frac{1}{2V}\sum_{t=1}^T\tilde{\psi}_t^2$,  $b_{\tilde
 
 \section{Mixed Cholesky Factorization Algorithm (MCFA) for Simulation Smoothing}\label{sec:MCFA}
 
-Traditionally in DLMs, the Kalman filter is used in order to draw from the latent states $\theta_{0:T}$ through forward filtering, backward sampling (FFBS). This requires running the Kalman filter in order to determine the marginal distribution of $\theta_T$, then drawing $\theta_t|\theta_{t+1:T}$ for $t=T-1,T-2,\cdots,1$ \cite{carter1994gibbs,fruhwirth1994data}. The mixed Cholesky factorization algorithm (MCFA) determines the joint distribution of $\theta_{0:T}$ and draws from it using a backward sampling step as in FFBS. The idea comes from \citeasnoun{rue2001fast}, which introduces a Cholesky factorization algorithm (CFA) for drawing from a Gaussian Markov random field and notes that the conditional distribution of $\theta_{0:T}$ given $y_{1:T}$ in a Gaussian linear statespace model is a special case. The algorithm exploits the fact that the full conditional distribution of $\theta_{0:T}$ is Gaussian with a block tridiagonal precision matrix in order to quickly compute its Cholesky decomposition. \citeasnoun{mccausland2011simulation} improves the idea by implicitly computing this Cholesky decomposition through a backward sampling strategy, starting with sampling from the marginal distribution of $\theta_T$. 
+Traditionally in DLMs, forward filtering, backward sampling (FFBS) is used in order to draw from the latent states $\theta_{0:T}$. This requires running the Kalman filter in order to determine the marginal distribution of $\theta_T$, then drawing $\theta_t|\theta_{t+1:T}$ for $t=T-1,T-2,\cdots,1$ \cite{carter1994gibbs,fruhwirth1994data}. The mixed Cholesky factorization algorithm (MCFA) determines the joint distribution of $\theta_{0:T}$ and draws from it using a backward sampling step as in FFBS. The idea comes from \citeasnoun{rue2001fast}, which introduces a Cholesky factorization algorithm (CFA) for drawing from a Gaussian Markov random field and notes that the conditional distribution of $\theta_{0:T}$ given $y_{1:T}$ in a Gaussian linear statespace model is a special case. The algorithm exploits the fact that the full conditional distribution of $\theta_{0:T}$ is Gaussian with a block tridiagonal precision matrix in order to quickly compute its Cholesky decomposition. \citeasnoun{mccausland2011simulation} improves the idea by implicitly computing this Cholesky decomposition through a backward sampling strategy, starting with sampling from the marginal distribution of $\theta_T$. 
 
 Suppose our model is as follows:
 \begin{align*}
@@ -442,7 +496,7 @@ Now in order to construct a sampler that uses $\psi$, we simply add a new step t
 \item Sample $W \sim IW\left(\Lambda_W + \sum_{t=1}^Tw_tw_t',\lambda_{W} + T\right)$.
 \end{enumerate}
 \end{alg*}\noindent
-Step 8 is particularly tricky since $V$ is a component of $V^*$, and $V^*$ has the same density $p(V|W,\psi,y)$ that shows up in the usual case of the scaled disturbances, except now the lower right diagonal element is set to one. So while we can write down the various algorithms in the noninvertible $F$ case, the density $p(V|W,\psi,y^*)$ is tricky to work with. In step 8 $V$ is drawn conditional on $y^*$, but another option is to draw $V$ conditional on $y$ but not on $z$. This would require integrating $z$ out of the likelihood, equation \eqref{Fpsilike}. It is not clear which of these is easier, or faster though it is likely that the changing the prior for $V$ and $W$ will have an impact.
+Step 8 is particularly tricky since $V$ is a component of $V^*$, and $V^*$ has the same density $p(V|W,\psi,y)$ that shows up in the usual case of the scaled disturbances, except now the lower right diagonal element is set to one. So while we can write down the various algorithms in the noninvertible $F$ case, the density $p(V|W,\psi,y^*)$ is tricky to work with. In step 8 $V$ is drawn conditional on $y^*$, but another option is to draw $V$ conditional on $y$ but not on $z$. This would require integrating $z$ out of the likelihood, equation \eqref{Fpsilike}. It is not clear which of these is easier or faster, though it is likely that the changing the prior for $V$ and $W$ will have an impact.
 
 \section{Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ in the LLM}\label{sec:scaledraw}
 From Appendix \ref{subsec:SDs}, the full conditonal distribution of $W$ given $\gamma$ is
@@ -569,6 +623,52 @@ We then set the scale parameter to be
   -\left[\left.\frac{\partial^2 \log p(z)}{\partial z^2}\right|_{z=z^{mode}}\right]^{-1}
 \end{align*}
 as in the normal approximation, and the degrees of freedom parameter to $v=1$. This rejection sampler is tolerably efficient for our purposes, but there is much room for improvement.
+
+\section{Equivalence of CIS and GIS in the DLM}\label{sec:CISGIS}
+The CIS algorithm consists of the following steps:
+\begin{align*}
+&[\psi|V^{(k)},W^{(k)}] \to [V^{(k+0.5)}|W^{(k)},\psi] \to [\tilde{\psi}|V^{(k+0.5)},W^{(k)},\psi] \to [V^{(k+1)}|W^{(k)},\tilde{\psi}]\to\\
+&[\tilde{\gamma}|V^{(k+1)},W^{(k)},\tilde{\psi}] \to [W^{(k+0.5)}|V^{(k+1)},\tilde{\gamma}] \to [\gamma|V^{(k+1)},W^{(k+0.5)},\tilde{\gamma}]\to [W^{(k+1)}|V^{(k+1)},\gamma].
+\end{align*}
+In the fourth step of line one and the second step of line two, each of those densities would be unchanged if we conditioned on $\theta$ instead of $\tilde{\psi}$ on the first line or $\tilde{\gamma}$ on the second line. So the CIS algorithm above is equivalent to the following:
+\begin{align*}
+&[\psi|V^{(k)},W^{(k)}] \to [V^{(k+0.5)}|W^{(k)},\psi] \to [\theta|V^{(k+0.5)},W^{(k)},\psi] \to [V^{(k+1)}|W^{(k)},\theta]\to\\
+&[W^{(k+0.5)}|V^{(k+1)},\theta] \to [\gamma|V^{(k+1)},W^{(k+0.5)},\theta]\to [W^{(k+1)}|V^{(k+1)},\gamma].
+\end{align*}
+Now since $V$ and $W$ are conditionally independent given $\theta$ and $y$, the last step of line one and the first step of line 2 can be switched: 
+\begin{align*}
+&[\psi|V^{(k)},W^{(k)}] \to [V^{(k+0.5)}|W^{(k)},\psi] \to [\theta|V^{(k+0.5)},W^{(k)},\psi] \to [W^{(k+0.5)}|V^{(k+0.5)},\theta] \to\\
+&[V^{(k+1)}|W^{(k+0.5)},\theta] \to [\gamma|V^{(k+1)},W^{(k+0.5)},\theta]\to [W^{(k+1)}|V^{(k+1)},\gamma].
+\end{align*}
+Next $V$'s conditional density is the same whether we condition on $\theta$ or $\gamma$, so we can do the $V$ step between the $\gamma$ step and the $W$ step in line two. Similarly we can move the $W$ step to between the $V$ step and the $\theta$ step in line one. This yields:
+\begin{align*}
+&[\psi|V^{(k)},W^{(k)}] \to [V^{(k+0.5)}|W^{(k)},\psi] \to [W^{(k+0.5)}|V^{(k+0.5)},\psi] \to \\
+&[\gamma|V^{(k+0.5)},W^{(k+0.5)},\psi] \to  [V^{(k+1)}|W^{(k+0.5)},\gamma] \to [W^{(k+1)}|V^{(k+1)},\gamma].
+\end{align*}
+This is actually a SE-SD GIS algorithm, so the CIS sampler we started with is equivalent to SE-SD GIS. Since we do not expect the order in which the DAs appear in a GIS algorithm to matter, CIS should have the same mixing and convergence properties as the SD-SE GIS algorithm we constructed.
+
+\section{Partial CIS Algorithms}
+
+In addition to the GIS and CIS algorithms discussed in the main body of the article, \citeasnoun{yu2011center} also introduce {\it partial CIS} algorithms. While a CIS algorithm interweaves in separate Gibbs steps for each subvector of the parameter, a partial CIS algorithm has a usual Gibbs step for at least one of the parameter vectors. For example, suppose that the model parameter is $\phi=(\phi_1,\phi_2)$, and $\gamma_1$, $\gamma_2$, and $\theta$ are available DAs. Then a partial CIS algorithm using these DAs is
+\begin{align*}
+&[\gamma_1|\phi_1^{(k)},\phi_2^{(k)}]\to [\phi_1^{(k+0.5)}|\phi_2^{(k)},\gamma_1]\to[\gamma_2|\phi_1^{(k+0.5)},\phi_2^{(k)},\gamma_1]\to[\phi_1^{(k+1)}|\phi_2^{(k)},\gamma_2]\to\\
+&[\theta|\phi_1^{(k+1)},\phi_2^{(k)},\gamma_2] \to [\phi_2^{(k+1)}|\phi_1^{(k+1)},\theta].
+\end{align*}
+The first line is an interweaving step for $\phi_1$ while the second line is a standard Gibbs step for $\phi_2$. Partial CIS algorithms are easier to construct than full CIS algorithms at the cost of slower convergence \cite{yu2011center}.
+
+In the DLM we can construct two partial CIS algorithms using the wrongly-scaled DAs in much the same way they were used to construct the full CIS algorithm. The first algorithm interweaves for $W$ using the scaled disturbances, $\gamma$, and the wrongly-scaled disturbances, $\tilde{\gamma}$:
+\begin{align*}
+&[\theta|V^{(k)},W^{(k)}] \to [V^{(k+1)}|W^{(k)},\theta] \to\\
+&[W^{(k+0.5)}|V^{(k+1)},\theta]\to [\gamma|V^{(k+1)},W^{(k+0.5)},\theta] \to [W^{(k+1)}|V^{(k+1)},\gamma].
+\end{align*}
+As in the construction of the full CIS algorithm, we use $\theta$ instead of $\tilde{\gamma}$ in the second line since $p(W|V,\tilde{\gamma}) = p(W|V,\theta)$. Using an argument similar to that used in Appendix \ref{sec:CISGIS}, we can show that this partial CIS algorithm is equivalent to the SD-State GIS algorithm.
+
+Analogously, we can use the scaled errors, $\psi$, and the wrongly-scaled errors, $\tilde{\psi}$, to construct a partial CIS algorithm that interweaves for $V$:
+\begin{align*}
+&[\psi|V^{(k)},W^{(k)}] \to [V^{(k+0.5)}|W^{(k)},\psi] \to [\theta|V^{(k+0.5)},W^{(k)},\psi] \to [V^{(k+1)}|W^{(k)},\theta]\to\\
+&[W^{(k+1)}|V^{(k+1)},\theta].
+\end{align*}
+This algorithm is equivalent to the SE-State GIS algorithm.
 
 \section{Using posterior correlations to understand patterns of ESP}
 
