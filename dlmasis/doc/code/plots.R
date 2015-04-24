@@ -61,7 +61,7 @@ breaks <- Vs[seq(1,9,2)]
 labs <- c("0.01", "0.1", "1", "10", "100")
 
 ## Function for taking the variable names, splitting off irrelevant text, and
-## parsing the result as Latex.
+## parsing the result as Latex code.
 label_parsed_split <- function(variable, value){
   llply(as.character(value), function(x) parse(text = strsplit(x, "\\.")[[1]][1]))
 }
@@ -221,3 +221,22 @@ ggsave(filename="corplot5.pdf", plot=pww, width=4, height=3)
 ggsave(filename="corplot6.pdf", plot=pwv, width=4, height=3)
 ggsave(filename="corplot7.pdf", plot=pwa, width=4, height=3)
 ggsave(filename="corplot8.pdf", plot=pwb, width=4, height=3)
+
+
+
+###############################################################
+### Now make sure that samoutlong.RData is in the directory
+###############################################################
+
+load("samoutlong.RData")
+## log time in minutes per 1000 effective draws
+samout$V.ET <- log(samout$V.ES/samout$time/60*1000)
+samout$W.ET <- log(samout$W.ES/samout$time/60*1000)
+
+samout <- samout[,c(1,4,14,15)]
+samout$sampler[samout$sampler=="dealt"] <- "SD-SE Alt"
+samout$sampler[samout$sampler=="deint"] <- "SD-SE Int"
+colnames(samout)[2:4] <- c("T", "V", "W")
+meltedsam <- melt(samout, id=c("sampler", "T"))
+qplot(T, value, data=meltedsam, facets=variable~., color=sampler, geom="line")
+
