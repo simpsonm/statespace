@@ -230,13 +230,13 @@ ggsave(filename="corplot8.pdf", plot=pwb, width=4, height=3)
 
 load("samoutlong.RData")
 ## log time in minutes per 1000 effective draws
-samout$V.ET <- log(samout$V.ES/samout$time/60*1000)
-samout$W.ET <- log(samout$W.ES/samout$time/60*1000)
+samout$V.ET <- samout$time/samout$V.ES/60*1000
+samout$W.ET <- samout$time/samout$W.ES/60*1000
 
 samout <- samout[,c(1,4,14,15)]
 samout$sampler[samout$sampler=="dealt"] <- "SD-SE Alt"
-samout$sampler[samout$sampler=="deint"] <- "SD-SE Int"
+samout$sampler[samout$sampler=="deint"] <- "SD-SE GIS"
 colnames(samout)[2:4] <- c("T", "V", "W")
 meltedsam <- melt(samout, id=c("sampler", "T"))
-qplot(T, value, data=meltedsam, facets=variable~., color=sampler, geom="line")
+qplot(T, value, data=meltedsam, facets=variable~., color=sampler, geom="line", size=I(2)) + ylab("time (minutes) per 1000 effective draws")
 
