@@ -219,7 +219,7 @@ for $t=1,2,\cdots,T$ where $I_p$ is the $p\times p$ identity matrix. Neither $V$
 \subsection{The scaled errors}\label{sec:DAs:error}
 The scaled disturbances immediately suggest our first novel augmentation called the {\it scaled errors} (SEs), i.e. $v_t=y_t - F_t\theta_t$ appropriately scaled by $V$. Let $L_V$ denote the Cholesky decomposition of $V$ so that $L_VL_V'=V$, then we can define a version of the scaled errors as $\psi_t = L_V^{-1}(y_t - F_t\theta_t)$ for $t=1,2,\cdots,T$ and $\psi_0 = \theta_0$. This time there are $k!$ versions of the scaled errors depending on how $y_t$ is ordered.
 
-Assuming $F_t$ is invertible for all $t$ (this restriction is relaxed in Appendix F of the supplementary materials), then $\theta_t = F_t^{-1}(y_t - L_V\psi_t)$ for $t=1,2,\cdots,T$ while $\theta_0=\psi_0$. Define $\mu_1 = L_V\psi_1 + F_1G_1\psi_0$ and $\mu_t =L_V\psi_t + F_tG_tF_{t-1}^{-1}(y_{t-1} - L_{V}\psi_{t-1})$ for $t=2,3,\cdots,T$. Then the scaled error parameterization is 
+Assuming $F_t$ is invertible for all $t$ (see Appendix F of the supplementary materials and \citet{simpson2014app} for examples of how to relax this restriction), then $\theta_t = F_t^{-1}(y_t - L_V\psi_t)$ for $t=1,2,\cdots,T$ while $\theta_0=\psi_0$. Define $\mu_1 = L_V\psi_1 + F_1G_1\psi_0$ and $\mu_t =L_V\psi_t + F_tG_tF_{t-1}^{-1}(y_{t-1} - L_{V}\psi_{t-1})$ for $t=2,3,\cdots,T$. Then the scaled error parameterization is 
 \begin{align*}
   y_t|V,W,\psi,y_{1:t-1} \sim N_p(\mu_t, F_tWF_t'), \qquad \psi_t  \stackrel{iid}{\sim} N_p(0,I_k)
 \end{align*}
