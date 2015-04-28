@@ -396,7 +396,7 @@ $[W^{(k+0.5)}|V^{(k+1)},\theta]$ & $\to$ & $[\gamma|V^{(k+1)},W^{(k+0.5)},\theta
 %\item Sample $W \sim p(W|V,\gamma,y)$.
 %\end{enumerate}
 \end{alg*}
-We show in Appendix I that this algorithm is equivalent to SD-SE GIS in a certain sense so that we expect the mixing and convergence properties of the two algorithms to be very similar, and we confirm this in the local level model in Section \ref{sec:LLM:time}. So ease of implementation and computational cost per iteration are the only real considerations involved in choosing between the two algorithms.
+We show in Appendix I that this algorithm is equivalent to SD-SE GIS in a certain sense so that we expect the mixing and convergence properties of the two algorithms to be very similar, and we confirm this in the local level model in Section \ref{sec:LLM}. So ease of implementation and computational cost per iteration are the only real considerations involved in choosing between the two algorithms.
 
 In our original definition of the CIS sampler for the DLM we used the scaled disturbances as the AA for $W$ and the scaled errors and the AA for $V$. We could have reversed this or used the same AA for both $V$ and $W$ since both the scaled errors and scaled disturbances are AAs for $(V,W)$, or we can have used $\theta$ as the AA for $V$. In each of these cases, the resulting algorithm would reduce to either the state sampler or a {\it partial CIS} algorithm, also introduced by \citet{yu2011center}. Appendix J discusses partial CIS algorithms in general and in the DLM. In the next section we will characterize the efficiency of the various available samplers in the local level model, both in terms of computational cost and in terms of the mixing and convergence of the Markov chain.
 
@@ -409,7 +409,7 @@ The local level model (LLM) is a DLM with univariate data $y_t$ for $t=1,2,\cdot
   y_t |\theta,V,W& \stackrel{ind}{\sim} N(\theta_t,V), &
   \theta_t |\theta_{0:t-1},V,W& \sim N(\theta_{t-1},W)
 \end{align*}
-for $t=1,2,\cdots,T$. The priors on $(\theta_0,V,W)$ from Section \ref{sec:DLM} become $\theta_0\sim N(m_0,C_0)$, $V\sim IG(\alpha_V,\beta_V)$ and $W\sim IG(\alpha_W,\beta_W)$ with $\theta_0$, $V$ and $W$ mutually independent where $IG(\alpha,\beta)$ is the inverse gamma distribution with shape parameter $\alpha$ and rate parameter $\beta$. $W$ can be thought of as the signal, $V$ as the noise, and $R=W/V$ as the signal-to-noise ratio.
+for $t=1,2,\cdots,T$. The priors on $(\theta_0,V,W)$ from Section \ref{sec:DLM} become $\theta_0\sim N(m_0,C_0)$, $V\sim IG(\alpha_V,\beta_V)$ and $W\sim IG(\alpha_W,\beta_W)$ with $\theta_0$, $V$ and $W$ mutually independent where $IG(\alpha,\beta)$ is the inverse gamma distribution with shape parameter $\alpha$ and rate parameter $\beta$. Commonly in this model $W$ is called the signal, $V$ is called the noise, and $R=W/V$ is called the signal-to-noise ratio.
 
 We can define the various DAs from Section \ref{sec:DAs} in the context of the local level model. The latent states are simply $\theta$. From the states we obtain the scaled disturbances as $\gamma_0=\theta_0$ and $\gamma_t = (\theta_t - \theta_{t-1})/\sqrt{W}$ for $t=1,2,\cdots,T$. Similarly, the scaled errors are $\psi_0=\theta_0$ and $\psi_t = (y_t - \theta_t)/\sqrt{V}$ for $t=1,2,\cdots,T$. The wrongly-scaled disturbances are then $\tilde{\gamma}_{0}=\theta_0$ and $\tilde{\gamma}_t = (\theta_t - \theta_{t-1})/\sqrt{V}$ while the wrongly-scaled errors are $\tilde{\psi}_0=\theta_0$ with $\tilde{\psi}_t = (y_t - \theta_t)/\sqrt{W}$, both for $t=1,2,\cdots,T$. 
 
@@ -423,7 +423,7 @@ For each dataset and sampler we obtained $n=6500$ draws and threw away the first
 
 \subsection{Simulation results}
 
-Figure \ref{fig:ESPa} contains plots of ESP for $V$ and $W$ in each chain of each base samplers for $T=100$ --- the $T=10$ and $T=1000$ plots are similar and can be found in the supplementary materials (Appendix L). Table \ref{tab:stnmix} summarizes the results for the base samplers on the top. Let $R^*=V^*/W^*$ denote the true signal-to-noise ratio. The State sampler tends to have a low ESP for $V$ and high ESP for $W$ when $R^*>1$ with the behavior switched when $R^*<1$. The SD sampler has low ESP for both $V$ and $W$ when $R^*>1$ while the SE sampler has low ESP for both when $R^*<1$ and in particular for $V$. We omit the results here, but as $T$ increases, in all samplers the region of the parameter space with high ESP shrinks and in the low ESP regions, ESP drops closer to zero. In Appendix K of the supplementary materials, we discuss how the pattern of correlations between various quantities in the posterior distribution determines the pattern of ESPs we see in Figure \ref{ESplot}. 
+Figure \ref{fig:ESPa} contains plots of ESP for $V$ and $W$ in each chain of each base samplers for $T=100$ --- the $T=10$ and $T=1000$ plots are similar and can be found in the supplementary materials (Appendix M). Table \ref{tab:stnmix} summarizes the results for the base samplers on the top. Let $R^*=V^*/W^*$ denote the true signal-to-noise ratio. The State sampler tends to have a low ESP for $V$ and high ESP for $W$ when $R^*>1$ with the behavior switched when $R^*<1$. The SD sampler has low ESP for both $V$ and $W$ when $R^*>1$ while the SE sampler has low ESP for both when $R^*<1$ and in particular for $V$. We omit the results here, but as $T$ increases, in all samplers the region of the parameter space with high ESP shrinks and in the low ESP regions, ESP drops closer to zero. In Appendix K of the supplementary materials, we discuss how the pattern of correlations between various quantities in the posterior distribution determines the pattern of ESPs we see in Figure \ref{ESplot}. 
 
 
 \begin{figure}[!h]
@@ -464,34 +464,10 @@ Figure \ref{fig:ESPa} contains plots of ESP for $V$ and $W$ in each chain of eac
 
 We fit the LLM to the simulated datasets using several GIS samplers and a CIS sampler as well. Since the wrongly-scaled samplers behaved similarly to the state sampler and neither of the underlying DAs were a SA for $V$ and $W$ jointly, we ignored them in the construction of the GIS samplers. Instead, we constructed the State-SD, State-SE, SD-SE, and Triple (State-SD-SE) GIS samplers, as well as the CIS sampler. Figure \ref{fig:ESPb} has plots of ESP for each of the GIS and CIS algorithms while Figure \ref{fig:ESPc} has plots of ESP for each of the Alt algorithms. Table \ref{tab:stnmix} summarizes the results on the bottom.
 
-Essentially, each GIS and Alt algorithm has high ESP when at least one of the base algorithms has high ESP. For example, the State-SD GIS and Alt algorithms have high ESP for $W$ except for a narrow band where $R^*$ is near one while ESP is high for $W$ in the state sampler when $R^*>1$ and in the SD sampler when $R^*<1$. Similarly in the State-SD GIS and Alt algorithms, mixing for $V$ is identical to the State and SD samplers since neither sampler improves on the other in any region of the parameter space. Both the State-SD GIS and Alt algorithms take advantage of the fact that the state and SD DA algorithms make up a ``beauty and the beast'' pair for $W$ and thus improves mixing in the marginal chain for $W$. However, GIS without an SA-AA pair does not appear to improve on Alt. In Section \ref{sec:Algs:CIS} we noted that the CIS and the SD-SE GIS algorithms consist of the same steps, just rearranged. This suggests that they should perform similarly and in fact the SD-SE GIS algorithm behaves essentially identically to the CIS and Triple GIS algorithms. We also include simulations with differing sizes of $T$ using these samplers in the supplementary materials (Appendix L). Like with the base samplers, increasing the length of the time series worsens ESP for both $V$ and $W$ in all samplers and in particular shrinks the area of the parameter space in which ESP is high.
+Essentially, each GIS and Alt algorithm has high ESP when at least one of the base algorithms has high ESP. For example, the State-SD GIS and Alt algorithms have high ESP for $W$ except for a narrow band where $R^*$ is near one while ESP is high for $W$ in the state sampler when $R^*>1$ and in the SD sampler when $R^*<1$. Similarly in the State-SD GIS and Alt algorithms, mixing for $V$ is identical to the State and SD samplers since neither sampler improves on the other in any region of the parameter space. Both the State-SD GIS and Alt algorithms take advantage of the fact that the state and SD DA algorithms make up a ``beauty and the beast'' pair for $W$ and thus improves mixing in the marginal chain for $W$. However, GIS without an SA-AA pair does not appear to improve on Alt. In Section \ref{sec:Algs:CIS} we noted that the CIS and the SD-SE GIS algorithms consist of the same steps, just rearranged. This suggests that they should perform similarly and in fact the SD-SE GIS algorithm behaves essentially identically to the CIS and Triple GIS algorithms. We also include simulations with differing sizes of $T$ using these samplers in the supplementary materials (Appendix M). Like with the base samplers, increasing the length of the time series worsens ESP for both $V$ and $W$ in all samplers and in particular shrinks the area of the parameter space in which ESP is high.
 
-\subsection{Computational time}\label{sec:LLM:time}
+In Appendix L of the supplementary materials we also compare the time required to adequately characterize the posterior distribution between various algorithms, taking into account both mixing and computational time. GIS and Alt perform essentially identical in this respect, though there is good reason to expect GIS to sometimes be more efficient. In Appendix N we show that for very long time series, GIS does become significantly more efficient than Alt.
 
-From a practical standpoint a more important question than how well the chain mixes is the full computational time required to adequately characterize the target posterior distribution. In order to investigate this, we compute the natural log of the average time in minutes required for each sampler to achieve an effective sample size of 1000 --- in other words the log minutes per 1000 effective draws. All simulations were performed on a server with Intel Xeon X5675 3.07 GHz processors. While different systems will yield different absolute times, the relative times should be similar. Figure \ref{baseinttimeplot} contains plots of the log minutes per 1000 effective draws for both $V$ and $W$ and for each of the samplers.
-
-\begin{figure}[!h]
-\centering
-\begin{subfigure}[b]{0.59\textwidth}
-\includegraphics[width=\textwidth]{basecistimeplot100}
-\caption{}
-\label{fig:timea}
-\end{subfigure}
-\begin{subfigure}[b]{0.53\textwidth}
-\includegraphics[width=\textwidth]{altgisVtimeplot100}
-\caption{}
-\label{fig:timeb}
-\end{subfigure}
-\begin{subfigure}[b]{0.45\textwidth}
-\includegraphics[width=\textwidth]{altgisWtimeplot100}
-\caption{}
-\label{fig:timec}
-\end{subfigure}
-\caption{Log of the time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for $T=100$ in each sampler. Figure \ref{fig:timea} contains the base samplers, Figure \ref{fig:timeb} contains the GIS and CIS samplers, while Figure \ref{fig:timec} contains the Alt samplers. Log times larger than three $\log \mathrm{min}$ are rounded down to three for plotting purposes.}
-\label{baseinttimeplot}
-\end{figure}
-
-For $T=100$ the pattern we saw for ESP also appears for log minutes per 1000 effective draws. The State sampler becomes slow to reach 1000 effective draws for $V$ when $R^*>1$ and for $W$ when $R^*<1$. The SD and SE samplers behave as expected --- the SD sampler is slow for both $V$ and $W$ when $R^*>1$ while the SD sampler is slow for both $V$ and $W$ when $R^*<1$. The SD-SE GIS, Triple GIS and CIS algorithms appear to be the big winners here and are almost indistinguishable. All three algorithms are slightly slower for both $V$ and $W$ when $R^*$ is near one, though for larger $T$,  when $R^*$ is near or below one all three are slow for $W$ (plots available in Appendix L of the supplementary materials). Compared to the state sampler, all three offer large gains over most of the parameter space. There appears to be no difference between a GIS algorithm and the corresponding alternating algorithm in terms of log time per 1000 effective draws, so the SD-SE Alt and Triple Alt algorithms are both just as efficient as the best interweaving algorithms. This may not be the case though --- the GIS version of an algorithm is computationally cheaper than the Alt version since it consists of three of the four same steps, and in the fourth step the Alt algorithm has to obtain a random draw while the GIS algorithm typically only has to make a transformation. The longer the time series, the cheaper the transformation will be relative to the random draw. With very long time series, e.g. $T>100,000$, we find that GIS is cheaper than Alt even in the local level model (Appendix M). 
 
 \section{Discussion}\label{sec:Discuss}
 
@@ -527,8 +503,9 @@ All supplementary materials are available in a single \verb0.zip0 file.
 \item[] Appendix I: Equivalence of CIS and SD-SE GIS in the DLM.
 \item[] Appendix J: Partial CIS Algorithms in the DLM.
 \item[] Appendix K: Using posterior correlations to understand patterns of ESP.
-\item[] Appendix L: Additional plots for other values of $T$.
-\item[] Appendix M: Comparing GIS and Alt in very long time series.
+\item[] Appendix L: Computational time for each algorithm.
+\item[] Appendix M: Additional plots for other values of $T$.
+\item[] Appendix N: Comparing GIS and Alt in very long time series.
 \end{itemize}
 
 \item[mcfa.R:] This file contains R code to perform the MCFA for obtaining a draw from $p(\theta|V,W,y)$ and from $p(\psi|V,W,y)$ in the local level model.
@@ -538,6 +515,10 @@ All supplementary materials are available in a single \verb0.zip0 file.
 \item[wscalerej.R] This file contains several R functions for obtaining simulations from the wrongly-scaled DA algorithms in the local level model.
 
 \item[dlmasismixrun.R:] This file contains R code that uses the functions in \verb0dlmasisfun.R0 and \verb0mcfa.R0 to obtain the simulations used in the local level model example from Section \ref{sec:LLM}.
+
+\item[dlmasislongfun.R:] This file contains a modified version of the R functions in \verb0dlmasisfun.R0 in order to accomodate simulations for very long time series.
+
+\item[dlmasislongrun.R:] This file contains R code that uses the functions in \verb0dlmasislongfun.R0 to obtain simulations for long time series in the local level model used in Appendix L.
 
 \item[plots.R:] This file contains R code that uses the output from \verb0dlmasismixrun.R0 to create the various plots in the main document and the appendices.
 
