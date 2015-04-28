@@ -5,7 +5,7 @@ source("dlmasislongfun.R")
 set.seed(9098710) ## needed to replicate my dataset
 
 ## set the time series lengths and the true values of V and W
-T <- c(100, 1000, 10000, 50000, 100000)
+T <- c(100, 1000, 10000, 50000, 100000, 500000)
 V <- 1
 W <- V
 
