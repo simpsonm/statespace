@@ -4,7 +4,7 @@ library(MCMCpack)
 library(ars)
 library(plyr)
 source("mcfa.R") ## code for performing MCFA
-source("wscalerej.R") ## code for wrongly scaled samplers
+source("wscalerejlong.R") ## code for wrongly scaled samplers
 
 ## simulates from the posterior given a data set and a list of given samplers.
 ## samplers: vector of sampler names
