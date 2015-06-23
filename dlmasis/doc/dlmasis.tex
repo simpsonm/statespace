@@ -260,11 +260,11 @@ p(\phi|\eta,y) \propto & p(y|\eta,\phi)p(\eta|\phi)p(\phi) \propto p(\eta|\phi)p
 &\times \exp\left[-\frac{1}{2}(\eta - \alpha_{\eta})'[(A'A)^{-1}A'(\tilde{V} + \tilde{W} + \tilde{C} - \Sigma)A(A'A)^{-1}]^{-1}(\eta - \alpha_{\eta})\right].
 \end{align*}
 \end{lem}
-\noindent The posterior density we wish to sample from comes from equation \eqref{margmodel} and is similar to $p(\phi|\eta,y)$ except less complicated. So what this lemma shows is that in order to use an SA in a GIS algorithm, we probably need to obtain draws from a density that is just as hard to sample from as the posterior density we are already trying to approximate. This does not mean that the full conditional posterior density of the parameters given a SA has to be difficult to draw from. Rather it means that if we can draw from that density we could probably draw from the target posterior --- perhaps using the same technology. This result brings to mind \citet{van2001art}'s contention that there is an art to constructing data augmentation algorithms. Our goal is to find an MCMC algorithm that has nice convergence and mixing properties and is also easy to implement, and this second criteria is much more difficult to quantify.
+\noindent The proof of this lemma is in Appendix B. The posterior density we wish to sample from comes from equation \eqref{margmodel} and is similar to $p(\phi|\eta,y)$ except less complicated. So what this lemma shows is that in order to use an SA in a GIS algorithm, we probably need to obtain draws from a density that is just as hard to sample from as the posterior density we are already trying to approximate. This does not mean that the full conditional posterior density of the parameters given a SA has to be difficult to draw from. Rather it means that if we can draw from that density we could probably draw from the target posterior --- perhaps using the same technology. This result brings to mind \citet{van2001art}'s contention that there is an art to constructing data augmentation algorithms. Our goal is to find an MCMC algorithm that has nice convergence and mixing properties and is also easy to implement, and this second criteria is much more difficult to quantify.
 
 \section{MCMC strategies for the DLM}\label{sec:Algs}
 
-This section briefly discusses how to construct various MCMC algorithms for approximating the posterior distribution of the DLM. We focus on {\it what} to do, not {\it why}. Derivations of the relevant full conditional distributions are available in the supplementary materials in Appendix C. We occasionally come across a full conditional density that is difficult to sample from --- the details about why this happens and how to overcome it are in the supplementary materials (Appendices G and H).
+This section briefly discusses how to construct various MCMC algorithms for approximating the posterior distribution of the DLM. We focus on {\it what} to do, not {\it why}. Derivations of the relevant full conditional distributions are available in the supplementary materials in Appendix D. We occasionally come across a full conditional density that is difficult to sample from --- the details about why this happens and how to overcome it are in the supplementary materials (Appendices G and H).
 
 \subsection{Base algorithms}\label{sec:Algs:base}
 Using any of the DAs introduced in Section \ref{sec:DAs}, we can construct several DA algorithms which we call {\it base algorithms} to distinguish them from the alternating and interweaving algorithms we will construct later. We will call the standard DA algorithm \citep{fruhwirth1994data,carter1994gibbs} using $\theta$ the {\it state sampler}. In order to construct this sampler, we need to draw from two densities --- $p(\theta|V,W,y)$ and $p(V,W|\theta,y)$. In their conditional posterior, $V$ and $W$ are independent with
@@ -307,7 +307,7 @@ $[\theta|V^{(k)},W^{(k)}]$ & $\to$ & $[V^{(k+1)}|W^{(k)},\theta]$ & $\to$ & $[\g
 %\item Transform $\theta$ to $\gamma$.
 %\item Draw $W \sim p(W|V,\gamma,y)$.
 %\end{enumerate}
-\end{alg*}\noindent
+\noindent
 The first and second steps are the draws as in Algorithm \nameref{alg:DLMstate} while the third step is a transformation from $\theta$ to $\gamma$. The last step is the difficult one. When $W$ is a scalar a tolerably efficient rejection sampling algorithm can be constructed, but in models where $W$ is a matrix it is not clear whether drawing from $p(W|V,\gamma,y)$ can be accomplished efficiently. Appendix G of the supplementary materials has more detail as well as an algorithm for drawing from $P(W|V,\gamma,y)$ in the local level model when $V$ and $W$ are scalars. 
 
 The DA algorithm based on the scaled errors is called the {\it scaled error sampler} (Algorithm \nameref{alg:DLMerror}) and is similar to the scaled disturbance sampler with a couple of key differences. First, the simulation smoothing step in the scaled error sampler can be accomplished directly with the MCFA because the precision matrix of the conditional posterior of $\psi$ retains the necessary tridiagonal structure. Second, the full conditional distribution of $W$ is the familiar inverse Wishart density and the full conditional of $V$ is the complicated density. The density of $V|W,\psi,y$ is in the same class as that of $W|V,\gamma,y$. In fact there is a strong symmetry here --- the joint conditional posterior of $(V,W)$ given $\gamma$ is from the same family of densities as that of $(W,V)$ given $\psi$ so that $V$ and $W$ essentially switch places when we condition on the scaled errors instead of the scaled disturbances.
@@ -377,8 +377,8 @@ Next we consider CIS algorithms which have the form of Algorithm \nameref{alg:CI
 \end{align*}
 The first line is essentially a Gibbs step for drawing $V$ that interweaves between $\psi$ and $\tilde{\psi}$ while the second line is essentially a Gibbs step for drawing $W$ that interweaves between $\gamma$ and $\tilde{\gamma}$. In the second line we use the SA before the AA in order to minimize the number of transformations we have to make in every iteration. 
 
-Notice that each time one of the wrongly-scaled DAs appears in the CIS sampler, it would make no difference if the states were used instead because $p(V|W,\tilde{\psi},y)=p(V|W,\theta,y)$ and $p(W|V,\tilde{\gamma},y)=p(W|V,\theta,y)$, despite the fact that the states are not an SA for $V|W$. Using this we obtain a slightly different version of the CIS sampler in Algorithm \nameref{alg:DLMcis}:
-\begin{alg*}[CIS]Componentwise Interweaving Sampler\label{alg:DLMcis}{\small
+Notice that each time one of the wrongly-scaled DAs appears in the CIS sampler, it would make no difference if the states were used instead because $p(V|W,\tilde{\psi},y)=p(V|W,\theta,y)$ and $p(W|V,\tilde{\gamma},y)=p(W|V,\theta,y)$, despite the fact that the states are not an SA for $V|W$. Using this we obtain a slightly different version of the CIS sampler:
+{\small
 \begin{center}
 \begin{tabular}{llllllll}
 $[\psi|V^{(k)},W^{(k)}]$ & $\to$ & $[V^{(k+0.5)}|W^{(k)},\psi]$ & $\to$ & $[\psi|V^{(k+0.5)},W^{(k)},\theta]$ & $\to$ & $[V^{(k+1)}|W^{(k)},\theta]$ & $\to$ \\
@@ -516,9 +516,7 @@ All supplementary materials are available in a single \verb0.zip0 file.
 
 \item[dlmasismixrun.R:] This file contains R code that uses the functions in \verb0dlmasisfun.R0 and \verb0mcfa.R0 to obtain the simulations used in the local level model example from Section \ref{sec:LLM}.
 
-\item[dlmasislongfun.R:] This file contains a modified version of the R functions in \verb0dlmasisfun.R0 in order to accomodate simulations for very long time series.
-
-\item[dlmasislongrun.R:] This file contains R code that uses the functions in \verb0dlmasislongfun.R0 to obtain simulations for long time series in the local level model used in Appendix L.
+\item[dlmasislongrun.R:] This file contains R code that uses the functions in \verb0dlmasisfun.R0 to obtain simulations for long time series in the local level model used in Appendix L.
 
 \item[plots.R:] This file contains R code that uses the output from \verb0dlmasismixrun.R0 to create the various plots in the main document and the appendices.
 

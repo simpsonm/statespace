@@ -293,7 +293,7 @@ where note that $\mu_t$ depends on $\psi$. This density is Gaussian and like wit
 
 The full conditional distribution of $(V,W)$ is complicated, like the case of the scaled disturbances, so we find the full conditionals of $V$ and $W$ separately instead. The full conditional of $W$ is 
 \begin{align*}
- p(&W|V,\psi,y) \propto   p(V,W,\psi,y) \propto \times |W|^{-(\lambda_W + p + T + 2)/2} \exp\left[-\frac{1}{2}\left(\tr\left(\left[\Lambda_W + \sum_{t=1}^TF_t^{-1}(y_t - \mu_t)(y_t-\mu_t)'(F_t^{-1})'\right]W^{-1}\right)\right)\right],
+ p(&W|V,\psi,y) \propto |W|^{-(\lambda_W + p + T + 2)/2} \exp\left[-\frac{1}{2}\left(\tr\left(\left[\Lambda_W + \sum_{t=1}^TF_t^{-1}(y_t - \mu_t)(y_t-\mu_t)'(F_t^{-1})'\right]W^{-1}\right)\right)\right],
 \end{align*}
 in other words
 \begin{align*}
@@ -720,7 +720,7 @@ So the dependence between $V$ and $b_V$ determines how much the chain moves in t
 
 In order to analyze the SD sampler, first suppose $R^*>1$. Then from Figure \ref{corplot} $b_V$ has high correlation with $V$ and low correlation with $W$, so the draw of $b_V$ should not move the chain much. Next, the draw of $V$ should again not move the chain much because of the high correlation between $V$ and $b_V$. Finally the draw of $W$ has a fair chance to move the chain because it has low correlation with both $a_\gamma$ and $b_\gamma$. But this has little impact on $b_V$ and thus the entire chain since $b_V$ is so highly correlated with $V$ but hardly correlated with $W$. So when $R^*>1$, we should expect high serial dependence and low ESP for $V$. We should also expect similar behavior for $W$ since the entire chain is hardly moving so $W$'s hyperparameters are hardly moving. This is roughly what we see in Figure \ref{ESplot100}, though this reasoning does not allow us to predict which of $V$ and $W$ will have lower ESP. When $R^*<1$ the posterior correlation in each of the steps is broken, though in the $W$ step the correlation between $W$ and both $a_\gamma$ and $b_\gamma$ becomes negative and somewhat high in magnitude. Here we should not expect less serial dependence in $V$ or $W$, but we should perhaps expect higher ESP's since negatively correlated draws decrease Monte Carlo standard error. Indeed, we see ESP's near one for both variances in Figure \ref{ESplot100}. The SE sampler is analogous to the SD sampler and a similar analysis applies --- the posterior correlations between $V$ or $W$ and $b_W$, $a_\psi$ or $b_\psi$ in Figure \ref{corplot} roughly predict the ESP of the SE sampler in Figure \ref{ESplot100}. When one or more of the correlations are high, ESPs for $V$ and $W$ are low while when all of the correlations are low, both ESPs are high. We omit a similar analysis of the wrongly-scaled samplers for brevity, but note that their behavior will allows us to predict the behavior of the CIS sampler.
 
-\subsection{Computational time}\label{sec:time}
+\section{Computational time}\label{sec:time}
 
 From a practical standpoint a more important question than how well the chain mixes is the full computational time required to adequately characterize the target posterior distribution. In order to investigate this, we compute the natural log of the average time in minutes required for each sampler to achieve an effective sample size of 1000 --- in other words the log minutes per 1000 effective draws. All simulations were performed on a server with Intel Xeon X5675 3.07 GHz processors. While different systems will yield different absolute times, the relative times should be similar. Figure \ref{baseinttimeplot} contains plots of the log minutes per 1000 effective draws for both $V$ and $W$ and for each of the samplers.
 
@@ -880,7 +880,18 @@ For $T=100$ the pattern we saw for ESP also appears for log minutes per 1000 eff
 
 \clearpage
 \section{GIS vs. Alt in very long time series}\label{sec:GISALTtime}
-(To be completed -- waiting on simulations)
+
+While our results indicate that GIS and the corresponding Alternating algorithms seem to perform equally well in terms of both mixing and computational time, this is not always the case. GIS is computationally cheaper per iteration and in long enough time series this different is significant. To illustrate this we again simulated data from the local level model with $V=1$, $W=1$, for various lengths of the time series starting at $T=1000$ and increasing to $T=500,000$. Then we fit each model using the same priors as before using the SD-SE GIS and SD-SE Alt algorithms. Figure \ref{gisaltlongt} contains plots of the time in minutes per 1000 effective draws for each of $V$ and $W$ in each sampler. 
+
+For both samplers the relationship between the length of the time series and the time per 1000 effective draws appears linear. However, for the alternating sampler the time required increases at a fast rate as the $T$ increases. For example with a time series of 300,000 observations, the SD-SE GIS sampler requires about 1000 minutes ($16.67$ hours) to achieve an effective sample size of 1000 for $W$ and about about 500 minutes ($8.33$ hours) for $V$. On the other hand the SD-SE Alt sampler requires 2000 minutes ($33.33$ hours) to achieve an effective sample size of 1000 for $W$ and 1000 minutes for $V$. Theses differences do not add up to much when the time series is short enough -- e.g. $T=1000$ and below, but when $T$ is on the order of $100,000$ the GIS sampler starts to become significantly computationally cheaper.
+
+\begin{figure}[!thb]
+\centering
+\includegraphics[width=\textwidth]{gisaltplot}
+\caption{Time in minutes per 1000 effective draws in the posterior sampler for $V$ and $W$, for the SD-SE GIS and SD-SE Alt samplers in very long time series.}
+\label{gisaltlongt}
+\end{figure}
+
 
 \clearpage
 \bibliographystyle{MWS_jasa}  % proper bibliography style for ASA
