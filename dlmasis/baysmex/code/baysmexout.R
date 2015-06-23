@@ -68,14 +68,14 @@ thetcis <- data.frame(period=rep(0:35,6), rep=rep(1:6,each=36), ll=c(statell[,-1
 
 
 
-##phiplot <- ggplot(data=thetmeds, aes(x=period, y=phi)) + geom_line(aes(size="phi")) + facet_wrap(~rep, ncol=2) + geom_line(data=kstealdatf, aes(x=period, y=leff, size="data")) + geom_line(data=mumeds, aes(x=period, y=mu, size="mu"), lty=2) + scale_size_manual(values=c(0.25, 0.5, 0.5), labels=c(expression(y[j][,][t]), expression(mu[t]), expression(phi[j][,][t])), guide=guide_legend(title=NULL, override.aes=list(size=c(0.1,0.5,0.5), linetype=c(1,2,1)))) + ylab("logit efficiency")
+##phiplot <- ggplot(data=thetmeds, aes(x=period, y=phi)) + geom_line(aes(size="phi")) + facet_wrap(~rep, ncol=2) + geom_line(data=kstealdatf, aes(x=period, y=leff, size="data")) + geom_line(data=mumeds, aes(x=period, y=mu, size="mu"), lty=2) + scale_size_manual(values=c(0.25, 0.5, 0.5), labels=c(expression(y[j][,][t]), expression(mu[t]), expression(phi[j][,][t])), guide=guide_legend(title=NULL, override.aes=list(size=c(0.1,0.5,0.5), linetype=c(1,2,1)), color=c("red", "blue", "black"))) + ylab("logit efficiency")
 
-phiplot <- ggplot(data=thetmeds, aes(x=period, y=phi)) + geom_line(aes(color="phi"), lwd=.75) + facet_wrap(~rep, ncol=2) + geom_line(data=kstealdatf, aes(x=period, y=leff, color="data"), lwd=.75) + geom_line(data=mumeds, aes(x=period, y=mu, color="mu"), lwd=.75) + ylab("logit efficiency") + scale_color_manual(values=c("black","red","blue"), labels=c(expression(y[j][,][t]), expression(mu[t]), expression(phi[j][,][t])), guide=guide_legend(title=NULL))
+phiplot <- ggplot(data=thetmeds, aes(x=period, y=phi)) + geom_line(data=mumeds, aes(x=period, y=mu, color="mu"), lwd=.75, linetype=6) + facet_wrap(~rep, ncol=2) + geom_line(data=kstealdatf, aes(x=period, y=leff, color="data"), lwd=.75, linetype=1) + geom_line(aes(color="phi"), lwd=.75, linetype=2) + ylab("logit efficiency") + scale_color_manual(values=c("black","red","blue"), labels=c(expression(y[j][,][t]), expression(mu[t]), expression(phi[j][,][t])), guide=guide_legend(title=NULL, override.aes=list(linetype=c(1,6,2))))
 
 mudatplot <- qplot(period, mu, data=mumeds, geom="line", lwd=I(1)) + geom_line(data=kstealdatf, aes(x=period, y=leff, lty=rep),lwd=0.25)
 muphiplot <- qplot(period, mu, data=mumeds, geom="line", lwd=I(1)) + geom_line(data=thetmeds, aes(x=period, y=phi, lty=rep),lwd=0.25)
 
-ggsave("phiplot.png", phiplot, width=10, height=5)
+##ggsave("phiplot.png", phiplot, width=10, height=5)
 
 ggsave("phiplot.pdf", phiplot, width=10, height=5)
 ##ggsave("mudatplot.pdf", mudatplot)
