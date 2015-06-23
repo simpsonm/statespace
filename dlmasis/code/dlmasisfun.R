@@ -1,7 +1,4 @@
 ## A set of functions for simulating from and fitting local level models
-library(dlm)
-library(coda)
-library(MCMCpack)
 library(ars)
 library(plyr)
 source("../code/mcfa.R")
@@ -49,66 +46,43 @@ postcor <- function(sam, dat, burn){
   W <- sam$W[-c(1:burn)]
   theta0s <- sam[-c(1:burn),grep("theta", colnames(sam))]
   theta0s <- theta0s[,1:(T.T+1)]
+  bv <- apply(t((yt - t(theta0s[,-1]))^2), 1, sum)
+  bw <- apply( t((theta0s[,-1] - theta0s[,-(T.T+1)])^2 ), 1, sum)
   thetas <- theta0s[,-1]
   theta0 <- theta0s[,1]
   data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
   gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
   colnames(gammas) <- paste("gamma", 1:T.T, sep="")
-  psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
+  cgam <- t(apply(gammas, 1, cumsum))
+  agam <- apply(cgam^2, 1, sum)/(2*V)
+  bgam <- apply( (yt-theta0)*cgam, 1, sum)/V
+  psis <- (data - thetas)/sqrt(V)
   colnames(psis) <- paste("psi", 1:T.T, sep="")
+  ys <- cbind(theta0, matrix(yt, ncol=length(yt), nrow=length(W), byrow=TRUE))
+  Ly <- ys[,-1] - ys[,-(T.T+1)]
+  psiLT <- cbind(0,psis)
+  Lpsi <- psiLT[,-1] - psiLT[,-(T.T+1)]
+  apsi <- apply(Lpsi^2, 1, sum)/2/W
+  bpsi <- apply(Lpsi*Ly, 1, sum)/W
   VWcor <- cor(V,W)
-  Vth0cor <- cor(V,theta0)
-  Wth0cor <- cor(W,theta0)
-  Vthcors <- cor(V, thetas)
-  Wthcors <- cor(W, thetas)
-  Vgacors <- cor(V, gammas)
-  Wgacors <- cor(W, gammas)
-  Vpscors <- cor(V, psis)
-  Wpscors <- cor(W, psis)
-  Vthmaxcor <- Vthcors[1,which.max(abs(Vthcors))]
-  Wthmaxcor <- Wthcors[1,which.max(abs(Wthcors))]
-  Vgamaxcor <- Vgacors[1,which.max(abs(Vgacors))]
-  Wgamaxcor <- Wgacors[1,which.max(abs(Wgacors))]
-  Vpsmaxcor <- Vpscors[1,which.max(abs(Vpscors))]
-  Wpsmaxcor <- Wpscors[1,which.max(abs(Wpscors))]
-  Vthavgcor <- mean(abs(Vthcors[1,]))
-  Wthavgcor <- mean(abs(Wthcors[1,]))
-  Vgaavgcor <- mean(abs(Vgacors[1,]))
-  Wgaavgcor <- mean(abs(Wgacors[1,]))
-  Vpsavgcor <- mean(abs(Vpscors[1,]))
-  Wpsavgcor <- mean(abs(Wpscors[1,]))
-
-  out <- data.frame(VW=VWcor, Vtheta0=Vth0cor, Wtheta0=Wth0cor,
-                    Vtheta1=Vthcors[1,1], Wtheta1=Wthcors[1,1],
-                    VthetaT=Vthcors[1,T.T], WthetaT=Wthcors[1,T.T],
-                    Vgamma1=Vgacors[1,1], Wgamma1=Wgacors[1,1],
-                    VgammaT=Vgacors[1,T.T], WgammaT=Wgacors[1,T.T],
-                    Vpsi1=Vpscors[1,1], Wpsi1=Wpscors[1,1],
-                    VpsiT=Vpscors[1,T.T], WpsiT=Wpscors[1,T.T],
-                    VthetaMax=Vthmaxcor, WthetaMax=Wthmaxcor,
-                    VgammaMax=Vgamaxcor, WgammaMax=Wgamaxcor,
-                    VpsiMax=Vpsmaxcor, WpsiMax=Wpsmaxcor,
-                    VthetaAvg=Vthavgcor, WthetaAvg=Wthavgcor,
-                    VgammaAvg=Vgaavgcor, WgammaAvg=Wgaavgcor,
-                    VpsiAvg=Vpsavgcor, WpsiAvg=Wpsavgcor,
-                    VthT4 = Vthcors[1, ceiling(T.T/4)],
-                    VthT2 = Vthcors[1, T.T/2],
-                    Vth3T4 = Vthcors[1, floor(3*T.T/4)],
-                    WthT4 = Wthcors[1, ceiling(T.T/4)],
-                    WthT2 = Wthcors[1, T.T/2],
-                    Wth3T4 = Wthcors[1, floor(3*T.T/4)],
-                    VgaT4 = Vgacors[1, ceiling(T.T/4)],
-                    VgaT2 = Vgacors[1, T.T/2],
-                    Vga3T4 = Vgacors[1, floor(3*T.T/4)],
-                    WgaT4 = Wgacors[1, ceiling(T.T/4)],
-                    WgaT2 = Wgacors[1, T.T/2],
-                    Wga3T4 = Wgacors[1, floor(3*T.T/4)],
-                    VpsT4 = Vpscors[1, ceiling(T.T/4)],
-                    VpsT2 = Vpscors[1, T.T/2],
-                    Vps3T4 = Vpscors[1, floor(3*T.T/4)],
-                    WpsT4 = Wpscors[1, ceiling(T.T/4)],
-                    WpsT2 = Wpscors[1, T.T/2],
-                    Wps3T4 = Wpscors[1, floor(3*T.T/4)])
+  Vbv <- cor(V, bv)
+  Wbv <- cor(W, bv)
+  Vbw <- cor(V, bw)
+  Wbw <- cor(W, bw)
+  Wagam <- cor(W, agam)
+  Wbgam <- cor(W, bgam)
+  Vapsi <- cor(V, apsi)
+  Vbpsi <- cor(V, bpsi)
+  out <- data.frame(V=V.T, W=W.T, T=T.T)
+  out$VW <- VWcor
+  out$Vbv <- Vbv
+  out$Wbv <- Wbv
+  out$Vbw <- Vbw
+  out$Wbw <- Wbw
+  out$Wagam <- Wagam
+  out$Wbgam <- Wbgam
+  out$Vapsi <- Vapsi
+  out$Vbpsi <- Vbpsi
   rownames(out)[1] <- ""
   return(out)
 }

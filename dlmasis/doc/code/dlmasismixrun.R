@@ -1,7 +1,7 @@
 ## code for running the simulations from the paper.
 ## WARNING: THIS WILL TAKE ON THE ORDER OF WEEKS TO COMPLETE ON A UNIVERSITY CLUSTER
 
-source("dlmasisfun.R")
+source("dlmasislongfun.R")
 set.seed(152893627) ## needed to replicate my dataset
 
 ## set the time series lengths and the true values of V and W
@@ -26,7 +26,7 @@ sams <- c("state", "dist", "error", "sdint", "seint", "deint", "triint",
           "sdalt", "sealt", "dealt", "trialt", "wdist", "werror", "fullcis")
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
-n <- 6500
+n <- 10500
 burn <- 500
 
 ## If doParallel package is installed, attempt to use 8 threads for parallel processing
@@ -35,7 +35,7 @@ parallel <- require(doParallel, quietly=TRUE)
 if(parallel){
   cl <- makeCluster(4, "FORK") ## Requires Unix system
   registerDoParallel(cl)
-  clusterSetRNGStream(cl, iseed = 32511) ## Alter seed for posterior simulations here
+  clusterSetRNGStream(cl, iseed = 8910) ## Alter seed for posterior simulations here
   ## Sets up L'Ecuyer RNG on the clusters
 }
 
@@ -45,5 +45,5 @@ system.time(samout <- fullsim(samplers, simdata, n, burn, parallel))
 ## "4: <anonymous>: ... may be used in an incorrect context: ‘.fun(piece, ...)’"
 ## This is due to a bug in plyr and should hopefully be fixed shortly
 
-save(samout, file="samout.RData")
+save(samout, file="samoutlongmix.RData")
 stopCluster(cl)

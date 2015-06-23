@@ -4,7 +4,7 @@ library(MCMCpack)
 library(ars)
 library(plyr)
 source("mcfa.R") ## code for performing MCFA
-source("wscalerej.R") ## code for wrongly scaled samplers
+source("wscalerejlong.R") ## code for wrongly scaled samplers
 
 ## simulates from the posterior given a data set and a list of given samplers.
 ## samplers: vector of sampler names
@@ -30,7 +30,7 @@ samsim <- function(samplers, simdata, n, burn, parallel){
   ## V.T, W.T and T.T denotes the true values of V, W and T used to simulate the series
   sam <- ddply(simdata, .(V.T, W.T, T.T), samwrap, .parallel=parallel,
                n=n, samp=sampler)
-  samnam <- paste(sampler, "SAM.RData", sep="")
+  samnam <- paste(sampler, "SAMlong.RData", sep="")
   colnam <- grep("(V.T|W.T|T.T|V|W|time|stime|logconW|adrejW|logconWls|adrejWls|logconV|adrejV|logconVls|adrejVls|kernel)$", colnames(sam))
   samshort <- sam[,colnam]
   save(samshort, file=samnam)
@@ -39,97 +39,9 @@ samsim <- function(samplers, simdata, n, burn, parallel){
   out <- ddply(sam, .(V.T, W.T, T.T), samsummary,
                .parallel=parallel, dat=simdata, burn=burn,
                sampler=sampler)
-  ## Obtain posterior correlation information using only one of the samplers
-  if(sampler=="trialt"){
-    postcors <- ddply(sam, .(V.T, W.T, T.T), postcor, .parallel=parallel,
-                           dat=simdata, burn=burn)
-    save(postcors, file="postcors.RData")
-    rm(postcors)
-  }
   rm(sam)
-  save(out, file=paste(sampler, "OUT.RData", sep=""))
+  save(out, file=paste(sampler, "OUTlong.RData", sep=""))
   print(paste(sampler, "finished", sep=" "))
-  return(out)
-}
-
-## Finds the posterior correlation between various quantities
-## called by samsim
-## sam: posterior sample
-## dat: data frame containing each of the time series
-## burn: burn in size
-postcor <- function(sam, dat, burn){
-  ## True values of V, W, and T used to simulate the series
-  V.T <- sam$V.T[1]
-  W.T <- sam$W.T[1]
-  T.T <- sam$T.T[1]
-  V <- sam$V[-c(1:burn)]
-  W <- sam$W[-c(1:burn)]
-  theta0s <- sam[-c(1:burn),grep("theta", colnames(sam))] 
-  theta0s <- theta0s[,1:(T.T+1)] ## the thetas including theta_0
-  thetas <- theta0s[,-1] ## thetas not including theta_0
-  theta0 <- theta0s[,1]
-  data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
-  gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
-  colnames(gammas) <- paste("gamma", 1:T.T, sep="")
-  psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
-  colnames(psis) <- paste("psi", 1:T.T, sep="")
-  ## compute correlations between V, W, and various quantities
-  VWcor <- cor(V, W)
-  Vth0cor <- cor(V, theta0)
-  Wth0cor <- cor(W, theta0)
-  Vthcors <- cor(V, thetas)
-  Wthcors <- cor(W, thetas)
-  Vgacors <- cor(V, gammas)
-  Wgacors <- cor(W, gammas)
-  Vpscors <- cor(V, psis)
-  Wpscors <- cor(W, psis)
-  ## Find the maximum correlation between, e.g., V and any of the theta's
-  Vthmaxcor <- Vthcors[1,which.max(abs(Vthcors))]
-  Wthmaxcor <- Wthcors[1,which.max(abs(Wthcors))]
-  Vgamaxcor <- Vgacors[1,which.max(abs(Vgacors))]
-  Wgamaxcor <- Wgacors[1,which.max(abs(Wgacors))]
-  Vpsmaxcor <- Vpscors[1,which.max(abs(Vpscors))]
-  Wpsmaxcor <- Wpscors[1,which.max(abs(Wpscors))]
-  ## Find the average correlation between, e.g., V and any of the theta's
-  Vthavgcor <- mean(abs(Vthcors[1,]))
-  Wthavgcor <- mean(abs(Wthcors[1,]))
-  Vgaavgcor <- mean(abs(Vgacors[1,]))
-  Wgaavgcor <- mean(abs(Wgacors[1,]))
-  Vpsavgcor <- mean(abs(Vpscors[1,]))
-  Wpsavgcor <- mean(abs(Wpscors[1,]))
-
-  out <- data.frame(VW=VWcor, Vtheta0=Vth0cor, Wtheta0=Wth0cor,
-                    Vtheta1=Vthcors[1,1], Wtheta1=Wthcors[1,1],
-                    VthetaT=Vthcors[1,T.T], WthetaT=Wthcors[1,T.T],
-                    Vgamma1=Vgacors[1,1], Wgamma1=Wgacors[1,1],
-                    VgammaT=Vgacors[1,T.T], WgammaT=Wgacors[1,T.T],
-                    Vpsi1=Vpscors[1,1], Wpsi1=Wpscors[1,1],
-                    VpsiT=Vpscors[1,T.T], WpsiT=Wpscors[1,T.T],
-                    VthetaMax=Vthmaxcor, WthetaMax=Wthmaxcor,
-                    VgammaMax=Vgamaxcor, WgammaMax=Wgamaxcor,
-                    VpsiMax=Vpsmaxcor, WpsiMax=Wpsmaxcor,
-                    VthetaAvg=Vthavgcor, WthetaAvg=Wthavgcor,
-                    VgammaAvg=Vgaavgcor, WgammaAvg=Wgaavgcor,
-                    VpsiAvg=Vpsavgcor, WpsiAvg=Wpsavgcor,
-                    VthT4 = Vthcors[1, ceiling(T.T/4)],
-                    VthT2 = Vthcors[1, T.T/2],
-                    Vth3T4 = Vthcors[1, floor(3*T.T/4)],
-                    WthT4 = Wthcors[1, ceiling(T.T/4)],
-                    WthT2 = Wthcors[1, T.T/2],
-                    Wth3T4 = Wthcors[1, floor(3*T.T/4)],
-                    VgaT4 = Vgacors[1, ceiling(T.T/4)],
-                    VgaT2 = Vgacors[1, T.T/2],
-                    Vga3T4 = Vgacors[1, floor(3*T.T/4)],
-                    WgaT4 = Wgacors[1, ceiling(T.T/4)],
-                    WgaT2 = Wgacors[1, T.T/2],
-                    Wga3T4 = Wgacors[1, floor(3*T.T/4)],
-                    VpsT4 = Vpscors[1, ceiling(T.T/4)],
-                    VpsT2 = Vpscors[1, T.T/2],
-                    Vps3T4 = Vpscors[1, floor(3*T.T/4)],
-                    WpsT4 = Wpscors[1, ceiling(T.T/4)],
-                    WpsT2 = Wpscors[1, T.T/2],
-                    Wps3T4 = Wpscors[1, floor(3*T.T/4)])
-  rownames(out)[1] <- ""
   return(out)
 }
 
@@ -147,10 +59,6 @@ samsummary <- function(sam, dat, burn, sampler){
   T.T <- sam$T.T[1]
   V <- sam$V[-c(1:burn)]
   W <- sam$W[-c(1:burn)]
-###  theta0s <- sam[-c(1:burn),grep("theta", colnames(sam))]
-###  theta0s <- theta0s[,1:(T.T + 1)]
-###  thetas <- theta0s[,-1]
-###  theta0 <- theta0s[,1]
   data <- dat$y[dat$V.T==V.T & dat$W.T==W.T & dat$T.T==T.T]
   time <- sam$time[1] 
   ## tracks when relevant densities are log concave and when
@@ -162,79 +70,10 @@ samsummary <- function(sam, dat, burn, sampler){
   init <- data.frame(time=time,
                      logconV=logconV,     adrejV=adrejV,
                      logconW=logconW,     adrejW=adrejW)
-###  gammas <- (theta0s[,-1] - theta0s[,-(T.T+1)])/sqrt(W)
-###  colnames(gammas) <- paste("gamma", 1:T.T, sep="")
-###  psis <- (matrix(data, ncol=1) - thetas)/sqrt(V)
-###  colnames(psis) <- paste("psi", 1:T.T, sep="")
-  ## Find autocorrelation and effective sample size for various quantities
-###  thetaAC <- apply(thetas, 2, corfun)
-###  gammaAC <- apply(gammas, 2, corfun)
-###  psiAC <- apply(psis, 2, corfun)
-###  thetaES <- apply(thetas, 2, effectiveSize)
-###  gammaES <- apply(gammas, 2, effectiveSize)
-###  psiES <- apply(psis, 2, effectiveSize)
-###  theta0.AC <- corfun(theta0)
-###  theta1.AC <- thetaAC[1]
-###  thetaT4.AC <- thetaAC[ceiling(T.T/4)]
-###  thetaT2.AC <- thetaAC[T.T/2]
-###  theta3T4.AC <- thetaAC[floor(3*T.T/4)]
-###  thetaT.AC <- thetaAC[T.T]
-###  gamma1.AC <- gammaAC[1]
-###  gammaT4.AC <- gammaAC[ceiling(T.T/4)]
-###  gammaT2.AC <- gammaAC[T.T/2]
-###  gamma3T4.AC <- gammaAC[floor(3*T.T/4)]
-###  gammaT.AC <- gammaAC[T.T]
-###  psi1.AC <- psiAC[1]
-###  psiT4.AC <- psiAC[ceiling(T.T/4)]
-###  psiT2.AC <- psiAC[T.T/2]
-###  psi3T4.AC <- psiAC[floor(3*T.T/4)]
-###  psiT.AC <- psiAC[T.T]
-###  theta.ACmax <- thetaAC[which.max(abs(thetaAC))]
-###  gamma.ACmax <- gammaAC[which.max(abs(gammaAC))]
-###  psi.ACmax <- psiAC[which.max(abs(psiAC))]
-###  theta.ACavg <- mean(abs(thetaAC))
-###  gamma.ACavg <- mean(abs(gammaAC))
-###  psi.ACavg <- mean(abs(psiAC))
-###  theta0.ES <- effectiveSize(theta0)
-###  theta1.ES <- thetaES[1]
-###  thetaT4.ES <- thetaES[ceiling(T.T/4)]
-###  thetaT2.ES <- thetaES[T.T/2]
-###  theta3T4.ES <- thetaES[floor(3*T.T/4)]
-###  thetaT.ES <- thetaES[T.T]
-###  gamma1.ES <- gammaES[1]
-###  gammaT4.ES <- gammaES[ceiling(T.T/4)]
-###  gammaT2.ES <- gammaES[T.T/2]
-###  gamma3T4.ES <- gammaES[floor(3*T.T/4)]
-###  gammaT.ES <- gammaES[T.T]
-###  psi1.ES <- psiES[1]
-###  psiT4.ES <- psiES[ceiling(T.T/4)]
-###  psiT2.ES <- psiES[T.T/2]
-###  psi3T4.ES <- psiES[floor(3*T.T/4)]
-###  psiT.ES <- psiES[T.T]
-###  theta.ESmin <- thetaES[which.min(thetaES)]
-###  gamma.ESmin <- gammaES[which.min(gammaES)]
-###  psi.ESmin <- psiES[which.min(psiES)]
-###  theta.ESavg <- mean(thetaES)
-###  gamma.ESavg <- mean(gammaES)
-###  psi.ESavg <- mean(psiES)
   V.AC <- corfun(V)
   W.AC <- corfun(W)
   V.ES <- effectiveSize(V)
   W.ES <- effectiveSize(W)
-###  out <- cbind(init, V.AC, W.AC, theta0.AC,
-###               theta1.AC, thetaT4.AC, thetaT2.AC, theta3T4.AC,
-###               thetaT.AC, theta.ACmax,theta.ACavg,
-###               gamma1.AC, gammaT4.AC, gammaT2.AC, gamma3T4.AC,
-###               gammaT.AC, gamma.ACmax, gamma.ACavg,
-###               psi1.AC, psiT4.AC, psiT2.AC, psi3T4.AC, psiT.AC,
-###               psi.ACmax, psi.ACavg,
-###               V.ES, W.ES, theta0.ES,
-###               theta1.ES, thetaT4.ES, thetaT2.ES, theta3T4.ES,
-###               thetaT.ES, theta.ESmin, theta.ESavg,
-###               gamma1.ES, gammaT4.ES, gammaT2.ES, gamma3T4.ES,
-###               gammaT.ES, gamma.ESmin, gamma.ESavg,
-###               psi1.ES, psiT4.ES, psiT2.ES, psi3T4.ES,
-###               psiT.ES, psi.ESmin, psi.ESavg)
   out <- cbind(init, V.AC, W.AC, V.ES, W.ES)
   rownames(out) <- ""
   return(out)
@@ -362,10 +201,10 @@ llsim <- function(T, V, W, m0, C0){
 
 ## Function for quickly setting up the output data frame for a given sampler
 ## Called by each individual sampler
-samoutsetup <- function(n, T){
-  out <- data.frame(matrix(0, nrow=n, ncol=T+7))
+samoutsetup <- function(n){
+  out <- data.frame(matrix(0, nrow=n, ncol=6))
   colnames(out) <- c("logconV", "adrejV", "logconW", "adrejW", 
-                     "V", "W", paste("theta",0:T,sep=""))
+                     "V", "W")
   return(out)
 }
 
@@ -378,7 +217,7 @@ statesam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- samoutsetup(n, T)
+  out <- samoutsetup(n)
   for(i in 1:n){
     ## draw theta using MCFA
     theta <- mcfathsmooth(dat, V, W, m0, C0)
@@ -386,7 +225,7 @@ statesam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
     VWiter <- VWthetaiter(dat, theta, av, aw, bv, bw)
     V <- VWiter[1]
     W <- VWiter[2]
-    out[i,] <- c(NA,NA,NA,NA,V,W,theta)
+    out[i,] <- c(NA,NA,NA,NA,V,W)
   }
   return(out)
 }
@@ -400,7 +239,7 @@ errorsam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- samoutsetup(n, T)
+  out <- samoutsetup(n)
   for(i in 1:n){
     ## draw psi using MCFA
     psi <- mcfapssmooth(dat, V, W, m0, C0)
@@ -412,7 +251,7 @@ errorsam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
     W <- Wpsiiter(dat, psi, V,  aw, bw)
     ## transform back to theta for storage purposes
     theta <- thetapsitrans(dat, psi, V)
-    out[i,] <- c(rejsV,NA,NA, V, W, theta)
+    out[i,] <- c(rejsV,NA,NA, V, W)
   }
   return(out)
 }
@@ -428,7 +267,7 @@ distsam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- samoutsetup(n, T)
+  out <- samoutsetup(n)
   for(i in 1:n){
     ## draw theta using MCFA then transform to gamma
     theta <- mcfathsmooth(dat, V, W, m0, C0)
@@ -441,7 +280,7 @@ distsam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
     rejsW <- Wout[2:3]
     ## transform back to theta for storage purposes
     theta <- thetagamtrans(gam, W)
-    out[i,] <- c(NA,NA,rejsW, V, W, theta)
+    out[i,] <- c(NA,NA,rejsW, V, W)
   }
   return(out)
 }
@@ -456,7 +295,7 @@ statedistinter <- function(n, start, dat, av, aw, bv, bw, m0, C0, inter=TRUE){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- samoutsetup(n, T)
+  out <- samoutsetup(n)
   for(i in 1:n){
     ## state sampler
     ## draw theta using MCFA
@@ -485,7 +324,7 @@ statedistinter <- function(n, start, dat, av, aw, bv, bw, m0, C0, inter=TRUE){
     rejsW <- Wout[2:3]
     ## transform back to theta for storage purposes
     theta <- thetagamtrans(gam, W)
-    out[i,] <- c(NA,NA,rejsW, V, W, theta)
+    out[i,] <- c(NA,NA,rejsW, V, W)
   }
   return(out)
 }
@@ -500,7 +339,7 @@ stateerrorinter <- function(n, start, dat, av, aw, bv, bw, m0, C0, inter=TRUE){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- samoutsetup(n, T)
+  out <- samoutsetup(n)
   for(i in 1:n){
     ## state sampnler
     ## draw theta using MCFA
@@ -528,7 +367,7 @@ stateerrorinter <- function(n, start, dat, av, aw, bv, bw, m0, C0, inter=TRUE){
     W <- Wpsiiter(dat, psi, V,  aw, bw)
     ## transform back to theta for storage
     theta <- thetapsitrans(dat, psi, V)
-    out[i,] <- c(rejsV,NA,NA, V, W, theta)
+    out[i,] <- c(rejsV,NA,NA, V, W)
   }
   return(out)
 }
@@ -543,7 +382,7 @@ disterrorinter <- function(n, start, dat, av, aw, bv, bw, m0, C0, inter=TRUE){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- samoutsetup(n, T)
+  out <- samoutsetup(n)
   for(i in 1:n){
     ## scaled disturbance sampler
     ## draw theta using MCFA and transform to gamma
@@ -574,7 +413,7 @@ disterrorinter <- function(n, start, dat, av, aw, bv, bw, m0, C0, inter=TRUE){
     W <- Wpsiiter(dat, psi, V,  aw, bw)
     ## transform back to theta for storage
     theta <- thetapsitrans(dat, psi, V)
-    out[i,] <- c(rejsV,rejsW, V, W, theta)
+    out[i,] <- c(rejsV,rejsW, V, W)
   }
   return(out)
 }
@@ -590,7 +429,7 @@ tripleinter <- function(n, start, dat, av, aw, bv, bw, m0, C0, inter=c(TRUE, TRU
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- samoutsetup(n, T)
+  out <- samoutsetup(n)
   for(i in 1:n){
     ## state sampler
     ## draw theta using MCFA
@@ -636,7 +475,7 @@ tripleinter <- function(n, start, dat, av, aw, bv, bw, m0, C0, inter=c(TRUE, TRU
     W <- Wpsiiter(dat, psi, V,  aw, bw)
     ## transform back to theta for storage
     theta <- thetapsitrans(dat, psi, V)
-    out[i,] <- c(rejsV,rejsW, V, W, theta)
+    out[i,] <- c(rejsV,rejsW, V, W)
   }
     return(out)
 }
@@ -654,7 +493,7 @@ fullcissam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
   W <- start[2]
   Va <- av + T/2
   Wa <- aw + T/2
-  out <- samoutsetup(n, T)  
+  out <- samoutsetup(n)  
   for(i in 1:n){
     ## V step
     ## draw psi using MCFA
@@ -678,7 +517,7 @@ fullcissam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
     W <- Wout[1]
     ## transform back to theta for storage
     theta <- thetagamtrans(gam, W)
-    out[i,] <- c(Vout[2:3], Wout[2:3], V, W, theta)
+    out[i,] <- c(Vout[2:3], Wout[2:3], V, W)
   }
   return(out)
 }
