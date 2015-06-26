@@ -466,42 +466,10 @@ where $\alpha,a,c>0$ and $b\in\Re$. When $b=0$ we have a special case of the gen
 In the general DLM the this prior becomes much more complicated because $V$ and $W$ are matrices. The conditionally conjugate prior for $W$ given $\gamma$ is now a normal distribution on $L_W$, which is tolerable. But the full conditional for the other covariance matrix becomes a matrix analogue of the GIG distribution. So no matter which conditionally conjugate prior is used, under the SEs or SDs one of $V$ or $W$'s full conditionals will be intractable. This is not a problem for the DA algorithms necessarily --- you have the freedom to use the inverse Wishart prior for $V$ and the normal prior for $L_W$ in the SD sampler, for example. But in any interweaving or alternating algorithm each covariance matrix needs to be drawn from two full conditionals --- one given each of the DAs used in the algorithm --- yielding at least one intractable full conditional. A Metropolis step is a tolerable solution to the problem, though perhaps we can do better.
 
 \section{Supplementary materials}\label{sec:Supp}
-All supplementary materials are available in a single \verb0.zip0 file.
-\begin{description}
-\item[appendices.pdf:] This file provides 8 appendices cited in the main article:
-\begin{itemize}
-\item[] Appendix A: Derivation of marginal model for the DLM.
-\item[] Appendix B: Proof of lemma 1.
-\item[] Appendix C: Construction of the wrongly-scaled DA algorithms.
-\item[] Appendix D: Derivations of relevant joint and full conditional distributions.
-\item[] Appendix E: MCFA for simulation smoothing.
-\item[] Appendix F: Further augmentation for non-invertible $F_t$.
-\item[] Appendix G: Efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ in the LLM.
-\item[] Appendix H: Efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$ in the LLM.
-\item[] Appendix I: Equivalence of CIS and SD-SE GIS in the DLM.
-\item[] Appendix J: Partial CIS Algorithms in the DLM.
-\item[] Appendix K: Using posterior correlations to understand patterns of ESP.
-\item[] Appendix L: Computational time for each algorithm.
-\item[] Appendix M: Additional plots for other values of $T$.
-\item[] Appendix N: Comparing GIS and Alt in very long time series.
-\end{itemize}
 
-\item[mcfa.R:] This file contains R code for the MCFA smoother in the local level model.
+All supplementary materials are available in a single \verb0.zip0 file. The file \texttt{appendices.pdf} provides 8 appendices cited in the main article: A) derivation of marginal model for the DLM, B) proof of lemma 1, C) construction of the wrongly-scaled DA algorithms, D) derivations of relevant joint and full conditional distributions, E) MCFA for simulation smoothing, F) further augmentation for non-invertible $F_t$, G) efficiently drawing from $p(W|V,\gamma,y)$ and $p(V|W,\psi,y)$ in the LLM, H) efficiently drawing from $p(W|V,\tilde{\gamma},y)$ and $p(V|W,\tilde{\psi},y)$ in the LLM, I) equivalence of CIS and SD-SE GIS in the DLM, J) partial CIS Algorithms in the DLM, K) using posterior correlations to understand patterns of ESP, L) computational time for each algorithm, M) additional plots for other values of $T$, and N) comparing GIS and Alt in very long time series. The file \texttt{mcfa.R} contains R code for the MCFA smoother in the local level model. The file \texttt{dlmasisfun.R} contains R functions for obtaining simulations from a variety of MCMC algorithms in the local level model, summarizing those simulations, and for simulating data from the model. It depends on \verb0wscalerej.R0 and \verb0mcfa.R0. The file \texttt{wscalerej.R} contains several R functions for obtaining simulations from the wrongly-scaled DA algorithms in the local level model. Th e file \texttt{dlmasismixrun.R} contains R code that uses the functions in \verb0dlmasisfun.R0 and \verb0mcfa.R0 to obtain the simulations discussed in Section \ref{sec:LLM}. The file \texttt{dlmasislongrun.R} contains R code that uses the functions in \verb0dlmasisfun.R0 to obtain simulations for long time series in the local level model used in Appendix N. The file \texttt{plots.R} contains R code that uses output from \verb0dlmasismixrun.R0 to create the plots in the main document and the appendices.
 
-\item[dlmasisfun.R:] This file contains R functions for obtaining simulations from a variety of MCMC algorithms in the local level model, summarizing those simulations, and for simulating data from the model. It depends on \verb0wscalerej.R0 and \verb0mcfa.R0.
-
-\item[wscalerej.R] This file contains several R functions for obtaining simulations from the wrongly-scaled DA algorithms in the local level model.
-
-\item[dlmasismixrun.R:] This file contains R code that uses the functions in \verb0dlmasisfun.R0 and \verb0mcfa.R0 to obtain the simulations discussed in Section \ref{sec:LLM}.
-
-\item[dlmasislongrun.R:] This file contains R code that uses the functions in \verb0dlmasisfun.R0 to obtain simulations for long time series in the local level model used in Appendix N.
-
-\item[plots.R:] This file contains R code that uses output from \verb0dlmasismixrun.R0 to create the plots in the main document and the appendices.
-
-\end{description}
-
-
-\clearpage
+%\clearpage
 \bibliographystyle{MWS_jasa}  % proper bibliography style for ASA
 \bibliography{dlmasis}
 \end{document}
