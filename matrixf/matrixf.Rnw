@@ -235,4 +235,4 @@ The significance of this distribution and its mixture representations is hopeful
 \bibliography{../mcmcex}
 
 
-\end{document}
+\end{document}o
