@@ -176,7 +176,7 @@ werrorsam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- samoutsetup(n, T)  
+  out <- samoutsetup(n)  
   for(i in 1:n){
     ## draw psi using MCFA
     psi <- mcfapssmooth(dat, V, W, m0, C0)
@@ -189,7 +189,7 @@ werrorsam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
     ## transform back to theta
     thetat <- dat - sqrt(W)*psi[-1]
     theta <- c(psi[1], thetat)
-    out[i,] <- c(NA,NA,Wout[2:3], V, W, theta)
+    out[i,] <- c(NA,NA,Wout[2:3], V, W)
   }
   return(out)
 }
@@ -205,7 +205,7 @@ wdistsam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
   T <- length(dat)
   V <- start[1]
   W <- start[2]
-  out <- samoutsetup(n, T)  
+  out <- samoutsetup(n)  
   for(i in 1:n){
     ## draw theta using MCFA and transform to gamma
     theta <- mcfathsmooth(dat, V, W, m0, C0)
@@ -219,7 +219,7 @@ wdistsam <- function(n, start, dat, av, aw, bv, bw, m0, C0){
     ## transform back to theta
     thetat <- gam[1] + cumsum(gam[-1])*sqrt(V)
     theta <- c(gam[1], thetat)
-    out[i,] <- c(Vout[2:3],NA,NA,V,W,theta)
+    out[i,] <- c(Vout[2:3],NA,NA,V,W)
   }
   return(out)
 }

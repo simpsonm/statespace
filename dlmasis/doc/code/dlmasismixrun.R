@@ -1,7 +1,7 @@
 ## code for running the simulations from the paper.
 ## WARNING: THIS WILL TAKE ON THE ORDER OF WEEKS TO COMPLETE ON A UNIVERSITY CLUSTER
 
-source("dlmasislongfun.R")
+source("dlmasisfun.R")
 set.seed(152893627) ## needed to replicate my dataset
 
 ## set the time series lengths and the true values of V and W
