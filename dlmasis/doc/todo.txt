@@ -1,15 +1,9 @@
-For arguing our sample size is large enough to estimate ESS:
-    mention that nothing changed when increasing sample size
-    redo the procedure for n=3000 on just 1 cell of the grid to get some idea of the monte carlo variability of ESS
-    	 pick one good cell/sampler combination and one bad
-    
-One of the reviewers suggests a method of constructing CIS samplers - mention his method then mention that we show you can improve on computational time by removing extraneous steps.
-
-See if we can change the formatting of the authors to not repeat Jarad & Vivek's department, add an acknowledgements section (acknowledge reviewer's points, especially one from above)
-
-Change math environments: don't use align for 1 line math environments, use \[ \]
-       (Use \qquad to make space on one line, try negative \vspace to save whitespace vertically)
-
-Don't forget to thank editor + reviewrs in the response file
-
 Monday, July 6 meet at 1pm
+
+1) Make sure Jarad and Vivek get their info into the submission system
+
+2) References to the applied literature (asks Referee 3) --- do we really need this?
+
+3) Line number references are incorrect --- fix this just before submission (they will add line numbers to our submission, that's what we should use).
+
+4) Should we cut anymore? We are so close to the desired 28 pages. I could probably cut ~1 page from the discussion that is somewhat extraneous --- it mostly points at further work dealing with the multivariate case efficiently. Some of that can go in an appendix, or maybe it isn't necessary at all. I'm not sure where the other page could come from.
