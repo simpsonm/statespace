@@ -255,7 +255,7 @@ where $v_t = y_t - F_t\theta_t$, and $w_t = \theta_t - G_t\theta_{t-1}$.
 
 The density $p(\theta|V,W,y)$ is multivariate normal and any algorithm to draw from it is called a simulation smoother. FFBS is the most commonly used smoother and it uses the Kalman filter \citep{fruhwirth1994data,carter1994gibbs}, but there are other options.
 % \citet{koopman1993disturbance} and \citet{de1995simulation}.
-We use what we are calling the mixed Cholesky factor algorithm (MCFA) to draw $\theta$ \citep{mccausland2011simulation}, also used in \citet{kastner2013ancillarity} under the name ``AWOL smoother.'' The details of this algorithm for the DLM are included in Appendix E.
+We use the mixed Cholesky factor algorithm (MCFA) to draw $\theta$ \citep{mccausland2011simulation,kastner2013ancillarity}. The details of this algorithm are included in Appendix E.
 
 Putting the pieces together, the state sampler is the following DA algorithm:
 \begin{alg*}[State]State Sampler\label{alg:DLMstate}
