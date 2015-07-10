@@ -25,7 +25,7 @@ simdata$C0 <- 10^7
 sams <- c("deint", "dealt")
 samplers <- data.frame(sams=rep(1,length(sams)))
 samplers$sampler <- sams
-n <- 6500
+n <- 10500 ## sample size including burn in
 burn <- 500
 
 ## If doParallel package is installed, attempt to use 8 threads for parallel processing
